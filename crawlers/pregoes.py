@@ -36,6 +36,7 @@ logging.basicConfig(level=logging.INFO)
 
 base = "https://www1.compras.mg.gov.br/processocompra/pregao/consulta/dados/abaDadosPregao.html?interfaceModal=true&metodo=visualizar&idPregao="
 url_ata = "https://www1.compras.mg.gov.br/processocompra/pregao/consulta/dados/atas/atasGeraisPregao.html?interfaceModal=true&idPregao="
+url_ata_especifica = "https://www1.compras.mg.gov.br/processocompra/pregao/consulta/dados/atas/atasEspecificasLote.html?aba=abaAtasEspecificasLote&idPregao="
 url_chat = "https://www1.compras.mg.gov.br/processocompra/pregao/consulta/dados/pregao/visualizacaoChatPregao.html?interfaceModal=true&idPregao="
 not_found = "entidadeNaoEncontrada"
 chat_not_found = 'O(A) "Pregão" não pode ser alterado(a), pois foi excluído(a) por outro usuário, em acesso concorrente, enquanto esta tela era visualizada.'
@@ -65,6 +66,19 @@ for i in range(800,50000):
             driver.get(url_down)
             if os.path.isfile("/home/rennan/Downloads/ataPregao.pdf"):
                 os.rename("/home/rennan/Downloads/ataPregao.pdf", destination_dir + "/ataPregao.pdf" + ata)
+
+    content = requests.get(url_ata_especifica + str(i) + "&metodo=visualizar").text
+    if not(chat_not_found in content or "Continue acessando: PRODEMGE" in content):
+        driver.get(url_ata + str(i))
+        logging.info("Coletando atas pregao de ID: " + str(i))
+        atas = re.findall(r"habilitarComandoVisualizarAta\('(.*?)'\)", content)
+        for ata in atas:
+            print(ata)
+            time.sleep(.5)
+            url_down = "https://www1.compras.mg.gov.br/processocompra/pregao/consulta/dados/atas/atasEspecificasLote.html?id=" + ata +"&idPregao=15000&metodo=visualizarAta"
+            driver.get(url_down)
+            if os.path.isfile("/home/rennan/Downloads/ataPregao.pdf"):
+                os.rename("/home/rennan/Downloads/ataPregao.pdf", destination_dir + "/ataPregaoEspecifica.pdf" + ata)
 
     driver.get(url)
     getPDF(driver, "exibirRelatorioQuadroAvisos();", "relatorioConsultaQuadroAvisos.pdf")
