@@ -1,6 +1,9 @@
 import requests
 import logging
 import os
+import re
+import time
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -8,8 +11,17 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException    
 
+def getPDF(driver, command, name):
+    try:
+        driver.execute_script(command)
+        if os.path.isfile("/home/rennan/Downloads/" + name):
+            os.rename("/home/rennan/Downloads/" + name,
+                  destination_dir + "/" + name)
+    except:
+        pass
+
 options = webdriver.ChromeOptions()
-# options.add_argument("--headless")
+options.add_argument("--headless")
 options.add_experimental_option("prefs", {
         "download.default_directory": "/home/rennan/Downloads/",
         "download.prompt_for_download": False,
@@ -23,7 +35,10 @@ driver = webdriver.Chrome("/usr/bin/chromedriver", chrome_options=options)
 logging.basicConfig(level=logging.INFO)
 
 base = "https://www1.compras.mg.gov.br/processocompra/pregao/consulta/dados/abaDadosPregao.html?interfaceModal=true&metodo=visualizar&idPregao="
+url_ata = "https://www1.compras.mg.gov.br/processocompra/pregao/consulta/dados/atas/atasGeraisPregao.html?interfaceModal=true&idPregao="
+url_chat = "https://www1.compras.mg.gov.br/processocompra/pregao/consulta/dados/pregao/visualizacaoChatPregao.html?interfaceModal=true&idPregao="
 not_found = "entidadeNaoEncontrada"
+chat_not_found = 'O(A) "Pregão" não pode ser alterado(a), pois foi excluído(a) por outro usuário, em acesso concorrente, enquanto esta tela era visualizada.'
 for i in range(800,50000):
     url = base + str(i)
     response = requests.get(url)
@@ -35,11 +50,31 @@ for i in range(800,50000):
     destination_dir = "pregoes/" + folder + "/" + str(i)
     if not os.path.exists(destination_dir):
         os.makedirs(destination_dir)
-    with open(destination_dir + "/pregao_id" + str(i), "w") as f:
+    with open(destination_dir + "/pregao_id" + str(i) + ".html", "w") as f:
         f.write(content)
+
+    content = requests.get(url_ata + str(i)).text
+    if not(chat_not_found in content or "Continue acessando: PRODEMGE" in content):
+        driver.get(url_ata + str(i))
+        logging.info("Coletando atas pregao de ID: " + str(i))
+        atas = re.findall(r"habilitarComandoVisualizarAta\('(.*?)'\)", content)
+        for ata in atas:
+            print(ata)
+            time.sleep(.5)
+            url_down = "https://www1.compras.mg.gov.br/processocompra/pregao/consulta/dados/atas/atasGeraisPregao.html?id=" + ata +"&idPregao=801&metodo=visualizarAta"
+            driver.get(url_down)
+            if os.path.isfile("/home/rennan/Downloads/ataPregao.pdf"):
+                os.rename("/home/rennan/Downloads/ataPregao.pdf", destination_dir + "/ataPregao.pdf" + ata)
+
     driver.get(url)
-    command = "exibirRelatorioQuadroAvisos();"
-    driver.execute_script(command)
-    if os.path.isfile("/home/rennan/Downloads/relatorioConsultaQuadroAvisos.pdf"):
-        os.rename("/home/rennan/Downloads/relatorioConsultaQuadroAvisos.pdf",
-              destination_dir + "/relatorioConsultaQuadroAvisos.pdf")
+    getPDF(driver, "exibirRelatorioQuadroAvisos();", "relatorioConsultaQuadroAvisos.pdf")
+    getPDF(driver, "exibirRelatorioTermoConclusao();", "termoConclusao.pdf")
+
+    driver.get(url_chat + str(i))
+    time.sleep(1)
+    content = driver.page_source
+    if not(chat_not_found in content or "Continue acessando: PRODEMGE" in content):
+        logging.info("Coletando chat pregao de ID: " + str(i))
+        folder = "pregao" + str(i%100)
+        with open(destination_dir + "/pregao_id_chat" + str(i) + ".html", "w") as f:
+            f.write(content)
