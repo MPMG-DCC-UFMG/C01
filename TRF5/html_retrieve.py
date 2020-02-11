@@ -5,9 +5,11 @@ from selenium.common.exceptions import NoSuchElementException
 
 url_base = 'http://www5.trf5.jus.br/precatorio/'
 
-model1 = '//*[@id="wrapper"]/h1'
-model2 = '/html/body/p[2]'
+# define xpaths válidos em páginas de processos nos dois formatos existentes
+xpath_model1 = '//*[@id="wrapper"]/h1'
+xpath_model2 = '/html/body/p[2]'
 
+# opções para não abrir navegador
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 driver = webdriver.Chrome(chrome_options=chrome_options)
@@ -26,7 +28,8 @@ i = 1
 while True:
 	url = url_base + str(i)
 	
-	if check_exists_by_xpath(model1, url) or check_exists_by_xpath(model2, url):
+	# se a página contiver um xpath específico de um dos dois modelos, ela é armazenada
+	if check_exists_by_xpath(xpath_model1, url) or check_exists_by_xpath(xpath_model2, url):
 
 		filename = 'precatorio-' + str("{:06d}".format(i)) + '.html'
 		path = './pages/' + filename
@@ -36,4 +39,3 @@ while True:
 		i += 1
 	else:
 		break
-
