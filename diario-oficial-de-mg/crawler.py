@@ -194,7 +194,7 @@ def waitNavigationToLoad(driver: WebDriver, action_type: str):
             print("StaleElementReferenceException")
             pass
 
-        print(f"Attempt {attempt}, waiting {action_type} navigation to load...")
+        print(f"Attempt #{attempt} failed, waiting {action_type} navigation to load...")
         attempt += 1
         time.sleep(1)
 
@@ -250,9 +250,13 @@ def switchFrame(driver: WebDriver, attempts: int = 1):
                 print("FATAL ERROR: 504 Gateway Time-out.")
                 exit()
         except NoSuchElementException:
+            print(f"Attempt #{attempts} failed...")
+            
+            if attempts == 128:
+                raise LimitOfAttemptsReached("Limit of attempts reached, aborting")
+            
             pass
 
-        print(f"Attempt {attempts}, waiting for frame to load...")
         time.sleep(1)
         switchFrame(driver, attempts + 1)
 
@@ -343,7 +347,7 @@ def mergePdfFiles(files_to_merge: [str], output_file_address: str):
 def pdf2Txt(source_file: str, final_file: str):
     """Converts pdf file in a txt file."""
     raw = parser.from_file(source_file)
-    open(final_file, "w").write(raw['content'])
+    open(final_file, "w", encoding="utf-8").write(raw['content'])
 
 def createFolders():
     """Creates folders 'jornais/pdf/' and 'jornais/txt' if they do not exists."""
@@ -366,7 +370,6 @@ def openNextPage(driver):
     attempts = 0
     print("Opening next page")
     while True:
-        print("Attempt:", attempts)
         try:
             next_page_div = driver.find_element_by_id(
                 "id-div-pagina-posterior"
@@ -384,6 +387,7 @@ def openNextPage(driver):
             time.sleep(1)
             pass
 
+        print(f"Attempt #{attempts} failed!")
         attempts += 1
         if attempts == 100:
             print("ERROR Limits of attempt reached")
@@ -394,7 +398,6 @@ def getContentFrame(driver):
     attempts = 0
     print("Getting content page")
     while True:
-        print("Attempt:", attempts)
         try:
             frame = driver.find_element_by_tag_name("iframe")
             return frame
@@ -407,6 +410,7 @@ def getContentFrame(driver):
             time.sleep(1)
             pass
 
+        print(f"Attempt #{attempts} failed!")
         attempts += 1
 
         if attempts == 128:
@@ -416,7 +420,6 @@ def downloadPdf(pdf_source, fname):
     """Download pdf stored in url pdf_source and saves it in fname."""
     attempt = 0
     while True:
-        print("Download pdf attempt ", attempt)
         myfile = requests.get(pdf_source)
 
         open(fname, 'wb').write(myfile.content)
@@ -430,8 +433,10 @@ def downloadPdf(pdf_source, fname):
             print("PdfReadError, trying again...")
             pass
 
+        print("Attempt #{attempt} to download pdf failed...", attempt)
         attempt += 1
         if attempt == 16:
+            # not raising exception because some pdfs just have corrupted pages
             print("ERROR Limit of attempts reached!")
             return False
 
@@ -522,11 +527,12 @@ def crawler():
 
     createFolders()
     for i in range(len(urls_to_download)):
+        url = urls_to_download[i]
+
         if not downloadNewspaper(url):
             problematic_pdf.append(urls_to_download)
 
         saveProgress(urls_to_download[i + 1:])
-        url = urls_to_download[i]
 
         print("Sleeping...")
         time.sleep(60) # politiness?
