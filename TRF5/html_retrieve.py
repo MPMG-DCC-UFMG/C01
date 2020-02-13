@@ -27,7 +27,7 @@ def check_exists_by_xpath(xpath, url):
 	return True
 
 # URLs de forma sequencial
-i = 70078
+i = 1
 
 # contador de exceções
 exc_counter = 0
