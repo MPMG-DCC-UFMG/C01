@@ -14,22 +14,34 @@ chrome_options = Options()
 chrome_options.add_argument("--headless")
 driver = webdriver.Chrome(chrome_options=chrome_options)
 
+# arquivo para armazenar as páginas que tiveram exceção
+excs = open('exceptions.txt', 'a')
+
 # checa se um dado xpath existe
 def check_exists_by_xpath(xpath, url):
-    driver.get(url)
-    try:
-        driver.find_element_by_xpath(xpath)
-    except NoSuchElementException:
-        return False
-    return True
+	driver.get(url)
+	try:
+		driver.find_element_by_xpath(xpath)
+	except NoSuchElementException:		
+		return False
+	return True
 
 # URLs de forma sequencial
-i = 1
+i = 70078
+
+# contador de exceções
+exc_counter = 0
+
 while True:
 	url = url_base + str(i)
 	
+	if exc_counter >= 3:
+		break
+
 	# se a página contiver um xpath específico de um dos dois modelos, ela é armazenada
 	if check_exists_by_xpath(xpath_model1, url) or check_exists_by_xpath(xpath_model2, url):
+
+		exc_counter = 0
 
 		filename = 'precatorio-' + str("{:06d}".format(i)) + '.html'
 		path = './pages/' + filename
@@ -38,4 +50,6 @@ while True:
 		urllib.request.urlretrieve(url, path)
 		i += 1
 	else:
-		break
+		excs.write(url + '\n')
+		exc_counter += 1
+		i += 1
