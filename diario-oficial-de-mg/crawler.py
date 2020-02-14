@@ -28,7 +28,7 @@ def initChromeWebdriver(
 ) -> WebDriver:
     """
     Returns a ready to use chrome driver.
-    It will not display warning and erros that the site prints on the
+    It will not display warning and errors that the site prints on the
     navigator console.
 
     Keyword arguments:
@@ -440,6 +440,39 @@ def downloadPdf(pdf_source, fname):
             print("ERROR Limit of attempts reached!")
             return False
 
+def downloadPdfPages(driver, date, n_pages, pdf_name):
+    print("Number of pages:", n_pages)
+    files_to_merge = []
+
+    everything_ok = True
+
+    page_count = 0
+    while page_count < n_pages:
+        print(f"Starting page ({page_count}/{n_pages-1})")
+        if page_count > 0:
+            openNextPage(driver)
+
+        pdf_frame = getContentFrame(driver)
+        pdf_source = pdf_frame.get_attribute("src")
+
+        fname = f'jornais/temp-{str(date)}-{page_count}.pdf'
+        if not downloadPdf(pdf_source, fname):
+            everything_ok = False
+        else:
+            files_to_merge.append(fname)
+
+        page_count += 1
+
+    print("Merging pdf pages...")
+    driver.close()
+    mergePdfFiles(files_to_merge, pdf_name)
+
+    print("Deleting temporary pdf")
+    for file in files_to_merge:
+        os.remove(file)
+    
+    return everything_ok
+
 def downloadNewspaper(newspaper: dict):
     """
     Download correspondent newspaper, saves it in pdf and txt.
@@ -462,41 +495,29 @@ def downloadNewspaper(newspaper: dict):
         )
         target = newspaper[news_type]
 
-        print(">>>>>>>> Starting download for", newspaper[news_type]) 
+        print(">>>>>>>> Starting download for", date, newspaper[news_type]) 
 
         driver.get(target)
         time.sleep(1)
 
         n_pages_div = driver.find_element_by_id("id-div-numero-pagina-corrente").text
-        n_pages = int(n_pages_div.split(" ")[-1])
-        print("Number of pages:", n_pages)
-        files_to_merge = []
 
-        page_count = 0
-        while page_count < n_pages:
-            print(f"Starting page ({page_count}/{n_pages-1})")
-            if page_count > 0:
-                openNextPage(driver)
+        n_pages = n_pages_div.split(" ")[-1]
+        pdf_name = f'jornais/pdf/{str(date)}-{news_type}.pdf'
 
+        # some newspapers have no page number and all pages are together
+        if n_pages == "de": 
+            print("Unique pdf, starting download...")
             pdf_frame = getContentFrame(driver)
             pdf_source = pdf_frame.get_attribute("src")
 
-            fname = f'jornais/temp-{str(date)}-{page_count}.pdf'
-            if not downloadPdf(pdf_source, fname):
+            pdf_name = f'jornais/pdf/{str(date)}-{news_type}.pdf'
+            if not downloadPdf(pdf_source, pdf_name):
                 everything_ok = False
-            else:
-                files_to_merge.append(fname)
-
-            page_count += 1
-
-        print("Merging pdf pages...")
-        driver.close()
-        pdf_name = f'jornais/pdf/{str(date)}-{news_type}.pdf'
-        mergePdfFiles(files_to_merge, pdf_name)
-
-        print("Deleting temporary pdf")
-        for file in files_to_merge:
-            os.remove(file)
+        else:
+            n_pages = int(n_pages)
+            if not downloadPdfPages(driver, date, n_pages, pdf_name):
+                everything_ok = False
 
         print("Creating txt version...")
         pdf2Txt(pdf_name, f'jornais/txt/{str(date)}-{news_type}.txt')
