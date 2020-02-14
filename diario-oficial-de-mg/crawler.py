@@ -260,7 +260,7 @@ def switchFrame(driver: WebDriver, attempts: int = 1):
         time.sleep(1)
         switchFrame(driver, attempts + 1)
 
-def saveProgress(urls_listed):
+def saveProgress(urls_listed: []):
     """Saves list of urls to file 'temp.json'."""
     open("temp.json", "w+").write(json.dumps(urls_listed, indent=1))
 
@@ -366,7 +366,8 @@ def createFolders():
     except FileExistsError:
         pass
 
-def openNextPage(driver):
+def openNextPage(driver: WebDriver):
+    """Interacts with page to load next pdf page."""
     attempts = 0
     print("Opening next page")
     while True:
@@ -393,7 +394,7 @@ def openNextPage(driver):
             print("ERROR Limits of attempt reached")
             exit()
 
-def getContentFrame(driver):
+def getContentFrame(driver: WebDriver) -> WebElement:
     """Locate the main iframe tag and returns it."""
     attempts = 0
     print("Getting content page")
@@ -416,7 +417,7 @@ def getContentFrame(driver):
         if attempts == 128:
             raise LimitOfAttemptsReached("Limit of attempts reached, aborting")
 
-def downloadPdf(pdf_source, fname):
+def downloadPdf(pdf_source: str, fname: str) -> bool:
     """Download pdf stored in url pdf_source and saves it in fname."""
     attempt = 0
     while True:
@@ -440,7 +441,13 @@ def downloadPdf(pdf_source, fname):
             print("ERROR Limit of attempts reached!")
             return False
 
-def downloadPdfPages(driver, date, n_pages, pdf_name):
+def downloadPdfPages(driver: WebDriver, date: str, n_pages: int, pdf_name: str) -> bool:
+    """
+    Download all pages of a newspaper and merge them.
+
+    It will create temporary pdf files to contain the pages, then merge
+    the files and delete them. File will be named 'jornais/pdf/<date>.pdf'
+    """
     print("Number of pages:", n_pages)
     files_to_merge = []
 
@@ -473,12 +480,10 @@ def downloadPdfPages(driver, date, n_pages, pdf_name):
     
     return everything_ok
 
-def downloadNewspaper(newspaper: dict):
+def downloadNewspaper(newspaper: dict) -> bool:
     """
     Download correspondent newspaper, saves it in pdf and txt.
-    
-    It will create temporary pdf files to contain the pages, then merge
-    the files and delete them.
+
     Final files will have the address 'jornais/pdf/<date>.pdf',
     'jornais/txt/<date>.txt'.
     """
