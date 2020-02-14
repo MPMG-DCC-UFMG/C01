@@ -33,7 +33,7 @@ def initChromeWebdriver(
 
     Keyword arguments:
     path_to_driver -- path to the chrome driver executable. No need to
-    pass if driver set in path.
+    pass if the driver is set in path.
     use_window -- if True, a instance of chrome will be opened
     and one could watch the execution of the program
     print_console -- if true, log information printed in the navigator
