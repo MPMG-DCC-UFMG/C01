@@ -299,11 +299,14 @@ if __name__ == "__main__":
             default=False, help='query for new links and save them to text file')
     parser.add_argument('--processes', dest='processes', action='store_true',
             default=False, help='follow link file to collect processes')
+    parser.add_argument('--screen', dest='screen', action='store_true',
+            default=False, help='turn headless mode off')
 
     args = parser.parse_args()
 
     process_page = 'https://eproc.trf2.jus.br/eproc/externo_controlador.php?acao=processo_consulta_publica&acao_origem=&acao_retorno=processo_consulta_publica'
-
+    if args.screen:
+        SCREEN_ON = True
     if args.links:
         get_links(process_page)
     if args.processes:
