@@ -298,7 +298,7 @@ if __name__ == "__main__":
     parser.add_argument('--links', dest='links', action='store_true',
             default=False, help='query for new links and save them to text file')
     parser.add_argument('--processes', dest='processes', action='store_true',
-            default=True, help='follow link file to collect processes')
+            default=False, help='follow link file to collect processes')
 
     args = parser.parse_args()
 
