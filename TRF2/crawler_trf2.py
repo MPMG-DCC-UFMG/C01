@@ -310,5 +310,5 @@ if __name__ == "__main__":
     if args.links:
         get_links(process_page)
     if args.processes:
-        crawler(initial_line=198600)
+        crawler(initial_line=0)
     
