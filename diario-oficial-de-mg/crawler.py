@@ -4,8 +4,12 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import NoSuchFrameException 
 from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import ElementClickInterceptedException
+
+from shutil import copyfile
 
 from PyPDF2.utils import PdfReadError
+from PyPDF2 import PdfFileReader
 
 import requests
 import json
@@ -21,7 +25,7 @@ SCREEN_ON = False
 class LimitOfAttemptsReached(Exception):
     pass
 
-def initChromeWebdriver(
+def initChromeWebdriver     (
     path_to_driver: str = None,
     use_window: bool = False,
     ignore_console: bool = True
@@ -387,10 +391,14 @@ def openNextPage(driver: WebDriver):
             print("StaleElementReferenceException")
             time.sleep(1)
             pass
+        except ElementClickInterceptedException:
+            print("ElementClickInterceptedException")
+            time.sleep(1)
+            pass
 
         print(f"Attempt #{attempts} failed!")
         attempts += 1
-        if attempts == 100:
+        if attempts == 16:
             print("ERROR Limits of attempt reached")
             exit()
 
@@ -426,15 +434,16 @@ def downloadPdf(pdf_source: str, fname: str) -> bool:
         open(fname, 'wb').write(myfile.content)
         print("Page saved")
 
-        print("Checking pdf:")
+        print("Checking pdf...")
         try:
             PyPDF2.PdfFileReader(fname, strict=False)
+            print("ok")
             return True
         except PdfReadError:
             print("PdfReadError, trying again...")
             pass
 
-        print("Attempt #{attempt} to download pdf failed...", attempt)
+        print(f"Attempt #{attempt} to download pdf failed...", attempt)
         attempt += 1
         if attempt == 16:
             # not raising exception because some pdfs just have corrupted pages
@@ -455,7 +464,9 @@ def downloadPdfPages(driver: WebDriver, date: str, n_pages: int, pdf_name: str) 
 
     page_count = 0
     while page_count < n_pages:
-        print(f"Starting page ({page_count}/{n_pages-1})")
+        everything_ok_with_this_page = True
+
+        print(f"Starting page ({page_count}/{n_pages-1})", getNow())
         if page_count > 0:
             openNextPage(driver)
 
@@ -463,10 +474,27 @@ def downloadPdfPages(driver: WebDriver, date: str, n_pages: int, pdf_name: str) 
         pdf_source = pdf_frame.get_attribute("src")
 
         fname = f'jornais/temp-{str(date)}-{page_count}.pdf'
-        if not downloadPdf(pdf_source, fname):
-            everything_ok = False
-        else:
+
+        if fileDownloaded(fname):
             files_to_merge.append(fname)
+        else:
+            if not downloadPdf(pdf_source, fname):
+                everything_ok = False
+                everything_ok_with_this_page = False
+            else:
+                files_to_merge.append(fname)
+
+            if everything_ok_with_this_page and page_count == 0:
+                n_pages_download = checkPagesDownloaded(fname)
+                if n_pages_download > 1:
+                    if n_pages_download != n_pages:
+                        print("More than one page downloaded, but not all. Giving up on this file.")
+                        return False
+                    else:
+                        print("All pages in page one. Done.")
+                        copyfile(fname, pdf_name)
+                        os.remove(fname)
+                        return True
 
         page_count += 1
 
@@ -480,6 +508,39 @@ def downloadPdfPages(driver: WebDriver, date: str, n_pages: int, pdf_name: str) 
     
     return everything_ok
 
+def fileDownloaded(fname: str) -> bool:
+    try:
+        f = open(fname, "r")
+    except FileNotFoundError:
+        return False
+    f.close()
+    return True
+
+def getNumberOfPages(driver: WebDriver,) -> str:
+    attempts = 0
+    while attempts < 8:
+        try:
+            n_pages = driver.find_element_by_id("id-div-numero-pagina-corrente").text
+            
+            if n_pages is not None:
+                return n_pages
+        
+        except NoSuchElementException:
+            try:
+                error_message = driver.find_element_by_id("id-area-principal-esquerda").text
+                print("Problematic date. Returned page with message:")
+                print(error_message)
+                print("Ignoring it.")
+                return ""
+            except NoSuchElementException:
+                pass
+        
+        print(f"Attempts {attempts} for get page number failed...")
+        attempts += 1
+        time.sleep(1)
+
+    raise LimitOfAttemptsReached("ERROR Limit of attempts reached!")
+
 def downloadNewspaper(newspaper: dict) -> bool:
     """
     Download correspondent newspaper, saves it in pdf and txt.
@@ -490,25 +551,42 @@ def downloadNewspaper(newspaper: dict) -> bool:
     date = newspaper['date']
     everything_ok = True
 
+    downloaded_something = False
+
     for news_type in newspaper:
+        everything_ok_with_this = True
+
         if news_type == 'date':
             continue
 
+        news_type_holder = news_type.replace("/", " ")
+
+        print(">>>>>>>> Starting download for", date, "-", news_type, "-", newspaper[news_type]) 
+
+        pdf_name = f'jornais/pdf/{str(date)}-{news_type_holder}.pdf'
+
+        # Delete 3 lines
+        if fileDownloaded(pdf_name):
+            print("Ja salvo")
+            continue
+        
+        downloaded_something = True
+
         driver = initChromeWebdriver(
             'chromedriver_win_79-0-3945-36.exe',
-            # use_window=True
+            use_window=SCREEN_ON
         )
         target = newspaper[news_type]
-
-        print(">>>>>>>> Starting download for", date, newspaper[news_type]) 
 
         driver.get(target)
         time.sleep(1)
 
-        n_pages_div = driver.find_element_by_id("id-div-numero-pagina-corrente").text
-
-        n_pages = n_pages_div.split(" ")[-1]
-        pdf_name = f'jornais/pdf/{str(date)}-{news_type}.pdf'
+        
+        n_pages = getNumberOfPages(driver)
+        if len(n_pages) == 0:
+            continue
+        
+        n_pages = n_pages.split(" ")[-1]
 
         # some newspapers have no page number and all pages are together
         if n_pages == "de": 
@@ -516,18 +594,25 @@ def downloadNewspaper(newspaper: dict) -> bool:
             pdf_frame = getContentFrame(driver)
             pdf_source = pdf_frame.get_attribute("src")
 
-            pdf_name = f'jornais/pdf/{str(date)}-{news_type}.pdf'
+            pdf_name = f'jornais/pdf/{str(date)}-{news_type_holder}.pdf'
             if not downloadPdf(pdf_source, pdf_name):
-                everything_ok = False
+                everything_ok_with_this = False
+                everything_ok = everything_ok and everything_ok_with_this
         else:
             n_pages = int(n_pages)
             if not downloadPdfPages(driver, date, n_pages, pdf_name):
-                everything_ok = False
+                everything_ok_with_this = False
+                everything_ok = everything_ok and everything_ok_with_this
 
-        print("Creating txt version...")
-        pdf2Txt(pdf_name, f'jornais/txt/{str(date)}-{news_type}.txt')
+        if everything_ok_with_this:
+            print("Creating txt version...")
+            pdf2Txt(pdf_name, f'jornais/txt/{str(date)}-{news_type_holder}.txt')
 
-        return everything_ok
+        print("Sleeping...")
+        time.sleep(60) # politiness?
+
+    # return everything_ok
+    return downloaded_something
 
 def crawler():
     """
@@ -555,20 +640,15 @@ def crawler():
     for i in range(len(urls_to_download)):
         url = urls_to_download[i]
 
-        if not downloadNewspaper(url):
-            problematic_pdf.append(urls_to_download)
+        # Uncomment
+        # if not downloadNewspaper(url):
+        #     problematic_pdf.append(urls_to_download)
 
-        saveProgress(urls_to_download[i + 1:])
-
-        print("Sleeping...")
-        time.sleep(60) # politiness?
-
-    pdf2Txt('jornais/pdf/2005-07-01.pdf', 'jornais/txt/2005-07-01.txt')
+        if downloadNewspaper(url): # Delete
+            saveProgress(urls_to_download[i + 1:])
 
     f = open("config.json", "w+")
-
     last_date_crawled = str(urls_to_download[-1][0])
-
     f.write(json.dumps({"last_date_crawled": last_date_crawled}, indent=1))
     f.close()
 
@@ -579,6 +659,17 @@ def crawler():
         os.remove("temp.json")
     except FileNotFoundError:
         pass
+
+def getNow():
+    date = datetime.datetime.now()
+    return f"{date.hour}:{date.minute}:{date.second}"
+
+def checkPagesDownloaded(pdf_name: str) -> int:
+    f = open(pdf_name, "rb")
+    reader = PdfFileReader(f)
+    n_pages = reader.getNumPages() 
+    f.close()
+    return n_pages
 
 if __name__ == "__main__":
     crawler()
