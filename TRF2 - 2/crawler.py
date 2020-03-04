@@ -57,7 +57,6 @@ def load_or_retry(driver, url):
 
     # tries the required number of times
     while tries < RETRY_LIMIT:
-        print(tries)
         try:
             # leaves the loop if URL is correctly loaded
             driver.get(TRF2_URL)
