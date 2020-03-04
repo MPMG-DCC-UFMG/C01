@@ -12,20 +12,23 @@ from selenium.webdriver.support.ui import WebDriverWait
 JTR_IDENTIFIER = 402
 TRF2_URL = "http://portal.trf2.jus.br/portal/consulta/cons_procs.asp"
 
-FIRST_YEAR = 2010
-LAST_YEAR = 2015
+FIRST_YEAR = 1980
+LAST_YEAR = 2020
 
-MAX_ORIGIN = 9 #9999
-MAX_SEQ = 99 #9999999
+MAX_ORIGIN = 9999
+MAX_SEQ = 9999999
 
 DEBUG = True
-PRINTING_INTERVAL = 500
+PRINTING_INTERVAL = 5000
 
-def init_driver(headless):
+RETRY_LIMIT = 10
+
+def init_driver(headless=True, timeout=30):
     """
     Initializes the Firefox Driver
 
     :param headless: if set to true, no window is rendered by Selenium
+    :param timeout: number of seconds to wait for a page to load
     :return: the configured driver
     """
 
@@ -38,8 +41,34 @@ def init_driver(headless):
     options.headless = headless
 
     driver = webdriver.Firefox(options=options, firefox_profile=fp)
+    driver.set_page_load_timeout(timeout)
     return driver
 
+
+def load_or_retry(driver, url):
+    """
+    Tries to GET the supplied url using the driver
+
+    :param driver: the driver to access the page from
+    :param url: url to load
+    :returns: the driver in the desired url
+    """
+    tries = 0
+
+    # tries the required number of times
+    while tries < RETRY_LIMIT:
+        print(tries)
+        try:
+            # leaves the loop if URL is correctly loaded
+            driver.get(TRF2_URL)
+            break
+        except:
+            tries += 1
+
+    if tries >= RETRY_LIMIT:
+        raise Exception("Couldn't reach {}".format(url))
+
+    return driver
 
 
 def verif_code(num_proc):
@@ -93,7 +122,7 @@ def check_number(driver, num_proc):
     :returns: true if the checked number was hit, false if it missed
     """
 
-    driver.get(TRF2_URL)
+    driver = load_or_retry(driver, TRF2_URL)
     
     # process number input
     loaded = False
@@ -103,10 +132,14 @@ def check_number(driver, num_proc):
             loaded = True
         except:
             # there has been some internal server error, try again
-            driver.get(TRF2_URL)
+            driver = load_or_retry(driver, TRF2_URL)
 
     elem.clear()
     elem.send_keys(num_proc)
+
+    # Checks the box to download everything
+    elem = driver.find_element_by_name("baixado")
+    elem.click()
     
     # CAPTCHA "solving"
     elem = driver.find_element_by_id("gabarito")
