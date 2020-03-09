@@ -276,7 +276,7 @@ def listNewspaperToDownload() -> [(datetime.date, str)]:
     locale.setlocale(locale.LC_TIME, "pt_BR") 
 
     driver = initChromeWebdriver(
-        'chromedriver_win_79-0-3945-36.exe',
+        # 'chromedriver_win_79-0-3945-36.exe',
         use_window=SCREEN_ON
     )
     target = "http://www.iof.mg.gov.br/index.php?/ultima-edicao.html"
@@ -425,30 +425,61 @@ def getContentFrame(driver: WebDriver) -> WebElement:
         if attempts == 128:
             raise LimitOfAttemptsReached("Limit of attempts reached, aborting")
 
+def getFileNameFromUrl(pdf_source: str) -> str:
+    """Extracts file name from url, converting special characters."""
+    return pdf_source.split("/")[-1].split("?")[0].replace("%20", " ")
+
 def downloadPdf(pdf_source: str, fname: str) -> bool:
     """Download pdf stored in url pdf_source and saves it in fname."""
     attempt = 0
+
+    if fileDownloaded(fname):
+        print("Already saved")
+        return True
+    
     while True:
+        print(pdf_source)
+
         myfile = requests.get(pdf_source)
+        if len(myfile.content) > 0:
+            f = open(fname, "wb")
+            f.write(myfile.content)
+            f.close()
+            
+            downloaded_file = getFileNameFromUrl(pdf_source)
+            try:
+                os.remove(downloaded_file)
+            except FileNotFoundError:
+                pass
 
-        open(fname, 'wb').write(myfile.content)
-        print("Page saved")
+            print("Page saved")
 
-        print("Checking pdf...")
-        try:
-            PyPDF2.PdfFileReader(fname, strict=False)
-            print("ok")
-            return True
-        except PdfReadError:
-            print("PdfReadError, trying again...")
-            pass
+            print("Checking pdf...")
+            try:
+                pdf_merger = PyPDF2.PdfFileMerger()
+                pdf_merger.append(PyPDF2.PdfFileReader(fname, strict=False))
+                print("ok")
+                return True
+            except PdfReadError:
+                print("PdfReadError, trying again...")
+                pass
+            
+        else:
+            print("File not Downloaded or empty.")
 
         print(f"Attempt #{attempt} to download pdf failed...", attempt)
         attempt += 1
         if attempt == 16:
             # not raising exception because some pdfs just have corrupted pages
             print("ERROR Limit of attempts reached!")
+
+            try:
+                os.remove(fname)
+            except FileNotFoundError:
+                pass
+
             return False
+        time.sleep(1)
 
 def downloadPdfPages(driver: WebDriver, date: str, n_pages: int, pdf_name: str) -> bool:
     """
@@ -573,7 +604,7 @@ def downloadNewspaper(newspaper: dict) -> bool:
         downloaded_something = True
 
         driver = initChromeWebdriver(
-            'chromedriver_win_79-0-3945-36.exe',
+            # 'chromedriver_win_79-0-3945-36.exe',
             use_window=SCREEN_ON
         )
         target = newspaper[news_type]
