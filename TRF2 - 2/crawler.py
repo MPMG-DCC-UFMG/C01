@@ -21,7 +21,8 @@ MAX_SEQ = 9999999
 DEBUG = True
 PRINTING_INTERVAL = 5000
 
-RETRY_LIMIT = 10
+RETRY_LIMIT = 100
+WAIT_INTERVAL = 2
 
 def init_driver(headless=True, timeout=30):
     """
@@ -63,6 +64,7 @@ def load_or_retry(driver, url):
             break
         except:
             tries += 1
+            time.sleep(WAIT_INTERVAL * tries)
 
     if tries >= RETRY_LIMIT:
         raise Exception("Couldn't reach {}".format(url))
@@ -178,6 +180,7 @@ def main():
             origin_last_working = 0
             for n in range(0, MAX_SEQ + 1):
                 code = build_from_data(year, origin, n)
+                print(code)
                 was_hit = check_number(driver, code)
 
                 if n % PRINTING_INTERVAL == 0 and DEBUG:
