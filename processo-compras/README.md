@@ -16,7 +16,7 @@ As of February 28th 2020, there are 309374 processes. The crawler should run for
     - The files from "Visualizar dados do pregão" are identical to the ones obtained by ``consulta-pregoes`` (~45000 processes) 
     
 ### TODO
-- [ ] Catch thread exceptions
+- [x] Catch thread exceptions
 - [ ] Handle urllib3.connectionpool warnings
 - [ ] Access IDs randomly to avoid blocking
 - [ ] Merge crawler with ``consulta-pregoes``
