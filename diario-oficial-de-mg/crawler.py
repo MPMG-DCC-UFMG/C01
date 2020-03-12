@@ -20,7 +20,7 @@ import os
 import PyPDF2
 from tika import parser
 
-SCREEN_ON = False
+SCREEN_ON = True
 
 class LimitOfAttemptsReached(Exception):
     pass
@@ -273,7 +273,7 @@ def listNewspaperToDownload() -> [(datetime.date, str)]:
     # set language to be used for month and weekday names
     print(">>>>>>>> Checking for new newspaper")  
 
-    locale.setlocale(locale.LC_TIME, "pt_BR") 
+    locale.setlocale(locale.LC_TIME, "pt_BR.utf8") 
 
     driver = initChromeWebdriver(
         # 'chromedriver_win_79-0-3945-36.exe',
@@ -282,9 +282,11 @@ def listNewspaperToDownload() -> [(datetime.date, str)]:
     target = "http://www.iof.mg.gov.br/index.php?/ultima-edicao.html"
 
     driver.get(target)
+    print("Loaded page...")
     switchFrame(driver)
 
     # to check if there is new data available
+    print("Getting date...")
     last_newspaper_date = getLastNewspaperDate(driver)
     try:
         configs = json.loads(open("config.json").read())
@@ -295,8 +297,8 @@ def listNewspaperToDownload() -> [(datetime.date, str)]:
         last_date_crawled = datetime.date(2005, 6, 30)
 
     if last_newspaper_date <= last_date_crawled:
-        print("No new newspaper to crawl. Exit()ting crawler.")
-        exit()
+        print("No new newspaper to crawl")
+        return []
 
     print(
         f"Last date crawled: {last_date_crawled},"
@@ -660,9 +662,9 @@ def crawler():
     the script again and it will check for updates.
     """
     
-    # urls_to_download = listNewspaperToDownload() # UNCOMMENT
+    urls_to_download = listNewspaperToDownload() 
 
-    # saveProgress(urls_to_download) # UNCOMMENT
+    saveProgress(urls_to_download)
     urls_to_download = json.loads(open("temp.json", "r").read()) # DELETE
 
     problematic_pdf = []
@@ -671,15 +673,15 @@ def crawler():
     for i in range(len(urls_to_download)):
         url = urls_to_download[i]
 
-        # Uncomment
-        # if not downloadNewspaper(url):
-        #     problematic_pdf.append(urls_to_download)
+        Uncomment
+        if not downloadNewspaper(url):
+            problematic_pdf.append(urls_to_download)
 
         if downloadNewspaper(url): # Delete
             saveProgress(urls_to_download[i + 1:])
 
     f = open("config.json", "w+")
-    last_date_crawled = str(urls_to_download[-1][0])
+    last_date_crawled = str(urls_to_download[-1]["date"])
     f.write(json.dumps({"last_date_crawled": last_date_crawled}, indent=1))
     f.close()
 
