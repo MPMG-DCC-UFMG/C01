@@ -101,5 +101,6 @@ url_ata_especifica = "https://www1.compras.mg.gov.br/processocompra/pregao/consu
 url_chat = "https://www1.compras.mg.gov.br/processocompra/pregao/consulta/dados/pregao/visualizacaoChatPregao.html?interfaceModal=true&idPregao="
 not_found = "entidadeNaoEncontrada"
 chat_not_found = 'O(A) "Pregão" não pode ser alterado(a), pois foi excluído(a) por outro usuário, em acesso concorrente, enquanto esta tela era visualizada.'
-for i in range(1594,50000):
+
+for i in range(120000,200000):
     download(driver, i)
