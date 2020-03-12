@@ -1,10 +1,11 @@
-import threading
 import logging
 import time
 import wget
 import requests
 import os
+import threading
 
+from compras.threads import DownloadThread, MoveFileThread
 from compras import config
 from selenium.common import exceptions
 
@@ -120,20 +121,17 @@ def download_extrato(driver, current_id):
 
 
 def download_files_threads(driver, method, filename, current_id):
-    try:
-        download_thread = threading.Thread(target=download_files, args=(driver, method))
-        download_thread.start()
-        move_files_thread = threading.Thread(target=move_files, args=(filename, current_id, download_thread))
-        move_files_thread.start()
-        logging.info('Downloaded ' + filename + ' for ' + str(current_id))
-    except exceptions.NoSuchElementException:
-        logging.info(filename + ' not available for ID ' + str(current_id))
+    download_thread = DownloadThread(target=download_files, args=(driver, method, filename, current_id))
+    download_thread.start()
+    move_files_thread = MoveFileThread(target=move_files, args=(filename, current_id, download_thread))
+    move_files_thread.start()
 
 
-def download_files(driver, element_id):
+def download_files(driver, element_id, filename, current_id):
     search_input = driver.find_element_by_id(element_id)
     search_input.click()
     time.sleep(1.5)
+    logging.info('Downloaded ' + filename + ' for ' + str(current_id))
 
 
 def move_files(filename, current_id, download_thread):
