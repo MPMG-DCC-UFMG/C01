@@ -4,3 +4,4 @@
 *.pdf
 *.txt
 .DS_Store
+.idea

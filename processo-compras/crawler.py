@@ -2,76 +2,60 @@
 import time
 import logging
 
+from requests.exceptions import ConnectionError
+from http.client import RemoteDisconnected
 from compras import config
-from compras.config import MAX_PROCESSES, START_PROCESS
 from compras import download
 
 
 download_dir = config.DOWNLOAD_DIR
 config.set_logging()
-driver = config.get_driver()
 
-base = config.BASE
-process_not_found = config.PROCESS_NOT_FOUND
-
-i = START_PROCESS
+current_id = config.START_PROCESS
 start_time = time.time()
 retries = 0
 skipped_ids = 0
 
-driver = config.get_driver()
-
-while i < MAX_PROCESSES:
+while current_id < config.MAX_PROCESSES:
     try:
         # time information
-        download.progress_information(i, start_time)
-
-        content, text = download.get_html(i)
+        download.progress_information(current_id, start_time)
 
         # process not found
-        if download.check_process_exists(i):
-            skipped_ids = 0
-        else:
+        if download.check_access_forbidden(current_id):
+            logging.info("Processo de compra ID " + str(current_id) + ": 403 Forbidden")
             skipped_ids += 1
-            i = i + 1
+            current_id = current_id + 1
             if download.check_max_skipped_ids(skipped_ids):
                 break
             else:
                 continue
-
-        logging.info("Downloading processo de compra ID: " + str(i))
+        elif download.check_process_exists(current_id):
+            logging.info("Processo de compra ID " + str(current_id) + ": nothing to download")
+            skipped_ids += 1
+            current_id = current_id + 1
+            if download.check_max_skipped_ids(skipped_ids):
+                break
+            else:
+                continue
+        else:
+            skipped_ids = 0
+            logging.info("Downloading processo de compra ID: " + str(current_id))
 
         # fetching html
-        download.download_html(i)
+        download.download_html(current_id)
 
         # fetching relatorio_de_detalhes
-        download.get_relatorio_detalhes(i)
-
-        # driver.get(url)
-        loaded_driver = download.get_page(driver, i)
-
-        # expanding files section
-        if download.expand_file_section(loaded_driver):
-            pass
-        else:
-            i = i + 1
-            continue
+        download.get_relatorio_detalhes(current_id)
 
         # download edital files
-        download.download_edital(loaded_driver, i)
 
-        # download extrato de publicacao files
-        download.download_extrato(loaded_driver, i)
+        download.download_process_files(current_id)
 
-        download.check_max_threads()
-
-        # download arquivo grande circulacao files
-        download.download_publicacao(loaded_driver, i)
-
-        i = i + 1
+        current_id = current_id + 1
         retries = 0
 
     # Check for timeout and retry download
-    except TimeoutError:
+    except (TimeoutError, ConnectionError, RemoteDisconnected):
         if download.check_max_retries(retries):
             break
