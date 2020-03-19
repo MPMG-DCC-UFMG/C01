@@ -3,13 +3,11 @@ import time
 import wget
 import requests
 import os
-import threading
+import re
+import random
 
-from compras.threads import DownloadThread, MoveFileThread
 from compras import config
-from selenium.common import exceptions
-
-
+from bs4 import BeautifulSoup
 from random import randint
 
 
@@ -35,28 +33,29 @@ def get_html_contents(current_id):
     :param current_id: current process
     :return: url contents
     """
+    user_agent = random.choice(config.USER_AGENT_LIST)
+    headers = {'User-Agent': user_agent}
     url = get_base_url(current_id)
-    response = requests.get(url)
+    response = requests.get(url, headers=headers)
     return response.content
 
 
 def get_html_text(current_id):
     url = get_base_url(current_id)
-    response = requests.get(url)
+    user_agent = random.choice(config.USER_AGENT_LIST)
+    headers = {'User-Agent': user_agent}
+    response = requests.get(url, headers=headers)
     return response.text
-
-
-def get_html(current_id):
-    return get_html_contents(current_id), get_html_text(current_id)
 
 
 def check_process_exists(current_id):
     text = get_html_text(current_id)
-    if config.PROCESS_NOT_FOUND in text or "Acesso negado" in text:
-        logging.info("Processo de compra ID " + str(current_id) + ": nothing to download")
-        return False
-    else:
-        return True
+    return config.PROCESS_NOT_FOUND_MESSAGE in str(text) or "Acesso negado" in str(text)
+
+
+def check_access_forbidden(current_id):
+    text = get_html_text(current_id)
+    return config.NO_PERMISSION_MESSAGE in str(text)
 
 
 def check_max_skipped_ids(skipped_ids):
@@ -70,12 +69,6 @@ def check_max_skipped_ids(skipped_ids):
 def get_output_dir(current_id):
     current_id_range = current_id // 100
     return config.DOWNLOAD_DIR + config.BASE_FOLDER + str(current_id_range) + "/" + str(current_id)
-
-
-def get_page(driver, current_id):
-    url = get_base_url(current_id)
-    driver.get(url)
-    return driver
 
 
 def download_html(current_id):
@@ -93,54 +86,9 @@ def get_relatorio_detalhes(current_id):
     try:
         relatorio_detalhes_url = config.RELATORIO_DETALHES + str(current_id)
         wget.download(relatorio_detalhes_url, out=output_dir)
-        time.sleep(1.5)
+        time.sleep(.5)
     except:
         logging.info('Relatorio de Detalhes not available for ID ' + str(current_id))
-
-
-def expand_file_section(driver):
-    try:
-        search_input = driver.find_element_by_id('painelArquivosEdital')
-        search_input.click()
-        return True
-    except exceptions.NoSuchElementException:
-        return False
-
-
-def download_edital(driver, current_id):
-    download_files_threads(driver, 'visualizar_idArquivoDocumentoEdital', 'Edital', current_id)
-
-
-def download_publicacao(driver, current_id):
-    download_files_threads(driver, 'visualizar_idArquivoPublicJornalGraCirc', 'PublicJornalGrandeCirculacao',
-                           current_id)
-
-
-def download_extrato(driver, current_id):
-    download_files_threads(driver, 'visualizar_idArquivoExtratoPublicEdital', 'ExtratoPublicacaoEdital', current_id)
-
-
-def download_files_threads(driver, method, filename, current_id):
-    download_thread = DownloadThread(target=download_files, args=(driver, method, filename, current_id))
-    download_thread.start()
-    move_files_thread = MoveFileThread(target=move_files, args=(filename, current_id, download_thread))
-    move_files_thread.start()
-
-
-def download_files(driver, element_id, filename, current_id):
-    search_input = driver.find_element_by_id(element_id)
-    search_input.click()
-    time.sleep(1.5)
-    logging.info('Downloaded ' + filename + ' for ' + str(current_id))
-
-
-def move_files(filename, current_id, download_thread):
-    download_thread.join()
-    output_dir = get_output_dir(current_id)
-    for file_extension in config.FILE_EXTENSIONS:
-        downloaded_file = config.DOWNLOAD_DIR + "/" + filename + file_extension
-        if os.path.isfile(downloaded_file):
-            os.rename(downloaded_file, output_dir + "/" + filename + file_extension)
 
 
 def check_max_retries(retries):
@@ -153,6 +101,50 @@ def check_max_retries(retries):
         return True
 
 
-def check_max_threads():
-    if threading.active_count() > config.MAX_THREADS:
-        time.sleep(2)
+def download_process_files(current_id):
+    html_text = get_html_text(current_id)
+    params_list = parse_html(html_text)
+    for params in params_list:
+        form_data = fill_form_data(params)
+        get_files(current_id, form_data)
+
+
+def fill_form_data(params):
+    form_data = config.FORM_DATA
+    form_data['idArquivo'] = params[0]
+    form_data['nomeArquivo'] = params[1]
+    form_data['chaveAberturaArquivo'] = params[2]
+    return form_data
+
+
+def get_files(current_id, form_data):
+    output_dir = get_output_dir(current_id)
+    try:
+        url = get_base_url(current_id) + '&versao=51&metodo=abrirArquivo&exibirMensagem=false&idArquivo=' \
+              + form_data['idArquivo'] + '&nomeArquivo=' + form_data['nomeArquivo'] + \
+              '&chaveAberturaArquivo=' + form_data['chaveAberturaArquivo']
+        wget.download(url, out=output_dir)
+        time.sleep(1.5)
+    except:
+        logging.info(form_data['nomeArquivo'] + ' not available for ID ' + str(current_id))
+
+
+def parse_html(html_text):
+    soup = BeautifulSoup(html_text, features='lxml')
+    search_string = get_search_string()
+    results = re.findall(search_string, str(soup))
+    params_list = []
+    for params in results:
+        if 'idArquivo' in params:
+            continue
+        params = treat_params_string(params)
+        params_list.append(params)
+    return params_list
+
+
+def treat_params_string(params):
+    return params.replace("'", "").replace(" ", "").split(",")
+
+
+def get_search_string(js_method=config.JS_METHOD, string_pattern=config.STRING_PATTERN):
+    return js_method + string_pattern
