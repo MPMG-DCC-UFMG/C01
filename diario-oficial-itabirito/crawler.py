@@ -36,14 +36,17 @@ dataConsulta = datetime.today().strftime('%Y_%m_%d')
 if not os.path.exists(dataConsulta):
     os.makedirs(dataConsulta)
     
-if not os.path.exists(dataConsulta):
-    os.makedirs(dataConsulta)
+# if not os.path.exists(dataConsulta):
+#     os.makedirs(dataConsulta)
     
 while(registrosSalvos<=numeroRegistros):
     
     # print('links_pgs[registrosSalvos]: ', links_pgs[registrosSalvos])
     
     driver.get(links_pgs[registrosSalvos])
+    
+    with open(os.path.join(dataConsulta,'publicacao_oficial_'+str(registrosSalvos)+'.html'), 'w') as f:
+                f.write(driver.page_source)
     
     title = driver.find_elements_by_class_name('clr-prefeitura')[1].text
     
