@@ -120,14 +120,18 @@ def download_pdfs_url(driver, url):
             # Get all the PDF links in page again (page might have been
             # refreshed)
             elems = driver.find_elements_by_css_selector(\
-                "section article a.elementor-post__read-more")  
+                "section article a.elementor-post__read-more")
             link_href = elems[el].get_attribute("href")
             try:
+                # This should download the file, but this url also hangs the
+                # driver, so we wrap it around a try/except block to catch the
+                # timeout exception
                 driver.get(link_href)
             except:
                 pass
-            print("passei")
+
             load_or_retry(driver, list_url)
+            time.sleep(1)
 
         next_button = driver.find_elements_by_css_selector("a.page-numbers.next")
         if len(next_button) != 0:
@@ -161,6 +165,7 @@ def countEntries(driver, url):
             "section article a.elementor-post__read-more")
 
         total += len(elems)
+        time.sleep(1)
 
         if len(elems) == 0:
             return total
@@ -176,11 +181,11 @@ def countEntries(driver, url):
 
 
 def main():
-    driver = init_driver(False, 3)
+    driver = init_driver(True, 30)
 
-    total = 0
-    for url in generate_urls(2009, 2020):
-        curr = download_pdfs_url(driver, url)
+    for url in generate_urls(2005, 2020):
+        download_pdfs_url(driver, url)
+        print(url)
 
     driver.close()
 
