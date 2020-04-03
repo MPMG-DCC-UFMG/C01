@@ -16,7 +16,7 @@ def progress_information(current_page, start_time):
         wait_time = randint(1, 30)
         e = int(time.time() - start_time)
         elapsed_time = f'{e // 3600:02d}:{(e % 3600 // 60):02d}:{e % 60:02d}'
-        percentage = (current_page // config.MAX_PAGES) * 100
+        percentage = (current_page / config.MAX_PAGES) * 100
         logging.info("Elapsed time " + elapsed_time + " sec, " + str(percentage) + "% of all pages covered")
         logging.info("Waiting " + str(wait_time) + " sec")
         time.sleep(wait_time)
@@ -67,7 +67,7 @@ def check_access_forbidden(current_page):
 
 def check_max_skipped_pages(skipped_ids):
     if skipped_ids > config.MAX_SKIPPED_PAGES:
-        logging.info(skipped_ids + " consecutive void pages. Nothing else to download")
+        logging.info(str(skipped_ids) + " consecutive void pages. Nothing else to download")
         return True
     else:
         return False
