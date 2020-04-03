@@ -6,11 +6,11 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 
 
 BASE_FOLDER = "/br.gov.mg.pocosdecaldas/licitacoes"
-DOWNLOAD_DIR = "/mnt/rubia"
+DOWNLOAD_DIR = "/Volumes/Work HD/MPMG"
 
 PROFILE_PATH = "/Users/work/Library/Application Support/Firefox/Profiles/yde1eaqi.mpmg"
 
-START_PROCESS = 1
+START_PROCESS = 39
 MAX_PROCESSES = 4000
 
 MAX_SKIPPED_IDS = 20

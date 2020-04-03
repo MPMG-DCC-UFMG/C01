@@ -26,6 +26,10 @@ class SearchForm:
                 driver.find_element_by_xpath(self.sort_button).click()
             except exceptions.NoSuchElementException:
                 logging.error('Website has not loaded properly')
+        except exceptions.ElementClickInterceptedException:
+            element = driver.find_element_by_xpath(self.sort_button).click()
+            driver.execute_script("arguments[0].scrollIntoView();", element)
+            element.click()
 
     def set_max_displayed_results(self, driver):
         driver.find_element_by_xpath(self.max_results_field).clear()

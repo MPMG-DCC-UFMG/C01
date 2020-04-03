@@ -10,9 +10,9 @@ from selenium.common import exceptions
 class BiddingProcess:
     def __init__(self, process_count, search_results):
         self.process = search_results.find_element_by_xpath("/html/body/div[5]/div[1]/div[1]/div[2]/"
-                                                               "div/div[3]/table/tbody/tr[2]/td/div/table/"
-                                                               "tbody/tr/td/table/tbody/tr[" +
-                                                               str(2 * process_count) + "]/td[1]/a")
+                                                            "div/div[3]/table/tbody/tr[2]/td/div/table/"
+                                                            "tbody/tr/td/table/tbody/tr[" +
+                                                            str(2 * process_count) + "]/td[1]/a")
         self.process_id = utils.get_process_id(self.process)
 
         try:
@@ -21,15 +21,15 @@ class BiddingProcess:
             search_results.execute_script("arguments[0].scrollIntoView();", self.process)
             self.process.click()
 
-    def extract_html_table(self, tab):
+    def extract_html_table(self, tab, driver):
         table = self.process.find_element_by_xpath("/html/body/div[5]/div[1]/div[1]/div[2]/div/div[4]/table")
         tab = table.find_element_by_xpath("/html/body/div[5]/div[1]/div[1]/div[2]/div/div[4]/table/tbody/"
-                                                  "tr[2]/td/table/tbody/tr[1]/td/table/tbody/tr/td[" + str(tab) +
-                                                  "]/table/tbody/tr[2]/td[2]/div/div/div")
+                                          "tr[2]/td/table/tbody/tr[1]/td/table/tbody/tr/td[" + str(tab) +
+                                          "]/table/tbody/tr[2]/td[2]/div/div/div")
         tab_title = tab.get_attribute('innerHTML')
         tab.click()
         if tab_title in 'Participantes do Processo':
-            self.extract_contracts()
+            self.extract_contracts(driver)
         # TODO
         # elif tab_title in 'Atas de Registro de Preços'
         #     self.extract_atas()
@@ -41,18 +41,20 @@ class BiddingProcess:
                                                            "div[1]/a[3]")
         return_button.click()
 
-    def extract_process_data(self):
+    def extract_process_data(self, driver):
         for tab in range(2, 6):
-            self.extract_html_table(tab)
+            self.extract_html_table(tab, driver)
         self.return_search_results()
+        return driver
 
-    def extract_contracts(self):
+    def extract_contracts(self, driver):
         for contract_number in range(2, 21):
             try:
-                contract = self.process.find_element_by_xpath('/html/body/div[5]/div[1]/div[1]/div[2]/div/div[4]/'
-                                                              'table/tbody/tr[2]/td/table/tbody/tr[2]/td/div/div[2]'
-                                                              '/table/tbody/tr[' + str(contract_number) +
-                                                              ']/td[5]/table/tbody/tr/td/table/tbody/tr/td/a')
+                contract = self.process.find_element_by_xpath(
+                    '/html/body/div[5]/div[1]/div[1]/div[2]/div/div[4]/'
+                    'table/tbody/tr[2]/td/table/tbody/tr[2]/td/div/div[2]'
+                    '/table/tbody/tr[' + str(contract_number) +
+                    ']/td[5]/table/tbody/tr/td/table/tbody/tr/td/a')
                 contract.click()
             except exceptions.ElementClickInterceptedException:
                 contract = self.process.find_element_by_xpath('/html/body/div[5]/div[1]/div[1]/div[2]/div/div[4]/'
@@ -62,6 +64,7 @@ class BiddingProcess:
                 self.process.execute_script("arguments[0].scrollIntoView();", contract)
                 contract.click()
             except exceptions.NoSuchElementException:
+
                 continue
 
             # TODO
@@ -69,9 +72,14 @@ class BiddingProcess:
             #                                                "tbody/tr[1]/td/div/table/tbody/tr[10]/td/div/table/tbody/"
             #                                                "tr[2]/td[5]/table/tbody/tr/td/a")
             # download_link.click()
-
-            contract_table = contract.find_element_by_xpath('/html/body/div[8]')
-            contract_filename = "contrato" + str(contract_number)
+            utils.wait_page_load(driver, element_xpath="/html/body/div[8]/div/table/tbody/tr[2]/td[2]/div/table"
+                                                       "/tbody/tr[2]/td/table/tbody/tr/td/button")
+            contract_table = driver.find_element_by_xpath("/html/body/div[8]/div")
+            contract_id = contract_table.find_element_by_xpath("/html/body/div[8]/div/table/tbody/tr[2]/td[2]/"
+                                                               "div/table/tbody/tr[1]/td/div/table/tbody/tr[1]/td["
+                                                               "2]/div").get_attribute('innerHTML')
+            contract_number, contract_year = utils.parse_process_id(contract_id)
+            contract_filename = "Contrato " + contract_year + '-' + contract_number
             contract_html = contract_table.get_attribute('innerHTML')
             utils.save_html(contract_html, self.process_id, contract_filename)
             close_button = contract.find_element_by_xpath("/html/body/div[8]/div/table/tbody/tr[2]/td[2]/div/table/"

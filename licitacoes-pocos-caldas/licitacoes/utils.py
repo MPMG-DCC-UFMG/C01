@@ -1,6 +1,5 @@
 import logging
 import time
-import requests
 import os
 
 from licitacoes import config
@@ -12,7 +11,7 @@ from selenium.webdriver.common.by import By
 
 
 def progress_information(current_id, start_time):
-    if not current_id % 100:
+    if not current_id % 50:
         wait_time = randint(1, 30)
         e = int(time.time() - start_time)
         elapsed_time = f'{e // 3600:02d}:{(e % 3600 // 60):02d}:{e % 60:02d}'
