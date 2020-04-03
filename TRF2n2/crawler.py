@@ -1,6 +1,7 @@
 import selenium
 import os
 import shutil
+import sys
 import time
 
 from joblib import Parallel, delayed
@@ -21,8 +22,8 @@ FOLDER_PATH = "coleta"
 JTR_IDENTIFIER = 402
 TRF2_URL = "http://portal.trf2.jus.br/portal/consulta/cons_procs.asp"
 
-FIRST_YEAR = 1989
-LAST_YEAR = 2019
+FIRST_YEAR = 2014
+LAST_YEAR = 2020
 
 ORIGINS = [0, 9999]
 MAX_SEQ = 9999999
@@ -355,37 +356,38 @@ def process_page(driver, num_proc, tmp_folder, down_folder):
             if DOWNLOAD_ATTACHMENTS:
                 attachments = driver.find_elements_by_css_selector("a.link-under")
 
-                # create folder for attachments
-                att_folder = os.path.join(proc_folder, "attachments")
-                if not os.path.exists(att_folder):
-                    os.mkdir(att_folder)
+                if len(attachments) > 0:
+                    # create folder for attachments
+                    att_folder = os.path.join(proc_folder, "attachments")
+                    if not os.path.exists(att_folder):
+                        os.mkdir(att_folder)
 
-                # save each attachment
-                for i in attachments:
-                    i.click()
-                    time.sleep(2) ################################# LEFT
+                    # save each attachment
+                    for i in attachments:
+                        i.click()
+                        time.sleep(2) ################################# LEFT
 
-                    window_before = driver.window_handles[0]
-                    window_after = driver.window_handles[-1]
-                    driver.switch_to.window(window_after)
+                        window_before = driver.window_handles[0]
+                        window_after = driver.window_handles[-1]
+                        driver.switch_to.window(window_after)
 
-                    downloaded_file = wait_for_file(tmp_folder, 2)
-                    driver.close()
+                        downloaded_file = wait_for_file(tmp_folder, 2)
+                        driver.close()
 
-                    new_location = os.path.join(att_folder, downloaded_file)
-                    previous_location = os.path.join(tmp_folder, downloaded_file)
-                    shutil.move(previous_location, new_location)
+                        new_location = os.path.join(att_folder, downloaded_file)
+                        previous_location = os.path.join(tmp_folder, downloaded_file)
+                        shutil.move(previous_location, new_location)
 
-                    # Wait for file to be removed
-                    #wait = WebDriverWait(driver, 30)
-                    #wait.until(lambda _: len(os.listdir(tmp_folder)) == 0)
+                        # Wait for file to be removed
+                        #wait = WebDriverWait(driver, 30)
+                        #wait.until(lambda _: len(os.listdir(tmp_folder)) == 0)
 
-                    driver.switch_to.window(window_before)
+                        driver.switch_to.window(window_before)
 
-                time.sleep(10) # wait for all files to be available
-                # check if all attachments were downloaded
-                #print("Assert for {} ".format(num_proc))
-                assert len(os.listdir(att_folder)) == len(attachments)
+                    time.sleep(10) # wait for all files to be available
+                    # check if all attachments were downloaded
+                    #print("Assert for {} ".format(num_proc))
+                    assert len(os.listdir(att_folder)) == len(attachments)
 
         else:
             # Just download the inner iframe's contents
