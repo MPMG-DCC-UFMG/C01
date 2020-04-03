@@ -457,15 +457,17 @@ def run_year(year):
     hit = 0
     for origin in ORIGINS:
         #print("* Year {}:".format(year))
-        upper_lim = 2 #bin_search(driver, year, origin)
+        upper_lim = bin_search(driver, year, origin)
         #print("** Verify from 0 to {}".format(upper_lim))
         for i in range(0, upper_lim):
             code = build_from_data(year, origin, i)
             if access_process_url(driver, code, tmp_folder, down_folder):
                 hit += 1
                 print("{} --- Done processing {}".format(year, code))
+            sys.stdout.flush()
 
     print("Year {} had {} hits".format(year, hit))
+    sys.stdout.flush()
 
     time.sleep(5)
 
