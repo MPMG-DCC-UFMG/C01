@@ -1,5 +1,6 @@
 import selenium
 import os
+import shutil
 import time
 
 from joblib import Parallel, delayed
@@ -373,7 +374,7 @@ def process_page(driver, num_proc, tmp_folder, down_folder):
 
                     new_location = os.path.join(att_folder, downloaded_file)
                     previous_location = os.path.join(tmp_folder, downloaded_file)
-                    os.replace(previous_location, new_location)
+                    shutil.move(previous_location, new_location)
 
                     # Wait for file to be removed
                     #wait = WebDriverWait(driver, 30)
