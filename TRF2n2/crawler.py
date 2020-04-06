@@ -463,9 +463,16 @@ def run_year(year):
         #print("** Verify from 0 to {}".format(upper_lim))
         for i in range(0, upper_lim):
             code = build_from_data(year, origin, i)
-            if access_process_url(driver, code, tmp_folder, down_folder):
-                hit += 1
-                print("{} --- Done processing {}".format(year, code))
+            processed = False
+            while not processed:
+                try:
+                    if access_process_url(driver, code, tmp_folder, down_folder):
+                        hit += 1
+                        print("{} --- Done processing {}".format(year, code))
+                    processed = True
+                except:
+                    print("Error at {}, retrying...".format(year, code))
+                    pass
             sys.stdout.flush()
 
     print("Year {} had {} hits".format(year, hit))
