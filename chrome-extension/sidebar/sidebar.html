@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta http-equiv="Content-Language" content="pt-br">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" 
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="sidebar.css">
+    <!-- <script src="panel.js"></script> -->
+</head>
+<body>
+    <!-- bootstrap imports -->
+    <script src="bootstrap/jquery-3.4.1.slim.min.js"></script>
+    <script src="bootstrap/popper.min.js"></script>
+    <script src="bootstrap/bootstrap.min.js"></script>
+    <!-- /bootstrap imports -->
+
+    <!-- 
+        https://feathericons.com/ 
+        https://getbootstrap.com/docs/4.4/components/forms/#switches
+    -->
+
+    <script src="sidebar.js"></script>
+    
+    <div class="container-fluid" id="globalContainer">
+        <!-- begin config -->
+        <dov class="row">
+            <div class="col">
+                <div class="row">
+                    <div class="col">
+                        <h2>Configuarações</h2>
+                    </div>
+                </div>
+                
+                <div class="config">
+                    <div class="row">
+                        <div class="col">
+                            <label><strong>Nome do coletor:</strong></label>
+                            <input type="text" class="form-control" placeholder="Nome">
+                        </div>
+                    </div>
+                
+                    <div class="row">
+                        <div class="col">
+                            <label>Número máximo de requisições por segundo:</label>
+                            <input type="text" class="form-control" placeholder="2">
+                        </div>
+                    </div>
+                
+                    <div class="row">
+                        <div class="col">
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="rotateAddress">
+                                <label class="custom-control-label" for="rotateAddress">Rotacionar endereço de IP:</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" id="maxCallsPerAddress" style="display: none;">
+                        <label class="col-4">
+                            <img src="icons/corner-down-right.svg" alt=""> Máximo de chamadas por ip:
+                        </label>
+                        <input type="text" class="form-control col-1" placeholder="30">
+                    </div>
+                </div>
+            </div>
+        </dov>
+        <!-- end config -->
+
+        <!-- begin steps -->
+        <div class="row">
+            <div class="col">
+                <div class="row">
+                    <div class="col">
+                        <h2>Passo a passo</h2>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col"  id="stepsContainer">
+                        <!-- begin selecionar ação -->
+                        <div class="stepContainer" id="stepMenuContainer">
+                            <div class="row">
+                                <div class="col">
+                                    <strong>Adicionar passo</strong>
+                                </div>
+                            </div>
+                        
+                            <div class="row">
+                                <div class="col">
+                                    <select class="custom-select" id="stepMenu" onChange="enableAddStep()">
+                                        <option value="default" selected>Selecione um passo</option>
+                                        <option value="click">Clique no elemento </option>
+                                        <option value="select">Selecione opção </option>
+                                        <option value="save">Salve dados </option>
+                                        <option value="iframe">Mude para Iframe </option>
+                                        <option value="download">Baixe o arquivo</option>
+                                        <option value="pages">Para cada página </option>
+                                        <option value="captcha">Quebre o Captcha </option>
+                                        <option value="if">Se detectar elemento </option>
+                                    </select>
+                                </div>
+                            </div>
+                        
+                            <div class="row">
+                                <div class="col">
+                                    <button type="button" class="btn btn-primary" id="addStep" disabled onClick="addStep()">Adicionar</button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- end condicional  -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end steps -->
+
+        <!-- beign end -->
+        <div class="row">
+            <div class="col">
+                <div class="row">
+                    <div class="col">
+                        <h2>Finalizar</h2>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <button type="button" class="btn btn-primary">Gerar Json</button>
+                    </div>
+                </div>
+                <form>
+                    <div class="form-row">
+                        <div class="col-6">
+                            <input type="text" class="form-control" placeholder="{ }" disabled>
+                        </div>
+                        <div class="col-1">
+                            <span class="badge badge-primary clickableSpan">Copiar</span>
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+        <!-- end end -->
+    </div>
+</body>
+
+</html>
+
+<!-- 
+TODO:
+- adicionar passos
+    clique e select feitos
+    select com problema no togle elements
+- mostrar nivel da ação
+- x para deletar ação
+- verificador de sintaxe (ex.: select precisa de um filho)
+- verificador de dinamico em tds
+- colocar popovers nos helps
+- margem dentro das ações grandes, entre "topicos"
+- importar configurações do json para editar
+ -->
