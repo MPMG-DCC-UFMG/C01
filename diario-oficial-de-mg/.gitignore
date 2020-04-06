@@ -1,2 +1,3 @@
 chromedriver_win_79-0-3945-36.exe
-temp.json
+*.json
+*.zip
