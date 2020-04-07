@@ -40,7 +40,7 @@ div {
 }
 
 .indent{
-    border-left: solid green;
+    border-left: solid gray;
     height: 100%;
     padding-left: 5px;
     float: left;
