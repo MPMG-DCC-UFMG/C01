@@ -1,4 +1,5 @@
 import random 
+import time 
 
 from os import system
 
@@ -14,6 +15,9 @@ class CamouflageHandler:
         Send signal to Tor to change IP
         """
         system('sudo service tor reload')
+
+        # Time chosen arbitrarily/empirically. It is necessary to wait a while for the IP to be changed
+        time.sleep(7.5) 
 
     def get_user_agent(self) -> str:
         """
