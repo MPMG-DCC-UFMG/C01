@@ -487,7 +487,7 @@ def main():
         os.makedirs(DOWNLOAD_FOLDER)
     #run_year(2019)
     #Parallel(n_jobs=-1)(delayed(run_year)(year) for year in reversed(range(FIRST_YEAR, LAST_YEAR + 1) ))
-    for year in reversed(range(FIRST_YEAR, LAST_YEAR + 1):
+    for year in reversed(range(FIRST_YEAR, LAST_YEAR + 1)):
         run_year(year)
 
 if __name__ == "__main__":
