@@ -146,7 +146,7 @@ def init_driver(tmp_folder, headless=True, timeout=30):
     fp.set_preference("browser.download.manager.focusWhenStarting", False)
     fp.set_preference("browser.download.manager.closeWhenDone", True)
     fp.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/pdf");
-    fp.set_preference("dom.max_script_run_time", 1)
+    #fp.set_preference("dom.max_script_run_time", 1)
 
     options = Options()
     options.headless = headless
@@ -486,7 +486,9 @@ def main():
     if not os.path.exists(DOWNLOAD_FOLDER):
         os.makedirs(DOWNLOAD_FOLDER)
     #run_year(2019)
-    Parallel(n_jobs=-1)(delayed(run_year)(year) for year in reversed(range(FIRST_YEAR, LAST_YEAR + 1) ))
+    #Parallel(n_jobs=-1)(delayed(run_year)(year) for year in reversed(range(FIRST_YEAR, LAST_YEAR + 1) ))
+    for year in reversed(range(FIRST_YEAR, LAST_YEAR + 1):
+        run_year(year)
 
 if __name__ == "__main__":
     main()
