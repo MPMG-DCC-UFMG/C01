@@ -5,6 +5,7 @@ from CamouflageHandler import CamouflageHandler
 
 class TorChromeWebdriver(CamouflageHandler, webdriver.Chrome):
     def __init__(self, 
+                # Chromedriver parameters
                 executable_path='chromedriver',
                 port=0, 
                 options=None,
@@ -13,22 +14,45 @@ class TorChromeWebdriver(CamouflageHandler, webdriver.Chrome):
                 service_log_path=None,
                 chrome_options=webdriver.ChromeOptions(),
                 keep_alive=True,
+                # CamouflageHandler parameters
+                tor_host: str = '127.0.0.1',
+                tor_port: int = 9050,
                 user_agents: list = [],
-                change_ip_after: int = 42,
-                time_between_calls: int = 10,
-                change_user_agent_after: int = -1):
+                time_between_calls: int = 0,
+                random_time_between_calls: bool = False,
+                min_time_between_calls: int = 0,
+                max_time_between_calls: int = 10,
+                # Parameters of this class
+                change_ip_after: int = 42):
+        """
+        Creates a new instance of this class.
 
-        CamouflageHandler.__init__(self, user_agents=user_agents)
+        Keyword arguments:
+            change_ip_after -- Number of calls before changing the IP. (dafault 42).
+        """
+
+        CamouflageHandler.__init__(self,
+                                   tor_host,
+                                   tor_port,
+                                   user_agents,
+                                   time_between_calls,
+                                   random_time_between_calls,
+                                   min_time_between_calls,
+                                   max_time_between_calls)
 
         chrome_options.add_argument(f'--proxy-server=socks5://{self.tor_host}:{self.tor_port}')
-        webdriver.Chrome.__init__(self, executable_path=executable_path, port=port, options=options, service_args=service_args, desired_capabilities=desired_capabilities, service_log_path=service_log_path, chrome_options=chrome_options, keep_alive=keep_alive)
+        webdriver.Chrome.__init__(self, 
+                                    executable_path,
+                                    port,
+                                    options, 
+                                    service_args,
+                                    desired_capabilities,
+                                    service_log_path,
+                                    chrome_options,
+                                    keep_alive)
 
         self.change_ip_after = change_ip_after
-        self.time_between_calls = time_between_calls
-        self.change_user_agent_after = change_user_agent_after
-
         self.number_of_requests_made = 0
-        self.last_timestamp = 0
     
     def get(self, url: str) -> None:
         """
@@ -40,16 +64,13 @@ class TorChromeWebdriver(CamouflageHandler, webdriver.Chrome):
             self.renew_ip()
 
         else:
-            # Ensures that time between requests is respected
-            time_sleep = int(time.time()) - self.last_timestamp
-            if time_sleep <= self.time_between_calls:
-                time.sleep(self.time_between_calls - time_sleep)
+            self.wait()
 
         self.last_timestamp = int(time.time())
         super().get(url)
 
 # if __name__ == "__main__":
-#     cw = TorChromeWebdriver('../../venv/bin/chromedriver', change_ip_after=5)
+#     cw = TorChromeWebdriver('../../venv/bin/chromedriver', change_ip_after=5, random_time_between_calls=True)
 
 #     for _ in range(100):
 #         cw.get('https://check.torproject.org/')

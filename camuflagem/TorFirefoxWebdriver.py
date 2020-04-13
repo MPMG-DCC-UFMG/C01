@@ -18,22 +18,36 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
                     desired_capabilities=None,
                     log_path=None, 
                     keep_alive=True,
-                    # end of parameters of webdriver.Firefox
+                    # CamouflageHandler parameters
+                    tor_host: str = '127.0.0.1',
+                    tor_port: int = 9050,
                     user_agents: list = [],
+                    time_between_calls: int = 0,
+                    random_time_between_calls: bool = False,
+                    min_time_between_calls: int = 0,
+                    max_time_between_calls: int = 10,
+                    # Parameters of this class
                     change_ip_after: int = 42,
-                    time_between_calls: int = 10,
                     change_user_agent_after: int = -1):
 
         """
         Starts a new session of TorFirefoxWebdriver.
+
+        Keyword arguments:
+            change_ip_after: Number of calls before changing the IP. (dafault 42).
+            change_user_agent_after: Number of calls before changing the user-agent. If the number of calls is negative, the user-agent never will change (default -1)
         """
-        CamouflageHandler.__init__(self, user_agents=user_agents)
+        CamouflageHandler.__init__(self, 
+                                    tor_host, 
+                                    tor_port, 
+                                    user_agents,
+                                    time_between_calls,
+                                    random_time_between_calls,
+                                    min_time_between_calls,
+                                    max_time_between_calls)
 
         self.number_of_requests_made = 0
-        self.last_timestamp = 0
-        
         self.change_ip_after = change_ip_after
-        self.time_between_calls = time_between_calls
         
         # if negative, never change user-agent
         self.change_user_agent_after = change_user_agent_after
@@ -77,10 +91,15 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
             self.renew_ip()
         
         else: 
-            # Ensures that time between requests is respected
-            time_sleep = int(time.time()) - self.last_timestamp
-            if time_sleep <= self.time_between_calls:
-                time.sleep(self.time_between_calls - time_sleep)
+            self.wait()
 
         self.last_timestamp = int(time.time())
         super().get(url)
+
+# if __name__ == "__main__":
+#     driver = TorFirefoxWebdriver(change_ip_after=5)
+
+#     for _ in range(100):
+#         driver.get('https://check.torproject.org/')
+#         ip = driver.find_element_by_css_selector('body > div.content > p:nth-child(3) > strong').text
+#         print(ip)
