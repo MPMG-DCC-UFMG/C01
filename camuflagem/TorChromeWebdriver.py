@@ -23,12 +23,14 @@ class TorChromeWebdriver(CamouflageHandler, webdriver.Chrome):
                 min_time_between_calls: int = 0,
                 max_time_between_calls: int = 10,
                 # Parameters of this class
-                change_ip_after: int = 42):
+                change_ip_after: int = 42,
+                clear_cookies_after: int = 100):
         """
         Creates a new instance of this class.
 
         Keyword arguments:
-            change_ip_after -- Number of calls before changing the IP. (dafault 42).
+            change_ip_after -- Number of calls before changing the IP. (dafault 42)
+            clear_cookies_after -- Number of calls before clear the cookies. (default 100)
         """
 
         CamouflageHandler.__init__(self,
@@ -52,6 +54,8 @@ class TorChromeWebdriver(CamouflageHandler, webdriver.Chrome):
                                     keep_alive)
 
         self.change_ip_after = change_ip_after
+        self.clear_cookies_after = clear_cookies_after
+
         self.number_of_requests_made = 0
     
     def get(self, url: str) -> None:
@@ -59,6 +63,9 @@ class TorChromeWebdriver(CamouflageHandler, webdriver.Chrome):
         Loads a web page in the current browser session.
         """
         self.number_of_requests_made += 1
+
+        if self.number_of_requests_made % self.clear_cookies_after == 0:
+            self.delete_all_cookies()
 
         if self.number_of_requests_made % self.change_ip_after == 0:
             self.renew_ip()
@@ -69,10 +76,10 @@ class TorChromeWebdriver(CamouflageHandler, webdriver.Chrome):
         self.last_timestamp = int(time.time())
         super().get(url)
 
-# if __name__ == "__main__":
-#     cw = TorChromeWebdriver('../../venv/bin/chromedriver', change_ip_after=5, random_time_between_calls=True)
+if __name__ == "__main__":
+    cw = TorChromeWebdriver('../../venv/bin/chromedriver', clear_cookies_after=2)
 
-#     for _ in range(100):
-#         cw.get('https://check.torproject.org/')
-#         ip = cw.find_element_by_css_selector('body > div.content > p:nth-child(3) > strong').text
-#         print(ip)
+    for _ in range(100):
+        cw.get('https://check.torproject.org/')
+        ip = cw.find_element_by_css_selector('body > div.content > p:nth-child(3) > strong').text
+        print(ip)

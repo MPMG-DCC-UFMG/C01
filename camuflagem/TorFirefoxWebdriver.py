@@ -28,14 +28,16 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
                     max_time_between_calls: int = 10,
                     # Parameters of this class
                     change_ip_after: int = 42,
+                    clear_cookies_after: int = 100,
                     change_user_agent_after: int = -1):
 
         """
         Starts a new session of TorFirefoxWebdriver.
 
         Keyword arguments:
-            change_ip_after: Number of calls before changing the IP. (dafault 42).
-            change_user_agent_after: Number of calls before changing the user-agent. If the number of calls is negative, the user-agent never will change (default -1)
+            change_ip_after: Number of calls before changing the IP. (dafault 42)
+            clear_cookies_after: Number of calls before clear the cookies. (default 100)
+            change_user_agent_after: Number of calls before changing the user-agent. If the number is negative, the user-agent never will be changed (default -1)
         """
         CamouflageHandler.__init__(self, 
                                     tor_host, 
@@ -48,6 +50,7 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
 
         self.number_of_requests_made = 0
         self.change_ip_after = change_ip_after
+        self.clear_cookies_after = clear_cookies_after
         
         # if negative, never change user-agent
         self.change_user_agent_after = change_user_agent_after
@@ -84,6 +87,9 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
         """
         self.number_of_requests_made += 1
 
+        if self.number_of_requests_made % self.clear_cookies_after == 0:
+            self.delete_all_cookies()
+
         if (self.change_user_agent_after > 0) and (self.number_of_requests_made % self.change_user_agent_after == 0):
             self.renew_user_agent()
 
@@ -96,10 +102,10 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
         self.last_timestamp = int(time.time())
         super().get(url)
 
-# if __name__ == "__main__":
-#     driver = TorFirefoxWebdriver(change_ip_after=5)
+if __name__ == "__main__":
+    driver = TorFirefoxWebdriver(clear_cookies_after=2)
 
-#     for _ in range(100):
-#         driver.get('https://check.torproject.org/')
-#         ip = driver.find_element_by_css_selector('body > div.content > p:nth-child(3) > strong').text
-#         print(ip)
+    for _ in range(100):
+        driver.get('https://check.torproject.org/')
+        ip = driver.find_element_by_css_selector('body > div.content > p:nth-child(3) > strong').text
+        print(ip)
