@@ -25,7 +25,7 @@ class TorRequestSession(CamouflageHandler, Session):
 
         Keyword arguments:
             change_ip_after: Number of calls before changing the IP. (dafault 42).
-            change_user_agent_after: Number of calls before changing the user-agent. If the number of calls is negative, the user-agent never will change (default -1)
+            change_user_agent_after: Number of calls before changing the user-agent. If the number is negative, the user-agent never will be change (default -1)
         """
         
         CamouflageHandler.__init__(self,
