@@ -78,7 +78,6 @@ def checkForUrlExtra(driver):
         return driver.find_element_by_id("btDownloadExtra").get_attribute("href")
     return ""
     
-
 def checkForUrlOld(driver):
     container = driver.find_element_by_id("containerDownload")
     if container.value_of_css_property("display") == "block":
@@ -86,6 +85,21 @@ def checkForUrlOld(driver):
         
         return driver.find_element_by_id("btDownloadSimples").get_attribute("href")
     return ""
+
+def addProgress(urls):
+    print(f"Saving progress, adding {len(urls)} links")
+    try:
+        f = open("links_ammg.txt", "r")
+        data = json.loads(f.read())
+        f.close()
+    except FileNotFoundError:
+        data = []
+
+    data = data + urls
+
+    f = open("links_ammg.txt", "w+")
+    f.write(json.dumps(data, indent=1))
+    f.close()
 
 def crawler():
     driver = initChromeWebdriver(
@@ -125,32 +139,15 @@ def crawler():
             urls.append((dt.strftime('%Y-%m-%d'), "extra", anchor))
 
         if len(urls) >= 100:
-            print("writing backup, adding links:", len(urls))
-            try:
-                f = open("links_ammg.txt", "r")
-                data = json.loads(f.read())
-                f.close()
-            except FileNotFoundError:
-                data = []
-
-            data = data + urls
-
-            f = open("links_ammg.txt", "w+")
-            f.write(json.dumps(data))
-            f.close()
-
+            addProgress(urls)
             urls = []
 
         time.sleep(1)
         driver.find_element_by_xpath("//*[@id=\"popup\"]/div/article/a").click()
     
     driver.close()
-
-    f = open("links_ammg.txt", "w+")
-    f.write(json.dumps(urls))
-    f.close()
-
-    print("done.")
+    addProgress(urls)
+    print("Done.")
 
 crawler()
 
