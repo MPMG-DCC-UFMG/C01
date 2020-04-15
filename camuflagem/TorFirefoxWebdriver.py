@@ -1,5 +1,11 @@
+import random
 import time
+
+import bezier_curve
+
 from selenium import webdriver
+from selenium.webdriver.common.action_chains import ActionChains
+
 from CamouflageHandler import CamouflageHandler
 
 class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
@@ -64,9 +70,10 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
         webdriver.Firefox.__init__(self, firefox_profile=firefox_profile)
 
         # Enables advanced Firefox preferences (to change user-agents)
-        super().get('about:config')
-        self.find_element_by_id('showWarningNextTime').click()
-        self.find_element_by_id('warningButton').click()
+        if change_user_agent_after > 0:
+            super().get('about:config')
+            self.find_element_by_id('showWarningNextTime').click()
+            self.find_element_by_id('warningButton').click()
 
     def renew_user_agent(self) -> None:
         """
@@ -101,11 +108,68 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
 
         self.last_timestamp = int(time.time())
         super().get(url)
+    
+    def bezier_mouse_move(self, webelement_to_mouse_move = None, control_points: list = [], num_random_control_points: int = 7, plot: bool = True) -> None:
+       '''Moves the mouse in the form of Bézier curves.
+        
+        Keywords arguments:
+            webelement_to_mouse_move -- Webelement where the mouse will move (default html)
+            control_points -- Control points for generating Bézier curves. If the list is empty, a random with num_random_control_points points will be generated.
+            num_random_control_points -- Number of random control points to be generated, if control points are not defined. (default 7)
+            plot -- If true, save the generated curve to a file. (default true) 
+       '''
+       
+        if webelement_to_mouse_move is None:
+            webelement_to_mouse_move = self.find_element_by_css_selector('html')
+        
+        # Generates random control points
+        if len(control_points) < 2:
+            we_size = webelement_to_mouse_move.size 
+            
+            width = we_size['width']
+            height = we_size['height']
+            
+            for _ in range(num_random_control_points):
+                x = random.randint(0, width)
+                y = random.randint(0, height)
 
-if __name__ == "__main__":
-    driver = TorFirefoxWebdriver(clear_cookies_after=2)
+                control_points.append((x, y))
 
-    for _ in range(100):
-        driver.get('https://check.torproject.org/')
-        ip = driver.find_element_by_css_selector('body > div.content > p:nth-child(3) > strong').text
-        print(ip)
+        bezier_points = bezier_curve.generate(control_points, intervals=25)
+
+        action = ActionChains(driver)
+
+        x_offset = bezier_points[0][0]
+        y_offset = bezier_points[0][1]
+
+        action.move_to_element_with_offset(webelement_to_mouse_move, x_offset, y_offset)
+        # action.click_and_hold()
+
+        last_point = [x_offset, y_offset]
+        for point in bezier_points[1:]:
+            x_offset = point[0] - last_point[0]
+            y_offset = point[1] - last_point[1]
+            
+            action.move_by_offset(x_offset, y_offset)
+
+            last_point[0] = point[0]
+            last_point[1] = point[1]
+
+        # action.release()
+        action.perform()
+
+        if plot:
+            bezier_curve.plot(bezier_points)
+
+# if __name__ == "__main__":
+    # driver = TorFirefoxWebdriver()
+    # driver.get('https://www.google.com/')
+    # driver.find_element_by_css_selector(".buttons > .green").click()
+    # canvas = driver.find_element_by_id("main-canvas")
+
+    # driver.bezier_mouse_move()
+
+    # for _ in range(100):
+    #     driver.get('https://check.torproject.org/')
+    #     ip = driver.find_element_by_css_selector('body > div.content > p:nth-child(3) > strong').text
+    #     print(ip)
