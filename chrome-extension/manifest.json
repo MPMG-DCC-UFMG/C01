@@ -5,6 +5,6 @@
     "description": "Ferramenta para criar scripts python para coleta de páginas na web.\n",
     "devtools_page": "devtools.html",
     "permissions": [
-        "tabs"
+        "tabs", "*://*/*"
     ]
 }

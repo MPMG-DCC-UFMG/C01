@@ -1,7 +1,11 @@
+let errors = {
+    InvalidArgumentException: "Ivalid value passed as arguments."
+}
+
 function toggleElement(id){
-    console.log(id);
+    console.log("toggleElement: id=" + id);
     var el = document.getElementById(id);
-    console.log(el.style.display);
+    console.log("toggleElement: style=" + el.style.display);
     if(el.style.display == "none")
         el.style.display = "block";
     else
@@ -72,101 +76,108 @@ function deleStep(stepId){
     child.parentNode.removeChild(child);
 }
 
+function getXpathHtml(xpath_id="", new_id="", label=""){
+    if(xpath_id == "" && new_id == "")
+        throw new InvalidOperationException(errors.InvalidArgumentException );
+    else if(xpath_id == "")
+        xpath_id == new_id + "XpathInput";
+
+    if(label == "")
+        label = "xpath";
+
+    var events = [
+        [xpath_id + "SelectSpan", function () { readXpath(xpath_id); }, "click"],
+        [xpath_id + "CopySpan", function () { copyInputText(xpath_id); }, "click"],
+    ]
+
+    document.getElementById("collectorName").value = "Xpath id: " + xpath_id + "SelectSpan";
+
+    var html = `
+        <!-- begin xpath -->
+        <div class=\"row\">
+            <div class=\"col\"><label>${label}:</label></div>
+        </div>
+        <form>
+            <div class=\"form-row\">
+                <div class=\"col-1\">
+                    <span
+                        class=\"badge badge-light clickableSpan\"
+                        id=\"${xpath_id}SelectSpan\"
+                    >
+                        <img src=\"icons/mouse-pointer-gray.svg\" alt=\"Selecionar\">
+                    </span>
+                </div>
+                <div class=\"col-6\">
+                    <input type=\"text\" class=\"form-control\" placeholder=\"xpath para elemento\" id=\"${xpath_id}\">
+                </div>
+                <div class=\"col-1\">
+                    <span
+                        class=\"badge badge-primary clickableSpan\"
+                        id=\"${xpath_id}CopySpan\"
+                    >
+                        Copiar
+                    </span>
+                </div>
+                <div class=\"col-1\">
+                    <span class=\"badge badge-light clickableSpan\" onClick=\"\">
+                        <img src=\"icons/help-circle.svg\" alt=\"Como usar\">
+                    </span>
+                </div>
+            </div>
+        </form>
+        <!-- end xpath -->
+    `;
+
+    return [html, events]
+}
+
 function getClickStepHtml(new_id){
-    var xpath_id = new_id + "XpathInput";
-    return `
+    const [xpathHtml, xpathEvents] = getXpathHtml(new_id = new_id)
+
+    // envent target, function, event type
+    var events = [] + xpathEvents;
+
+    var html = `
         <div class=\"col\">
             <div class=\"row\">
                 <div class=\"col\"><strong>Clique em um elemento</strong></div>
             </div>
-            <!-- begin xpath -->
-            <div class=\"row\">
-                <div class=\"col\"><label>xpath:</label></div>
-            </div>
-            <form>
-                <div class=\"form-row\">
-                    <div class=\"col-1\">
-                        <span
-                            class=\"badge badge-light clickableSpan\"
-                            onClick=\"(function(){readXpath(\'${xpath_id}\')})();\"
-                        >
-                            <img src=\"icons/mouse-pointer-gray.svg\" alt=\"Selecionar\">
-                        </span>
-                    </div>
-                    <div class=\"col-6\">
-                        <input type=\"text\" class=\"form-control\" placeholder=\"xpath para elemento\" id=\"${xpath_id}\">
-                    </div>
-                    <div class=\"col-1\">
-                        <span
-                            class=\"badge badge-primary clickableSpan\"
-                            onClick=\"(function(){copyInputText(\'${xpath_id}\')})();\"
-                        >
-                            Copiar
-                        </span>
-                    </div>
-                    <div class=\"col-1\">
-                        <span class=\"badge badge-light clickableSpan\" onClick=\"\">
-                            <img src=\"icons/help-circle.svg\" alt=\"Como usar\">
-                        </span>
-                    </div>
-                </div>
-            </form>
-            <!-- end xpath -->
+    ` + xpathHtml + `
         </div>    
     `;
+
+    return [html, events];
 }
 
 function getSelectStepHtml(new_id){
-    var xpath_id = new_id + "XpathInput";
     var is_filled_dynamically = new_id + "IsFilledDynamically";
     var filled_after_step = new_id + "FilledAfterStep";
     var manage_dynamic_options = new_id + "ManageDynamicOptions";
     var static_options_to_ignore = new_id + "OptionToIgnore";
 
-    return `
+    const [xpathHtml, xpathEvents] = getXpathHtml(new_id = new_id)
+
+    // envent target, function, event type
+    var events = [
+        [is_filled_dynamically, function () {
+            toggleElement(filled_after_step);
+            toggleElement(manage_dynamic_options);
+            toggleElement(static_options_to_ignore);
+        }, "onChange"],
+    ] + xpathEvents;
+
+    var html = `
         <div class=\"col\">
             <div class=\"row\">
                 <div class=\"col\">
                     <strong>Selecione opção</strong>
                 </div>
             </div>
-            <!-- begin xpath -->
-                <div class=\"row\">
-                    <div class=\"col\"><label>xpath:</label></div>
-                </div>
-                <form>
-                    <div class=\"form-row\">
-                        <div class=\"col-1\">
-                            <span class=\"badge badge-light clickableSpan\" onClick=\"(function(){readXpath(\'${xpath_id}\')})();\">
-                                <img src=\"icons/mouse-pointer-gray.svg\" alt=\"Selecionar\">
-                            </span>
-                        </div>
-                        <div class=\"col-6\">
-                            <input type=\"text\" class=\"form-control\" placeholder=\"xpath para elemento\" id=\"${xpath_id}\">
-                        </div>
-                        <div class=\"col-1\">
-                            <span class=\"badge badge-primary clickableSpan\" onClick=\"(function(){copyInputText(\'${xpath_id}\')})();\">
-                                Copiar
-                            </span>
-                        </div>
-                        <div class=\"col-1\">
-                            <span class=\"badge badge-light clickableSpan\" onClick=\"\">
-                                <img src=\"icons/help-circle.svg\" alt=\"Como usar\">
-                            </span>
-                        </div>
-                    </div>
-                </form>
-            <!-- end xpath -->
+            ` + xpathHtml + `
             <div class=\"row\">
                 <div class=\"col\">
                     <div class=\"custom-control custom-switch\">
-                        <input type=\"checkbox\" class=\"custom-control-input\" id=\"${is_filled_dynamically}\"
-                            onChange=\"(function (){
-                                toggleElement(\'${filled_after_step}\');
-                                toggleElement(\'${manage_dynamic_options}\');
-                                toggleElement(\'${static_options_to_ignore}\');
-                            })()\"
-                        >
+                        <input type=\"checkbox\" class=\"custom-control-input\" id=\"${is_filled_dynamically}\">
                         <label class=\"custom-control-label\" for=\"${is_filled_dynamically}\">Preenchido dinamicamente?</label>
                     </div>
                 </div>
@@ -217,11 +228,11 @@ function getSelectStepHtml(new_id){
             </div>    
         </div>   
     `;
+
+    return [html, events];
 }
 
 function getSaveStepHtml(new_id){
-    var xpath_id = new_id + "XpathInput";
-    var xpath_apply_method = new_id + "XpathAs";
     var xpath_as_first_matches = new_id + "FirstMatch";
     var xpath_as_all_matches = new_id + "AllMatches";
     var save_content_table = new_id + "SaveContentTable";
@@ -229,41 +240,20 @@ function getSaveStepHtml(new_id){
     var file_name = new_id + "FileName";
     var overwrite_file = new_id + "OverwriteFile";
     var append_to_file = new_id + "AppendToFile";
+    
+    const [xpathHtml, xpathEvents] = getXpathHtml(new_id = new_id)
 
-    return `
+    // envent target, function, event type
+    var events = [] + xpathEvents;
+
+    var html = `
         <div class=\"col\">
             <div class=\"row\">
                 <div class=\"col\">
                     <strong>Salve dados</strong>
                 </div>
             </div>
-            <!-- begin xpath -->
-            <div class=\"row\">
-                <div class=\"col\"><label>xpath:</label></div>
-            </div>
-            <form>
-                <div class=\"form-row\">
-                    <div class=\"col-1\">
-                        <span class=\"badge badge-light clickableSpan\" onClick=\"(function(){readXpath(\'${xpath_id}\')})();\">
-                            <img src=\"icons/mouse-pointer-gray.svg\" alt=\"Selecionar\">
-                        </span>
-                    </div>
-                    <div class=\"col-6\">
-                        <input type=\"text\" class=\"form-control\" placeholder=\"xpath para elemento\" id=\"${xpath_id}\">
-                    </div>
-                    <div class=\"col-1\">
-                        <span class=\"badge badge-primary clickableSpan\" onClick=\"(function(){copyInputText(\'${xpath_id}\')})();\">
-                            Copiar
-                        </span>
-                    </div>
-                    <div class=\"col-1\">
-                        <span class=\"badge badge-light clickableSpan\" onClick=\"\">
-                            <img src=\"icons/help-circle.svg\" alt=\"Como usar\">
-                        </span>
-                    </div>
-                </div>
-            </form>
-            <!-- end xpath -->
+            ` + xpathHtml + `
             <div class=\"row\">
                 <div class=\"col\">
                     <label class=\"\">xpath para:</label>
@@ -423,96 +413,44 @@ function getSaveStepHtml(new_id){
             </div>
         </div>
     `;
+    
+    return [html, events];
 }
 
 function getIFrameStepHtml(new_id){
-    var xpath_id = new_id + "XpathInput";
-    return `
+    const [xpathHtml, xpathEvents] = getXpathHtml(new_id = new_id)
+
+    // envent target, function, event type
+    var events = [] + xpathEvents;
+
+    var html = `
         <div class=\"col\">
             <div class=\"row\">
                 <div class=\"col\"><strong>Mude para o iframe</strong></div>
             </div>
-            <!-- begin xpath -->
-            <div class=\"row\">
-                <div class=\"col\"><label>xpath:</label></div>
-            </div>
-            <form>
-                <div class=\"form-row\">
-                    <div class=\"col-1\">
-                        <span
-                            class=\"badge badge-light clickableSpan\"
-                            onClick=\"(function(){readXpath(\'${xpath_id}\')})();\"
-                        >
-                            <img src=\"icons/mouse-pointer-gray.svg\" alt=\"Selecionar\">
-                        </span>
-                    </div>
-                    <div class=\"col-6\">
-                        <input type=\"text\" class=\"form-control\" placeholder=\"xpath para elemento\" id=\"${xpath_id}\">
-                    </div>
-                    <div class=\"col-1\">
-                        <span
-                            class=\"badge badge-primary clickableSpan\"
-                            onClick=\"(function(){copyInputText(\'${xpath_id}\')})();\"
-                        >
-                            Copiar
-                        </span>
-                    </div>
-                    <div class=\"col-1\">
-                        <span class=\"badge badge-light clickableSpan\" onClick=\"\">
-                            <img src=\"icons/help-circle.svg\" alt=\"Como usar\">
-                        </span>
-                    </div>
-                </div>
-            </form>
-            <!-- end xpath -->
+            ` + xpathHtml + `
         </div>    
     `;
+
+    return [html, events];
 }
 
 function getDownloadHtml(new_id){
     var file_name = new_id = "FileName";
-    var xpath_id = new_id + "XpathInput";
 
-    return `
+    const [xpathHtml, xpathEvents] = getXpathHtml(new_id = new_id)
+
+    // envent target, function, event type
+    var events = [] + xpathEvents;
+
+    var html = `
         <div class=\"col\">
             <div class=\"row\">
                 <div class=\"col\">
                     <strong>Baixe o arquivo</strong>
                 </div>
             </div>
-            <!-- begin xpath -->
-            <div class=\"row\">
-                <div class=\"col\"><label>xpath:</label></div>
-            </div>
-            <form>
-                <div class=\"form-row\">
-                    <div class=\"col-1\">
-                        <span
-                            class=\"badge badge-light clickableSpan\"
-                            onClick=\"(function(){readXpath(\'${xpath_id}\')})();\"
-                        >
-                            <img src=\"icons/mouse-pointer-gray.svg\" alt=\"Selecionar\">
-                        </span>
-                    </div>
-                    <div class=\"col-6\">
-                        <input type=\"text\" class=\"form-control\" placeholder=\"xpath para elemento\" id=\"${xpath_id}\">
-                    </div>
-                    <div class=\"col-1\">
-                        <span
-                            class=\"badge badge-primary clickableSpan\"
-                            onClick=\"(function(){copyInputText(\'${xpath_id}\')})();\"
-                        >
-                            Copiar
-                        </span>
-                    </div>
-                    <div class=\"col-1\">
-                        <span class=\"badge badge-light clickableSpan\" onClick=\"\">
-                            <img src=\"icons/help-circle.svg\" alt=\"Como usar\">
-                        </span>
-                    </div>
-                </div>
-            </form>
-            <!-- end xpath -->
+            ` + xpathHtml + `
             <div class=\"row\">
                 <div class=\"col\">
                     <label>Salvar na pasta</label>
@@ -521,179 +459,73 @@ function getDownloadHtml(new_id){
             </div>
         </div>        
     `;
+
+    return [html, events];
 }
 
 function getPaginationHtml(new_id){
-    var xpath_to_next_page_button = new_id + "XpathInput";
-    var xpath_to_max_number_of_pages = new_id + "XpathInput"; 
-    return `
+    const [xpathHtmlNextPageBtn, xpathEventsNextPageBtn] = getXpathHtml(
+        xpath_id = new_id + "NextPageBtn", label = "Xpath para botão de próxima página")
+    const [xpathHtmlMaxPagesInfo, xpathEventsMaxPagesInfo] = getXpathHtml(
+        xpath_id = new_id + "MaxPagesInfo", label = "Xpath para número máximo de páginas")
+
+    // envent target, function, event type
+    var events = [] + xpathEventsNextPageBtn + xpathEventsMaxPagesInfo;
+
+    var html = `
         <div class=\"col\">
             <!--  -->
             <div class=\"row\">
                 <div class=\"col\">
                     <strong>Para cada página</strong>
                 </div>
-            </div>    
-            <!-- begin xpath -->
-            <div class=\"row\">
-                <div class=\"col\"><label>Xpath para botao de próxima página:</label></div>
             </div>
-            <form>
-                <div class=\"form-row\">
-                    <div class=\"col-1\">
-                        <span
-                            class=\"badge badge-light clickableSpan\"
-                            onClick=\"(function(){readXpath(\'${xpath_to_next_page_button}\')})();\"
-                        >
-                            <img src=\"icons/mouse-pointer-gray.svg\" alt=\"Selecionar\">
-                        </span>
-                    </div>
-                    <div class=\"col-6\">
-                        <input type=\"text\" class=\"form-control\" placeholder=\"xpath para elemento\" id=\"${xpath_to_next_page_button}\">
-                    </div>
-                    <div class=\"col-1\">
-                        <span
-                            class=\"badge badge-primary clickableSpan\"
-                            onClick=\"(function(){copyInputText(\'${xpath_to_next_page_button}\')})();\"
-                        >
-                            Copiar
-                        </span>
-                    </div>
-                    <div class=\"col-1\">
-                        <span class=\"badge badge-light clickableSpan\" onClick=\"\">
-                            <img src=\"icons/help-circle.svg\" alt=\"Como usar\">
-                        </span>
-                    </div>
-                </div>
-            </form>
-            <!-- end xpath -->
-            <!-- begin xpath -->
-            <div class=\"row\">
-                <div class=\"col\"><label>Xpath para valor máximo de páginas:</label></div>
-            </div>
-            <form>
-                <div class=\"form-row\">
-                    <div class=\"col-1\">
-                        <span
-                            class=\"badge badge-light clickableSpan\"
-                            onClick=\"(function(){readXpath(\'${xpath_to_max_number_of_pages}\')})();\"
-                        >
-                            <img src=\"icons/mouse-pointer-gray.svg\" alt=\"Selecionar\">
-                        </span>
-                    </div>
-                    <div class=\"col-6\">
-                        <input type=\"text\" class=\"form-control\" placeholder=\"xpath para elemento\" id=\"${xpath_to_max_number_of_pages}\">
-                    </div>
-                    <div class=\"col-1\">
-                        <span
-                            class=\"badge badge-primary clickableSpan\"
-                            onClick=\"(function(){copyInputText(\'${xpath_to_max_number_of_pages}\')})();\"
-                        >
-                            Copiar
-                        </span>
-                    </div>
-                    <div class=\"col-1\">
-                        <span class=\"badge badge-light clickableSpan\" onClick=\"\">
-                            <img src=\"icons/help-circle.svg\" alt=\"Como usar\">
-                        </span>
-                    </div>
-                </div>
-            </form>
-            <!-- end xpath -->
+            ` + xpathHtmlNextPageBtn + `
+            ` + xpathHtmlMaxPagesInfo + `
         </div>
     `;
+
+    return [html, events];
 }
 
 function getCaptchaHtml(new_id) {
-    var xpath_id = new_id + "XpathInput";
-    return `
+    const [xpathHtml, xpathEvents] = getXpathHtml(new_id = new_id)
+
+    // envent target, function, event type
+    var events = [] + xpathEvents;
+
+    var html = `
         <div class=\"col\">
             <div class=\"row\">
                 <div class=\"col\">
                     <strong>Quebre o captcha</strong>
                 </div>
-            </div> 
-            <!-- begin xpath -->
-            <div class=\"row\">
-                <div class=\"col\"><label>xpath:</label></div>
             </div>
-            <form>
-                <div class=\"form-row\">
-                    <div class=\"col-1\">
-                        <span
-                            class=\"badge badge-light clickableSpan\"
-                            onClick=\"(function(){readXpath(\'${xpath_id}\')})();\"
-                        >
-                            <img src=\"icons/mouse-pointer-gray.svg\" alt=\"Selecionar\">
-                        </span>
-                    </div>
-                    <div class=\"col-6\">
-                        <input type=\"text\" class=\"form-control\" placeholder=\"xpath para elemento\" id=\"${xpath_id}\">
-                    </div>
-                    <div class=\"col-1\">
-                        <span
-                            class=\"badge badge-primary clickableSpan\"
-                            onClick=\"(function(){copyInputText(\'${xpath_id}\')})();\"
-                        >
-                            Copiar
-                        </span>
-                    </div>
-                    <div class=\"col-1\">
-                        <span class=\"badge badge-light clickableSpan\" onClick=\"\">
-                            <img src=\"icons/help-circle.svg\" alt=\"Como usar\">
-                        </span>
-                    </div>
-                </div>
-            </form>
-            <!-- end xpath -->   
+            ` + xpathHtml + `
         </div>
     `;
+
+    return [html, events];
 }
 
 function getIfHtml(new_id){
-    var xpath_id = new_id + "XpathInput";
-    return `
+    const [xpathHtml, xpathEvents] = getXpathHtml(new_id = new_id)
+
+    // envent target, function, event type
+    var events = [] + xpathEvents;
+
+    var html = `
         <div class=\"col\">
             <div class=\"row\">
                 <div class=\"col\">
                     <strong>Se detectar elemento</strong>
                 </div>
-            </div> 
-            <!-- begin xpath -->
-            <div class=\"row\">
-                <div class=\"col\"><label>xpath:</label></div>
             </div>
-            <form>
-                <div class=\"form-row\">
-                    <div class=\"col-1\">
-                        <span
-                            class=\"badge badge-light clickableSpan\"
-                            onClick=\"(function(){readXpath(\'${xpath_id}\')})();\"
-                        >
-                            <img src=\"icons/mouse-pointer-gray.svg\" alt=\"Selecionar\">
-                        </span>
-                    </div>
-                    <div class=\"col-6\">
-                        <input type=\"text\" class=\"form-control\" placeholder=\"xpath para elemento\" id=\"${xpath_id}\">
-                    </div>
-                    <div class=\"col-1\">
-                        <span
-                            class=\"badge badge-primary clickableSpan\"
-                            onClick=\"(function(){copyInputText(\'${xpath_id}\')})();\"
-                        >
-                            Copiar
-                        </span>
-                    </div>
-                    <div class=\"col-1\">
-                        <span class=\"badge badge-light clickableSpan\" onClick=\"\">
-                            <img src=\"icons/help-circle.svg\" alt=\"Como usar\">
-                        </span>
-                    </div>
-                </div>
-            </form>
-            <!-- end xpath -->   
+            ` + xpathHtml + ` 
         </div>
-    `;    
+    `;
+
+    return [html, events];
 }
 
 function insertStep(new_id, step_type) {
@@ -702,29 +534,33 @@ function insertStep(new_id, step_type) {
         console.log("ERROR: Received default option. Should not fall here")
         return "";
     } else if (step_type == "click") {
-        innerElements = getClickStepHtml(new_id);
+        [innerElements, newEvents] = getClickStepHtml(new_id);
     } else if (step_type == "select") {
-        innerElements = getSelectStepHtml(new_id);
+        [innerElements, newEvents] = getSelectStepHtml(new_id);
     } else if (step_type == "save") {
-        innerElements = getSaveStepHtml(new_id);
+        [innerElements, newEvents] = getSaveStepHtml(new_id);
     } else if (step_type == "iframe") {
-        innerElements = getIFrameStepHtml(new_id);
+        [innerElements, newEvents] = getIFrameStepHtml(new_id);
     } else if (step_type == "download") {
-        innerElements = getDownloadHtml(new_id);
+        [innerElements, newEvents] = getDownloadHtml(new_id);
     } else if (step_type == "pages") {
-        innerElements = getPaginationHtml(new_id);
+        [innerElements, newEvents] = getPaginationHtml(new_id);
     } else if (step_type == "captcha") {
-        innerElements = getCaptchaHtml(new_id);
+        [innerElements, newEvents] = getCaptchaHtml(new_id);
     } else if (step_type == "if") {
-        innerElements = getIfHtml(new_id);
+        [innerElements, newEvents] = getIfHtml(new_id);
     }
-    console.log("#" + new_id + "Container > div.col > div.stepStuff");
     document.querySelector("#" + new_id + "Container > div.col > div.stepStuff").innerHTML = innerElements.trim();
+
+    for (var [id, fun, type] of newEvents) {
+        addEventListener(id, fun, type);
+    }
 }
 
 function getStepContainerHtml(new_id){
     const new_container_id = new_id + "Container";
-    return `
+    return [
+        `
         <div class=\"stepContainer row\" id=\"${new_container_id}\">
             <div class=\"col-1 indentContainer\"></div>
             <div class=\"col\">
@@ -734,7 +570,7 @@ function getStepContainerHtml(new_id){
                     <div class=\"col-2\">Gerenciar Passo:</div>
                     <div class=\"col-1\">
                         <span
-                            onClick=\"(function(){dedentStep(\'${new_container_id}\');})();\"
+                            id=\"dedent${new_container_id}\"
                             class=\"badge badge-light clickableSpan\"
                         >
                             <img src=\"icons/arrow-left-black.svg\" alt=\"Selecionar\">
@@ -742,7 +578,7 @@ function getStepContainerHtml(new_id){
                     </div>
                     <div class=\"col-1\">
                         <span
-                            onClick=\"(function(){indentStep(\'${new_container_id}\');})();\"
+                            id=\"indent${new_container_id}\"
                             class=\"badge badge-light clickableSpan\"
                         >
                             <img src=\"icons/arrow-right-black.svg\" alt=\"Selecionar\">
@@ -750,7 +586,7 @@ function getStepContainerHtml(new_id){
                     </div>
                     <div class=\"col-1\">
                         <span
-                            onClick=\"(function(){moveStepUp(\'${new_container_id}\');})();\"
+                            id=\"moveStepUp${new_container_id}\"
                             class=\"badge badge-light clickableSpan\"
                         >
                             <img src=\"icons/arrow-up-black.svg\" alt=\"Selecionar\">
@@ -758,7 +594,7 @@ function getStepContainerHtml(new_id){
                     </div>
                     <div class=\"col-1\">
                         <span
-                            onClick=\"(function(){moveStepDown(\'${new_container_id}\');})();\"
+                            id=\"moveStepDown${new_container_id}\"
                             class=\"badge badge-light clickableSpan\"
                         >
                             <img src=\"icons/arrow-down-black.svg\" alt=\"Selecionar\">
@@ -766,7 +602,7 @@ function getStepContainerHtml(new_id){
                     </div>
                     <div class=\"col-1\">
                         <span
-                            onClick=\"(function(){deleStep(\'${new_container_id}\');})();\"
+                            id=\"deleteStep${new_container_id}\"
                             class=\"badge badge-light clickableSpan\"
                         >
                             <img src=\"icons/x.svg\" alt=\"Selecionar\">
@@ -775,19 +611,31 @@ function getStepContainerHtml(new_id){
                 </div>
             </div>
         </div>    
-    `;
+        `, 
+        [
+            ["dedent"+new_container_id, function(){dedentStep(new_container_id);}, "click"], 
+            ["indent"+new_container_id, function(){indentStep(new_container_id);}, "click"], 
+            ["moveStepUp"+new_container_id, function(){moveStepUp(new_container_id);}, "click"], 
+            ["moveStepDown"+new_container_id, function(){moveStepDown(new_container_id);}, "click"], 
+            ["deleteStep"+new_container_id, function(){deleStep(new_container_id);}, "click"], 
+
+        ]
+    ];
 }
 
 function insertContainer(new_id){
-    const htmlString = getStepContainerHtml(new_id);
+    const [htmlString, newEvents] = getStepContainerHtml(new_id);
 
     const div = document.createElement('div');
     div.innerHTML = htmlString.trim();
-    const newNode = div.firstChild;
 
     const stepsContainer = document.getElementById("stepsContainer");
     const stepContainer = document.getElementById("stepMenuContainer");
     stepsContainer.insertBefore(div.firstChild, stepContainer);
+
+    for (var [id, fun, type] of newEvents) {
+        addEventListener(id, fun, type);
+    }
 }
 
 function addStep() {
@@ -795,6 +643,9 @@ function addStep() {
     const btn = document.getElementById("addStep");
     const new_id = "Step" + genId();
     const step_type = select.options[select.selectedIndex].value;
+    if (step_type == "default"){
+        return;
+    }
 
     insertContainer(new_id);
     insertStep(new_id, step_type);    
@@ -802,27 +653,55 @@ function addStep() {
     select.value = "default";
 }
 
-function load(){
-    var el = document.getElementById("rotateAddress");
-    el.addEventListener("click", function () {
-        toggleElement("maxCallsPerAddress");},
-        false
-    ); 
-
-    // el = document.getElementById("stepMenu");
-    // el.addEventListener("click", function () {
-    //     toggleElement("maxCallsPerAddress");},
-    //     false
-    // ); 
+function addEventListener(id, fun, type="click"){
+    var iterations = 0;
+    // waits until element is acessible, checks every 100ms
+    var checkExist = setInterval(function () {
+        if (document.getElementById(id)) {
+            console.log("addEventListener: found " + id + "!!!! Creating event...");
+            var el = document.getElementById(id);
+            el.addEventListener(type, fun, false); 
+            clearInterval(checkExist);
+        }
+        iterations++;
+        if (iterations > 20){
+            console.log("addEventListener: Unable to find " + id);
+            clearInterval(checkExist);
+        }
+    }, 100); 
 }
 
+function load(){
+    var el = document.getElementById("rotateAddress");
+
+    addEventListener("rotateAddress", function () {
+        toggleElement("maxCallsPerAddress");
+    }); 
+
+    addEventListener("stepMenu", function(){enableAddStep();}, "change")
+
+    addEventListener("addStep", function () {
+        addStep();
+    }); 
+}
+
+// receives xpath of selected element from devtools.js
+chrome.extension.onMessage.addListener(
+    function (request, sender, sendResponse) {
+        document.getElementById("collectorName").value = request.content;
+    }
+);
 
 document.addEventListener("DOMContentLoaded", load, false);
 
 // TODO:
-// adicionar funcionalidade do clique no xpath
+// Make all in insertStep return a list of [html, events], turn all inline functions in event handlers, like in insert Container
+// adicionar funcionalidade do clique no xpath DONE
 //     mudar cor do icone de mouse quando ele for selecionado
 // implementar funcionalidade de copiar xpath com o botao Copiar
 // Select: implementar funcionalidade de detectar opções estaticas e inserir no gerenciador
 // Select: implementar funcionalidade de marcar textos separados por ;
 // Save: implementar funcionalidade de tentar casar elementos com xpath e detectar atributos
+// checar todas as funcionalidades de cada passo
+// xpath: highlight do elemento selecionado?
+

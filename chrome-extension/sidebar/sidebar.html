@@ -41,7 +41,7 @@
                     <div class="row">
                         <div class="col">
                             <label><strong>Nome do coletor:</strong></label>
-                            <input type="text" class="form-control" placeholder="Nome">
+                            <input type="text" class="form-control" placeholder="Nome" id="collectorName">
                         </div>
                     </div>
                 
@@ -92,7 +92,7 @@
                         
                             <div class="row">
                                 <div class="col">
-                                    <select class="custom-select" id="stepMenu" onChange="enableAddStep()">
+                                    <select class="custom-select" id="stepMenu">
                                         <option value="default" selected>Selecione um passo</option>
                                         <option value="click">Clique no elemento </option>
                                         <option value="select">Selecione opção </option>
@@ -108,7 +108,7 @@
                         
                             <div class="row">
                                 <div class="col">
-                                    <button type="button" class="btn btn-primary" id="addStep" disabled onClick="addStep()">Adicionar</button>
+                                    <button type="button" class="btn btn-primary" id="addStep" disabled>Adicionar</button>
                                 </div>
                             </div>
                         </div>
