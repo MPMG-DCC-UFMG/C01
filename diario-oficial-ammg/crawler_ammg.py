@@ -101,9 +101,18 @@ def addProgress(urls):
     f.write(json.dumps(data, indent=1))
     f.close()
 
+def lastFetchedDate():
+    try:
+        f = open("links_ammg.txt", "r")
+        data = json.loads(f.read())
+        f.close()
+        return data[-1][0]
+    except FileNotFoundError:
+        return "2014-01-01"
+
 def crawler():
     driver = initChromeWebdriver(
-        'chromedriver_win_79-0-3945-36.exe',
+        # 'chromedriver_win_79-0-3945-36.exe',
         # use_window=SCREEN_ON
     )
 
@@ -112,9 +121,8 @@ def crawler():
 
     urls = []
 
-    # for dt in date_range("2014-01-01", "2020-04-13"): 2019-03-17
-    for dt in date_range("2019-01-29", "2020-04-13"):
-        print("starting", dt.strftime('%Y-%m-%d'))
+    for dt in date_range(lastFetchedDate(), datetime.datetime.now().strftime('%Y-%m-%d')):
+        print(f"starting {dt.strftime('%Y-%m-%d')} at {datetime.datetime.now()}")
 
         Select(driver.find_element_by_id("calendar_year")).select_by_value(str(dt.year))
         time.sleep(1)
