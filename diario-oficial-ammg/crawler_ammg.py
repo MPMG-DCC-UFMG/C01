@@ -89,7 +89,7 @@ def checkForUrlOld(driver):
 def addProgress(urls):
     print(f"Saving progress, adding {len(urls)} links")
     try:
-        f = open("links_ammg.txt", "r")
+        f = open("links_ammg.json", "r")
         data = json.loads(f.read())
         f.close()
     except FileNotFoundError:
@@ -97,13 +97,13 @@ def addProgress(urls):
 
     data = data + urls
 
-    f = open("links_ammg.txt", "w+")
+    f = open("links_ammg.json", "w+")
     f.write(json.dumps(data, indent=1))
     f.close()
 
 def lastFetchedDate():
     try:
-        f = open("links_ammg.txt", "r")
+        f = open("links_ammg.json", "r")
         data = json.loads(f.read())
         f.close()
         return data[-1][0]
