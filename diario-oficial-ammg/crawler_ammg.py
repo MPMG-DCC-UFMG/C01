@@ -62,29 +62,36 @@ def initChromeWebdriver     (
         driver.set_page_load_timeout(60)
         return driver
 
-def checkForUrlNova(driver):
-    container = driver.find_element_by_id("containerDownloadNova")
-    if container.value_of_css_property("display") == "block":
-        print("link found Nova")
+def checkForUrl(driver, prev, dtype, container_id, btn_id):
+    container = driver.find_element_by_id(container_id)
+    css = container.value_of_css_property("display")
+    if css == "block":
+        print("link found", dtype)
         
-        return driver.find_element_by_id("btDownloadSimples2").get_attribute("href")
+        # must check display and if url changed, because it was repeating urls
+        anchor = driver.find_element_by_id(btn_id).get_attribute("href")
+        if anchor == prev:
+            print("but repeated...")
+            time.sleep(1)
+            anchor = driver.find_element_by_id(btn_id).get_attribute("href")
+            if anchor == prev:
+                print("still repeated, giving up")
+                return ""
+            else:
+                print("new url found, returning...")
+                return anchor
+        else:
+            return anchor
     return ""
 
-def checkForUrlExtra(driver):
-    container = driver.find_element_by_id("exibeExtra")
-    if container.value_of_css_property("display") == "block":
-        print("link found extra")
-        
-        return driver.find_element_by_id("btDownloadExtra").get_attribute("href")
-    return ""
-    
-def checkForUrlOld(driver):
-    container = driver.find_element_by_id("containerDownload")
-    if container.value_of_css_property("display") == "block":
-        print("link found old")
-        
-        return driver.find_element_by_id("btDownloadSimples").get_attribute("href")
-    return ""
+def checkForUrlNova(driver, prev):
+    return checkForUrl(driver, prev, "Nova", "containerDownloadNova", "btDownloadSimples2")
+
+def checkForUrlExtra(driver, prev):
+    return checkForUrl(driver, prev, "extra", "exibeExtra", "btDownloadExtra")
+
+def checkForUrlOld(driver, prev):
+    return checkForUrl(driver, prev, "Old", "containerDownload", "btDownloadSimples")
 
 def addProgress(urls):
     print(f"Saving progress, adding {len(urls)} links")
@@ -106,7 +113,7 @@ def lastFetchedDate():
         f = open("links_ammg.json", "r")
         data = json.loads(f.read())
         f.close()
-        return data[-1][0]
+        return data[-1]["date"]
     except FileNotFoundError:
         return "2014-01-01"
 
@@ -121,6 +128,10 @@ def crawler():
 
     urls = []
 
+    prev_old_url = ""
+    prev_new_url = ""
+    prev_extra_url = ""
+
     for dt in date_range(lastFetchedDate(), datetime.datetime.now().strftime('%Y-%m-%d')):
         print(f"starting {dt.strftime('%Y-%m-%d')} at {datetime.datetime.now()}")
 
@@ -132,19 +143,22 @@ def crawler():
         time.sleep(1)
 
         driver.find_element_by_css_selector(".selected").click()
-        time.sleep(2)
+        time.sleep(5)
 
-        anchor = checkForUrlOld(driver)
+        anchor = checkForUrlOld(driver, prev_old_url)
         if anchor != "":
-            urls.append((dt.strftime('%Y-%m-%d'), "regular", anchor))
+            urls.append({"date": dt.strftime('%Y-%m-%d'), "type": "regular", "url": anchor})
+            prev_old_url = anchor
         else:
-            anchor = checkForUrlNova(driver)
+            anchor = checkForUrlNova(driver, prev_new_url)
             if anchor != "":
-                urls.append((dt.strftime('%Y-%m-%d'), "regular", anchor))
+                urls.append({"date": dt.strftime('%Y-%m-%d'), "type": "regular", "url": anchor})
+                prev_new_url = anchor
             
-        anchor = checkForUrlExtra(driver)
+        anchor = checkForUrlExtra(driver, prev_extra_url)
         if anchor != "":
-            urls.append((dt.strftime('%Y-%m-%d'), "extra", anchor))
+            urls.append({"date": dt.strftime('%Y-%m-%d'), "type": "extra", "url": anchor})
+            prev_extra_url = anchor
 
         if len(urls) >= 100:
             addProgress(urls)
@@ -152,6 +166,7 @@ def crawler():
 
         time.sleep(1)
         driver.find_element_by_xpath("//*[@id=\"popup\"]/div/article/a").click()
+        time.sleep(1)
     
     driver.close()
     addProgress(urls)
