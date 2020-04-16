@@ -33,7 +33,8 @@ class CamouflageHandler:
         self.time_between_calls = time_between_calls
 
         self.random_time_between_calls = random_time_between_calls
-        self.time_range = [time for time in range(min_time_between_calls, max_time_between_calls + 1)]
+        self.min_time_between_calls = min_time_between_calls
+        self.max_time_between_calls = max_time_between_calls
 
     def renew_ip(self) -> None:
         """
@@ -55,7 +56,7 @@ class CamouflageHandler:
         Delays calls for a fixed or random time.
         """
         if self.random_time_between_calls:
-            time_between_calls = random.choice(self.time_range)
+            time_between_calls = random.randint(self.min_time_between_calls, self.max_time_between_calls)
         else:
             time_between_calls = self.time_between_calls
 

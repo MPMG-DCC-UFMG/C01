@@ -295,3 +295,69 @@ Por fim, para garantir as mudanças, reinicie o Tor:
 > sudo service tor restart
 
 Restringir IPs a certos países pode ser útil de diversas formas. Por exemplo, caso algum site ofereça algum bloqueio para países estrangeiros. Por outro lado, o número de IPs disponíveis tende a diminuir com a restrição ou especificação de países de origem.
+
+# Detalhes de módulos
+## CamouflageHandler
+
+Classe responsável por mudar IP do Tor, retornar user-agents de uma lista passada e, por fim, gerenciar tempo entre uma requisição feita e outra. 
+
+Para seu uso, é necessário que o Tor esteja instalado e acesso root, que é necessário para mudar o IP do Tor. 
+
+Parâmetros:
+
+- tor_host: **String** - Endereço host do Tor. (default '127.0.0.1')
+- tor_port:  **Int** - Porta do Tor (default 9050)
+- user_agents: **List** - Lista de user-agents (default Lista Vazia) 
+- time_between_calls: **Int** -  Tempo fixo entre uma requisição e outra.  
+- random_time_between_calls: **Bool** - Se este argumento for verdadeiro, um tempo escolhido ao acaso entre **min_time_between_calls** e **max_time_between_calls** será escolhido **sempre** entre uma requisição e outra. (default False) 
+- min_time_between_calls: **Int** - Caso **random_time_between_calls** for verdadeiro, este será o valor mínimo de espera entre uma requisição e outra. (default 0) 
+- max_time_between_calls:  **Int** - Caso **random_time_between_calls** for verdadeiro, este será o valor máximo de espera entre uma requisição e outra. (default 10) 
+
+Métodos:
+- renew_ip(): Executa o comando para mudar o IP do Tor e espera um certo tempo (7.5s) para que o efeito surja.
+- get_user_agent(): Retorna uma **String** representando um user-agent da lista passada na instanciação da classe.
+- wait(): Interrompe a execução do programa por um tempo fixo definido em **time_between_calls** ou aleatório, escolhido entre **min_time_between_calls** e **min_time_between_calls**, se **random_time_between_calls** estiver definido como **True**.
+
+## Tor*Webdriver
+
+Classe que herda de **CamouflageHandler** e **selenium.webdriver.***, onde * é Chrome ou Firefox. 
+
+Essa classe especializa determinados métodos (listados abaixo) e são capazes de alterar o IP por determinado número de requisições, limpar cookies e, no caso do Firefox, mudar o user-agent. 
+
+Os parâmetros para gerar uma instância são, na ordem, os mesmos de selenium.webdriver.[Firefox ou Chrome], CamouflageHandler e os seus próprios, mostrado abaixo:
+
+Parâmetros próprios:
+- change_ip_after: **Int** - Número de requisições feitas antes de se alterar o IP. (default 42)
+- change_user_agent_after: **Int** - (Exclusivo para o Firefox) Número de requisições feitas antes de mudar o user-agent. Caso esse número seja negativo, o user-agent original nunca será alterado. (default -1)
+- clear_cookies_after: **Int** - Número de requisições feitas até que se limpe os cookies da sessão.
+
+Métodos:
+
+- get(url: **String**): Especialização do método *get* dos webdrivers. Muda IP, troca user-agent (Firefox) e limpa cookies de acordo com determinado número de requisições feitas, além de controlar o tempo entre uma requisição e outra em um intervalo de tempo fixo ou aleatório. 
+- bezier_mouse_move(webelement_to_mouse_move: **webelement**, control_points: **List**, num_random_control_points: **Int**, plot: **Bool**): Método responsável para simular movimentos do mouse em forma de [curvas de Bézier](https://en.wikipedia.org/wiki/B%C3%A9zier_curve). Caso **webelement_to_mouse_move** seja passado, os movimentos ocorrerão sobre ele. Caso contrário, um webelement será criado tendo como base o elemento/tag html. Se **control_points**, uma lista de pontos de controles, for passado, as curvas serão geradas tendo como base esses pontos (devem ser 2-D). Caso contrário, será gerado uma lista com **num_random_control_points** aleatória. Por fim, se **plot**
+- renew_user_agent():  (Exclusivo para Firefox) Muda o user-agent aleatoriamente.
+
+## TorRequestSession
+
+Herda de CamouflageHandler e de requests.sessions.Session, responsável por criar objetos requests com IPs anônimos.
+
+Os parâmetros para gerar nova instância são os mesmos da classe CamouflageHandler mais dois parâmetros próprios.
+
+Por ser mais leve que os webdrivers, pode ser bastante útil em tarefas simples.
+
+Parâmetros próprios:
+- change_ip_after: **Int** - Número de requisições feitas antes de se alterar o IP. (default 42)
+- change_user_agent_after: **Int** - Número de requisições feitas antes de mudar o user-agent. Caso esse número seja negativo, o user-agent original nunca será alterado. (default -1)
+
+Métodos:
+- get(url: Union[Text, bytes], **kwargs): Especialização do método *get* de requests.Session. Muda IP e troca user-agent de acordo com determinado número de requisições feitas, além de controlar o tempo entre uma requisição e outra em um intervalo de tempo fixo ou aleatório. 
+
+## bezier_curve
+
+Módulo responsável por gerar [curvas de Bézier](https://en.wikipedia.org/wiki/B%C3%A9zier_curve), usadas em movimentos de mouse.
+
+Métodos:
+- binomial_coef(n: **Float**, i: **Float**): Retorna o coeficiente binômial de  n e i.
+- bernstein(i: **Float**, n: **Float**, t: **Float**): Calcula e retorna o valor de t e i na base polinomial de Bernstein de grau n.
+- generate(control_points: **List**, intervals: **Int**): Gera n (default 10) pontos da curva de Bernstein para a lista de pontos de controle, control_points, passada. 
+- plot(points: **List**): 'Plota' os pontos, points, em um arquivo salvo com 'bezier_curve_' + data_hora_atual + '.png' 
