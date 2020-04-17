@@ -1,6 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.common.exceptions import ElementClickInterceptedException
+from selenium.common.exceptions import ElementNotInteractableException
 from selenium.webdriver.support.select import Select
 
 import datetime
@@ -9,6 +10,9 @@ import json
 from pandas import date_range
 
 SCREEN_ON = True
+
+class LimitOfAttemptsReached(Exception):
+    pass
 
 def initChromeWebdriver     (
     path_to_driver: str = None,
@@ -19,7 +23,6 @@ def initChromeWebdriver     (
     Returns a ready to use chrome driver.
     It will not display warning and errors that the site prints on the
     navigator console.
-
     Keyword arguments:
     path_to_driver -- path to the chrome driver executable. No need to
     pass if the driver is set in path.
@@ -35,7 +38,7 @@ def initChromeWebdriver     (
     chrome_options = webdriver.ChromeOptions()
 
     chrome_options.add_argument('--window-size=1420,1080')
-    # chrome_options.add_argument("disable-popup-blocking");
+    # chrome_options.add_argument("disable-popup-blocking")
     if ignore_console:
         # will only print fatal errors
         chrome_options.add_argument('log-level=3')
@@ -113,9 +116,24 @@ def lastFetchedDate():
         f = open("links_ammg.json", "r")
         data = json.loads(f.read())
         f.close()
-        return data[-1]["date"]
+        last_date = datetime.datetime.fromisoformat(data[-1]["date"])
+        last_date += datetime.timedelta(days=1)
+        return last_date.strftime('%Y-%m-%d')
     except FileNotFoundError:
         return "2014-01-01"
+
+def waitUntilInteractable(driver, xpath):
+    popup_header = driver.find_element_by_xpath(xpath)
+    attempt = 0
+    while attempt < 16:
+        try:
+            popup_header.click()
+            return
+        except ElementNotInteractableException:
+            attempt += 1
+            print("Element not interactable yet, sleeping...")
+            time.sleep(1)
+    raise LimitOfAttemptsReached()
 
 def crawler():
     driver = initChromeWebdriver(
@@ -134,6 +152,8 @@ def crawler():
 
     for dt in date_range(lastFetchedDate(), datetime.datetime.now().strftime('%Y-%m-%d')):
         print(f"starting {dt.strftime('%Y-%m-%d')} at {datetime.datetime.now()}")
+        
+        waitUntilInteractable(driver, "//*[@id=\"hora\"]") # wait for popup to close
 
         Select(driver.find_element_by_id("calendar_year")).select_by_value(str(dt.year))
         time.sleep(1)
@@ -143,7 +163,7 @@ def crawler():
         time.sleep(1)
 
         driver.find_element_by_css_selector(".selected").click()
-        time.sleep(5)
+        waitUntilInteractable(driver, "//*[@id=\"popup\"]/div/article/header") # waits for popup to open
 
         anchor = checkForUrlOld(driver, prev_old_url)
         if anchor != "":
@@ -164,8 +184,7 @@ def crawler():
             addProgress(urls)
             urls = []
 
-        time.sleep(1)
-        driver.find_element_by_xpath("//*[@id=\"popup\"]/div/article/a").click()
+        driver.find_element_by_xpath("//*[@id=\"popup\"]/div/article/a").click() # close popup
         time.sleep(1)
     
     driver.close()
@@ -173,4 +192,3 @@ def crawler():
     print("Done.")
 
 crawler()
-
