@@ -1,3 +1,5 @@
+var selected_xpath_input = null;
+
 let errors = {
     InvalidArgumentException: "Ivalid value passed as arguments."
 }
@@ -23,7 +25,9 @@ function enableAddStep(){
 }
 
 function readXpath(input_id){
-    console.log("reading xpath for " + input_id);
+    selected_xpath_input = input_id;
+    // TODO: change span appearence
+    console.log("readXpath: reading xpath for " + input_id);
 }
 
 function copyInputText(input_id){
@@ -40,53 +44,96 @@ function genId(length=8) {
     return "-" + result + "-";
 }
 
-function dedentStep(stepId){
-    const parent_div = document.querySelector("#" + stepId + " > .indentContainer");
+function dedentStep(step_id){
+    const parent_div = document.querySelector("#" + step_id + " > .indentContainer");
     const indentation_lvl = parent_div.childElementCount;
 
     if (indentation_lvl > 0) {
-        const child = document.querySelector("#" + stepId + " > .indentContainer > div:nth-child(1)");
+        const child = document.querySelector("#" + step_id + " > .indentContainer > div:nth-child(1)");
         child.parentNode.removeChild(child);
     }
 }
 
-function indentStep(stepId){
+function indentStep(step_id){
     const new_div = document.createElement("div");
     new_div.className += "indent";
-    document.querySelector("#" + stepId + " > .indentContainer").appendChild(new_div);
+    document.querySelector("#" + step_id + " > .indentContainer").appendChild(new_div);
 }
 
-function moveStepUp(stepId){
-    var e = $("#" + stepId);
+function moveStepUp(step_id){
+    var e = $("#" + step_id);
     console.log("Up")
-    console.log(stepId)
+    console.log(step_id)
     console.log(e.prev().attr("id"))
     e.prev().insertAfter(e);
 }
 
-function moveStepDown(stepId) {
-    var e = $("#" + stepId);
+function moveStepDown(step_id) {
+    var e = $("#" + step_id);
     if (e.next().attr("id") == "stepMenuContainer")
         return;
     e.next().insertBefore(e);
 }
 
-function deleStep(stepId){
-    const child = document.querySelector("#" + stepId);
+function deleteStep(step_id){
+    const child = document.querySelector("#" + step_id);
     child.parentNode.removeChild(child);
+}
+
+function deselectXpathSpan(span_id) {
+    var xpath_id = span_id.replace("SelectSpan", ""); 
+    console.log("Xpath id " + xpath_id);
+
+    if (selected_xpath_input == xpath_id){
+        console.log("deselectXpathSpan: Setting selected_xpath_input from " + selected_xpath_input + " to null")
+        selected_xpath_input = null;
+    }
+
+    console.log("Deselect " + span_id);
+    var el = document.getElementById(span_id);
+    var first_span = el.querySelector("img:nth-child(1)");
+    var second_span = el.querySelector("img:nth-child(2)");
+
+    el.style.backgroundColor = "GhostWhite";
+    first_span.style.display = "block";
+    second_span.style.display = "none";
+
+    addEventListener(span_id + "Default", function () {
+        selectXpathSpan(span_id);
+        readXpath(xpath_id); 
+    });
+}
+
+function selectXpathSpan(span_id){
+    var el = document.getElementById(span_id);
+    var first_span = el.querySelector("img:nth-child(1)");
+    var second_span = el.querySelector("img:nth-child(2)");
+
+    el.style.backgroundColor = "LimeGreen";
+    first_span.style.display = "none";
+    second_span.style.display = "block";
+
+    addEventListener(span_id + "Selected", function () {
+        deselectXpathSpan(span_id);
+    });
 }
 
 function getXpathHtml(xpath_id="", new_id="", label=""){
     if(xpath_id == "" && new_id == "")
         throw new InvalidOperationException(errors.InvalidArgumentException );
     else if(xpath_id == "")
-        xpath_id == new_id + "XpathInput";
+        xpath_id = new_id + "XpathInput";
+
+    console.log("getXpathHtml: xpath_id: " + xpath_id);
 
     if(label == "")
         label = "xpath";
 
     var events = [
-        [xpath_id + "SelectSpan", function () { readXpath(xpath_id); }, "click"],
+        [xpath_id + "SelectSpanDefault", function () {
+            selectXpathSpan(xpath_id + "SelectSpan");
+            readXpath(xpath_id); 
+        }, "click"],
         [xpath_id + "CopySpan", function () { copyInputText(xpath_id); }, "click"],
     ]
 
@@ -104,7 +151,12 @@ function getXpathHtml(xpath_id="", new_id="", label=""){
                         class=\"badge badge-light clickableSpan\"
                         id=\"${xpath_id}SelectSpan\"
                     >
-                        <img src=\"icons/mouse-pointer-gray.svg\" alt=\"Selecionar\">
+                        <img src=\"icons/mouse-pointer-gray.svg\" alt=\"Selecionar\" 
+                            style=\"display: block; padding: 5px; margin: 0px auto;\"
+                            id=\"${xpath_id}SelectSpanDefault\">
+                        <img src=\"icons/mouse-pointer-white.svg\" alt=\"Selecionar\" 
+                            style=\"display: none; padding: 5px; margin: 0px auto;\" 
+                            id=\"${xpath_id}SelectSpanSelected\">
                     </span>
                 </div>
                 <div class=\"col-6\">
@@ -132,10 +184,12 @@ function getXpathHtml(xpath_id="", new_id="", label=""){
 }
 
 function getClickStepHtml(new_id){
-    const [xpathHtml, xpathEvents] = getXpathHtml(new_id = new_id)
+    const [xpathHtml, xpathEvents] = getXpathHtml("", new_id, "");
 
     // envent target, function, event type
-    var events = [] + xpathEvents;
+    var events = [].concat(xpathEvents);
+
+    console
 
     var html = `
         <div class=\"col\">
@@ -155,7 +209,7 @@ function getSelectStepHtml(new_id){
     var manage_dynamic_options = new_id + "ManageDynamicOptions";
     var static_options_to_ignore = new_id + "OptionToIgnore";
 
-    const [xpathHtml, xpathEvents] = getXpathHtml(new_id = new_id)
+    const [xpathHtml, xpathEvents] = getXpathHtml("", new_id, "");
 
     // envent target, function, event type
     var events = [
@@ -164,7 +218,7 @@ function getSelectStepHtml(new_id){
             toggleElement(manage_dynamic_options);
             toggleElement(static_options_to_ignore);
         }, "onChange"],
-    ] + xpathEvents;
+    ].concat(xpathEvents);
 
     var html = `
         <div class=\"col\">
@@ -241,10 +295,10 @@ function getSaveStepHtml(new_id){
     var overwrite_file = new_id + "OverwriteFile";
     var append_to_file = new_id + "AppendToFile";
     
-    const [xpathHtml, xpathEvents] = getXpathHtml(new_id = new_id)
+    const [xpathHtml, xpathEvents] = getXpathHtml("", new_id, "");
 
     // envent target, function, event type
-    var events = [] + xpathEvents;
+    var events = [].concat(xpathEvents);
 
     var html = `
         <div class=\"col\">
@@ -418,10 +472,10 @@ function getSaveStepHtml(new_id){
 }
 
 function getIFrameStepHtml(new_id){
-    const [xpathHtml, xpathEvents] = getXpathHtml(new_id = new_id)
+    const [xpathHtml, xpathEvents] = getXpathHtml("", new_id, "");
 
     // envent target, function, event type
-    var events = [] + xpathEvents;
+    var events = [].concat(xpathEvents);
 
     var html = `
         <div class=\"col\">
@@ -438,10 +492,10 @@ function getIFrameStepHtml(new_id){
 function getDownloadHtml(new_id){
     var file_name = new_id = "FileName";
 
-    const [xpathHtml, xpathEvents] = getXpathHtml(new_id = new_id)
+    const [xpathHtml, xpathEvents] = getXpathHtml("", new_id, "");
 
     // envent target, function, event type
-    var events = [] + xpathEvents;
+    var events = [].concat(xpathEvents);
 
     var html = `
         <div class=\"col\">
@@ -465,12 +519,12 @@ function getDownloadHtml(new_id){
 
 function getPaginationHtml(new_id){
     const [xpathHtmlNextPageBtn, xpathEventsNextPageBtn] = getXpathHtml(
-        xpath_id = new_id + "NextPageBtn", label = "Xpath para botão de próxima página")
+        new_id + "NextPageBtn", "", "Xpath para botão de próxima página")
     const [xpathHtmlMaxPagesInfo, xpathEventsMaxPagesInfo] = getXpathHtml(
-        xpath_id = new_id + "MaxPagesInfo", label = "Xpath para número máximo de páginas")
+        new_id + "MaxPagesInfo", "", "Xpath para número máximo de páginas")
 
     // envent target, function, event type
-    var events = [] + xpathEventsNextPageBtn + xpathEventsMaxPagesInfo;
+    var events = [].concat(xpathEventsNextPageBtn).concat(xpathEventsMaxPagesInfo);
 
     var html = `
         <div class=\"col\">
@@ -489,10 +543,10 @@ function getPaginationHtml(new_id){
 }
 
 function getCaptchaHtml(new_id) {
-    const [xpathHtml, xpathEvents] = getXpathHtml(new_id = new_id)
+    const [xpathHtml, xpathEvents] = getXpathHtml("", new_id, "");
 
     // envent target, function, event type
-    var events = [] + xpathEvents;
+    var events = [].concat(xpathEvents);
 
     var html = `
         <div class=\"col\">
@@ -509,10 +563,10 @@ function getCaptchaHtml(new_id) {
 }
 
 function getIfHtml(new_id){
-    const [xpathHtml, xpathEvents] = getXpathHtml(new_id = new_id)
+    const [xpathHtml, xpathEvents] = getXpathHtml("", new_id, "");
 
     // envent target, function, event type
-    var events = [] + xpathEvents;
+    var events = [].concat(xpathEvents);
 
     var html = `
         <div class=\"col\">
@@ -664,7 +718,7 @@ function addEventListener(id, fun, type="click"){
             clearInterval(checkExist);
         }
         iterations++;
-        if (iterations > 20){
+        if (iterations > 50){
             console.log("addEventListener: Unable to find " + id);
             clearInterval(checkExist);
         }
@@ -688,7 +742,10 @@ function load(){
 // receives xpath of selected element from devtools.js
 chrome.extension.onMessage.addListener(
     function (request, sender, sendResponse) {
-        document.getElementById("collectorName").value = request.content;
+        if (selected_xpath_input){
+            document.getElementById(selected_xpath_input).value = request.content;
+            deselectXpathSpan(selected_xpath_input + "SelectSpan");
+        }
     }
 );
 
