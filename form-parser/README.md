@@ -3,7 +3,7 @@ Form parser module for web crawling.
 ### Features
 - Extracts parameters from URLs using urllib.parse
 
-##### URLParser
+#### URLParser
 ```
 from form_parser import URLParser
 Parser = URLParser("myurl.com/param=value1&param2=value2")
@@ -12,7 +12,7 @@ Parser.parameters() # {'param1': 'value1', 'param2': 'value2'}
 ```
 
 - Extracts parameters from HTML forms using lxml.etree and XPaths
-##### HTMLParser
+#### HTMLParser
 ```
 from form_parser import HTMLExtractor, HTMLForm
 HTML = HTMLExtractor("myurl.com/param=value1&param2=value2")
