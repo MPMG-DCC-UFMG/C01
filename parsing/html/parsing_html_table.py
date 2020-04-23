@@ -1,10 +1,15 @@
 import pandas as pd
+import os
 
 def html_to_df(html_file, match, flavor, header, index_col, skiprows, attrs, parse_dates, thousands, encoding, decimal, converters, na_values, keep_default_na, displayed_only):
     '''
     Receives the html file path and reads into a DataFrame structure using the Pandas module.
     '''
-    dfs = pd.read_html(html_file, match, flavor, header, index_col, skiprows, attrs, parse_dates, thousands, encoding, decimal, converters, na_values, keep_default_na, displayed_only)
+    try:
+        dfs = pd.read_html(html_file, match, flavor, header, index_col, skiprows, attrs, parse_dates, thousands, encoding, decimal, converters, na_values, keep_default_na, displayed_only)
+    except:
+        raise Exception("The table could not be found in the HTML file.")
+    
     return dfs
 
 def df_to_csv(dfs, output_file, index = False):
@@ -12,7 +17,10 @@ def df_to_csv(dfs, output_file, index = False):
     Receives a list of DataFrames and write them to a csv file (output_file).
     '''
     for i in range(0, len(dfs)):
-        dfs[i].to_csv(output_file, index = index, mode='a')
+        try:
+            dfs[i].to_csv(output_file, index = index, mode='a')
+        except:
+            raise Exception("The system could not save the CSV file.")
     
     
 def html_to_csv(html_file_path, match='.+', flavor=None, header=None, index_col=None, skiprows=None, attrs=None, parse_dates=False, thousands=', ', encoding=None, decimal='.', converters=None, na_values=None, keep_default_na=True, displayed_only=True):
@@ -36,6 +44,16 @@ def html_to_csv(html_file_path, match='.+', flavor=None, header=None, index_col=
     :param display_only : bool, default True (Whether elements with “display: none” should be parsed)
     '''
 
+    
+    # Check if html file exists
+    if !(os.path.isfile(html_file_path)):
+        raise Exception('The given HMTL file does not exist.')
+    
+    # Create output file based on the input file name
     output_file = html_file_path.split('.html')[0]+".csv"
+    
+    # Convert html do Pandas DataFrame
     dfs = html_to_df(html_file_path, match, flavor, header, index_col, skiprows, attrs, parse_dates, thousands, encoding, decimal, converters, na_values, keep_default_na, displayed_only)
+    
+    # Save the Pandas DataFrame to a csv file
     df_to_csv(dfs, output_file)
