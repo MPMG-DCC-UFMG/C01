@@ -252,6 +252,7 @@ def load_process_page(driver, num_proc):
             loaded = True
         except:
             # there has been some internal server error, try again
+            print("Server error, trying again")
             driver = load_or_retry(driver, TRF2_URL)
 
     elem.clear()
@@ -278,7 +279,7 @@ def load_process_page(driver, num_proc):
     # Search
     elem = driver.find_element_by_name("Pesquisar")
     elem.click()
-    WebDriverWait(driver, 10).until(EC.staleness_of(elem))
+    WebDriverWait(driver, 20).until(EC.staleness_of(elem))
 
     return driver
 
