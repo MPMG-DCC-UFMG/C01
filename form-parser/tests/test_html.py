@@ -7,8 +7,7 @@ Test cases for extracting parameters with HTMLParser
 import unittest
 
 from lxml import etree
-from form_parser import HTMLExtractor, HTMLForm
-from form_parser import config
+from form_parser import HTMLForm, HTMLExtractor, config
 
 
 HTML = HTMLExtractor(config.PORTAL_COMPRAS)
@@ -51,6 +50,15 @@ class TestFormPortalCompras(unittest.TestCase):
 
     def test_select_fields(self):
         self.assertEqual(len(Form.select_fields()), 10)
+
+    def test_option_fields(self):
+        self.assertEqual(len(Form.option_fields()), 122)
+
+    def test_select_fields_with_options(self):
+        num_options = sum([len(Form.select_with_option_fields()[key])
+                           for key in Form.select_with_option_fields().keys()])
+        num_selects = len(Form.select_with_option_fields().keys())
+        self.assertEqual((num_selects, num_options), (10, 122))
 
     def test_list_field_attributes(self):
         field = Form.fields()['text'][0]

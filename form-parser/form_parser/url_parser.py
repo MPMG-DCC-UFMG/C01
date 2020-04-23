@@ -16,5 +16,5 @@ class URLParser:
 
     def parameters(self, query=None, keep_blank_values=True):
         if query is None:
-            query = self.get_query()
+            query = self.query()
         return urllib.parse.parse_qs(query, keep_blank_values=keep_blank_values)

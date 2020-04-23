@@ -58,8 +58,11 @@ option_fields = ParsedForm.option_fields()
 for option_field in option_fields:
     ParsedForm.get_parent_field(option_field) # -> ```<Element select>``` 
 ``` 
-
 Note: also works for other types of ```<Element>``` objects
+
+- Retrieve a select field with its respective options:
+```ParsedForm.select_with_option_fields() # -> dict, {<Element select1>: [<Element option1>, <Element option2>, ...], ...}```
+
 
 ### TODO
 - [ ] Parse custom format types
