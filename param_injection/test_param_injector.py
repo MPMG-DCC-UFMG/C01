@@ -136,7 +136,7 @@ class ParamInjectorTest(unittest.TestCase):
         # invalid param_limits (one of the entries is an integer)
         self.assertRaises(ValueError, next, proc_gen)
 
-        param_limits = [(0, 5), (2018, 2019), [402], (1,2,3)]
+        param_limits = [(0, 5), (2018, 2019), [402], (1, 2, 3)]
         proc_gen = ParamInjector.generate_format(code_format, param_limits, \
                         self.verif_code)
         # invalid param_limits (one of the entries is a tuple with 3 elements)

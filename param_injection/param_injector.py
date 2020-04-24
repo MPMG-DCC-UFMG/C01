@@ -182,7 +182,7 @@ class ParamInjector():
            not isinstance(end_date, datetime.date):
             raise ValueError("The start and end dates must be of type "+\
                              "datetime.date.")
-        if not frequency in ['Y', 'M', 'D']:
+        if frequency not in ['Y', 'M', 'D']:
             raise ValueError("The frequency must be one of the following " +\
                              "options: 'Y', 'M' or 'D.")
 
@@ -207,10 +207,8 @@ class ParamInjector():
         elif frequency == 'D':
             get_period_val = lambda x: x.day
 
-
-
-        for n in range(max_days):
-            curr = start_date + delta_coef * datetime.timedelta(n)
+        for day in range(max_days):
+            curr = start_date + delta_coef * datetime.timedelta(day)
             if get_period_val(curr) != prev_period:
                 prev_period = get_period_val(curr)
                 yield curr.strftime(date_format)
