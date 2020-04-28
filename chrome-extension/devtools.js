@@ -8,6 +8,7 @@ chrome.devtools.panels.elements.createSidebarPane(
 
 // onSelectionChanged: whe the user select a new element
 // source: https://stackoverflow.com/questions/61108602/put-xpath-to-selected-element-in-sidebar-extension-html
+// source: https://stackoverflow.com/questions/25128330/how-to-i-send-selected-element-from-devtools-page-to-chrome-sidebar-page/36841655
 chrome.devtools.panels.elements.onSelectionChanged.addListener(() => {
   // the function must be declared in the same context as $0, so we need to
   // declare it like this:
@@ -39,10 +40,8 @@ chrome.devtools.panels.elements.onSelectionChanged.addListener(() => {
         `(${() => {
           // sends message to script inside panel
           chrome.extension.sendMessage(
-            { content: getXpathTo($0)},
-            function (response) {
-              console.log(response.farewell);
-            }
+            { type: "xpath", content: getXpathTo($0)},
+            function (response) {}
           );
         }})()`,
         {useContentScriptContext: true}
@@ -50,6 +49,67 @@ chrome.devtools.panels.elements.onSelectionChanged.addListener(() => {
     }
   );
 });
+
+// chrome.extension.onMessage.addListener(
+//   function (request, sender, sendResponse) {
+//     console.log("received message type: " + request.type);
+//     if(request.type == "table"){
+//       console.log(">>>>>>>>>>>>>>> Received message:");
+//       console.log(">>>>>>>>>>>>>>> " + request.xpath);
+//       var el = getElementByXpath(request.xpath);
+//       console.log(">>>>>>>>>>>>>>> " + el);
+
+//       sendResponse({ table: JSON.stringify(el.innerHtml) });
+//     }
+//   }
+// );
+
+chrome.extension.onMessage.addListener(
+  function (request, sender, sendResponse) {
+    if(request.type == "asking_for_table"){
+      chrome.tabs.executeScript(
+        {
+          code: 
+            `
+            function getElementByXpath(path) {
+              console.log("getElementByXpath says Hello.......");
+              return document.evaluate(path, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            }
+            function getContentByXpath(path){
+              console.log("getContentByXpath says Hi.......");
+              return getElementByXpath(path).innerHTML;
+            }
+            var path = \"${request.xpath}\";`
+          ,
+          runAt: 'document_start',
+        },
+        // function that receives the element selected
+        () => {
+          console.log("HERE!!!!!!!!!!!! " + request.xpath);
+          chrome.devtools.inspectedWindow.eval(
+            `(${() => {
+              // sends message to script inside panel
+              console.log("tinha q ter algo aqui >>>>> ");
+              console.log(path);
+              console.log(" <<<");
+              chrome.extension.sendMessage(
+                // { type: "sending_table", table: getContentByXpath(request.xpath) },
+                { type: "sending_table", table: getContentByXpath(path) },
+                function (response) { }
+              );
+            }})()`,
+            { useContentScriptContext: true }
+          );
+        }
+      );
+      sendResponse({status: "Ok?"})    
+    }
+  }
+);
+
+function getElementByXpath(path) {
+  return document.evaluate(path, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+}
 
 // The 2 functions below are not actually used here, I'm just saving them. 
 // To be used they need to be in tha same context of where the element is
