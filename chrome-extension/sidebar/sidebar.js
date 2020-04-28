@@ -1,4 +1,5 @@
 var selected_xpath_input = null;
+var waiting_table = null;
 
 let errors = {
     InvalidArgumentException: "Ivalid value passed as arguments."
@@ -26,12 +27,14 @@ function enableAddStep(){
 
 function readXpath(input_id){
     selected_xpath_input = input_id;
-    // TODO: change span appearence
     console.log("readXpath: reading xpath for " + input_id);
 }
 
 function copyInputText(input_id){
     console.log("copying input from " + input_id);
+    const el = document.getElementById(input_id);
+    el.select();
+    document.execCommand('copy');
 }
 
 function genId(length=8) {
@@ -41,10 +44,11 @@ function genId(length=8) {
     for (var i = 0; i < length; i++) {
         result += characters.charAt(Math.floor(Math.random() * charactersLength));
     }
-    return "-" + result + "-";
+    return result;
 }
 
-function dedentStep(step_id){
+function dedentStep(step_id) {
+    console.log("dedentStep:" + step_id);
     const parent_div = document.querySelector("#" + step_id + " > .indentContainer");
     const indentation_lvl = parent_div.childElementCount;
 
@@ -55,6 +59,7 @@ function dedentStep(step_id){
 }
 
 function indentStep(step_id){
+    console.log("indentStep:" + step_id);
     const new_div = document.createElement("div");
     new_div.className += "indent";
     document.querySelector("#" + step_id + " > .indentContainer").appendChild(new_div);
@@ -75,7 +80,7 @@ function moveStepDown(step_id) {
     e.next().insertBefore(e);
 }
 
-function deleteStep(step_id){
+function deleteElement(step_id){
     const child = document.querySelector("#" + step_id);
     child.parentNode.removeChild(child);
 }
@@ -163,15 +168,10 @@ function getXpathHtml(xpath_id="", new_id="", label=""){
                     <input type=\"text\" class=\"form-control\" placeholder=\"xpath para elemento\" id=\"${xpath_id}\">
                 </div>
                 <div class=\"col-1\">
-                    <span
-                        class=\"badge badge-primary clickableSpan\"
-                        id=\"${xpath_id}CopySpan\"
-                    >
-                        Copiar
-                    </span>
+                    <button class="btn btn-primary" type="button" id=\"${xpath_id}CopySpan\">Copiar</button>
                 </div>
                 <div class=\"col-1\">
-                    <span class=\"badge badge-light clickableSpan\" onClick=\"\">
+                    <span class=\"badge badge-light clickableSpan\">
                         <img src=\"icons/help-circle.svg\" alt=\"Como usar\">
                     </span>
                 </div>
@@ -184,19 +184,24 @@ function getXpathHtml(xpath_id="", new_id="", label=""){
 }
 
 function getClickStepHtml(new_id){
-    const [xpathHtml, xpathEvents] = getXpathHtml("", new_id, "");
+    const [xpath_html, xpath_events] = getXpathHtml("", new_id, "");
 
     // envent target, function, event type
-    var events = [].concat(xpathEvents);
+    var events = [].concat(xpath_events);
 
     console
 
     var html = `
         <div class=\"col\">
             <div class=\"row\">
-                <div class=\"col\"><strong>Clique em um elemento</strong></div>
+                <div class=\"col\">
+                    <strong>Clique em um elemento</strong>
+                </div>
+                <div class=\"col-3\">
+                    id: ${new_id}
+                </div>
             </div>
-    ` + xpathHtml + `
+    ` + xpath_html + `
         </div>    
     `;
 
@@ -209,7 +214,7 @@ function getSelectStepHtml(new_id){
     var manage_dynamic_options = new_id + "ManageDynamicOptions";
     var static_options_to_ignore = new_id + "OptionToIgnore";
 
-    const [xpathHtml, xpathEvents] = getXpathHtml("", new_id, "");
+    const [xpath_html, xpath_events] = getXpathHtml("", new_id, "");
 
     // envent target, function, event type
     var events = [
@@ -217,8 +222,8 @@ function getSelectStepHtml(new_id){
             toggleElement(filled_after_step);
             toggleElement(manage_dynamic_options);
             toggleElement(static_options_to_ignore);
-        }, "onChange"],
-    ].concat(xpathEvents);
+        }, "change"],
+    ].concat(xpath_events);
 
     var html = `
         <div class=\"col\">
@@ -226,8 +231,11 @@ function getSelectStepHtml(new_id){
                 <div class=\"col\">
                     <strong>Selecione opção</strong>
                 </div>
+                <div class=\"col-3\">
+                    id: ${new_id}
+                </div>
             </div>
-            ` + xpathHtml + `
+            ` + xpath_html + `
             <div class=\"row\">
                 <div class=\"col\">
                     <div class=\"custom-control custom-switch\">
@@ -240,20 +248,22 @@ function getSelectStepHtml(new_id){
                 <label class=\"col-4\">
                     <img src=\"icons/corner-down-right.svg\" alt=\"\"> Preenchido depois do passo:
                 </label>
-                <input type=\"text\" class=\"form-control col-1\" placeholder=\"1xca13\">
+                <input type=\"text\" class=\"col-4\" placeholder=\"Step-...-\">
             </div>
-            <div class=\"row\" id=\"${static_options_to_ignore}\" style=\"display: block;\">
+            <div class=\"row\" id=\"${manage_dynamic_options}\" style=\"display: none;\">
                 <label class=\"col-3\">
                     <img src=\"icons/corner-down-right.svg\" alt=\"\">
                     Ignorar opções:
                 </label>
-                <input type=\"text\" class=\"form-control col\" placeholder=\"cidade 1;cidade 2;(...)\">
-                <span class=\"badge badge-light col-1 clickableSpan\">
-                    <img src=\"icons/help-circle.svg\" alt=\"Como usar\">
-                </span>
+                <input type=\"text\" class=\"col\" placeholder=\"cidade 1;cidade 2;(...)\">
+                <div class="col-1">
+                    <span class=\"badge badge-light clickableSpan\">
+                        <img src=\"icons/help-circle.svg\" alt=\"Como usar\">
+                    </span>
+                </div>
             </div>
 
-            <div class=\"dropdown row\" id=\"${manage_dynamic_options}\" style=\"display: none;\">
+            <div class=\"dropdown row\" id=\"${static_options_to_ignore}\" style=\"display: block;\">
                 <button class=\"btn btn-primary dropdown-toggle\" type=\"button\" data-toggle=\"dropdown\"
                     aria-haspopup=\"true\" aria-expanded=\"false\"
                 >
@@ -286,47 +296,63 @@ function getSelectStepHtml(new_id){
     return [html, events];
 }
 
-function getSaveStepHtml(new_id){
-    var xpath_as_first_matches = new_id + "FirstMatch";
-    var xpath_as_all_matches = new_id + "AllMatches";
+function askTable(destine_table, xpath_id){
+    waiting_table = destine_table;
+    var xpath = document.getElementById(xpath_id).value;
+
+    chrome.extension.sendMessage(
+        { type: "asking_for_table", xpath: xpath},
+        function (response) {
+            console.log("askTable received:", response.status)
+        }
+    );
+}
+
+function treatAnchorsInTable(table_id){
+
+}
+
+chrome.extension.onMessage.addListener(
+    function (request, sender, sendResponse) {
+        if (request.type == "sending_table") {
+            if(waiting_table){
+                document.getElementById(waiting_table).innerHTML = request.table;
+                treatAnchorsInTable(waiting_table);
+            }
+            waiting_table = null;
+        }
+    }
+);
+
+
+function getSaveTableHtml(new_id){
+    var xpath_id = new_id + "XpathInput";
     var save_content_table = new_id + "SaveContentTable";
-    var manage_table_columns = new_id + "ManageTableColumns";
     var file_name = new_id + "FileName";
     var overwrite_file = new_id + "OverwriteFile";
     var append_to_file = new_id + "AppendToFile";
     
-    const [xpathHtml, xpathEvents] = getXpathHtml("", new_id, "");
+    const [xpath_html, xpath_events] = getXpathHtml(xpath_id, "", "Xpath para tabela");
 
     // envent target, function, event type
-    var events = [].concat(xpathEvents);
+    var events = [
+        [xpath_id, function () { askTable(save_content_table, xpath_id); }, "input"],
+    ].concat(xpath_events);
 
     var html = `
         <div class=\"col\">
             <div class=\"row\">
                 <div class=\"col\">
-                    <strong>Salve dados</strong>
+                    <strong>Salve a tabela</strong>
+                </div>
+                <div class=\"col-3\">
+                    id: ${new_id}
                 </div>
             </div>
-            ` + xpathHtml + `
+            ` + xpath_html + `
             <div class=\"row\">
                 <div class=\"col\">
-                    <label class=\"\">xpath para:</label>
-                </div>
-            </div>
-            <div class=\"row\">
-                <div class=\"col\">
-                    <form>
-                        <div class=\"custom-control custom-radio\">
-                            <input type=\"radio\" id=\"${xpath_as_first_matches}\" name=\"customRadio\" class=\"custom-control-input\" checked>
-                            <label class=\"custom-control-label\" for=\"${xpath_as_first_matches}\">O primeiro que case com xpath</label>
-                        </div>
-                        <div class=\"custom-control custom-radio\">
-                            <input type=\"radio\" id=\"${xpath_as_all_matches}\" name=\"customRadio\" class=\"custom-control-input\">
-                            <label class=\"custom-control-label\" for=\"${xpath_as_all_matches}\">Todos que casem com xpath,
-                                adicionando [x], x
-                                de 1 até onde casar </label>
-                        </div>
-                    </form>
+                    Selecione a tabela (tag table no html). As linhas serão casadas usando xpath + "/tbody[1]/tr[1, 2, ...]".
                 </div>
             </div>
 
@@ -414,33 +440,6 @@ function getSaveStepHtml(new_id){
                 </div>
             </div>
 
-            <div class=\"dropdown\">
-                <button class=\"btn btn-primary dropdown-toggle\" type=\"button\" data-toggle=\"dropdown\" aria-haspopup=\"true\"
-                    aria-expanded=\"false\" id=\"${manage_table_columns}\">
-                    Gerenciar colunas da tabela:
-                </button>
-                <div class=\"dropdown-menu\" aria-labelledby=\"dropdownMenuButton\">
-                    <div class=\"form-check\">
-                        <input class=\"form-check-input\" type=\"checkbox\" value=\"\">
-                        <label class=\"form-check-label\">
-                            Amazonas
-                        </label>
-                    </div>
-                    <div class=\"form-check\">
-                        <input class=\"form-check-input\" type=\"checkbox\" value=\"\">
-                        <label class=\"form-check-label\">
-                            Minas Gerais
-                        </label>
-                    </div>
-                    <div class=\"form-check\">
-                        <input class=\"form-check-input\" type=\"checkbox\" value=\"\">
-                        <label class=\"form-check-label\">
-                            Sao Paulo
-                        </label>
-                    </div>
-                </div>
-            </div>
-
             <div class=\"row\">
                 <div class=\"col\">
                     <label>Nome do arquivo</label>
@@ -458,9 +457,8 @@ function getSaveStepHtml(new_id){
                         </div>
                         <div class=\"custom-control custom-radio\">
                             <input type=\"radio\" id=\"${append_to_file}\" name=\"customRadio\" class=\"custom-control-input\">
-                            <label class=\"custom-control-label\" for=\"${append_to_file}\">Adiiconar dados ao final do arquivo
-                                (assume
-                                que arquivo foi criado por outra execução deste coletor)</label>
+                            <label class=\"custom-control-label\" for=\"${append_to_file}\">Adicionar dados ao final do arquivo
+                                (se já existir)</label>
                         </div>
                     </form>
                 </div>
@@ -472,17 +470,20 @@ function getSaveStepHtml(new_id){
 }
 
 function getIFrameStepHtml(new_id){
-    const [xpathHtml, xpathEvents] = getXpathHtml("", new_id, "");
+    const [xpath_html, xpath_events] = getXpathHtml("", new_id, "");
 
     // envent target, function, event type
-    var events = [].concat(xpathEvents);
+    var events = [].concat(xpath_events);
 
     var html = `
         <div class=\"col\">
             <div class=\"row\">
                 <div class=\"col\"><strong>Mude para o iframe</strong></div>
             </div>
-            ` + xpathHtml + `
+            <div class=\"col-3\">
+                id: ${new_id}
+            </div>
+            ` + xpath_html + `
         </div>    
     `;
 
@@ -492,10 +493,10 @@ function getIFrameStepHtml(new_id){
 function getDownloadHtml(new_id){
     var file_name = new_id = "FileName";
 
-    const [xpathHtml, xpathEvents] = getXpathHtml("", new_id, "");
+    const [xpath_html, xpath_events] = getXpathHtml("", new_id, "");
 
     // envent target, function, event type
-    var events = [].concat(xpathEvents);
+    var events = [].concat(xpath_events);
 
     var html = `
         <div class=\"col\">
@@ -503,8 +504,11 @@ function getDownloadHtml(new_id){
                 <div class=\"col\">
                     <strong>Baixe o arquivo</strong>
                 </div>
+                <div class=\"col-3\">
+                    id: ${new_id}
+                </div>
             </div>
-            ` + xpathHtml + `
+            ` + xpath_html + `
             <div class=\"row\">
                 <div class=\"col\">
                     <label>Salvar na pasta</label>
@@ -518,13 +522,13 @@ function getDownloadHtml(new_id){
 }
 
 function getPaginationHtml(new_id){
-    const [xpathHtmlNextPageBtn, xpathEventsNextPageBtn] = getXpathHtml(
+    const [xpath_htmlNextPageBtn, xpath_eventsNextPageBtn] = getXpathHtml(
         new_id + "NextPageBtn", "", "Xpath para botão de próxima página")
-    const [xpathHtmlMaxPagesInfo, xpathEventsMaxPagesInfo] = getXpathHtml(
+    const [xpath_htmlMaxPagesInfo, xpath_eventsMaxPagesInfo] = getXpathHtml(
         new_id + "MaxPagesInfo", "", "Xpath para número máximo de páginas")
 
     // envent target, function, event type
-    var events = [].concat(xpathEventsNextPageBtn).concat(xpathEventsMaxPagesInfo);
+    var events = [].concat(xpath_eventsNextPageBtn).concat(xpath_eventsMaxPagesInfo);
 
     var html = `
         <div class=\"col\">
@@ -533,9 +537,12 @@ function getPaginationHtml(new_id){
                 <div class=\"col\">
                     <strong>Para cada página</strong>
                 </div>
+                <div class=\"col-3\">
+                    id: ${new_id}
+                </div>
             </div>
-            ` + xpathHtmlNextPageBtn + `
-            ` + xpathHtmlMaxPagesInfo + `
+            ` + xpath_htmlNextPageBtn + `
+            ` + xpath_htmlMaxPagesInfo + `
         </div>
     `;
 
@@ -543,10 +550,10 @@ function getPaginationHtml(new_id){
 }
 
 function getCaptchaHtml(new_id) {
-    const [xpathHtml, xpathEvents] = getXpathHtml("", new_id, "");
+    const [xpath_html, xpath_events] = getXpathHtml("", new_id, "");
 
     // envent target, function, event type
-    var events = [].concat(xpathEvents);
+    var events = [].concat(xpath_events);
 
     var html = `
         <div class=\"col\">
@@ -554,8 +561,12 @@ function getCaptchaHtml(new_id) {
                 <div class=\"col\">
                     <strong>Quebre o captcha</strong>
                 </div>
+
+                <div class=\"col-3\">
+                    id: ${new_id}
+                </div>
             </div>
-            ` + xpathHtml + `
+            ` + xpath_html + `
         </div>
     `;
 
@@ -563,10 +574,10 @@ function getCaptchaHtml(new_id) {
 }
 
 function getIfHtml(new_id){
-    const [xpathHtml, xpathEvents] = getXpathHtml("", new_id, "");
+    const [xpath_html, xpath_events] = getXpathHtml("", new_id, "");
 
     // envent target, function, event type
-    var events = [].concat(xpathEvents);
+    var events = [].concat(xpath_events);
 
     var html = `
         <div class=\"col\">
@@ -574,8 +585,157 @@ function getIfHtml(new_id){
                 <div class=\"col\">
                     <strong>Se detectar elemento</strong>
                 </div>
+
+                <div class=\"col-3\">
+                    id: ${new_id}
+                </div>
             </div>
-            ` + xpathHtml + ` 
+            ` + xpath_html + ` 
+        </div>
+    `;
+
+    return [html, events];
+}
+
+function addInfo(container_id, info_type){
+    var new_id = "Info-" + genId(3);
+
+    var info_desc = "Salve o texto do elemento";
+    if (info_type == "href") info_desc = "Salve o href do elemento";
+    else if (info_type == "attr") info_desc = "Salve os atributos do elemento";
+
+    var delete_btn_id = `deleteInfo-${new_id}`;
+
+    const [xpath_html, xpath_events] = getXpathHtml(new_id + "-XpathInput");
+    
+    // envent target, function, event type
+    var events = [
+        [delete_btn_id, function () { deleteElement(new_id); }, "click"],
+    ].concat(xpath_events);
+
+    var html = `
+        <div class=\"row infoContainer\" id=\"${new_id}\" type=\"${info_type}\">
+            <div class=\"col\">
+                <div class=\"row\">
+                    <div class=\"col\">
+                        ${info_desc}
+                    </div>
+                    <div class=\"col-1\">
+                        <span id=\"${delete_btn_id}\" class=\"badge badge-light clickableSpan\">
+                            <img src=\"icons/x.svg\" alt=\"Selecionar\">
+                        </span>
+                    </div>
+                </div>
+
+                <div class=\"row\">
+                    <div class=\"col\">
+                        <div class=\"form-group\">
+                            <label for=\"Title\">Nome da informação:</label>
+                            <input type=\"text\" class=\"form-control\" id=\"Title\">
+                        </div>
+                    </div>
+                </div>
+
+                ` + xpath_html + `
+
+                <div class=\"row\">
+                    <div class=\"col\">
+                        <div class=\"form-group\">
+                            <label for=\"Preview\">Preview:</label>
+                            <input type=\"text\" class=\"form-control\" id=\"Preview\"
+                                placeholder=\"...\" disabled>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const div = document.createElement('div');
+    div.innerHTML = html.trim();
+
+    const info_container = document.getElementById(container_id + "InfoContainer");
+    const dummy = document.getElementById(container_id + "Dummy");
+    info_container.insertBefore(div.firstChild, dummy);
+
+    for (var [id, fun, type] of events) {
+        addEventListener(id, fun, type);
+    }    
+}
+
+function getSaveInfoHtml(new_id) {
+    var events = [
+        [`${new_id}AddInfoBtn`, function () {
+            console.log("AddInfoBtn clicked")
+            const select = document.getElementById(`${new_id}AddInfoSelect`);
+            const info_type = select.options[select.selectedIndex].value;
+            console.log("calling addIfno with:", new_id, info_type);
+            addInfo(new_id, info_type);
+            select.value = "default";
+        }, "click"],
+    ];
+
+    var html = `
+        <div class=\"col\">
+            <div class=\"row\">
+                <div class=\"col\">
+                    <strong>Salve informações</strong>
+                </div>
+                <div class=\"col-3\">
+                    id: ${new_id}
+                </div>
+            </div>
+
+            <div class=\"row\">
+                <div class=\"col\">
+                    <label>Nome do arquivo</label>
+                    <input type=\"text\" class=\"form-control\" placeholder=\"./(...)\" id=\"${new_id}-FileName\">
+                </div>
+            </div>
+
+            <div class=\"row\">
+                <div class=\"col\">
+                    <form>
+                        <div class=\"custom-control custom-radio\">
+                            <input type=\"radio\" id=\"${new_id}OverWriteFile\" name=\"customRadio\" class=\"custom-control-input\" checked>
+                            <label class=\"custom-control-label\" for=\"${new_id}OverWriteFile\">Sobrescrever arquivo se ja
+                                existe</label>
+                        </div>
+                        <div class=\"custom-control custom-radio\">
+                            <input type=\"radio\" id=\"${new_id}AppendToFile\" name=\"customRadio\" class=\"custom-control-input\">
+                            <label class=\"custom-control-label\" for=\"${new_id}AppendToFile\">Adicionar dados ao final do arquivo
+                                (se já existir)</label>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class=\"row\">
+                <div class=\"col\" id=\"${new_id}InfoContainer\">
+                    <div class="row" id="${new_id}Dummy"></div>
+                </div>
+            </div>
+
+            <div class=\"row\" style=\"border-top: 1px dotted gray\">
+                <div class=\"col\">
+                    Adicionar informação:
+                </div>
+            </div>
+            <div class=\"row\">
+                <div class=\"col\">
+                    <select class=\"custom-select\" id=\"${new_id}AddInfoSelect\">
+                        <option selected value=\"default\">Selecione o tipo de informação</option>
+                        <option value=\"href\">href</option>
+                        <option value=\"attr\">atributos do elemento</option>
+                        <option value=\"txt\">texto do elemento</option>
+                    </select>
+                </div>
+            </div>
+            <div class=\"row\">
+                <div class=\"col\">
+                    <button class=\"btn btn-primary\" type=\"button\" id=\"${new_id}AddInfoBtn\">Adicionar</button>
+                </div>
+            </div>
         </div>
     `;
 
@@ -583,39 +743,44 @@ function getIfHtml(new_id){
 }
 
 function insertStep(new_id, step_type) {
-    var innerElements = ""
+    var inner_elements = ""
     if (step_type == "default") {
         console.log("ERROR: Received default option. Should not fall here")
         return "";
     } else if (step_type == "click") {
-        [innerElements, newEvents] = getClickStepHtml(new_id);
+        [inner_elements, new_events] = getClickStepHtml(new_id);
     } else if (step_type == "select") {
-        [innerElements, newEvents] = getSelectStepHtml(new_id);
+        [inner_elements, new_events] = getSelectStepHtml(new_id);
+    } else if (step_type == "table") {
+        [inner_elements, new_events] = getSaveTableHtml(new_id);
     } else if (step_type == "save") {
-        [innerElements, newEvents] = getSaveStepHtml(new_id);
+        [inner_elements, new_events] = getSaveInfoHtml(new_id);
     } else if (step_type == "iframe") {
-        [innerElements, newEvents] = getIFrameStepHtml(new_id);
+        [inner_elements, new_events] = getIFrameStepHtml(new_id);
     } else if (step_type == "download") {
-        [innerElements, newEvents] = getDownloadHtml(new_id);
+        [inner_elements, new_events] = getDownloadHtml(new_id);
     } else if (step_type == "pages") {
-        [innerElements, newEvents] = getPaginationHtml(new_id);
+        [inner_elements, new_events] = getPaginationHtml(new_id);
     } else if (step_type == "captcha") {
-        [innerElements, newEvents] = getCaptchaHtml(new_id);
+        [inner_elements, new_events] = getCaptchaHtml(new_id);
     } else if (step_type == "if") {
-        [innerElements, newEvents] = getIfHtml(new_id);
+        [inner_elements, new_events] = getIfHtml(new_id);
+    } else {
+        console.log("Invalid option of step. Returning.");
+        return;
     }
-    document.querySelector("#" + new_id + "Container > div.col > div.stepStuff").innerHTML = innerElements.trim();
+    document.querySelector("#" + new_id + "Container > div.col > div.stepStuff").innerHTML = inner_elements.trim();
 
-    for (var [id, fun, type] of newEvents) {
+    for (var [id, fun, type] of new_events) {
         addEventListener(id, fun, type);
     }
 }
 
-function getStepContainerHtml(new_id){
+function getStepContainerHtml(new_id, step_type){
     const new_container_id = new_id + "Container";
     return [
         `
-        <div class=\"stepContainer row\" id=\"${new_container_id}\">
+        <div class=\"stepContainer row\" id=\"${new_container_id}\" stepType="${step_type}">
             <div class=\"col-1 indentContainer\"></div>
             <div class=\"col\">
                 <div class=\"stepStuff row\">
@@ -656,7 +821,7 @@ function getStepContainerHtml(new_id){
                     </div>
                     <div class=\"col-1\">
                         <span
-                            id=\"deleteStep${new_container_id}\"
+                            id=\"deleteElement${new_container_id}\"
                             class=\"badge badge-light clickableSpan\"
                         >
                             <img src=\"icons/x.svg\" alt=\"Selecionar\">
@@ -671,14 +836,14 @@ function getStepContainerHtml(new_id){
             ["indent"+new_container_id, function(){indentStep(new_container_id);}, "click"], 
             ["moveStepUp"+new_container_id, function(){moveStepUp(new_container_id);}, "click"], 
             ["moveStepDown"+new_container_id, function(){moveStepDown(new_container_id);}, "click"], 
-            ["deleteStep"+new_container_id, function(){deleStep(new_container_id);}, "click"], 
+            ["deleteElement"+new_container_id, function(){deleteElement(new_container_id);}, "click"], 
 
         ]
     ];
 }
 
-function insertContainer(new_id){
-    const [htmlString, newEvents] = getStepContainerHtml(new_id);
+function insertContainer(new_id, step_type){
+    const [htmlString, new_events] = getStepContainerHtml(new_id, step_type);
 
     const div = document.createElement('div');
     div.innerHTML = htmlString.trim();
@@ -687,7 +852,7 @@ function insertContainer(new_id){
     const stepContainer = document.getElementById("stepMenuContainer");
     stepsContainer.insertBefore(div.firstChild, stepContainer);
 
-    for (var [id, fun, type] of newEvents) {
+    for (var [id, fun, type] of new_events) {
         addEventListener(id, fun, type);
     }
 }
@@ -695,13 +860,13 @@ function insertContainer(new_id){
 function addStep() {
     const select = document.getElementById("stepMenu");
     const btn = document.getElementById("addStep");
-    const new_id = "Step" + genId();
+    const new_id = "Step-" + genId() + "-";
     const step_type = select.options[select.selectedIndex].value;
     if (step_type == "default"){
         return;
     }
 
-    insertContainer(new_id);
+    insertContainer(new_id, step_type);
     insertStep(new_id, step_type);    
     btn.disabled = true;
     select.value = "default";
@@ -725,9 +890,62 @@ function addEventListener(id, fun, type="click"){
     }, 100); 
 }
 
-function load(){
-    var el = document.getElementById("rotateAddress");
+function getIndentationLevel(step_container_id){
+    var el = document.querySelector("#" + step_container_id + " > div.col-1.indentContainer");
+    console.log(":::getIndentationLevel #" + step_container_id + " > div.col-1.indentContainer");
+    var depth = el.children.length + 1;
+    // if (el.children.lenght) depth = el.children.length + 1;
+    // else depth = 1;
+    console.log("Indentation:", depth);
+    return depth;
+}
 
+function getStepConfig(step_container_id){
+    var step_container = document.getElementById(step_container_id);
+    console.log(step_container.getAttribute("steptype"));
+    return {
+        type: step_container.getAttribute("steptype"),
+    };
+}
+
+function genJson() {
+    var steps_container = document.getElementById("stepsContainer");
+    var steps = steps_container.children;
+
+    var root_step = { type: "root", depth: 0, children: [] };
+    var depth_stack = [root_step];
+    var stack_top = depth_stack[depth_stack.length - 1];
+    for (var step of steps) {
+        var step_container_id = step.getAttribute("id");
+        if(step_container_id == "stepMenuContainer"){
+            continue;
+        }
+
+        var depth = getIndentationLevel(step_container_id);
+        if (depth > stack_top['depth'] + 1) {
+            document.getElementById("configJson").value = "Identação incorreta!!";
+            return;
+        }
+        else while (stack_top.depth >= depth) {
+            depth_stack.pop();
+            stack_top = depth_stack[depth_stack.length - 1];
+        }
+
+        var new_step = getStepConfig(step_container_id);
+        new_step["depth"] = depth;
+        new_step["id"] = document.querySelector("#" + step_container_id + 
+            "> div.col > div.stepStuff.row > div > div:nth-child(1) >" + 
+            "div.col-3").textContent.replace("id:", "").trim();
+        new_step["children"] = [];
+
+        stack_top.children.push(new_step);
+        depth_stack.push(new_step);
+        stack_top = depth_stack[depth_stack.length - 1];
+    }
+    document.getElementById("configJson").value = JSON.stringify(root_step);
+}
+
+function load(){
     addEventListener("rotateAddress", function () {
         toggleElement("maxCallsPerAddress");
     }); 
@@ -737,14 +955,20 @@ function load(){
     addEventListener("addStep", function () {
         addStep();
     }); 
+
+    addEventListener("genJson", function(){genJson();}, "click");
 }
 
 // receives xpath of selected element from devtools.js
 chrome.extension.onMessage.addListener(
     function (request, sender, sendResponse) {
-        if (selected_xpath_input){
-            document.getElementById(selected_xpath_input).value = request.content;
-            deselectXpathSpan(selected_xpath_input + "SelectSpan");
+        if (request.type == "xpath"){
+            if (selected_xpath_input){
+                var el = document.getElementById(selected_xpath_input);
+                el.value = "//" + request.content;
+                el.dispatchEvent(new Event('input'));
+                deselectXpathSpan(selected_xpath_input + "SelectSpan");
+            }
         }
     }
 );
@@ -752,13 +976,9 @@ chrome.extension.onMessage.addListener(
 document.addEventListener("DOMContentLoaded", load, false);
 
 // TODO:
-// Make all in insertStep return a list of [html, events], turn all inline functions in event handlers, like in insert Container
-// adicionar funcionalidade do clique no xpath DONE
-//     mudar cor do icone de mouse quando ele for selecionado
-// implementar funcionalidade de copiar xpath com o botao Copiar
-// Select: implementar funcionalidade de detectar opções estaticas e inserir no gerenciador
-// Select: implementar funcionalidade de marcar textos separados por ;
 // Save: implementar funcionalidade de tentar casar elementos com xpath e detectar atributos
+// Select: implementar funcionalidade de marcar textos separados por ;
+// Select: implementar funcionalidade de detectar opções estaticas e inserir no gerenciador
 // checar todas as funcionalidades de cada passo
 // xpath: highlight do elemento selecionado?
 
