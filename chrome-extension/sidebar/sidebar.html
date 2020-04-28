@@ -96,7 +96,8 @@
                                         <option value="default" selected>Selecione um passo</option>
                                         <option value="click">Clique no elemento </option>
                                         <option value="select">Selecione opção </option>
-                                        <option value="save">Salve dados </option>
+                                        <option value="table">Salve tabela </option>
+                                        <option value="save">Salve dados</option>
                                         <option value="iframe">Mude para Iframe </option>
                                         <option value="download">Baixe o arquivo</option>
                                         <option value="pages">Para cada página </option>
@@ -128,14 +129,15 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col">
-                        <button type="button" class="btn btn-primary">Gerar Json</button>
+                    <div class="col"></div>
+                    <div class="col-1">
+                        <button type="button" id="genJson" class="btn btn-primary">Gerar Json</button>
                     </div>
                 </div>
                 <form>
                     <div class="form-row">
                         <div class="col-6">
-                            <input type="text" class="form-control" placeholder="{ }" disabled>
+                            <input type="text" class="form-control" placeholder="{ " id="configJson" disabled>
                         </div>
                         <div class="col-1">
                             <span class="badge badge-primary clickableSpan">Copiar</span>
