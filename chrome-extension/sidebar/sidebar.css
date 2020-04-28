@@ -23,6 +23,7 @@ div {
 .my-custom-scrollbar {
     position: relative;
     height: 200px;
+    width: 700px;
     overflow: auto;
     padding: 10px 0;
 }
@@ -44,4 +45,12 @@ div {
     height: 100%;
     padding-left: 5px;
     float: left;
+}
+
+.stepContainer{
+    border-top: 1px groove gray;
+}
+
+.infoContainer{
+    border-top: 1px dotted gray;
 }
