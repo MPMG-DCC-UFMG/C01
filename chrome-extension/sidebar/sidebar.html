@@ -48,7 +48,7 @@
                     <div class="row">
                         <div class="col">
                             <label>Número máximo de requisições por segundo:</label>
-                            <input type="text" class="form-control" placeholder="2">
+                            <input type="text" class="form-control" placeholder="2" id="maxRequestsPerSecond">
                         </div>
                     </div>
                 
@@ -64,7 +64,7 @@
                         <label class="col-4">
                             <img src="icons/corner-down-right.svg" alt=""> Máximo de chamadas por ip:
                         </label>
-                        <input type="text" class="form-control col-1" placeholder="30">
+                        <input type="text" class="form-control col-1" placeholder="30" id="maxResquestsPerAddress">
                     </div>
                 </div>
             </div>
@@ -130,17 +130,17 @@
                 </div>
                 <div class="row">
                     <div class="col"></div>
-                    <div class="col-1">
+                    <div class="col-4">
                         <button type="button" id="genJson" class="btn btn-primary">Gerar Json</button>
                     </div>
                 </div>
                 <form>
                     <div class="form-row">
                         <div class="col-6">
-                            <input type="text" class="form-control" placeholder="{ " id="configJson" disabled>
+                            <input type="text" class="form-control" placeholder="{ " id="configJson">
                         </div>
                         <div class="col-1">
-                            <span class="badge badge-primary clickableSpan">Copiar</span>
+                            <span id="copyConfigJson" class="badge badge-primary clickableSpan">Copiar</span>
                         </div>
                     </div>
                 </form>

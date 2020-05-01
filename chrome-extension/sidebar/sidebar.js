@@ -80,8 +80,8 @@ function moveStepDown(step_id) {
     e.next().insertBefore(e);
 }
 
-function deleteElement(step_id){
-    const child = document.querySelector("#" + step_id);
+function deleteElement(element_id){
+    const child = document.querySelector("#" + element_id);
     child.parentNode.removeChild(child);
 }
 
@@ -141,8 +141,6 @@ function getXpathHtml(xpath_id="", new_id="", label=""){
         }, "click"],
         [xpath_id + "CopySpan", function () { copyInputText(xpath_id); }, "click"],
     ]
-
-    document.getElementById("collectorName").value = "Xpath id: " + xpath_id + "SelectSpan";
 
     var html = `
         <!-- begin xpath -->
@@ -211,18 +209,13 @@ function getClickStepHtml(new_id){
 function getSelectStepHtml(new_id){
     var is_filled_dynamically = new_id + "IsFilledDynamically";
     var filled_after_step = new_id + "FilledAfterStep";
-    var manage_dynamic_options = new_id + "ManageDynamicOptions";
-    var static_options_to_ignore = new_id + "OptionToIgnore";
+    var options_to_ignore = new_id + "OptionToIgnore";
 
     const [xpath_html, xpath_events] = getXpathHtml("", new_id, "");
 
     // envent target, function, event type
     var events = [
-        [is_filled_dynamically, function () {
-            toggleElement(filled_after_step);
-            toggleElement(manage_dynamic_options);
-            toggleElement(static_options_to_ignore);
-        }, "change"],
+        [is_filled_dynamically, function () {toggleElement(filled_after_step);}, "change"],
     ].concat(xpath_events);
 
     var html = `
@@ -248,48 +241,20 @@ function getSelectStepHtml(new_id){
                 <label class=\"col-4\">
                     <img src=\"icons/corner-down-right.svg\" alt=\"\"> Preenchido depois do passo:
                 </label>
-                <input type=\"text\" class=\"col-4\" placeholder=\"Step-...-\">
+                <input type=\"text\" class=\"col-4\" placeholder=\"Step-...-\" id=\"${new_id}FilledAfterStep\">
             </div>
-            <div class=\"row\" id=\"${manage_dynamic_options}\" style=\"display: none;\">
+            <div class=\"row\">
                 <label class=\"col-3\">
                     <img src=\"icons/corner-down-right.svg\" alt=\"\">
                     Ignorar opções:
                 </label>
-                <input type=\"text\" class=\"col\" placeholder=\"cidade 1;cidade 2;(...)\">
+                <input type=\"text\" class=\"col\" placeholder=\"cidade 1;cidade 2;(...)\" id=\"${options_to_ignore}\">
                 <div class="col-1">
                     <span class=\"badge badge-light clickableSpan\">
                         <img src=\"icons/help-circle.svg\" alt=\"Como usar\">
                     </span>
                 </div>
             </div>
-
-            <div class=\"dropdown row\" id=\"${static_options_to_ignore}\" style=\"display: block;\">
-                <button class=\"btn btn-primary dropdown-toggle\" type=\"button\" data-toggle=\"dropdown\"
-                    aria-haspopup=\"true\" aria-expanded=\"false\"
-                >
-                    Gerenciar opções:
-                </button>
-                <div class=\"dropdown-menu\" aria-labelledby=\"dropdownMenuButton\">
-                    <div class=\"form-check\">
-                        <input class=\"form-check-input\" type=\"checkbox\" value=\"\">
-                        <label class=\"form-check-label\">
-                            Amazonas
-                        </label>
-                    </div>
-                    <div class=\"form-check\">
-                        <input class=\"form-check-input\" type=\"checkbox\" value=\"\">
-                        <label class=\"form-check-label\">
-                            Minas Gerais
-                        </label>
-                    </div>
-                    <div class=\"form-check\">
-                        <input class=\"form-check-input\" type=\"checkbox\" value=\"\">
-                        <label class=\"form-check-label\">
-                            Sao Paulo
-                        </label>
-                    </div>
-                </div>
-            </div>    
         </div>   
     `;
 
@@ -365,76 +330,6 @@ function getSaveTableHtml(new_id){
                 <div class=\"col\">
                     <div class=\"tableWrapperScrollY my-custom-scrollbar\">
                         <table class=\"table\" id=\"${save_content_table}\">
-                            <thead>
-                                <tr>
-                                    <th scope=\"col\">#</th>
-                                    <th scope=\"col\">First</th>
-                                    <th scope=\"col\">Last</th>
-                                    <th scope=\"col\">Handle</th>
-                                    <th scope=\"col\">blabla</td>
-                                    <th scope=\"col\">blabla</td>
-                                    <th scope=\"col\">blabla</td>
-                                    <th scope=\"col\">blabla</td>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <th scope=\"row\">1</th>
-                                    <td>Mark</td>
-                                    <td>Otto</td>
-                                    <td>@mdo</td>
-                                    <td>blabla</td>
-                                    <td>blabla</td>
-                                    <td>blabla</td>
-                                    <td>blabla</td>
-                                </tr>
-                                <tr>
-                                    <th scope=\"row\">2</th>
-                                    <td>Jacob</td>
-                                    <td>Thornton</td>
-                                    <td>@fat</td>
-                                    <td>blabla</td>
-                                    <td>blabla</td>
-                                    <td>blabla</td>
-                                    <td>blabla</td>
-                                </tr>
-                                <tr>
-                                    <th scope=\"row\">3</th>
-                                    <td>Larry</td>
-                                    <td>the Bird</td>
-                                    <td>@twitter</td>
-                                    <td>blabla</td>
-                                    <td>blabla</td>
-                                    <td>blabla</td>
-                                    <td>blabla</td>
-                                </tr>
-                                <tr>
-                                    <th scope=\"row\">4</th>
-                                    <td>Larry</td>
-                                    <td>the Bird</td>
-                                    <td>@twitter</td>
-                                    <td>blabla</td>
-                                    <td>blabla</td>
-                                    <td>blabla</td>
-                                    <td>blabla</td>
-                                </tr>
-                                <tr>
-                                    <th scope=\"row\">5</th>
-                                    <td>Larry</td>
-                                    <td>the Bird</td>
-                                    <td>@twitter</td>
-                                </tr>
-                                <tr>
-                                    <th scope=\"row\">6</th>
-                                    <td>Larry</td>
-                                    <td>the Bird</td>
-                                    <td>@twitter</td>
-                                    <td>blabla</td>
-                                    <td>blabla</td>
-                                    <td>blabla</td>
-                                    <td>blabla</td>
-                                </tr>
-                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -491,7 +386,7 @@ function getIFrameStepHtml(new_id){
 }
 
 function getDownloadHtml(new_id){
-    var file_name = new_id = "FileName";
+    var folder_address = new_id = "FolderAddress";
 
     const [xpath_html, xpath_events] = getXpathHtml("", new_id, "");
 
@@ -512,7 +407,7 @@ function getDownloadHtml(new_id){
             <div class=\"row\">
                 <div class=\"col\">
                     <label>Salvar na pasta</label>
-                    <input type=\"text\" class=\"form-control\" placeholder=\"./(...)\" id=\"${file_name}\">
+                    <input type=\"text\" class=\"form-control\" placeholder=\"./(...)\" id=\"${folder_address}\">
                 </div>
             </div>
         </div>        
@@ -575,7 +470,7 @@ function getCaptchaHtml(new_id) {
 
 function getIfHtml(new_id){
     const [xpath_html, xpath_events] = getXpathHtml("", new_id, "");
-
+    var if_detect = new_id + "IfDetect";
     // envent target, function, event type
     var events = [].concat(xpath_events);
 
@@ -590,6 +485,18 @@ function getIfHtml(new_id){
                     id: ${new_id}
                 </div>
             </div>
+
+            <div class=\"row\">
+                <div class=\"col\">
+                    <div class=\"custom-control custom-switch\">
+                        <input type=\"checkbox\" class=\"custom-control-input\" id=\"${if_detect}\">
+                        <label class=\"custom-control-label\" for=\"${if_detect}\">
+                            Se marcado, funcionará como 'se detectar'. Se não marcado, 'se não detectar'
+                        </label>
+                    </div>
+                </div>
+            </div>
+
             ` + xpath_html + ` 
         </div>
     `;
@@ -638,7 +545,7 @@ function addInfo(container_id, info_type){
 
                 ` + xpath_html + `
 
-                <div class=\"row\">
+                <!-- <div class=\"row\">
                     <div class=\"col\">
                         <div class=\"form-group\">
                             <label for=\"Preview\">Preview:</label>
@@ -646,7 +553,7 @@ function addInfo(container_id, info_type){
                                 placeholder=\"...\" disabled>
                         </div>
                     </div>
-                </div>
+                </div> -->
             </div>
         </div>
     `;
@@ -689,7 +596,7 @@ function getSaveInfoHtml(new_id) {
             <div class=\"row\">
                 <div class=\"col\">
                     <label>Nome do arquivo</label>
-                    <input type=\"text\" class=\"form-control\" placeholder=\"./(...)\" id=\"${new_id}-FileName\">
+                    <input type=\"text\" class=\"form-control\" placeholder=\"./(...)\" id=\"${new_id}FileName\">
                 </div>
             </div>
 
@@ -697,8 +604,8 @@ function getSaveInfoHtml(new_id) {
                 <div class=\"col\">
                     <form>
                         <div class=\"custom-control custom-radio\">
-                            <input type=\"radio\" id=\"${new_id}OverWriteFile\" name=\"customRadio\" class=\"custom-control-input\" checked>
-                            <label class=\"custom-control-label\" for=\"${new_id}OverWriteFile\">Sobrescrever arquivo se ja
+                            <input type=\"radio\" id=\"${new_id}OverwriteFile\" name=\"customRadio\" class=\"custom-control-input\" checked>
+                            <label class=\"custom-control-label\" for=\"${new_id}OverwriteFile\">Sobrescrever arquivo se ja
                                 existe</label>
                         </div>
                         <div class=\"custom-control custom-radio\">
@@ -890,9 +797,9 @@ function addEventListener(id, fun, type="click"){
     }, 100); 
 }
 
-function getIndentationLevel(step_container_id){
-    var el = document.querySelector("#" + step_container_id + " > div.col-1.indentContainer");
-    console.log(":::getIndentationLevel #" + step_container_id + " > div.col-1.indentContainer");
+function getIndentationLevel(step_id) {
+    var el = document.querySelector("#" + step_id + " > div.col-1.indentContainer");
+    console.log(":::getIndentationLevel #" + step_id + " > div.col-1.indentContainer");
     var depth = el.children.length + 1;
     // if (el.children.lenght) depth = el.children.length + 1;
     // else depth = 1;
@@ -900,19 +807,158 @@ function getIndentationLevel(step_container_id){
     return depth;
 }
 
+function getClickStepConfig(step_id) {
+    var config = {};
+    var xpath_input = document.querySelector(`#${step_id}XpathInput`);
+
+    console.log(`#${step_id}XpathInput`);
+
+    config["element_to_click_xpath"] = xpath_input.value;
+    return config;
+}
+
+function getSelectStepConfig(step_id) {
+    var config = {};
+
+    config["select_xpath"] = document.querySelector(`#${step_id}XpathInput`).value;
+    config["filled_dynamically"] = document.querySelector(`#${step_id}IsFilledDynamically`).checked;
+
+    
+    config["ignore_options"] = document.querySelector(`#${step_id}OptionToIgnore`).value.split(";");
+
+    if (config["filled_dynamically"])
+        config["filled_after_step"] = document.querySelector(`#${step_id}FilledAfterStep`).value;
+    else
+        config["filled_after_step"] = "";
+
+    return config;
+}
+
+function getSaveTableConfig(step_id) {
+    var config = {};
+
+    config["table_xpath"] = document.querySelector(`#${step_id}XpathInput`).value;
+    config["save_to_file"] = document.querySelector(`#${step_id}FileName`).value;
+    config["append_to_file"] = document.querySelector(`#${step_id}AppendToFile`).checked;
+
+    return config;
+}
+
+function getSaveInfoConfig(step_id) {
+    var config = {};
+
+    config["save_to_file"] = document.getElementById(`${step_id}FileName`).value;
+    config["appent_to_file"] = document.getElementById(`${step_id}AppendToFile`).checked;
+    
+    var infos = document.getElementById(`${step_id}InfoContainer`).children;
+    config["info"] = []
+    for (var info of infos) {
+        var info_id = info.getAttribute("id");
+        if(info_id == `${step_id}Dummy`)
+            continue;
+        var type = info.getAttribute("type");
+        var xpath_to_element = document.getElementById(`${info_id}-XpathInput`).value;
+
+        config["info"] = config["info"].concat([{
+            "type": type, "xpath": xpath_to_element
+        }]);
+    }
+
+    return config;
+}
+
+function getIFrameStepConfig(step_id) {
+    var config = {};
+    config["iframe_xpath"] = document.querySelector(`#${step_id}XpathInput`).value;
+    return config;
+}
+
+function getDownloadConfig(step_id) {
+    var config = {};
+
+    config["file_xpath"] = document.querySelector(`#${step_id}XpathInput`).value;
+    config["save_in_folder"] = document.querySelector(`#${step_id}FolderAddress`).value;
+
+    return config;
+}
+
+function getPaginationConfig(step_id) { 
+    var config = {};
+
+    config["next_btn_xpath"] = document.querySelector(
+        `#${step_id}NextPageBtn`).value;
+    config["max_pages_info_xpath"] = document.querySelector(
+        `#${step_id}MaxPagesInfo`).value;
+
+    return config;
+}
+
+function getCaptchaConfig(step_id) {
+    var config = {};
+    config["captcha_xpath"] = document.querySelector(`#${step_id}XpathInput`).value;
+    return config;
+}
+
+function getIfConfig(step_id) {
+    var config = {};
+    config["element_xpath"] = document.querySelector(`#${step_id}XpathInput`).value;
+    config["if_detect"] = document.querySelector(`#${step_id}IfDetect`).value;
+    return config;
+}
+
 function getStepConfig(step_container_id){
     var step_container = document.getElementById(step_container_id);
+
+    var id_parts = step_container_id.split("-");
+    
     console.log(step_container.getAttribute("steptype"));
-    return {
-        type: step_container.getAttribute("steptype"),
-    };
+    
+    var step_type = step_container.getAttribute("steptype");
+    
+    var config = {}
+
+    var step_id = [id_parts[0], id_parts[1], ""].join("-");
+
+    if (step_type == "click") {
+        config = getClickStepConfig(step_id);
+    } else if (step_type == "select") {
+        config = getSelectStepConfig(step_id);
+    } else if (step_type == "table") {
+        config = getSaveTableConfig(step_id);
+    } else if (step_type == "save") {
+        config = getSaveInfoConfig(step_id);
+    } else if (step_type == "iframe") {
+        config = getIFrameStepConfig(step_id);
+    } else if (step_type == "download") {
+        config = getDownloadConfig(step_id);
+    } else if (step_type == "pages") {
+        config = getPaginationConfig(step_id);
+    } else if (step_type == "captcha") {
+        config = getCaptchaConfig(step_id);
+    } else if (step_type == "if") {
+        config = getIfConfig(step_id);
+    } else {
+        console.log("Invalid option of step. Returning.");
+        return;
+    }
+
+    config["type"] = step_type;
+    return config;
 }
 
 function genJson() {
     var steps_container = document.getElementById("stepsContainer");
     var steps = steps_container.children;
 
-    var root_step = { type: "root", depth: 0, children: [] };
+    var root_step = {
+        type: "root",
+        depth: 0,
+        children: [],
+        name: document.getElementById("collectorName").value,
+        max_requests_per_seconds: document.getElementById("maxRequestsPerSecond").value,
+        rotate_address: document.getElementById("rotateAddress").checked,
+        max_requests_per_ip: document.getElementById("maxResquestsPerAddress").value
+    };
     var depth_stack = [root_step];
     var stack_top = depth_stack[depth_stack.length - 1];
     for (var step of steps) {
@@ -920,7 +966,6 @@ function genJson() {
         if(step_container_id == "stepMenuContainer"){
             continue;
         }
-
         var depth = getIndentationLevel(step_container_id);
         if (depth > stack_top['depth'] + 1) {
             document.getElementById("configJson").value = "Identação incorreta!!";
@@ -957,6 +1002,8 @@ function load(){
     }); 
 
     addEventListener("genJson", function(){genJson();}, "click");
+
+    addEventListener("copyConfigJson", function () { copyInputText("configJson");}, "click")
 }
 
 // receives xpath of selected element from devtools.js
@@ -976,6 +1023,7 @@ chrome.extension.onMessage.addListener(
 document.addEventListener("DOMContentLoaded", load, false);
 
 // TODO:
+// PAREI NO GET CONFIG do SAVE INFO, n ta pegando info
 // Save: implementar funcionalidade de tentar casar elementos com xpath e detectar atributos
 // Select: implementar funcionalidade de marcar textos separados por ;
 // Select: implementar funcionalidade de detectar opções estaticas e inserir no gerenciador
