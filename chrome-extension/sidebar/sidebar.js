@@ -572,14 +572,27 @@ function addInfo(container_id, info_type){
 
 function getSaveInfoHtml(new_id) {
     var events = [
-        [`${new_id}AddInfoBtn`, function () {
+        [`${new_id}AddInfoBtn`, function () { // Adds info to be collected
             console.log("AddInfoBtn clicked")
             const select = document.getElementById(`${new_id}AddInfoSelect`);
             const info_type = select.options[select.selectedIndex].value;
-            console.log("calling addIfno with:", new_id, info_type);
+            console.log("calling add Info with:", new_id, info_type);
             addInfo(new_id, info_type);
             select.value = "default";
+            var btn = document.getElementById(`${new_id}AddInfoBtn`);
+            btn.disabled = true;
         }, "click"],
+        [`${new_id}AddInfoSelect`, function(){
+            // disables 'AddInfoBtn' if value select is the default
+            // enables otherwise
+            var select = document.getElementById(`${new_id}AddInfoSelect`);
+            var btn = document.getElementById(`${new_id}AddInfoBtn`);
+
+            if (select.options[select.selectedIndex].value == "default")
+                btn.disabled = true;
+            else
+                btn.disabled = false;
+        }, "change"]
     ];
 
     var html = `
@@ -640,7 +653,7 @@ function getSaveInfoHtml(new_id) {
             </div>
             <div class=\"row\">
                 <div class=\"col\">
-                    <button class=\"btn btn-primary\" type=\"button\" id=\"${new_id}AddInfoBtn\">Adicionar</button>
+                    <button class=\"btn btn-primary\" type=\"button\" id=\"${new_id}AddInfoBtn\" disabled>Adicionar</button>
                 </div>
             </div>
         </div>
