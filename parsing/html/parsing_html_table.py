@@ -1,12 +1,21 @@
 import pandas as pd
 import os
+from bs4 import BeautifulSoup
 
 def html_to_df(html_file, match, flavor, header, index_col, skiprows, attrs, parse_dates, thousands, encoding, decimal, converters, na_values, keep_default_na, displayed_only):
     '''
     Receives the html file path and reads into a DataFrame structure using the Pandas module.
+    This function also converts the link element attribute to it's value 
     '''
     try:
-        dfs = pd.read_html(html_file, match, flavor, header, index_col, skiprows, attrs, parse_dates, thousands, encoding, decimal, converters, na_values, keep_default_na, displayed_only)
+        f = open(html_file, encoding="ISO-8859-1")
+        soup = BeautifulSoup(f, 'html.parser')
+        f.close()
+        
+        for a in soup.find_all('a', href=True):
+            a.string = a['href']
+
+        dfs = pd.read_html(str(soup), match, flavor, header, index_col, skiprows, attrs, parse_dates, thousands, encoding, decimal, converters, na_values, keep_default_na, displayed_only)
     except:
         raise Exception("The table could not be found in the HTML file.")
     
@@ -18,7 +27,7 @@ def df_to_csv(dfs, output_file, index = False):
     '''
     for i in range(0, len(dfs)):
         try:
-            dfs[i].to_csv(output_file, index = index, mode='a')
+            dfs[i].to_csv(output_file, index = index, mode='a', quoting =1)
         except:
             raise Exception("The system could not save the CSV file.")
     
@@ -46,14 +55,20 @@ def html_to_csv(html_file_path, match='.+', flavor=None, header=None, index_col=
 
     
     # Check if html file exists
-    if !(os.path.isfile(html_file_path)):
+    if (os.path.isfile(html_file_path)):   
+        
+        # print('exists')     
+    
+        # Create output file based on the input file name
+        output_file = html_file_path.split('.html')[0]+".csv"
+        
+        # Convert html do Pandas DataFrame
+        dfs = html_to_df(html_file_path, match, flavor, header, index_col, skiprows, attrs, parse_dates, thousands, encoding, decimal, converters, na_values, keep_default_na, displayed_only)
+        
+        
+        
+        # Save the Pandas DataFrame to a csv file
+        df_to_csv(dfs, output_file)
+        
+    else:
         raise Exception('The given HMTL file does not exist.')
-    
-    # Create output file based on the input file name
-    output_file = html_file_path.split('.html')[0]+".csv"
-    
-    # Convert html do Pandas DataFrame
-    dfs = html_to_df(html_file_path, match, flavor, header, index_col, skiprows, attrs, parse_dates, thousands, encoding, decimal, converters, na_values, keep_default_na, displayed_only)
-    
-    # Save the Pandas DataFrame to a csv file
-    df_to_csv(dfs, output_file)
