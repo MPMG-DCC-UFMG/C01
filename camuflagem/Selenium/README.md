@@ -1,4 +1,4 @@
-# Módulo responsável por camuflar coletores
+# Módulo responsável por camuflar coletores baseado em Selenium
 De maneira geral, webdrivers do Selenium ou sessões da biblioteca Requests são especializados para rotacionar IPs, controlar número de requisições por tempo, introduzir aleatoriedade, rotacionar User-Agents, evitar Honeypots, etc.   
 
 ## Rotação de IPs
