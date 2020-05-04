@@ -48,7 +48,7 @@ def generate(control_points: list, intervals: int = 10) -> list:
             point[0] += bern * control_point[0]
             point[1] += bern * control_point[1]
 
-        # coordenadas de pixels devem ser inteiros
+        # pixel coordinates must be integers
         point = (round(point[0]), round(point[1]))
         if point not in points:
             points.append(point)
@@ -72,52 +72,4 @@ def plot(points: list) -> None:
     filename = 'bezier_curve_' + str(datetime.now()).split('.')[0].replace(' ','_') + '.png'
     plt.savefig(filename)
 
-# if __name__ == "__main__":
-#     driver = webdriver.Firefox()
-#     driver.get('https://www.autodraw.com/')
-#     # find_element_by_css_selector('html')
-#     driver.find_element_by_css_selector(".buttons > .green").click()
-#     root = driver.find_element_by_id("main-canvas")
-
-#     window_size = root.size    
-#     width = int(window_size['width'])
-#     height = int(window_size['height'])
-    
-#     x_range = [x for x in range(width)]
-#     y_range = [x for x in range(height)]
-    
-#     n_ctrl_pts = 5
-#     ctrl_points = list()
-#     for _ in range(n_ctrl_pts):
-#         x = random.choice(x_range)
-#         y = random.choice(y_range)
-
-#         ctrl_points.append((x, y))
-
-#     points = generate(ctrl_points)
-
-#     action = ActionChains(driver)
-    
-#     xoffset = points[0][0]
-#     yoffset = points[0][1]
-
-#     action.move_to_element_with_offset(root, xoffset, yoffset)
-#     action.click_and_hold()
-
-#     last_point = [xoffset, yoffset]
-#     for point in points[1:]:
-#         xoffset = point[0] - last_point[0]
-#         yoffset = point[1] - last_point[1]
-        
-#         action.move_by_offset(xoffset, yoffset)
-        
-#         last_point[0] = point[0]
-#         last_point[1] = point[1]
-    
-#     action.release()
-#     action.perform()
-
-#     plot(points)
-#     # print(root.location)
-#     # print(root.size)
 

@@ -21,7 +21,9 @@ class TorChromeWebdriver(CamouflageHandler, webdriver.Chrome):
                 # CamouflageHandler parameters
                 tor_host: str = '127.0.0.1',
                 tor_port: int = 9050,
-                user_agents: list = [],
+                tor_password: str = '',
+                tor_control_port: int = 9051,
+                allow_reuse_ip_after: int = 5,
                 time_between_calls: int = 0,
                 random_time_between_calls: bool = False,
                 min_time_between_calls: int = 0,
@@ -40,13 +42,16 @@ class TorChromeWebdriver(CamouflageHandler, webdriver.Chrome):
         CamouflageHandler.__init__(self,
                                    tor_host,
                                    tor_port,
-                                   user_agents,
+                                   tor_password,
+                                   tor_control_port,
+                                   allow_reuse_ip_after,
+                                   [],
                                    time_between_calls,
                                    random_time_between_calls,
                                    min_time_between_calls,
                                    max_time_between_calls)
 
-        chrome_options.add_argument(f'--proxy-server=socks5://{self.tor_host}:{self.tor_port}')
+        chrome_options.add_argument(f'--proxy-server=socks5://{tor_host}:{tor_port}')
         webdriver.Chrome.__init__(self, 
                                     executable_path,
                                     port,
@@ -131,12 +136,3 @@ class TorChromeWebdriver(CamouflageHandler, webdriver.Chrome):
 
         if plot:
             bezier_curve.plot(bezier_points)
-
-# if __name__ == "__main__":
-#     driver = TorChromeWebdriver('../../venv/bin/chromedriver')
-
-#     driver.get('https://www.autodraw.com/')
-#     driver.find_element_by_css_selector(".buttons > .green").click()
-#     canvas = driver.find_element_by_id("main-canvas")
-
-#     driver.bezier_mouse_move(webelement_to_mouse_move=canvas)

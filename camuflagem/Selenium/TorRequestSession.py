@@ -11,6 +11,9 @@ class TorRequestSession(CamouflageHandler, Session):
                 # CamouflageHandler parameters
                 tor_host: str = '127.0.0.1',
                 tor_port: int = 9050,
+                tor_password: str = '',
+                tor_control_port: int = 9051,
+                allow_reuse_ip_after: int = 5,
                 # default user-agent is chrome 81.0 Linux
                 user_agents: list = ['Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.92 Safari/537.36'],
                 time_between_calls: int = 0,
@@ -29,20 +32,24 @@ class TorRequestSession(CamouflageHandler, Session):
         """
         
         CamouflageHandler.__init__(self,
-                                    tor_host,
-                                    tor_port,
-                                    user_agents,
-                                    time_between_calls,
-                                    random_time_between_calls,
-                                    min_time_between_calls,
-                                    max_time_between_calls)
+                                   tor_host,
+                                   tor_port,
+                                   tor_password,
+                                   tor_control_port,
+                                   allow_reuse_ip_after,
+                                   user_agents,
+                                   time_between_calls,
+                                   random_time_between_calls,
+                                   min_time_between_calls,
+                                   max_time_between_calls)
+
 
         Session.__init__(self)
 
         # Configures the session to use Tor as a proxy server
         self.proxies = dict()
-        self.proxies['http'] = f'socks5h://{self.tor_host}:{self.tor_port}'
-        self.proxies['https'] = f'socks5h://{self.tor_host}:{self.tor_port}'
+        self.proxies['http'] = f'socks5h://{tor_host}:{tor_port}'
+        self.proxies['https'] = f'socks5h://{tor_host}:{tor_port}'
 
         self.number_of_requests_made = 0
         self.change_ip_after = change_ip_after
@@ -72,10 +79,4 @@ class TorRequestSession(CamouflageHandler, Session):
         self.last_timestamp = int(time.time())
         kwargs['headers'] = self.headers
         return super().get(url, **kwargs)
-
-# if __name__ == "__main__":
-#     session = TorRequestSession(change_ip_after=2, random_time_between_calls=True)
-#     for _ in range(10):
-#         text = session.get('https://check.torproject.org/').text
-#         print(text.split('<strong>')[-1].split('</strong>')[0])
 

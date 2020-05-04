@@ -27,6 +27,9 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
                     # CamouflageHandler parameters
                     tor_host: str = '127.0.0.1',
                     tor_port: int = 9050,
+                    tor_password: str = '',
+                    tor_control_port: int = 9051,
+                    allow_reuse_ip_after: int = 5,
                     user_agents: list = [],
                     time_between_calls: int = 0,
                     random_time_between_calls: bool = False,
@@ -46,8 +49,11 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
             change_user_agent_after: Number of calls before changing the user-agent. If the number is negative, the user-agent never will be changed (default -1)
         """
         CamouflageHandler.__init__(self, 
-                                    tor_host, 
-                                    tor_port, 
+                                    tor_host,
+                                    tor_port,
+                                    tor_password,
+                                    tor_control_port,
+                                    allow_reuse_ip_after,
                                     user_agents,
                                     time_between_calls,
                                     random_time_between_calls,
@@ -63,8 +69,8 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
 
         # Configures the driver instance to use Tor as a proxy server
         firefox_profile.set_preference("network.proxy.type", 1)
-        firefox_profile.set_preference("network.proxy.socks", self.tor_host)
-        firefox_profile.set_preference("network.proxy.socks_port", self.tor_port)
+        firefox_profile.set_preference("network.proxy.socks", tor_host)
+        firefox_profile.set_preference("network.proxy.socks_port", tor_port)
         firefox_profile.update_preferences()
 
         webdriver.Firefox.__init__(self, firefox_profile=firefox_profile)
@@ -110,14 +116,14 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
         super().get(url)
     
     def bezier_mouse_move(self, webelement_to_mouse_move = None, control_points: list = [], num_random_control_points: int = 7, plot: bool = True) -> None:
-       '''Moves the mouse in the form of Bézier curves.
-        
-        Keywords arguments:
-            webelement_to_mouse_move -- Webelement where the mouse will move (default html)
-            control_points -- Control points for generating Bézier curves. If the list is empty, a random with num_random_control_points points will be generated.
-            num_random_control_points -- Number of random control points to be generated, if control points are not defined. (default 7)
-            plot -- If true, save the generated curve to a file. (default true) 
-       '''
+        '''Moves the mouse in the form of Bézier curves.
+            
+            Keywords arguments:
+                webelement_to_mouse_move -- Webelement where the mouse will move (default html)
+                control_points -- Control points for generating Bézier curves. If the list is empty, a random with num_random_control_points points will be generated.
+                num_random_control_points -- Number of random control points to be generated, if control points are not defined. (default 7)
+                plot -- If true, save the generated curve to a file. (default true) 
+        '''
        
         if webelement_to_mouse_move is None:
             webelement_to_mouse_move = self.find_element_by_css_selector('html')
@@ -160,16 +166,3 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
 
         if plot:
             bezier_curve.plot(bezier_points)
-
-# if __name__ == "__main__":
-    # driver = TorFirefoxWebdriver()
-    # driver.get('https://www.google.com/')
-    # driver.find_element_by_css_selector(".buttons > .green").click()
-    # canvas = driver.find_element_by_id("main-canvas")
-
-    # driver.bezier_mouse_move()
-
-    # for _ in range(100):
-    #     driver.get('https://check.torproject.org/')
-    #     ip = driver.find_element_by_css_selector('body > div.content > p:nth-child(3) > strong').text
-    #     print(ip)

@@ -4,15 +4,41 @@ De maneira geral, webdrivers do Selenium ou sessões da biblioteca Requests são
 ## Rotação de IPs
 A rotação de IPs ocorrem apenas via Tor. Para seu uso, crie uma instância de TorFirefoxWebdriver ou TorChromeWebdriver e defina pelo parâmetro **change_ip_after** com quantas requisições o IP será alterado. Essas duas classes herdam da classe webdriver.Firefox e webdriver.Chrome, respectivamente. Portanto, os mesmos parâmetros dessas superclasses estão disponíveis em Tor*Webdriver.
 
-Requisitos:
-- Acesso **root**
-- Instalar o Tor 
-    > sudo apt-get install tor
-
-Tor*Webdriver precisa de acesso root para que alterar programaticamente o IP, que é definido pelo Tor. 
+É necessário configurar o Tor:
+- Instale-o, se necessário
+    ```bash
+    sudo apt install tor
+    ```
+- Pare sua execução para configurá-lo:
+    ```bash
+    sudo service tor stop
+    ```
+- Gere uma senha de acesso (lembre-se dela, será necessária posteriormente):
+    ```bash
+    tor --hash-password "sua senha"
+    ```
+- O comando acima gerará um hash como o abaixo, copie-o:
+    ```bash
+    16:75928863A1C80E19600A03DB8AB2E733765FBFD229330A24536F3BA82E
+    ```
+- Acesse o arquivo de configuração do Tor:
+    ```bash
+    sudo nano /etc/tor/torrc
+    ```
+- Coloque os comandos abaixo:
+    ```bash
+    ControlPort 9051
+    HashedControlPassword <cole_aqui_o_hash_copiado>
+    ```
+- Reinicie o Tor:
+    ```bash
+    sudo service tor start
+    ```
 
 É possível específicar as origens dos IPs alterando o arquivo de configuração do Tor, para isso, acesse o mesmo como **root** com seu editor favorito. Sua localização é:
-> /etc/tor/torrc
+```bash
+/etc/tor/torrc
+```
 
 É necessário ter o código dos países de origem dos IPs, que são listados abaixo: 
 
@@ -267,46 +293,67 @@ Tor*Webdriver precisa de acesso root para que alterar programaticamente o IP, qu
 
 Após a escolha do país de origem dos IPs, altere o arquivo de configuração do Tor da seguinte forma:
 
-> ExitNodes {codigo_pais}
-
-> StrictNodes 1
+```bash
+ExitNodes {codigo_pais}
+StrictNodes 1
+```
 
 Por exemplo, para especificar que os IPs tem origem apenas no Brasil, adicione as linhas: 
 
-> ExitNodes {br}
-
-> StrictNodes 1
+```bash
+ExitNodes {br}
+StrictNodes 1
+```
 
 Também é possível específicar uma lista de países de onde os IPs se originam, da seguinte forma: 
 
-> ExitNodes {br}, {ar}, {cl}
+```bash
+ExitNodes {br}, {ar}, {cl}
+```
 
 Neste exemplo, os países de origem dos IPs são Brasil, Argentina e Chile. 
 
 Também é possível configurar o Tor para que se nunca use IPs de alguns países, da seguinte forma:
 
-> ExcludeExitNodes {codigo_pais}
+```bash
+ExcludeExitNodes {codigo_pais}
+```
 
 Por exemplo, restringindo IPs dos EUA e Canadá:
-
-> ExcludeExitNodes {us}, {ca}
+```bash
+ExcludeExitNodes {us}, {ca}
+```
 
 Por fim, para garantir as mudanças, reinicie o Tor:
-> sudo service tor restart
+```bash
+sudo service tor restart
+```
 
 Restringir IPs a certos países pode ser útil de diversas formas. Por exemplo, caso algum site ofereça algum bloqueio para países estrangeiros. Por outro lado, o número de IPs disponíveis tende a diminuir com a restrição ou especificação de países de origem.
 
 # Detalhes de módulos
+## tor_controller.TorController 
+
+Classe responsável por gerenciar o Tor. Nem sempre ao mandar sinal de mudança de IP ao Tor ele o muda para um diferente, além de que isso pode demorar certo tempo. A principal função dessa classe é cuidar disso e garantir que um IP já usado não seja escolhido novamente por um número antes que outros sejam usados.
+
+Parâmetros:
+- control_port: **Int** - Porta de controle do Tor (default 9051)
+- password: **String** - Senha usada para controlar Tor (definida passos acima)
+- host: **String** - Endereço do servidor proxy Tor (default '127.0.0.1')
+- port: **Int** - Porta do servidor proxy Tor
+- allow_reuse_ip_after: **Int** - Após um IP ser usado, ele poderá ser usado novamente somente após esse número de outros IPs usados (default 5)
+
 ## CamouflageHandler
 
 Classe responsável por mudar IP do Tor, retornar user-agents de uma lista passada e, por fim, gerenciar tempo entre uma requisição feita e outra. 
 
-Para seu uso, é necessário que o Tor esteja instalado e acesso root, que é necessário para mudar o IP do Tor. 
+Utiliza uma instância da classe TorController e são esses seus parâmetros:
 
-Parâmetros:
-
-- tor_host: **String** - Endereço host do Tor. (default '127.0.0.1')
-- tor_port:  **Int** - Porta do Tor (default 9050)
+- tor_host: **String** - Paramêtro da instância de TorController (default '127.0.0.1')
+- tor_port:  **Int** - Paramêtro da instância de TorController (default 9050)
+- control_port: **Int** - Paramêtro da instância de TorController (default 9051)
+- password: **String** - Paramêtro da instância de TorController (default '')
+- allow_reuse_ip_after: **Int** - Paramêtro da instância de TorController (default 5)
 - user_agents: **List** - Lista de user-agents (default Lista Vazia) 
 - time_between_calls: **Int** -  Tempo fixo entre uma requisição e outra.  
 - random_time_between_calls: **Bool** - Se este argumento for verdadeiro, um tempo escolhido ao acaso entre **min_time_between_calls** e **max_time_between_calls** será escolhido **sempre** entre uma requisição e outra. (default False) 
@@ -337,6 +384,12 @@ Métodos:
 - bezier_mouse_move(webelement_to_mouse_move: **webelement**, control_points: **List**, num_random_control_points: **Int**, plot: **Bool**): Método responsável para simular movimentos do mouse em forma de [curvas de Bézier](https://en.wikipedia.org/wiki/B%C3%A9zier_curve). Caso **webelement_to_mouse_move** seja passado, os movimentos ocorrerão sobre ele. Caso contrário, um webelement será criado tendo como base o elemento/tag html. Se **control_points**, uma lista de pontos de controles, for passado, as curvas serão geradas tendo como base esses pontos (devem ser 2-D). Caso contrário, será gerado uma lista com **num_random_control_points** aleatória. Por fim, se **plot**
 - renew_user_agent():  (Exclusivo para Firefox) Muda o user-agent aleatoriamente.
 
+Exemplo de uso:
+
+```python
+    driver = Tor*Webdriver(tor_password='my password')
+```
+
 ## TorRequestSession
 
 Herda de CamouflageHandler e de requests.sessions.Session, responsável por criar objetos requests com IPs anônimos.
@@ -351,6 +404,13 @@ Parâmetros próprios:
 
 Métodos:
 - get(url: Union[Text, bytes], **kwargs): Especialização do método *get* de requests.Session. Muda IP e troca user-agent de acordo com determinado número de requisições feitas, além de controlar o tempo entre uma requisição e outra em um intervalo de tempo fixo ou aleatório. 
+
+
+Exemplo de uso:
+
+```python
+    driver = TorRequestSession(tor_password='my password')
+```
 
 ## bezier_curve
 
