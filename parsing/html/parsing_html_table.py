@@ -56,17 +56,13 @@ def html_to_csv(html_file_path, match='.+', flavor=None, header=None, index_col=
     
     # Check if html file exists
     if (os.path.isfile(html_file_path)):   
-        
-        # print('exists')     
-    
+
         # Create output file based on the input file name
         output_file = html_file_path.split('.html')[0]+".csv"
         
         # Convert html do Pandas DataFrame
         dfs = html_to_df(html_file_path, match, flavor, header, index_col, skiprows, attrs, parse_dates, thousands, encoding, decimal, converters, na_values, keep_default_na, displayed_only)
-        
-        
-        
+         
         # Save the Pandas DataFrame to a csv file
         df_to_csv(dfs, output_file)
         
