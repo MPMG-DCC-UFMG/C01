@@ -1035,11 +1035,11 @@ chrome.extension.onMessage.addListener(
 
 document.addEventListener("DOMContentLoaded", load, false);
 
-// TODO:
-// PAREI NO GET CONFIG do SAVE INFO, n ta pegando info
-// Save: implementar funcionalidade de tentar casar elementos com xpath e detectar atributos
-// Select: implementar funcionalidade de marcar textos separados por ;
-// Select: implementar funcionalidade de detectar opções estaticas e inserir no gerenciador
-// checar todas as funcionalidades de cada passo
-// xpath: highlight do elemento selecionado?
-
+// TODO
+// 1. input de texto
+// 2. verificar identação antes de gerar json
+// 3. verificar campos incorretos / vazios antes de gerar json
+// 4. reconstruir a página de configuração a partir de um json
+// função add step por retornar a id do step criado
+//     ai cada tipo de step tem uma função fill step que transcreve as configurações
+// 5. criar issue "desenvolvimento de interface 'point-click' pra configuração de coletores"
