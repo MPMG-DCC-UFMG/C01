@@ -1,28 +1,35 @@
-from binary_extractor import BinaryExtractor
+from excel_extractor import ExcelExtractor
+from texts_extractor import TextsExtractor
 
-text_output_dict = {
-    'table': True,
-    'texts': True,
-}
-
-table_output_dict = {
-    'table': True,
-    'texts': False,
-}
+import sys
+from pathlib import Path
+from xlrd import open_workbook, XLRDError
 
 class Factory():
-    def __init__(self, path, meta):
-        self.output_dict = None
+    def __init__(self, path):
+        self.path = path
 
-        def type_of_file(self):
-            #detection
-            pass
+    def type_of_binary(self):
+        try:
+            open_workbook(self.path)
+        except XLRDError:
+            return TextsExtractor(self.path)
+        else:
+            return ExcelExtractor(self.path)
 
-    def extractor(path):
+    def extractor(self):
+        Extractor = self.type_of_binary()
+        Extractor.output()
+        Extractor.metadata()
 
-        #self.output_dict = text_output_dict
-        DOCExtractor = BinaryExtractor(path, doc_output_dict).output()
-        PDFExtractor = BinaryExtractor(path, pdf_output_dict).output()
-        PPTExtractor = BinaryExtractor(path, ppt_output_dict).output()
+def main():
+    filepath = sys.argv[1]
+    current = Path(__file__).absolute()
 
-        ExcelExtractor = BinaryExtractor(path, excel_output_dict).output()
+    basepath = current.parents[len(current.parents) - 1]
+    path = basepath.joinpath(filepath)
+
+    extractor = Factory(str(path)).extractor()
+
+if __name__ == '__main__':
+    main()

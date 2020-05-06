@@ -30,7 +30,7 @@ def final_sentence(line):
         return True
     return False
 
-def process(content):
+def process_text(content):
     lines = content.splitlines()
     lines = [i for i in lines if i]
 
@@ -51,11 +51,12 @@ def process(content):
             text = []
             texts[title] = text
             paragraph = []
+
     text.append(paragraph)
 
     return texts
 
-def to_dataframe(texts):
+def texts_to_columns(texts):
     content = []
     title = []
 
@@ -66,10 +67,13 @@ def to_dataframe(texts):
         for paragraph in texts[text]:
             content.append('\n'.join(paragraph))
 
-    texts_dict = {
-        'Title': title,
-        'Content': content
+    return title, content
+
+def columns_to_dataframe(keys, values, kname, vname):
+    dict = {
+        kname: keys,
+        vname: values
     }
-    columns = ['Title', 'Content']
-    
-    return pd.DataFrame(texts_dict, columns = columns)
+
+    columns = [kname, vname]
+    return pd.DataFrame(dict, columns = columns)

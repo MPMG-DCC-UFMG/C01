@@ -1,39 +1,20 @@
-from info_extractor import InfoExtractor
-from texts_processor import *
+from binary_extractor import *
 
-class TextsExtractor(InfoExtractor):
+class TextsExtractor(BinaryExtractor):
 
     def __init__(self, path):
-        InfoExtractor.__init__(self, path)
+        super().__init__(path)
 
-        self.output_text = 'text.csv'
-        self.output_meta = 'meta.csv'
-        self.content_df = None
-        self.metadata_df = None
-
-    def extract(self):
-        file = parser.from_file(self.path)
-
-        metadata = file['metadata']
-        content = file['content']
-
-        return content, metadata
+    def read(self):
+        return self.open['content']
 
     def process(self):
-        content, metadata = TextsExtractor.extract(self)
-        texts = process(content)
-        print(texts)
+        content = self.read()
+        texts = process_text(content)
+        title, content = texts_to_columns(texts)
 
-        #self.metadata_df = to_dataframe(metadata)
-        self.content_df = to_dataframe(texts)
+        return columns_to_dataframe(title, content, 'Título', 'Texto')
 
-    def write(self):
-        TextsExtractor.process(self)
-        # with open(self.output_meta, 'w') as out_meta:
-        #     self.metadata_df.to_csv(out_csv, encoding = 'utf-8')
-        with open(self.output_text, 'w') as out_cont:
-            self.content_df.to_csv(out_cont, encoding = 'utf-8')
-
-#TODO:
-#process metadata
-#lost of information =(
+    def output(self):
+        self.content = self.process()
+        self.write(self.content, self.name)
