@@ -37,6 +37,8 @@ def process_text(content):
     texts = {}
     text = []
     paragraph = []
+    title = '0- ' + lines[0]
+    texts[title] = text
 
     for i in range(len(lines)):
         if not is_title(i, lines):
