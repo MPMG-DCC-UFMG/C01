@@ -143,7 +143,7 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
 
         bezier_points = bezier_curve.generate(control_points, intervals=25)
 
-        action = ActionChains(driver)
+        action = ActionChains(self)
 
         x_offset = bezier_points[0][0]
         y_offset = bezier_points[0][1]

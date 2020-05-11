@@ -20,12 +20,13 @@ tc_logging = logging.getLogger(__name__)
 class TorController:
     def __init__(self, control_port: int = 9051, password: str = 'my password', host: str = '127.0.0.1', port: int = 9050, allow_reuse_ip_after: int = 5):
         '''Creates a new instance of TorController.
+        
         Keywords arguments:
-        control_port -- Standard Tor control port (default 9051)
-        password -- Password to control Tor (default 'my password')
-        host -- Tor server default IP address (default '127.0.0.1')
-        port -- Standard Tor server port (default 9050)
-        allow_reuse_ip_after -- When an already used IP can be used again. If 0, there will be no IP reuse control. (default 5). 
+            control_port -- Standard Tor control port (default 9051)
+            password -- Password to control Tor (default 'my password')
+            host -- Tor server default IP address (default '127.0.0.1')
+            port -- Standard Tor server port (default 9050)
+            allow_reuse_ip_after -- When an already used IP can be used again. If 0, there will be no IP reuse control. (default 5). 
         '''
 
         self.control_port = control_port
@@ -50,19 +51,19 @@ class TorController:
             return r.text.replace('\n', '')
         raise Exception()
 
-    def change_ip(self):
+    def change_ip(self) -> None:
         '''Send IP change signal to Tor.'''
 
         with Controller.from_port(port=self.control_port) as controller:
             controller.authenticate(password=self.password)
             controller.signal(Signal.NEWNYM)
 
-    def renew_ip(self):
+    def renew_ip(self) -> bool:
         '''Change Tor's IP (what differs from this change_ip method is that change_ip does not guarantee that the IP has been changed or has been changed to the same).
            
             Returns False if the attempt was unsuccessful or True if the IP was successfully changed.
         '''
-        tc_logging.debug('Alterando IP...')
+        tc_logging.debug('Changing IP...')
         # Makes up to 30 IP change attempts
         for _ in range(30):
             self.change_ip()
@@ -88,8 +89,8 @@ class TorController:
                     if len(self.used_ips) == self.allow_reuse_ip_after:
                         del self.used_ips[0]
                     self.used_ips.append(current_ip)
-                tc_logging.debug('IP alterado')
+                tc_logging.debug('IP changed')
                 return True
                 
-        tc_logging.error('Falha ao alterar IP')
+        tc_logging.error('Failed to change IP')
         return False

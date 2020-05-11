@@ -6,9 +6,6 @@ import matplotlib.pyplot as plt
 
 from datetime import datetime 
 
-# from selenium import webdriver
-# from selenium.webdriver.common.action_chains import ActionChains
-
 # Baseado em:
 #   - https://en.wikipedia.org/wiki/B%C3%A9zier_curve
 
@@ -17,7 +14,7 @@ def binomial_coef(n: float, i: float) -> float:
     '''
     return math.factorial(n) / math.factorial(i) / math.factorial(n - i)
 
-def bernstein(i: float, n: float, t: float):
+def bernstein(i: float, n: float, t: float) -> float:
     ''' Returns the bernstein basis polynomials of degree n 
     '''
     return binomial_coef(n, i) * (t ** i) * ((1 - t) ** (n - i))
@@ -71,5 +68,3 @@ def plot(points: list) -> None:
 
     filename = 'bezier_curve_' + str(datetime.now()).split('.')[0].replace(' ','_') + '.png'
     plt.savefig(filename)
-
-

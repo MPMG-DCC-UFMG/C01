@@ -1,11 +1,31 @@
-# Módulo responsável por camuflar coletores baseado em Selenium
-De maneira geral, webdrivers do Selenium ou sessões da biblioteca Requests são especializados para rotacionar IPs, controlar número de requisições por tempo, introduzir aleatoriedade, rotacionar User-Agents, evitar Honeypots, etc.   
+# Módulo responsável por camuflar coletores baseados em Selenium
+
+Funcionalidades:
+- Mudar IP via Tor após n requisições
+    - Para Firefox, Chrome e requests
+- Mudar User-Agent após n requisições
+    - Para Firefox e requests
+- Controle de tempo aleatório ou fixo entre requisições 
+    - Para Firefox, Chrome e requests
+- Realizar movimentos de mouse em curvas de Bézier 
+    - Para Firefox e Chrome
+- Limpar cookies após n requisições
+    - Para Firefox e Chrome
+
+**Instale os requerimentos**
+```
+pip install -r requeriments.txt
+```
 
 ## Rotação de IPs
-A rotação de IPs ocorrem apenas via Tor. Para seu uso, crie uma instância de TorFirefoxWebdriver ou TorChromeWebdriver e defina pelo parâmetro **change_ip_after** com quantas requisições o IP será alterado. Essas duas classes herdam da classe webdriver.Firefox e webdriver.Chrome, respectivamente. Portanto, os mesmos parâmetros dessas superclasses estão disponíveis em Tor*Webdriver.
+Para rotacionar IPs via Tor, primeiro é necessário configurá-lo.
 
-É necessário configurar o Tor:
-- Instale-o, se necessário
+Para instalar o Tor:
+- Atualize o sistema (importante)
+    ```bash
+    sudo apt update
+    ```
+- Instale-o
     ```bash
     sudo apt install tor
     ```
@@ -34,13 +54,14 @@ A rotação de IPs ocorrem apenas via Tor. Para seu uso, crie uma instância de 
     ```bash
     sudo service tor start
     ```
+### (Opcional) Condicionando IPs Tor a uma região
 
-É possível específicar as origens dos IPs alterando o arquivo de configuração do Tor, para isso, acesse o mesmo como **root** com seu editor favorito. Sua localização é:
+É possível específicar os países de origem dos IPs alterando o arquivo de configuração do Tor. Para isso, configure-o como abaixo:
 ```bash
-/etc/tor/torrc
+sudo nano /etc/tor/torrc
 ```
 
-É necessário ter o código dos países de origem dos IPs, que são listados abaixo: 
+É necessário ter o código dos países de origem dos IPs, listados abaixo: 
 
 | País de origem do IP | Código |
 | ------------- |:-------------:|
@@ -313,7 +334,7 @@ ExitNodes {br}, {ar}, {cl}
 
 Neste exemplo, os países de origem dos IPs são Brasil, Argentina e Chile. 
 
-Também é possível configurar o Tor para que se nunca use IPs de alguns países, da seguinte forma:
+Também é possível configurar o Tor para que nunca use IPs de alguns países, da seguinte forma:
 
 ```bash
 ExcludeExitNodes {codigo_pais}
@@ -334,7 +355,7 @@ Restringir IPs a certos países pode ser útil de diversas formas. Por exemplo, 
 # Detalhes de módulos
 ## tor_controller.TorController 
 
-Classe responsável por gerenciar o Tor. Nem sempre ao mandar sinal de mudança de IP ao Tor ele o muda para um diferente, além de que isso pode demorar certo tempo. A principal função dessa classe é cuidar disso e garantir que um IP já usado não seja escolhido novamente por um número antes que outros sejam usados.
+Classe responsável por gerenciar o Tor. Nem sempre ao mandar sinal de mudança de IP ao Tor ele o muda para um diferente ou isso pode demorar certo tempo. A principal função dessa classe é cuidar disso e garantir que um IP já usado não seja escolhido novamente por um número antes que outros sejam usados.
 
 Parâmetros:
 - control_port: **Int** - Porta de controle do Tor (default 9051)
@@ -387,8 +408,53 @@ Métodos:
 Exemplo de uso:
 
 ```python
-    driver = Tor*Webdriver(tor_password='my password')
+#use driver como normalmente usa um webdriver selenium
+
+driver = Tor<Firefox ou Chrome>Webdriver(tor_password='my password')
+
+# instância que muda ip após 10 requisições
+driver1 = Tor<Firefox ou Chrome>Webdriver(tor_password='my password', change_ip_after=10)
+
+#instância do Firefox (só há suporte para ele, por enquanto) que muda user-agent aleatoriamente após 20 requisições
+driver2 = TorFirefoxWebdriver(tor_password='my password', change_user_agent_after=20)
+
+#instância onde o tempo entre requisições têm um tempo mínimo fixo de 10 segundos
+driver3 = Tor<Firefox ou Chrome>Webdriver(tor_password='my password', time_between_calls=10)
+
+
+#instância onde o tempo entre requisições é aleatório entre um valor de 60 segundos e 10 segundos
+driver4 = Tor<Firefox ou Chrome>Webdriver(tor_password='my password', random_time_between_calls=True, min_time_between_calls=10,max_time_between_calls=60)
+
 ```
+
+Exemplo de uso do método bezier_mouse_move:
+
+```python
+driver = Tor<Chrome ou Firefox>Webdriver(tor_password='my password')
+driver.bezier_mouse_move()
+```
+
+(Opcional) No exemplo acima não será possível ver que houve movimento do mouse. Se por curiosidade desejar ver, no método bezier_mouse_move em Tor<Chrome ou Firefox>Webdriver descomente os comandos mostrados abaixo:
+
+```python
+    ...
+    # action.click_and_hold() 
+    ...
+    # action.release()
+```
+
+E crie uma instância como abaixo:
+```python
+    driver = TorFirefoxWebdriver(tor_password='my password')
+    
+    driver.get("https://www.autodraw.com/")
+    driver.find_element_by_css_selector(".buttons > .green").click()
+    canvas = driver.find_element_by_id("main-canvas")
+    
+    driver.bezier_mouse_move(webelement_to_mouse_move=canvas)
+```
+
+O trecho de código acima acessará o site [autodraw](https://www.autodraw.com/) e moverá o mouse sobre seu canvas, criando curvas.
 
 ## TorRequestSession
 
@@ -409,7 +475,22 @@ Métodos:
 Exemplo de uso:
 
 ```python
-    driver = TorRequestSession(tor_password='my password')
+# use como uma instância de requests qualquer
+session = TorRequestSession(tor_password='my password')
+
+#instância que muda IP após 20 requisições
+session2 = TorRequestSession(tor_password='my password', change_ip_after=20)
+
+#instância que muda user-agent após 20 requisições
+session3 = TorRequestSession(tor_password='my password', change_user_agent_after=20)
+
+#instância onde o tempo entre requisições têm um tempo mínimo fixo de 10 segundos
+driver4 = TorRequestSession(tor_password='my password', time_between_calls=10)
+
+
+#instância onde o tempo entre requisições é aleatório entre um valor de 60 segundos e 10 segundos
+driver5 = TorRequestSession(tor_password='my password', random_time_between_calls=True, min_time_between_calls=10,max_time_between_calls=60)
+
 ```
 
 ## bezier_curve

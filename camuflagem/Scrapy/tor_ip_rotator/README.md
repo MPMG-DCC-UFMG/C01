@@ -1,14 +1,18 @@
 # scrapy-tor-ip-rotator
 Este módulo tem por finalidade permitir rotação de IPs ao [Scrapy](https://scrapy.org/) via Tor.
 
-Esse pacote pode ser instalador via **pip**, por meio do comando:
+Para facilitar seu uso, esse módulo foi empacotado e distribuido via **pip**, por meio do comando:
 ```bash
 pip install scrapy-tor-ip-rotator
 ```
 O comando acima baixará automaticamente todas suas dependências.
 
 É necessário configurar o Tor:
-- Instale-o, se necessário
+- Atualize o sistema (importante)
+    ```bash
+    sudo apt update
+    ```
+- Instale o Tor
     ```bash
     sudo apt install tor
     ```
@@ -50,7 +54,9 @@ O comando acima baixará automaticamente todas suas dependências.
 
 Proxy do Tor não são suportados pelo Scrapy, para contornar esse problema, é necessário o uso de um intermediário, nesse caso o **[Privoxy](https://www.privoxy.org/)**. 
 
-> O servidor proxy do Tor se encontra, por padrão, no endereço 127.0.0.1:9050
+> O servidor proxy do Tor executa, por padrão, no endereço 127.0.0.1:9050
+
+Para que o Scrapy possa interagir com o Tor é necessário um intermediário, nesse caso o Privoxy. Isso ocorre pois a tecnologia de comunicação são diferentes.
 
 Passos de instalação e configuração do **Privoxy**:
 - Instalar: 

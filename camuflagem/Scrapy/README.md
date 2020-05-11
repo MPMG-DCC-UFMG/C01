@@ -2,7 +2,7 @@
 
 Existem muitos módulos já disponíveis para o Scrapy para camuflagem dos coletores seja por terceiros ou por alterando suas configurações disponíveis. 
 
-Os módulos tor_ip_rotator e user_agent_rotator foram desenvolvidas para que sejam mais personalizados que outras opções de terceiros disponíveis. O primeiro trata-se de um rotacionador de IP via proxy Tor, enquanto o segundo para rotacionar user-agents. Ambos foram empacotados e publicados no gerenciador de pacotes Python [Pypi](https://pypi.org/) no intuito de facilitar seu uso. Mais detalhes estão disponíveis nos respectivos módulos.
+Os módulos tor_ip_rotator e user_agent_rotator foram desenvolvidas para que sejam mais personalizados que outras opções de terceiros já disponíveis. O primeiro trata-se de um rotacionador de IP via proxy Tor, enquanto o segundo para rotacionar user-agents. Ambos foram empacotados e publicados no gerenciador de pacotes Python [Pypi](https://pypi.org/) no intuito de facilitar seu uso. Mais detalhes estão disponíveis nos respectivos módulos.
 
 Outras maneiras de se evitar que os coletores sejam detectados são possíveis alterando as configurações do Scrapy, como as abaixo.
 
@@ -30,7 +30,7 @@ Por padrão, essa configuração está desativada. Mas pode ser ativada por meio
 AUTOTHROTTLE_ENABLED = True
 ```
 
-É necessário definir um delay inicial que será ajustado ao longo das requisições automaticamente. Defina-o por meio do comando abaixo ou não o defina, para usar o default de 5.0 segundos (em **settings.py**):
+É necessário definir um delay inicial que será ajustado ao longo das requisições automaticamente. Defina-o por meio do comando abaixo ou não para usar o default de 5.0 segundos (em **settings.py**):
 
 ```python
 AUTOTHROTTLE_START_DELAY = #delay inicial  
@@ -50,7 +50,7 @@ AUTOTHROTTLE_TARGET_CONCURRENCY = #média de requisições concorrentes
 
 Mais detalhes podem ser encontrados [aqui](https://docs.scrapy.org/en/latest/topics/autothrottle.html#throttling-algorithm).
 
-### Gerenciamento de cookies e cache
+### Gerenciamento de cookies
 
 Cookies, que por padrão estão ativados, podem ser desativados via configuração do Tor por meio do seguinte comando (em **settings.py**):
 
