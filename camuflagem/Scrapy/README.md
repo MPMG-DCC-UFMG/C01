@@ -52,10 +52,4 @@ Mais detalhes podem ser encontrados [aqui](https://docs.scrapy.org/en/latest/top
 
 ### Gerenciamento de cookies
 
-Cookies, que por padrão estão ativados, podem ser desativados via configuração do Tor por meio do seguinte comando (em **settings.py**):
-
-```python 
-COOKIES_ENABLED = False
-```
-
-Mais detalhes podem ser encontrados [aqui](https://docs.scrapy.org/en/latest/topics/downloader-middleware.html#module-scrapy.downloadermiddlewares.cookies).
+Scrapy já possui mecanismos de gerencialmente de cookies e detalhes podem ser encontrados [aqui](https://docs.scrapy.org/en/latest/topics/downloader-middleware.html#module-scrapy.downloadermiddlewares.cookies).

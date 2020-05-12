@@ -17,7 +17,7 @@ Funcionalidades:
 pip install -r requeriments.txt
 ```
 
-## Rotação de IPs
+## Configurações básicas
 Para rotacionar IPs via Tor, primeiro é necessário configurá-lo.
 
 Para instalar o Tor:
@@ -434,7 +434,7 @@ driver = Tor<Chrome ou Firefox>Webdriver(tor_password='my password')
 driver.bezier_mouse_move()
 ```
 
-(Opcional) No exemplo acima não será possível ver que houve movimento do mouse. Se por curiosidade desejar ver, no método bezier_mouse_move em Tor<Chrome ou Firefox>Webdriver descomente os comandos mostrados abaixo:
+(Opcional) No exemplo acima não será possível ver que houve movimento do mouse. Se por curiosidade desejar ver, no método bezier_mouse_move em Tor< Chrome ou Firefox >Webdriver descomente os comandos mostrados abaixo:
 
 ```python
     ...
@@ -455,6 +455,10 @@ E crie uma instância como abaixo:
 ```
 
 O trecho de código acima acessará o site [autodraw](https://www.autodraw.com/) e moverá o mouse sobre seu canvas, criando curvas.
+
+### Gerenciamento de cookies
+
+Selenium já possui mecanismos para gerenciamento de cookies ([ver aqui](https://www.selenium.dev/documentation/en/support_packages/working_with_cookies/)). 
 
 ## TorRequestSession
 
