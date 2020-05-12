@@ -30,6 +30,13 @@ class ParamInjector():
         :param param_limits: a list where each element is either a list of
                              possible values for a placeholder, or a tuple
                              containing the upper and lower limits for it
+        :param verif:        a function which receives the generated parameters
+                             and returns an integer, to be used as a
+                             verification code calculator for each entry
+        :param verif_index:  if the verification function is supplied, this
+                             parameter determines where the generated
+                             verification code should be inserted in the format
+                             string
         :yields:             strings following the format for each possible
                              combination of parameters
         """
@@ -184,7 +191,7 @@ class ParamInjector():
                              "datetime.date.")
         if frequency not in ['Y', 'M', 'D']:
             raise ValueError("The frequency must be one of the following " +\
-                             "options: 'Y', 'M' or 'D.")
+                             "options: 'Y', 'M' or 'D'.")
 
         # add 1 to number of days to include the end of the period
         max_days = int((end_date - start_date).days) + 1
