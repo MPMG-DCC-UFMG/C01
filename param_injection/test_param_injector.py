@@ -14,7 +14,7 @@ class ParamInjectorTest(unittest.TestCase):
     """
 
     @staticmethod
-    def verif_code(seq, year, identifier, origin):
+    def verif_code(seq: int, year: int, identifier: int, origin: int):
         """
         Helper function which calculates the verificaton code for a given
         process
@@ -23,7 +23,8 @@ class ParamInjectorTest(unittest.TestCase):
         :param year: the process' year
         :param identifier: the instituional identifier for the process
         :param origin: the process' origin
-        :return: the verification number for the supplied code
+
+        :returns: the verification number for the supplied code
         """
 
         p_fmt = "{:07d}{:04d}{:03d}{:04d}".format(seq, year, identifier, origin)
@@ -32,7 +33,7 @@ class ParamInjectorTest(unittest.TestCase):
         return val
 
     @staticmethod
-    def verif_code_switched(year, identifier, origin, seq):
+    def verif_code_switched(year: int, identifier: int, origin: int, seq: int):
         """
         Variation of verif_code which simply has a different parameter order
 
@@ -40,7 +41,8 @@ class ParamInjectorTest(unittest.TestCase):
         :param year: the process' year
         :param identifier: the instituional identifier for the process
         :param origin: the process' origin
-        :return: the verification number for the supplied code
+
+        :returns: the verification number for the supplied code
         """
 
         return ParamInjectorTest.verif_code(seq, year, identifier, origin)
