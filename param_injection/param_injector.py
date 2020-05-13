@@ -42,7 +42,7 @@ class ParamInjector():
         """
 
         # if verif function is supplied, check if verif_index is too
-        if verif and not verif_index:
+        if verif and not isinstance(verif_index, int):
             message = "Verification number index must be supplied when using "+\
                       "a verification function"
             raise ValueError(message)
