@@ -8,13 +8,13 @@ import urllib.parse
 
 
 class URLParser:
-    def __init__(self, url):
+    def __init__(self, url: str):
         self.url = url
 
-    def query(self):
+    def query(self) -> str:
         return urllib.parse.urlsplit(self.url).query
 
-    def parameters(self, query=None, keep_blank_values=True):
+    def parameters(self, query=None, keep_blank_values=True) -> dict:
         if query is None:
             query = self.query()
         return urllib.parse.parse_qs(query, keep_blank_values=keep_blank_values)
