@@ -29,5 +29,10 @@ TEST_FORM_FIELD = {'type': 'text', 'name': 'codigoUnidadeCompra', 'maxlength': '
 
 
 def request_headers():
+    """Build request headers
+
+    Returns:
+        Dictionary containing headers
+    """
     user_agent = random.choice(USER_AGENT_LIST)
     return {'User-Agent': user_agent}
