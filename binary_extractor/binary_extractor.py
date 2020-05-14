@@ -13,6 +13,7 @@ class BinaryExtractor():
         self.open = parser.from_file(self.path)
 
         self.content = None
+        self.extra = None
         self.meta = None
 
         pure = Path(self.path)

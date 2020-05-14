@@ -1,5 +1,5 @@
-from tika import parser
 import pandas as pd
+from tika import parser
 
 end_punctuation = ['.', '?', '!', ';']
 

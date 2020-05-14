@@ -1,6 +1,7 @@
 from binary_extractor import *
 
 class ExcelExtractor(BinaryExtractor):
+    
     def __init__(self, path):
         super().__init__(path)
         self.sheets = pd.ExcelFile(self.path).sheet_names

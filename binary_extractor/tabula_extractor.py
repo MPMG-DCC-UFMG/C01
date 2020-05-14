@@ -1,35 +1,19 @@
-from info_extractor import InfoExtractor
 from tabula import read_pdf
-import pandas as pd
+from binary_extractor import BinaryExtractor
 
-class TabulaExtractor(InfoExtractor):
+class TabulaExtractor(BinaryExtractor):
 
     def __init__(self, path):
-        InfoExtractor.__init__(self, path)
+        super().__init__(path)
 
-        self.output = 'table.csv'
-        self.tables_df = None
-
-    def extract(self):
-        df = pd.read_pdf(self.path, output_format = 'dataframe', multiple_tables = True)
+    def read(self):
+        df = read_pdf(self.path, pages = 'all', multiple_tables = True, silent = True)
         return df
 
     def process(self):
-        extract = TabulaExtractor(self.path).extract()
-        df = pd.DataFrame(extract)
-        columns = df.shape[1]
-        print(columns)
-        #if columns > 1:
-        return df
+        pass
 
-    def write(self):
-        self.tables_df = TabulaExtractor(self.path).process()
-        with open(self.output, 'w') as out_tab:
-            print(self.path)
-            self.tables_df.to_csv(self.output, encoding = 'utf-8')
-
-#TODO:
-#multiple_tables
-#extract to DataFrame
-#turn off verbose mode
-#check if a valid table is ready
+    def output(self):
+        self.extra = self.read()
+        for i in range(len(self.extra)):
+            self.write(self.extra[i], 'table' + str(i))
