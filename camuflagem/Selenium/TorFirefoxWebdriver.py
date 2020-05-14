@@ -40,8 +40,7 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
                     clear_cookies_after: int = 100,
                     change_user_agent_after: int = -1):
 
-        """
-        Starts a new session of TorFirefoxWebdriver.
+        """Starts a new session of TorFirefoxWebdriver.
 
         Keyword arguments:
             change_ip_after: Number of calls before changing the IP. (dafault 42)
@@ -82,9 +81,8 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
             self.find_element_by_id('warningButton').click()
 
     def renew_user_agent(self) -> None:
-        """
-        Change user-agent.
-        """
+        """Change user-agent."""
+
         ua = self.get_user_agent()
 
         super().get('about:config')
@@ -95,9 +93,8 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
         self.execute_script(script)
 
     def get(self, url: str) -> None:
-        """
-        Loads a web page in the current browser session.
-        """
+        """Loads a web page in the current browser session."""
+
         self.number_of_requests_made += 1
 
         if self.number_of_requests_made % self.clear_cookies_after == 0:
@@ -118,11 +115,11 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
     def bezier_mouse_move(self, webelement_to_mouse_move = None, control_points: list = [], num_random_control_points: int = 7, plot: bool = True) -> None:
         '''Moves the mouse in the form of Bézier curves.
             
-            Keywords arguments:
-                webelement_to_mouse_move -- Webelement where the mouse will move (default html)
-                control_points -- Control points for generating Bézier curves. If the list is empty, a random with num_random_control_points points will be generated.
-                num_random_control_points -- Number of random control points to be generated, if control points are not defined. (default 7)
-                plot -- If true, save the generated curve to a file. (default true) 
+        Keywords arguments:
+            webelement_to_mouse_move -- Webelement where the mouse will move (default html)
+            control_points -- Control points for generating Bézier curves. If the list is empty, a random with num_random_control_points points will be generated.
+            num_random_control_points -- Number of random control points to be generated, if control points are not defined. (default 7)
+            plot -- If true, save the generated curve to a file. (default true) 
         '''
        
         if webelement_to_mouse_move is None:

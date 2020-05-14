@@ -61,9 +61,8 @@ class TorRequestSession(CamouflageHandler, Session):
         self.headers = {'User-Agent': self.current_user_agent}
 
     def get(self, url: Union[Text, bytes], **kwargs) -> Response:
-        """
-        Sends a GET request.
-        """
+        """Sends a GET request."""
+        
         self.number_of_requests_made += 1
 
         if (self.change_user_agent_after > 0) and (self.number_of_requests_made % self.change_user_agent_after == 0):

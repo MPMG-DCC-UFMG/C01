@@ -31,8 +31,7 @@ class TorChromeWebdriver(CamouflageHandler, webdriver.Chrome):
                 # Parameters of this class
                 change_ip_after: int = 42,
                 clear_cookies_after: int = 100):
-        """
-        Creates a new instance of this class.
+        """Creates a new instance of this class.
 
         Keyword arguments:
             change_ip_after -- Number of calls before changing the IP. (dafault 42)
@@ -68,9 +67,8 @@ class TorChromeWebdriver(CamouflageHandler, webdriver.Chrome):
         self.number_of_requests_made = 0
     
     def get(self, url: str) -> None:
-        """
-        Loads a web page in the current browser session.
-        """
+        """Loads a web page in the current browser session."""
+
         self.number_of_requests_made += 1
 
         if self.number_of_requests_made % self.clear_cookies_after == 0:
@@ -88,11 +86,11 @@ class TorChromeWebdriver(CamouflageHandler, webdriver.Chrome):
     def bezier_mouse_move(self, webelement_to_mouse_move=None, control_points: list = [], num_random_control_points: int = 7, plot: bool = True) -> None:
         '''Moves the mouse in the form of Bézier curves.
             
-            Keywords arguments:
-                webelement_to_mouse_move -- Webelement where the mouse will move (default html)
-                control_points -- Control points for generating Bézier curves. If the list is empty, a random with num_random_control_points points will be generated.
-                num_random_control_points -- Number of random control points to be generated, if control points are not defined. (default 7)
-                plot -- If true, save the generated curve to a file. (default true) 
+        Keywords arguments:
+            webelement_to_mouse_move -- Webelement where the mouse will move (default html)
+            control_points -- Control points for generating Bézier curves. If the list is empty, a random with num_random_control_points points will be generated.
+            num_random_control_points -- Number of random control points to be generated, if control points are not defined. (default 7)
+            plot -- If true, save the generated curve to a file. (default true) 
         '''
         
         if webelement_to_mouse_move is None:
@@ -113,7 +111,7 @@ class TorChromeWebdriver(CamouflageHandler, webdriver.Chrome):
 
         bezier_points = bezier_curve.generate(control_points, intervals=25)
 
-        action = ActionChains(driver)
+        action = ActionChains(self)
 
         x_offset = bezier_points[0][0]
         y_offset = bezier_points[0][1]
