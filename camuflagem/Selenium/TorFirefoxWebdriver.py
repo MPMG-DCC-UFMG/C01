@@ -37,15 +37,13 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
                     max_time_between_calls: int = 10,
                     # Parameters of this class
                     change_ip_after: int = 42,
-                    clear_cookies_after: int = 100,
                     change_user_agent_after: int = -1):
 
         """Starts a new session of TorFirefoxWebdriver.
 
         Keyword arguments:
-            change_ip_after: Number of calls before changing the IP. (dafault 42)
-            clear_cookies_after: Number of calls before clear the cookies. (default 100)
-            change_user_agent_after: Number of calls before changing the user-agent. If the number is negative, the user-agent never will be changed (default -1)
+            change_ip_after -- Number of calls before changing the IP. (dafault 42)
+            change_user_agent_after -- Number of calls before changing the user-agent. If the number is negative, the user-agent never will be changed (default -1)
         """
         CamouflageHandler.__init__(self, 
                                     tor_host,
@@ -61,7 +59,6 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
 
         self.number_of_requests_made = 0
         self.change_ip_after = change_ip_after
-        self.clear_cookies_after = clear_cookies_after
         
         # if negative, never change user-agent
         self.change_user_agent_after = change_user_agent_after
@@ -93,12 +90,13 @@ class TorFirefoxWebdriver(CamouflageHandler, webdriver.Firefox):
         self.execute_script(script)
 
     def get(self, url: str) -> None:
-        """Loads a web page in the current browser session."""
+        """Loads a web page in the current browser session.
+
+            Keyword arguments:
+                url -- URL of the website to be accessed
+        """
 
         self.number_of_requests_made += 1
-
-        if self.number_of_requests_made % self.clear_cookies_after == 0:
-            self.delete_all_cookies()
 
         if (self.change_user_agent_after > 0) and (self.number_of_requests_made % self.change_user_agent_after == 0):
             self.renew_user_agent()

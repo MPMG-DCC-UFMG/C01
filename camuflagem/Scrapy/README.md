@@ -50,6 +50,13 @@ AUTOTHROTTLE_TARGET_CONCURRENCY = #média de requisições concorrentes
 
 Mais detalhes podem ser encontrados [aqui](https://docs.scrapy.org/en/latest/topics/autothrottle.html#throttling-algorithm).
 
+### Proxies de terceiros
+Caso seja útil proxies que não sejam via Tor, já há opções para uso, como:
+- https://github.com/xiaowangwindow/scrapy-rotated-proxy
+- https://github.com/TeamHG-Memex/scrapy-rotating-proxies
+
+Nesse caso, uma lista de proxies deverão ser passadas para que os mecanismos funcionem.
+
 ### Gerenciamento de cookies
 
 Scrapy já possui mecanismos de gerencialmente de cookies e detalhes podem ser encontrados [aqui](https://docs.scrapy.org/en/latest/topics/downloader-middleware.html#module-scrapy.downloadermiddlewares.cookies).

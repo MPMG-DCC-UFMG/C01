@@ -9,8 +9,10 @@ Funcionalidades:
     - Para Firefox, Chrome e requests
 - Realizar movimentos de mouse em curvas de Bézier 
     - Para Firefox e Chrome
-- Limpar cookies após n requisições
-    - Para Firefox e Chrome
+
+A fazer:
+- Rotação de user-agents para o Chrome
+- Uso de proxies de terceiros
 
 **Instale os requerimentos**
 ```
@@ -397,7 +399,6 @@ Os parâmetros para gerar uma instância são, na ordem, os mesmos de selenium.w
 Parâmetros próprios:
 - change_ip_after: **Int** - Número de requisições feitas antes de se alterar o IP. (default 42)
 - change_user_agent_after: **Int** - (Exclusivo para o Firefox) Número de requisições feitas antes de mudar o user-agent. Caso esse número seja negativo, o user-agent original nunca será alterado. (default -1)
-- clear_cookies_after: **Int** - Número de requisições feitas até que se limpe os cookies da sessão.
 
 Métodos:
 
@@ -489,11 +490,11 @@ session2 = TorRequestSession(tor_password='my password', change_ip_after=20)
 session3 = TorRequestSession(tor_password='my password', change_user_agent_after=20)
 
 #instância onde o tempo entre requisições têm um tempo mínimo fixo de 10 segundos
-driver4 = TorRequestSession(tor_password='my password', time_between_calls=10)
+session4 = TorRequestSession(tor_password='my password', time_between_calls=10)
 
 
 #instância onde o tempo entre requisições é aleatório entre um valor de 60 segundos e 10 segundos
-driver5 = TorRequestSession(tor_password='my password', random_time_between_calls=True, min_time_between_calls=10,max_time_between_calls=60)
+session5 = TorRequestSession(tor_password='my password', random_time_between_calls=True, min_time_between_calls=10,max_time_between_calls=60)
 
 ```
 

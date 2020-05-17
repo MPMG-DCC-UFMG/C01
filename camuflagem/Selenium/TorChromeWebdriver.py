@@ -29,13 +29,12 @@ class TorChromeWebdriver(CamouflageHandler, webdriver.Chrome):
                 min_time_between_calls: int = 0,
                 max_time_between_calls: int = 10,
                 # Parameters of this class
-                change_ip_after: int = 42,
-                clear_cookies_after: int = 100):
+                change_ip_after: int = 42):
+
         """Creates a new instance of this class.
 
         Keyword arguments:
             change_ip_after -- Number of calls before changing the IP. (dafault 42)
-            clear_cookies_after -- Number of calls before clear the cookies. (default 100)
         """
 
         CamouflageHandler.__init__(self,
@@ -62,17 +61,17 @@ class TorChromeWebdriver(CamouflageHandler, webdriver.Chrome):
                                     keep_alive)
 
         self.change_ip_after = change_ip_after
-        self.clear_cookies_after = clear_cookies_after
 
         self.number_of_requests_made = 0
     
     def get(self, url: str) -> None:
-        """Loads a web page in the current browser session."""
+        """Loads a web page in the current browser session.
+
+            Keywords arguments:
+                url -- URL of the website to be accessed
+        """
 
         self.number_of_requests_made += 1
-
-        if self.number_of_requests_made % self.clear_cookies_after == 0:
-            self.delete_all_cookies()
 
         if self.number_of_requests_made % self.change_ip_after == 0:
             self.renew_ip()
