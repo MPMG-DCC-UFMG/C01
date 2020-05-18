@@ -2,6 +2,8 @@ import pandas as pd
 import os
 from bs4 import BeautifulSoup
 import csv
+import xml
+import re
 
 
 def clean_html(html_file, isString):
@@ -10,7 +12,12 @@ def clean_html(html_file, isString):
     '''
 
     # List of elements that are going to be removed from the html
-    remove_list = ["head", "header", "footer" , "polygon", "path", "script", "symbol"]
+    remove_list = ["head", "header", "footer" , "polygon", "path", "script", 
+                    "symbol", "meta", "link", "title", "style", "nav", "table", "form"]
+    remove_class = ["sidebar-inner","breadcrumb", "share", "navegacao", "skiptranslate",
+                    "goog-te-spinner-pos","social-list", "social-icon", "copyright", 
+                    "id_assist_frame",  "fbc-badge-tooltip"]
+    remove_id = ["boxes", "mySidenav", "chat-panel"]
 
     # Check if the html_file is a string with the page or a path to the file
     if not isString:
@@ -22,11 +29,20 @@ def clean_html(html_file, isString):
         f = html_file
         soup = BeautifulSoup(f, 'html.parser')
 
+    # Remove any tag present in remove_list
     for tag in soup.find_all():
         if tag.name.lower() in remove_list:
             tag.extract()
+    # Remove any div with the class in remove_class
+    for div in soup.find_all("div", {'class':remove_class}): 
+        div.extract()
+    # Remove any div with the id in remove_id    
+    for div in soup.find_all("div", {'id':remove_id}): 
+        div.extract()
 
     html_file = str(soup)
+    
+    
 
     return html_file
 
@@ -38,9 +54,12 @@ def fix_links(html_file):
     soup = BeautifulSoup(f, 'html.parser')
 
     for a in soup.find_all('a', href=True):
-        a.string = a['href']
+        if "http" in a['href']:
+            a.string = a['href']
 
     html_file = str(soup)
+    
+
 
     return html_file
 
@@ -48,25 +67,14 @@ def extrac_div(html_file):
     '''
     Receives a html file and creates a list of elements with the content of the page
     '''
-
-    # Only elements in this list are going to be saved
-    keep_list = ["h1", "h2", "h3" , "p", "path", "script", "symbol"]
-
+    # List to store the content of the page
     csv_list_all = []
-    found_text = False
-
-    f = html_file
-    soup = BeautifulSoup(f, 'html.parser')
-
-    for div in soup.find_all('div'):
-        csv_list = []
-        for tag in div.find_all():
-            if tag.name.lower() in keep_list:
-                csv_list.append(tag.text)
-                found_text = True
-        if found_text:
-            csv_list_all.append(csv_list)
-
+    # Extract all the text in the page, ignoring tags and hierarchy
+    for i, val in enumerate(xml.etree.ElementTree.fromstring(html_file).itertext()):
+        val.replace('\n',' ')
+        if val != '\n' and not val.isspace(): 
+            csv_list_all.append(val)
+    
     # Returns a list of list, with all the content
     return csv_list_all
 
@@ -77,7 +85,7 @@ def write_csv(csv_list, csv_output_name):
     '''
     with open(csv_output_name, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerows(csv_list)
+        writer.writerow(csv_list)
 
 
 def html_to_csv(html_file, output_file = None):
@@ -111,6 +119,5 @@ def html_to_csv(html_file, output_file = None):
     html_file = fix_links(html_file)
     # Extract the content
     csv_list_all = extrac_div(html_file)
-    csv_list_all = [x for x in csv_list_all if x != []]
     # Saves the content in a csv file
     write_csv(csv_list_all, output_file)
