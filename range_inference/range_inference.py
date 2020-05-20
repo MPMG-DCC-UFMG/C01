@@ -11,9 +11,55 @@ class RangeInference():
     """
     The RangeInference class contains the static methods to filter the search
     space. The __filter_range method is the core of the binary search. The
-    filter_numeric_range and filter_date_range methods do computation on the
+    filter_numeric_range and filter_daterange methods do computation on the
     inputs to call __filter_range accordingly.
     """
+
+
+    @staticmethod
+    def __range_validate_input(limits: Tuple[Union[int, datetime.date],
+                                             Union[int, datetime.date]],
+                               hit_check: Callable[[Any], bool],
+                               step_size: Union[int, relativedelta],
+                               mid_calc: Callable[[Any, Any], int],
+                               range_gen: Generator
+                               ) -> None:
+        """
+        Takes in the parameters for __filter_range and validates them, raising
+        an error if needed
+
+        :param limits:    tuple with lower and upper limits for the range to be
+                          checked
+        :param hit_check: function which does the request and returns True if
+                          it hits an entry or False if it doesn't
+        :param step_size: value to be added to a given index to go to the next
+                          one
+        :param mid_calc:  function which takes the beginning and end of the
+                          current range being considered and calculates the
+                          midpoint
+        :param range_gen: generator which takes the current mid point and the
+                          beginning and end of the current range being
+                          considered and yields all the points near the middle
+                          that we need to check
+        """
+        begin, end = limits
+
+        if begin is None or end is None:
+            raise ValueError("The range limits should be supplied for the "+\
+                             "inference.")
+        if begin > end:
+            raise ValueError("The beginning of the range should be lower than"+\
+                             " the end.")
+        if hit_check is None:
+            raise ValueError("A valid entry probing function must be supplied.")
+        if step_size is None:
+            raise ValueError("A range step size must be supplied.")
+        if mid_calc is None:
+            raise ValueError("A valid middle-calculating function must be "+\
+                             "supplied.")
+        if range_gen is None:
+            raise ValueError("A valid range generator must be supplied.")
+
 
     @staticmethod
     def __filter_range(limits: Tuple[Union[int, datetime.date],
@@ -43,9 +89,13 @@ class RangeInference():
                           considered and yields all the points near the middle
                           that we need to check
 
-        :returns:     position where the last hit entry was found, None if no
-                      entries were found
+        :returns: position where the last hit entry was found, None if no
+                  entries were found
         """
+        # Validate inputs
+        RangeInference.__range_validate_input(limits, hit_check, step_size,
+                                              mid_calc, range_gen)
+
         begin, end = limits
 
         last_hit = None
@@ -74,7 +124,7 @@ class RangeInference():
     @staticmethod
     def filter_numeric_range(begin: int,
                              end: int,
-                             hit_check: Callable[[str], bool],
+                             hit_check: Callable[[int], bool],
                              cons_misses: int = 100
                             ) -> int:
         """
@@ -91,14 +141,6 @@ class RangeInference():
                   entries were found
         """
         # Parameter validation
-        if not isinstance(begin, int) or not isinstance(end, int):
-            raise ValueError("The range limits should be supplied for the "+\
-                             "inference.")
-        if begin > end:
-            raise ValueError("The beginning of the range should be lower than"+\
-                             " the end.")
-        if hit_check is None:
-            raise ValueError("A valid entry probing function must be supplied.")
         if not isinstance(cons_misses, int) or cons_misses < 0:
             raise ValueError("The number of consecutive misses must be a "+\
                              "positive integer.")
@@ -115,12 +157,34 @@ class RangeInference():
 
 
     @staticmethod
-    def filter_date_range(begin: datetime.date,
-                          end: datetime.date,
-                          hit_check: Callable[[datetime.date], bool],
-                          detail_level: str = 'Y',
-                          cons_misses: int = 100,
-                          ) -> datetime.date:
+    def __daterange_calc_stepsize(detail_level: str = 'Y') -> relativedelta:
+        """
+        Calculates the step size for the date based on the required granularity
+
+        :param detail_level: granularity of date check (Y = yearly, M = monthly,
+                             D = daily)
+
+        :returns: a relativedelta describing the distance between two
+                  consecutive dates in the supplied frequency
+        """
+
+        if detail_level == 'Y':
+            return relativedelta(years=1)
+        if detail_level == 'M':
+            return relativedelta(months=1)
+        if detail_level == 'D':
+            return relativedelta(days=1)
+
+        raise ValueError("The detail level must be one of the following " +\
+                         "options: 'Y', 'M' or 'D'.")
+
+    @staticmethod
+    def filter_daterange(begin: datetime.date,
+                         end: datetime.date,
+                         hit_check: Callable[[datetime.date], bool],
+                         detail_level: str = 'Y',
+                         cons_misses: int = 100
+                         ) -> datetime.date:
         """
         Does the binary search over a date range.
 
@@ -136,31 +200,13 @@ class RangeInference():
         :returns: position where the last hit entry was found, None if no
                   entries were found
         """
+
         # Parameter validation
-        if not isinstance(begin, datetime.date) or \
-           not isinstance(end, datetime.date):
-            raise ValueError("The range limits should be supplied for the "+\
-                             "inference.")
-        if begin > end:
-            raise ValueError("The beginning of the range should be lower than"+\
-                             " the end.")
-        if hit_check is None:
-            raise ValueError("A valid entry probing function must be supplied.")
         if not isinstance(cons_misses, int) or cons_misses < 0:
             raise ValueError("The number of consecutive misses must be a "+\
                              "positive integer.")
 
-        # Calculates the step size based on the required granularity
-        time_delta = None
-        if detail_level == 'Y':
-            time_delta = relativedelta(years=1)
-        elif detail_level == 'M':
-            time_delta = relativedelta(months=1)
-        elif detail_level == 'D':
-            time_delta = relativedelta(days=1)
-        else:
-            raise ValueError("The detail level must be one of the following " +\
-                             "options: 'Y', 'M' or 'D'.")
+        time_delta = RangeInference.__daterange_calc_stepsize(detail_level)
 
         # Calculates the date in the middle of the given range, following the
         # defined detail level

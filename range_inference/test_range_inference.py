@@ -132,7 +132,7 @@ class RangeInferenceTest(unittest.TestCase):
 
 
     # DATE RANGE
-    def test_date_range_inference(self):
+    def test_daterange_inference(self):
         """
         Tests simple date ranges
         """
@@ -142,21 +142,21 @@ class RangeInferenceTest(unittest.TestCase):
         int_end = date(2012, 1, 1)
         end = date(2020, 1, 1)
         hit_check = RangeInferenceTest.dummy_hit_check(int_begin, int_end)
-        last_entry = RangeInference.filter_date_range(int_begin, end, hit_check,
-                                                      'Y', 10)
+        last_entry = RangeInference.filter_daterange(int_begin, end, hit_check,
+                                                     'Y', 10)
         # Since we're using yearly resolution, only the year value matters
         self.assertEqual(last_entry.year, int_end.year)
 
         # Same as above but with monthly resolution
-        last_entry = RangeInference.filter_date_range(int_begin, end, hit_check,
-                                                      'M', 10)
+        last_entry = RangeInference.filter_daterange(int_begin, end, hit_check,
+                                                     'M', 10)
         # Using monthly resolution, check year and month
         self.assertEqual(last_entry.year, int_end.year)
         self.assertEqual(last_entry.month, int_end.month)
 
         # Same as above but with daily resolution
-        last_entry = RangeInference.filter_date_range(int_begin, end, hit_check,
-                                                      'D', 10)
+        last_entry = RangeInference.filter_daterange(int_begin, end, hit_check,
+                                                     'D', 10)
         # Since now the resolution is daily, we can just compare the results
         self.assertEqual(last_entry, int_end)
 
@@ -164,15 +164,15 @@ class RangeInferenceTest(unittest.TestCase):
         # catch off-by-one errors
         int_end = date(2011, 12, 31)
         hit_check = RangeInferenceTest.dummy_hit_check(int_begin, int_end)
-        last_entry = RangeInference.filter_date_range(int_begin, end, hit_check,
-                                                      'Y', 10)
+        last_entry = RangeInference.filter_daterange(int_begin, end, hit_check,
+                                                     'Y', 10)
         self.assertEqual(last_entry.year, int_end.year)
-        last_entry = RangeInference.filter_date_range(int_begin, end, hit_check,
-                                                      'M', 10)
+        last_entry = RangeInference.filter_daterange(int_begin, end, hit_check,
+                                                     'M', 10)
         self.assertEqual(last_entry.year, int_end.year)
         self.assertEqual(last_entry.month, int_end.month)
-        last_entry = RangeInference.filter_date_range(int_begin, end, hit_check,
-                                                      'D', 10)
+        last_entry = RangeInference.filter_daterange(int_begin, end, hit_check,
+                                                     'D', 10)
         self.assertEqual(last_entry, int_end)
 
 
@@ -186,15 +186,15 @@ class RangeInferenceTest(unittest.TestCase):
         int_end = date(1996, 1, 10)
         end = date(1998, 1, 1)
         hit_check = RangeInferenceTest.dummy_hit_check(int_begin, int_end)
-        self.assertRaises(ValueError, RangeInference.filter_date_range,
+        self.assertRaises(ValueError, RangeInference.filter_daterange,
                           int_begin, end, hit_check, None)
 
         # detail_level = "YEAR"
-        self.assertRaises(ValueError, RangeInference.filter_date_range,
+        self.assertRaises(ValueError, RangeInference.filter_daterange,
                           int_begin, end, hit_check, "YEAR")
 
         # detail_level = ""
-        self.assertRaises(ValueError, RangeInference.filter_date_range,
+        self.assertRaises(ValueError, RangeInference.filter_daterange,
                           int_begin, end, hit_check, "")
 
 
@@ -210,45 +210,45 @@ class RangeInferenceTest(unittest.TestCase):
         end = date(2020, 1, 1)
         hit_check = RangeInferenceTest.dummy_hit_check(int_begin, int_end)
         # Yearly
-        last_entry = RangeInference.filter_date_range(begin, end, hit_check,
-                                                      'Y', 10)
+        last_entry = RangeInference.filter_daterange(begin, end, hit_check, 'Y',
+                                                     10)
         self.assertIsNone(last_entry)
         # Monthly
-        last_entry = RangeInference.filter_date_range(begin, end, hit_check,
-                                                      'M', 10)
+        last_entry = RangeInference.filter_daterange(begin, end, hit_check, 'M',
+                                                     10)
         self.assertIsNone(last_entry)
         # Daily
-        last_entry = RangeInference.filter_date_range(begin, end, hit_check,
-                                                      'D', 10)
+        last_entry = RangeInference.filter_daterange(begin, end, hit_check, 'D',
+                                                     10)
         self.assertIsNone(last_entry)
 
         # Entire search space is filled
         hit_check = RangeInferenceTest.dummy_hit_check(begin, end)
         # Yearly
-        last_entry = RangeInference.filter_date_range(begin, end, hit_check,
-                                                      'Y', 10)
+        last_entry = RangeInference.filter_daterange(begin, end, hit_check, 'Y',
+                                                     10)
         self.assertEqual(last_entry.year, end.year)
         # Monthly
-        last_entry = RangeInference.filter_date_range(begin, end, hit_check,
-                                                      'M', 10)
+        last_entry = RangeInference.filter_daterange(begin, end, hit_check, 'M',
+                                                     10)
         self.assertEqual(last_entry.year, end.year)
         self.assertEqual(last_entry.month, end.month)
         # Daily
-        last_entry = RangeInference.filter_date_range(begin, end, hit_check,
-                                                      'D', 10)
+        last_entry = RangeInference.filter_daterange(begin, end, hit_check, 'D',
+                                                     10)
         self.assertEqual(last_entry, end)
 
         # Only one entry at the beginning
         hit_check = RangeInferenceTest.dummy_hit_check(begin, begin)
-        last_entry = RangeInference.filter_date_range(begin, end, hit_check,
-                                                      'D', 10)
+        last_entry = RangeInference.filter_daterange(begin, end, hit_check, 'D',
+                                                     10)
         self.assertEqual(last_entry, begin)
 
         # Only one entry near the beginning
         entry_date = date(2000, 1, 5)
         hit_check = RangeInferenceTest.dummy_hit_check(entry_date, entry_date)
-        last_entry = RangeInference.filter_date_range(begin, end, hit_check,
-                                                      'D', 10)
+        last_entry = RangeInference.filter_daterange(begin, end, hit_check, 'D',
+                                                     10)
         self.assertEqual(last_entry, entry_date)
 
 
@@ -262,14 +262,14 @@ class RangeInferenceTest(unittest.TestCase):
         end = date(2000, 1, 1)
         hit_check = RangeInferenceTest.dummy_hit_check(begin, end)
 
-        self.assertRaises(ValueError, RangeInference.filter_date_range,
-                          begin, end, hit_check)
+        self.assertRaises(ValueError, RangeInference.filter_daterange, begin,
+                          end, hit_check)
         # Beginning is None
-        self.assertRaises(ValueError, RangeInference.filter_date_range,
-                          None, end, hit_check)
+        self.assertRaises(ValueError, RangeInference.filter_daterange, None,
+                          end, hit_check)
         # End is None
-        self.assertRaises(ValueError, RangeInference.filter_date_range,
-                          begin, None, hit_check)
+        self.assertRaises(ValueError, RangeInference.filter_daterange, begin,
+                          None, hit_check)
 
 
     def test_date_error_hit_check(self):
@@ -281,8 +281,8 @@ class RangeInferenceTest(unittest.TestCase):
         begin = date(2000, 1, 1)
         end = date(2020, 1, 1)
 
-        self.assertRaises(ValueError, RangeInference.filter_date_range,
-                          begin, end, None)
+        self.assertRaises(ValueError, RangeInference.filter_daterange, begin,
+                          end, None)
 
 
     def test_date_error_cons_misses(self):
@@ -294,11 +294,11 @@ class RangeInferenceTest(unittest.TestCase):
         end = date(2020, 1, 1)
 
         # Supply None as the cons_misses parameter
-        self.assertRaises(ValueError, RangeInference.filter_date_range,
+        self.assertRaises(ValueError, RangeInference.filter_daterange,
                           begin, end, None, 'Y', None)
 
         # Supply a negative value as cons_misses
-        self.assertRaises(ValueError, RangeInference.filter_date_range,
+        self.assertRaises(ValueError, RangeInference.filter_daterange,
                           begin, end, None, 'Y', -1)
 
 
