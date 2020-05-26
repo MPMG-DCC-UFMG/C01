@@ -9,9 +9,16 @@ from PIL import Image, ImageEnhance, ImageFilter
 from selenium import webdriver
 from validators import url
 from skimage.color import rgb2gray, rgba2rgb
+from selenium.common.exceptions import NoSuchElementException        
+
 
 class ImageSolver:
-    def __init__(self, url, model=None, preprocessing=None, webdriver=None):
+    def __init__(self, 
+                 url, 
+                 model=None,
+                 preprocessing=None,
+                 webdriver=None):
+
         if url is None:
             raise Exception("Usuário deve indicar uma url")
         self.url = url
@@ -20,10 +27,15 @@ class ImageSolver:
         self.driver = webdriver or self._get_webdriver()
 
     def _get_webdriver(self):
+        """
+        This functions intantiate the webdriver in case the user
+        didn't passed the webdriver to be used
+        """
         options = webdriver.ChromeOptions()
         options.add_argument("--headless")
         options.add_argument('window-size=1920x1080')
         driver = webdriver.Chrome("/usr/bin/chromedriver", chrome_options=options)
+        driver.get(self.url)
         return driver
 
     def _get_image(self, path):
@@ -37,8 +49,6 @@ class ImageSolver:
         return im
 
     def _from_screenshot(self, xpath):
-        self.driver.get(self.url)
-
         screenshot = self.driver.get_screenshot_as_png() # saves screenshot of entire page
         element = self.driver.find_element_by_xpath(xpath)
         location = element.location
@@ -64,11 +74,20 @@ class ImageSolver:
     def _ocr(self, image):
         return pytesseract.image_to_string(image)
 
-    def solve(self, image=None, xpath=None, url=None):
-        if xpath and url:
+    def check_exists_by_xpath(self, xpath):
+        try:
+            self.driver.find_element_by_xpath(xpath)
+        except NoSuchElementException:
+            return False
+        return True
+
+    def solve(self, image=None, source=None):
+        if image and source:
             raise Exception("Usuário deve informar apenas uma fonte para imagem")
-        
-        img = image or self._get_image(xpath or url)
+        if not image and not source:
+            raise Exception("Usuário deve informar uma fonte para imagem")
+
+        img = image or self._get_image(source)
         img = self.preprocess(img)
         text = self.predict(img)
         return text     

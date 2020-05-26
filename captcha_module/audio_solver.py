@@ -18,7 +18,6 @@ class AudioSolver:
         self.id = uuid.uuid4().hex
         self.download_dir = download_dir or  "./" + self.id
         self.driver = webdriver or self._get_webdriver()
-        self.driver.get(url)
 
     def _get_webdriver(self):
         options = webdriver.ChromeOptions()
@@ -42,7 +41,8 @@ class AudioSolver:
     def _from_url(self, url):
         audio = self.driver.get(url)
         while not os.path.exists(self.download_dir + "/audio.wav"):
-            sleep(2)            
+            sleep(2)
+        sleep(2)
         return sr.AudioFile(self.download_dir + "/audio.wav")
 
     def _preprocess(self, audio):
@@ -55,11 +55,20 @@ class AudioSolver:
         text = recognizer.recognize_google(audio, language = "pt-BR")
         return text
 
-    def solve(self, audio=None, url=None):
-        if not url:
+    def check_exists_by_xpath(self, xpath):
+        try:
+            self.driver.find_element_by_xpath(xpath)
+        except NoSuchElementException:
+            return False
+        return True
+
+    def solve(self, audio=None, source=None):
+        if audio and source:
+            raise Exception("Usuário deve informar apenas uma fonte para audio")
+        if not audio and not source:
             raise Exception("Usuário deve informar uma fonte para audio")
-        
-        aud = audio or self._get_audio(url)
+
+        aud = audio or self._get_audio(source)
         aud = self.preprocess(aud)
         text = self.predict(aud)
         return text     
