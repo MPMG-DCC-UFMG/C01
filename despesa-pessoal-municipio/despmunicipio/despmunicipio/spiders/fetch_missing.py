@@ -95,7 +95,7 @@ class SeleniumSpider(scrapy.Spider):
         for code in codes:
             # for year in range(2014, 2019):# 2020):
             year = 2019
-            if i >= last_call and i % 16 == 1:
+            if i >= last_call:
                 with open("last_call.txt", "w+") as f:
                     f.write(str(i))
                 
@@ -112,7 +112,7 @@ class SeleniumSpider(scrapy.Spider):
         # 2014~2018 for codes missing
         for code in missing_files["code"]:
             for year in range(2014, 2019):
-                if i >= last_call and i % 16 == 1:
+                if i >= last_call:
                     with open("last_call.txt", "w+") as f:
                         f.write(str(i))
                     
@@ -127,7 +127,7 @@ class SeleniumSpider(scrapy.Spider):
             self.logger.info("))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))" + str(miss))
             code = miss["code"].split("-")[0]
             year = miss["year"].split("-")[0]
-            if i >= last_call and i % 16 == 1:
+            if i >= last_call:
                 with open("last_call.txt", "w+") as f:
                     f.write(str(i))
                 

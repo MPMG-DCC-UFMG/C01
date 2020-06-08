@@ -83,7 +83,7 @@ class SeleniumSpider(scrapy.Spider):
         count = len(codes)
         for code in codes:
             for year in range(2014, 2019):# 2020):
-                if i >= last_call and i % 2 == 1:
+                if i >= last_call:
                     with open("last_call.txt", "w+") as f:
                         f.write(str(i))
                     
