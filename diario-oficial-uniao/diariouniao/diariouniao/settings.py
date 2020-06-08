@@ -94,7 +94,7 @@ SELENIUM_DRIVER_EXECUTABLE_PATH = which("../chromedriver_win32_chr_81.exe")
 # SELENIUM_DRIVER_ARGUMENTS=[]
 SELENIUM_DRIVER_ARGUMENTS=['--headless']  # '--headle   ss' if using chrome instead of firefox
 DOWNLOADER_MIDDLEWARES = {
-    'scrapy_selenium.SeleniumMiddleware': 800
+    'scrapy_selenium.SeleniumMiddleware': 0
 }
 
-DOWNLOAD_DELAY = 0.3
+DOWNLOAD_DELAY = 1
