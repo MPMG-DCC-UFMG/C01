@@ -27,24 +27,72 @@ class SeleniumSpider(scrapy.Spider):
     def __init__(self, *a, **kw):
         super(SeleniumSpider, self).__init__(*a, **kw)
 
-    def save_page(self, response):
-        metadata = response.request.meta
-        metadata["data"] = metadata["data"].replace("/", "-")
-        name = "jornais/" + "_".join([
-            metadata["data"], metadata["jornal"], 
-            metadata["totalArquivos"], metadata["page"]]
-        ) + ".pdf"
-        with open(name, "wb") as f:
-            f.write(response.body)
+    # def file_exists(file_name):
+    #     try:
+    #         with open(file_name) as f:
+    #             pass
+    #     except FileNotFoundError:
+    #         return False
+    #     return True
 
-    def start_requests(self):
+    def gen_base_url(self):
         today = datetime.datetime.today()
 
         # for date in pandas.date_range("2020-05-02", today.strftime('%Y-%m-%d')):
-        for date in pandas.date_range("2014-01-01", today.strftime('%Y-%m-%d')):
+        # for date in pandas.date_range("2014-01-01", today.strftime('%Y-%m-%d')):
+        for date in pandas.date_range("2019-09-25", "2020-05-15"):
+            self.logger.info(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> At gen_base_url")
             url = f"http://www.in.gov.br/leiturajornal?data={date.strftime('%d-%m-%Y')}#daypicker"
             metadata = {"date": date.strftime('%Y-%m-%d')}
-            yield SeleniumRequest(url=url, meta=metadata, callback=self.parse, dont_filter=True)
+
+            yield (url, metadata)
+
+    def next_call(self, gen):
+        self.logger.info(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> At next_call")
+        try:
+            url, metadata = next(gen)
+            metadata["generator"] = gen
+            self.logger.info(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Calling {url}")
+            return SeleniumRequest(url=url, meta=metadata, callback=self.parse, dont_filter=True)
+        except StopIteration:
+            return []
+
+    def start_requests(self):   
+        gen = self.gen_base_url()
+        yield self.next_call(gen)
+
+    def parse(self, response):
+        self.logger.info(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> At parser")
+        driver = response.request.meta['driver']
+        date = response.request.meta['date']
+
+        if self.move_to_document_list(driver) and self.there_is_documents(driver, date):
+            table_rows = self.get_document_table(driver)
+            self.logger.info(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> {date} - No. of rows: {len(table_rows)}")
+
+            for tr in table_rows:
+                anchor = tr.find_element_by_xpath("td[1]/a")
+                link = anchor.get_attribute("onclick")
+                args = {"date": date}
+
+                for i in link.split('?')[1][:-3].split('&'):
+                    key, value = i.split('=')
+                    args[key] = value
+
+                for p in range(int(args['totalArquivos'])):
+                    url = f"http://pesquisa.in.gov.br/imprensa/servlet/INPDFViewer?jornal={args['jornal']}" \
+                        f"&pagina={p + 1}&data={args['data']}&captchafield=firstAccess"
+                    url_data = args.copy()
+
+                    url_data["pagina"] = str(p + 1)
+                    
+                    self.logger.info(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> spawning {url_data} {url}")
+                    yield scrapy.Request(
+                        url=url, callback=self.save_page, meta=url_data,
+                        priority=1 # min(1, 1000 - int(args['totalArquivos'])) # give priority to shorter documents
+                    ) 
+        
+        yield self.next_call(response.request.meta['generator'])        
 
     def wait_element(self, driver, xpath):
         attempt = 1
@@ -58,50 +106,49 @@ class SeleniumSpider(scrapy.Spider):
         self.logger.info("Unable to locate element at " + xpath)
         return False
 
-    def parse(self, response):
-        self.logger.info(str(response.request.meta.keys()))
-        driver = response.request.meta['driver']
-
+    def move_to_document_list(self, driver):
         full_btn_xpath = "//div[1]/div[2]/main/div[2]/section/div/div/div/div/div[4]/section/" \
         "div/div[2]/div/div[1]/div[3]/button[4]"
 
         if not self.wait_element(driver, full_btn_xpath):
-            return {}
-        driver.find_element_by_xpath(full_btn_xpath).click()
+            return False
 
+        driver.find_element_by_xpath(full_btn_xpath).click()
+        return True
+
+    def there_is_documents(self, driver, date):
         if not self.wait_element(driver, "//div/form/center"):
-            return {}
+            return False
+
         center = driver.find_element_by_xpath("//div/form/center")
 
-        if center.text == "Nenhum registro encontrado para a pesquisa.":
-            self.logger.info(f">>>>> {response.request.meta['date']} - No documents for date")
-            return {}
+        self.logger.info(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> {date} TEXT - " + center.text)
+        if center.text == "Nenhum registro encontrado para a pesquisa.":            
+            self.logger.info(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> {date} - No documents for date")
+            return False            
+        
+        return True
 
+    def get_document_table(self, driver):
+        time.sleep(2) # making sure the table is filled before checking
         table_rows_xpath = "//*[@id=\"ResultadoConsulta\"]/tbody/tr"
         if not self.wait_element(driver, table_rows_xpath):
-            return {}
+            return []
         table_rows = driver.find_elements_by_xpath(table_rows_xpath)
+        return table_rows
 
-        self.logger.info(f">>>>> {response.request.meta['date']} - No. of rows: {len(table_rows)}")
-        for tr in table_rows:
-            anchor = tr.find_element_by_xpath("td[1]/a")
-            link = anchor.get_attribute("onclick")
-            args = {}
-
-            for i in link.split('?')[1][:-3].split('&'):
-                key, value = i.split('=')
-                args[key] = value
-
-            for p in range(int(args['totalArquivos'])):
-                url = f"http://pesquisa.in.gov.br/imprensa/servlet/INPDFViewer?jornal={args['jornal']}" \
-                    f"&pagina={p + 1}&data={args['data']}&captchafield=firstAccess"
-                
-                url_data = args.copy()
-                url_data["page"] = str(p + 1)
-                yield scrapy.Request(url=url, callback=self.save_page, meta=url_data) 
-                if p == 5:
-                    break       
-        return
+    def save_page(self, response):
+        metadata = response.request.meta
+        self.logger.info(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> At save_page {metadata}")
+        metadata["data"] = metadata["data"].replace("/", "-")
+        name = "jornais/" + "_".join([
+            metadata["date"],
+            metadata["jornal"], 
+            "%04d" % (int(metadata["totalArquivos"])),
+            "%04d" % (int(metadata["pagina"]))
+        ]) + ".pdf"
+        with open(name, "wb") as f:
+            f.write(response.body)
 
 # c = CrawlerProcess({
 #     'ITEM_PIPELINES': {'scrapy.pipelines.files.FilesPipeline': 1},
