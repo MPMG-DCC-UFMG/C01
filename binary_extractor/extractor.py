@@ -1,18 +1,57 @@
-from excel_extractor import ExcelExtractor
-from texts_extractor import TextsExtractor
-from tabula_extractor import TabulaExtractor
-#from errors import *
+"""
+This module calls the extraction of a binary file.
+
+"""
 
 import sys
 from pathlib import Path
+import filetype
+
 from xlrd import open_workbook, XLRDError
 
-class Factory():
+from excel_extractor import ExcelExtractor
+from texts_extractor import TextsExtractor
+from tabula_extractor import TabulaExtractor
+
+class Extractor():
+    """
+    This class chooses the right binary extractor for the file.
+
+    If the type of the file is an Excel, uses the ExcelExtractor; Otherwise, it
+    uses the TextsExtractor. Also, if the file has extra tables, other type of
+    extractor can be used.
+
+    Args:
+        path (str): Absolute file path.
+
+    Attributes:
+        path (str): Absolute file path.
+        type (str): File extension.
+
+    Raises:
+        FileNotFoundError: The type of the file could not be identified.
+
+    """
 
     def __init__(self, path):
         self.path = path
 
-    def type_of_binary(self):
+        try:
+            filetype.guess(path)
+        except FileNotFoundError:
+            raise FileNotFoundError('o caminho {} é inválido.'.format(path))
+        else:
+            self.type = filetype.guess(path).extension
+
+    def guess_extractor(self):
+        """
+        Method that chooses the right extractor for the document.
+
+        Returns:
+            BinaryExtractor: The extractor.
+
+        """
+
         try:
             open_workbook(self.path)
         except XLRDError:
@@ -20,28 +59,65 @@ class Factory():
         else:
             return ExcelExtractor(self.path)
 
+    def extra(self):
+        """
+        Method that verifies the existence of a extractor for extra contents.
+
+        Note:
+            For now, it only can look for tables in pdf files.
+
+        Returns:
+            TabulaExtractor, if the file is a pdf, None otherwise.
+
+        """
+
+        if self.type == 'pdf':
+            return TabulaExtractor(self.path)
+        return None
+
     def extractor(self):
-        Extractor = self.type_of_binary()
-        Extractor.output()
-        Extractor.metadata()
+        """
+        This method calls the output methods for the chosen extractors.
 
-        if Path(self.path).suffix == '.pdf':
-            TabulaExtractor(self.path).output()
+        It calls the extraction of main contents, extra contents and metadata.
 
+        """
+
+        extractor = self.guess_extractor()
+        extra = self.extra()
+
+        extractor.output()
+        extractor.metadata()
+
+        if not extra is None:
+            extra.output()
 
 def main():
+    """
+    This function instantiates and calls the extraction.
+
+    Note:
+        There is a processing of the file path and the construction of a relati-
+        ve path between the file path and the current work directory.
+
+    Args:
+        argv[1] (str): File path.
+
+    Raises:
+        IsADirectoryError: The path is a directory path.
+
+    """
+
     filepath = sys.argv[1]
 
-    if Path(filepath).is_absolute():
-        current = Path(__file__).absolute()
+    current = Path(__file__).absolute()
+    basepath = current.parents[len(current.parents) - 1]
+    path = basepath.joinpath(filepath)
 
-        basepath = current.parents[len(current.parents) - 1]
-        path = basepath.joinpath(filepath)
+    if Path.is_dir(path):
+        raise IsADirectoryError('o caminho {} é um diretório.'.format(path))
 
-        extractor = Factory(str(path)).extractor()
-
-    else:
-        raise FileNotFoundError('o caminho {} não é absoluto.'.format(filepath))
+    Extractor(str(path)).extractor()
 
 if __name__ == '__main__':
     main()

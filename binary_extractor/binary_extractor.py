@@ -1,55 +1,118 @@
-from texts_processor import *
+"""
+This module extracts contents from binary files.
+
+"""
 
 from pathlib import Path
 import abc
-import csv
+
+from tika import parser
+from texts_processor import columns_to_dataframe
 
 class BinaryExtractor():
+    """
+    This class extracts the content of binary files.
 
+    Args:
+        path (str): File path.
+
+    Attributes:
+        path (str): File path.
+        meta (None/pd.DataFrame): Metadata of the document.
+        content(None/dict/pd.DataFrame): Main content of the document.
+        name (str): File name, without its extension.
+        directory (Path): Created directory for saving the outputs.
+
+    Raises:
+        TypeError: The file can't be parsed.
+
+    """
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, path):
+
+        # initial important variables
         self.path = path
-        self.open = parser.from_file(self.path)
-
-        self.content = None
-        self.extra = None
         self.meta = None
+        self.content = None
 
+        # create directory for outputs
         pure = Path(self.path)
         self.name = pure.stem
-        parent = pure.parent
+        self.directory = pure.parent.joinpath(self.name)
+        Path.mkdir(self.directory, exist_ok=True)
 
-        self.directory = parent.joinpath(self.name)
-        Path.mkdir(self.directory, exist_ok = True)
+        # file parsing
+        try:
+            parser.from_file(self.path)
+        except:
+            TypeError('O arquivo não pôde ser extraído.')
+        else:
+            self.open = parser.from_file(self.path)
 
     @abc.abstractmethod
     def read(self):
-        raise AssertionError
+        """
+        Abstract Method: Reads the file content.
 
-    @abc.abstractmethod
-    def process(self):
+        """
+
         raise AssertionError
 
     @abc.abstractmethod
     def output(self):
+        """
+        Abstract Method: Prepares the processed content for writing.
+
+        """
+
         raise AssertionError
 
     def write(self, dataframe, name):
+        """
+        This method writes the output in csv format.
+
+        Args:
+            dataframe (pd.DataFrame): table to be writen.
+            name (str): name of the csv file.
+
+        """
+
         file = self.directory.joinpath(name + '.csv')
         with open(file, 'w') as out:
-            dataframe.to_csv(out, encoding = 'utf-8', index = None)
+            dataframe.to_csv(out, encoding='utf-8', index=None)
 
-    def extract_metadata(self):
+    def read_metadata(self):
+        """
+        dict: This method access and return the metadata.
+
+        """
+
         return self.open['metadata']
 
     def process_metadata(self):
-        metadata = self.extract_metadata()
+        """
+        This method processes the metadata.
+
+        Returns:
+            pd.DataFrame: table with the metadata properties and their values.
+
+        """
+
+        metadata = self.read_metadata()
         keys = list(metadata.keys())
         values = list(metadata.values())
 
         return columns_to_dataframe(keys, values, 'Propriedade', 'Valor')
 
     def metadata(self):
+        """
+        This method writes the metadata table in csv.
+
+        Attributes:
+            meta (pd.DataFrame): metadata dataframe.
+
+        """
+
         self.meta = self.process_metadata()
         self.write(self.meta, 'metadata')
