@@ -5,7 +5,7 @@ rubia-rg@github
 Test cases for extracting parameters with URLParser
 """
 import unittest
-from form_parser import URLParser
+from formparser.url import URLParser
 
 
 class MyTestCase(unittest.TestCase):

@@ -7,10 +7,10 @@ Extract HTML forms for parsing
 import requests
 
 from lxml import etree
-from form_parser import config
+from formparser import utils
 
 
-class HTMLExtractor:
+class Extractor:
     """Extract and parse HTML for forms"""
     def __init__(self, url):
         """Constructor for HTMLExtractor
@@ -31,7 +31,7 @@ class HTMLExtractor:
         Returns:
             Request response.
         """
-        return requests.get(url, headers=config.request_headers())
+        return requests.get(url, headers=utils.request_headers())
 
     def html_text(self) -> str:
         """Extracts HTML from request's response as string
@@ -50,7 +50,7 @@ class HTMLExtractor:
         return self.html_response.content
 
     def get_etree(self) -> etree._Element:
-        """Constrcturs lxml.etree from HTML
+        """Constructs lxml.etree from HTML
 
         Returns:
             lxml.etree from HTML
@@ -68,3 +68,11 @@ class HTMLExtractor:
         """
         html_tree = self.get_etree()
         return html_tree.xpath("//form")
+
+    def check_for_string(self, string: str) -> bool:
+        """Checks if string is present in a HTML page
+
+        Returns:
+            True, if present, and False, otherwise.
+        """
+        return string in self.html_text()
