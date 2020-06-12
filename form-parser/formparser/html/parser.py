@@ -42,7 +42,7 @@ class Parser:
             Example: {'text': [name, phone], 'radio': year}
         """
         inputs = {}
-        field_types = self.field_types()
+        field_types = self.unique_field_types()
         for input_type in field_types:
             if input_type is 'select':
                 inputs[input_type] = self.form.xpath("//select")

@@ -62,9 +62,10 @@ class DynamicFields:
                 element.click()
             time.sleep(0.5)
             self.check_change(text_before_click, field, field_type)
+            self.browser.refresh()
 
     def check_change(self, text_before_action, field, field_type):
-        """Detects if text was changed after action and fills dict with fields
+        """Detects if text changed after action and fills dict with fields
 
         Args:
             text_before_action: url of webpage where the form is (if not provided when

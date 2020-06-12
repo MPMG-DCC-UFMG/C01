@@ -50,7 +50,7 @@ class TestPortalCompras(unittest.TestCase):
 
 class TestFormPortalCompras(unittest.TestCase):
     def test_list_field_types(self):
-        self.assertListEqual(sorted(list(Form.field_types())), sorted(['checkbox', 'hidden', 'select', 'text']))
+        self.assertListEqual(sorted(list(Form.unique_field_types())), sorted(['checkbox', 'hidden', 'select', 'text']))
 
     def test_required_fields(self):
         self.assertEqual(Form.required_fields(), [])
