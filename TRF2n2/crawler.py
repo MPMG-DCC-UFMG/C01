@@ -38,7 +38,7 @@ WAIT_INTERVAL = 2
 
 DOWNLOAD_ATTACHMENTS = True
 
-DOWNLOAD_FOLDER = os.path.join(os.getcwd(), FOLDER_PATH)
+DOWNLOAD_FOLDER = os.path.join("/datalake/ufmg/coletatrf2", FOLDER_PATH)
 TMP_DOWNLOAD = os.path.join(os.getcwd(), "tmp")
 
 ### GENERAL UTILS
@@ -302,6 +302,7 @@ def process_page(driver, num_proc, tmp_folder, down_folder):
     # list with attachment links
     att_links = []
 
+    print("Selecting iframe links")
     # selects all iframe links
     iframe_sel = "/html/body/form/center/div/table[3]/tbody/tr[1]/td/table/tbody/tr/td[2]/p/font/span/a"
     els = driver.find_elements_by_xpath(iframe_sel)
@@ -314,6 +315,7 @@ def process_page(driver, num_proc, tmp_folder, down_folder):
         # wait for it to load and then switch into it
         time.sleep(2)
         driver.switch_to.frame("dir")
+        print("Tab number {}".format(counter))
 
         if counter == 1:
             # the first iframe has paging in it
@@ -437,11 +439,13 @@ def access_process_url(driver, num_proc, tmp_folder, down_folder):
     :return: true if the checked number was hit, false if it missed
     """
 
+    print("Loading process page")
     driver = load_process_page(driver, num_proc)
 
     if "cons_procs" in driver.current_url:
         return False
     else:
+        print("Entry found, processing page")
         #print("*** Found process for {}".format(num_proc))
         process_page(driver, num_proc, tmp_folder, down_folder)
         return True
@@ -467,6 +471,7 @@ def run_year(year):
             processed = False
             while not processed:
                 try:
+                    print("{} --- Begin processing {}".format(year, code))
                     if access_process_url(driver, code, tmp_folder, down_folder):
                         hit += 1
                         print("{} --- Done processing {}".format(year, code))
