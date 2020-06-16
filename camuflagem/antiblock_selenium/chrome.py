@@ -79,7 +79,7 @@ class Chrome(CamouflageHandler, webdriver.Chrome):
         else:
             self.wait()
 
-        self.last_timestamp = round(time.time(), 2)
+        self.last_call_timestamp = round(time.time(), 2)
         super().get(url)
 
         self.number_of_requests_made += 1
