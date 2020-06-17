@@ -9,6 +9,7 @@ from __future__ import annotations
 from .entry_probing_request import ProbingRequest
 from .entry_probing_response import ProbingResponse
 
+
 class EntryProbing():
     """
     General wrapper for both a ProbingRequest and a ProbingResponse. The
@@ -23,7 +24,7 @@ class EntryProbing():
         :param req_handler: Handler describing how to execute the request
         """
         if not isinstance(req_handler, ProbingRequest):
-            raise TypeError("Request handler must be a subclass of " +\
+            raise TypeError("Request handler must be a subclass of " +
                             "ProbingRequest")
 
         self.req_handler = req_handler
@@ -31,7 +32,7 @@ class EntryProbing():
 
 
     def add_response_handler(self, resp_handler: ProbingResponse
-                            ) -> EntryProbing:
+                             ) -> EntryProbing:
         """
         Adds a response handler to the probing process
 
@@ -40,7 +41,7 @@ class EntryProbing():
         :returns: Entry probing object, to enable chaining
         """
         if not isinstance(resp_handler, ProbingResponse):
-            raise TypeError("Response handler must be a subclass of " +\
+            raise TypeError("Response handler must be a subclass of " +
                             "ProbingResponse")
 
         self.resp_handlers.append(resp_handler)
