@@ -10,12 +10,18 @@ from lxml import etree
 from formparser.html import HTMLParser, HTMLExtractor
 from formparser import utils
 
-PORTAL_COMPRAS = 'https://www1.compras.mg.gov.br/processocompra/processo/consultaProcessoCompra.html'
-TEST_FORM_FIELD = {'type': 'text', 'name': 'codigoUnidadeCompra', 'maxlength': '7', 'size': '', 'value': '',
-                   'onkeydown': ' return IsNumericKey(event, false);', 'onkeyup':
-                       'return numericMask(this,0,7,false, event, false );testarBackspaceEDelete();',
-                   'onkeypress': 'campoAlterado();', 'onchange': 'campoAlterado();',
-                   'onblur': 'numericValidate(this,0,7,false,false);', 'id': 'codigoUnidadeCompra', 'class': ''}
+PORTAL_COMPRAS = 'https://www1.compras.mg.gov.br/processocompra/processo/' \
+                 'consultaProcessoCompra.html'
+TEST_FORM_FIELD = {'type': 'text', 'name': 'codigoUnidadeCompra',
+                   'maxlength': '7', 'size': '', 'value': '',
+                   'onkeydown': ' return IsNumericKey(event, false);',
+                   'onkeyup':
+                       'return numericMask(this,0,7,false, event, false );'
+                       'testarBackspaceEDelete();',
+                   'onkeypress': 'campoAlterado();',
+                   'onchange': 'campoAlterado();',
+                   'onblur': 'numericValidate(this,0,7,false,false);',
+                   'id': 'codigoUnidadeCompra', 'class': ''}
 
 HTML = HTMLExtractor(PORTAL_COMPRAS)
 Form = HTMLParser(form=HTML.get_forms()[0])
@@ -50,13 +56,15 @@ class TestPortalCompras(unittest.TestCase):
 
 class TestFormPortalCompras(unittest.TestCase):
     def test_list_field_types(self):
-        self.assertListEqual(sorted(list(Form.unique_field_types())), sorted(['checkbox', 'hidden', 'select', 'text']))
+        self.assertListEqual(sorted(list(Form.unique_field_types())),
+                             sorted(['checkbox', 'hidden', 'select', 'text']))
 
     def test_required_fields(self):
         self.assertEqual(Form.required_fields(), [])
 
     def test_fields(self):
-        self.assertEqual(sum([len(Form.fields()[key]) for key in Form.fields().keys()]), Form.number_of_fields())
+        self.assertEqual(sum([len(Form.fields()[key]) for key in
+                              Form.fields().keys()]), Form.number_of_fields())
 
     def test_select_fields(self):
         self.assertEqual(len(Form.select_fields()), 10)
@@ -80,13 +88,15 @@ class TestDynamicFields(unittest.TestCase):
         url = 'http://www5.trf5.jus.br/cp/'
         parsed_form = HTMLParser(url=url)
         dynamic_fields = parsed_form.dynamic_fields()
-        self.assertEqual((list(dynamic_fields.keys()), len(dynamic_fields['radio'])), (['radio'], 6))
+        self.assertEqual((list(dynamic_fields.keys()),
+                          len(dynamic_fields['radio'])), (['radio'], 6))
 
     def test_dyn_web(self):
         url = 'https://www.dyn-web.com/tutorials/forms/select/paired.php'
         parsed_form = HTMLParser(url=url)
         dynamic_fields = parsed_form.dynamic_fields()
-        self.assertEqual((list(dynamic_fields.keys()), len(dynamic_fields['select'])), (['select'], 1))
+        self.assertEqual((list(dynamic_fields.keys()),
+                          len(dynamic_fields['select'])), (['select'], 1))
 
 
 if __name__ == '__main__':

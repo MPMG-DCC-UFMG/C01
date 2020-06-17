@@ -50,7 +50,7 @@ class Extractor:
         """
         return self.html_response.content
 
-    def get_etree(self) -> etree._Element:
+    def get_etree(self) -> etree.Element:
         """Constructs lxml.etree from HTML
 
         Returns:

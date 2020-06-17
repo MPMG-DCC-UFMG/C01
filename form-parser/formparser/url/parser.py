@@ -33,7 +33,8 @@ class Parser:
         Args:
             query (:obj:`str`, optional): Query. If query is not provided,
                 attempts to extract from self.url
-            keep_blank_values (:obj:`bool`, optional): argument for urllib.parse.parse_qs().
+            keep_blank_values (:obj:`bool`, optional): argument for
+            urllib.parse.parse_qs().
                  Example: 'example.com/index.html?param1=&param2=value2'
                  If True: {'param1': '', 'param2': 'value2'}.
                  If False: {'param2': 'value2'}.

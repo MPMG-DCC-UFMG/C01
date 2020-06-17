@@ -68,8 +68,9 @@ class DynamicFields:
         """Detects if text changed after action and fills dict with fields
 
         Args:
-            text_before_action: url of webpage where the form is (if not provided when
-                          constructing the object HTMLParser)
+            text_before_action: url of webpage where the form is (if not
+                                provided when constructing the object
+                                HTMLParser)
             field: 'lxml.etree._Element'
             field_type: str
         """

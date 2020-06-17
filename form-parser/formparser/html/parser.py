@@ -47,7 +47,8 @@ class Parser:
             if input_type is 'select':
                 inputs[input_type] = self.form.xpath("//select")
             else:
-                inputs[input_type] = self.form.xpath("//input[@type='" + input_type + "']")
+                inputs[input_type] = self.form.xpath("//input[@type='" +
+                                                     input_type + "']")
         return inputs
 
     def unique_field_types(self) -> set:
