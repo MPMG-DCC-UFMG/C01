@@ -41,7 +41,8 @@ class MyTestCase(unittest.TestCase):
                   'procedimento4': [''], 'especializacao': [''],
                   'dataCriacaoDe': [''], 'dataCriacaoAte': [''],
                   'dataLicitacaoDe': [''], 'dataLicitacaoAte': [''],
-                  'linhaFornecimento': [''], 'linhaFornecimentoOpcaoEOu': ['E'],
+                  'linhaFornecimento': [''],
+                  'linhaFornecimentoOpcaoEOu': ['E'],
                   'linhaFornecimentoOpcaoSem': [''],
                   'descricaoMaterialOuServico': [''],
                   'descricaoMaterialOuServicoOpcaoEOu': ['E'],
@@ -77,13 +78,15 @@ class MyTestCase(unittest.TestCase):
               '&especificacaoItemMaterialOuServico=&' \
               'especificacaoItemMaterialOuServicoOpcaoEOu=E' \
               '&especificacaoItemMaterialOuServicoOpcaoSem='
-        query = 'idProcessoCompraSelecionado=&procedimentoProcessoSelecionado='\
+        query = 'idProcessoCompraSelecionado=' \
+                '&procedimentoProcessoSelecionado='\
                 '&unidadeCompra=&possuiPregao=&' \
                 'possuiEdital=&estaPesquisando=true&metodo=pesquisar' \
                 '&textoConfirmacao=&orgaoEntidade=&' \
                 'codigoUnidadeCompra=&numero=&ano=&situacao=SUSPENSO' \
                 '&procedimentoModificado=&procedimento1=&' \
-                'procedimento2=&procedimento3=&procedimento4=&especializacao=' \
+                'procedimento2=&procedimento3=' \
+                '&procedimento4=&especializacao=' \
                 '&dataCriacaoDe=&dataCriacaoAte=&' \
                 'dataLicitacaoDe=&dataLicitacaoAte=&linhaFornecimento=' \
                 '&linhaFornecimentoOpcaoEOu=E&' \

@@ -29,15 +29,15 @@ class Parser:
 
     def parameters(self, query=None, keep_blank_values=True) -> dict:
         """Extract parameters from query
-
+           Example: 'example.com/index.html?param1=&param2=value2'
+                 If True: {'param1': '', 'param2': 'value2'}.
+                 If False: {'param2': 'value2'}.
         Args:
             query (:obj:`str`, optional): Query. If query is not provided,
                 attempts to extract from self.url
             keep_blank_values (:obj:`bool`, optional): argument for
             urllib.parse.parse_qs().
-                 Example: 'example.com/index.html?param1=&param2=value2'
-                 If True: {'param1': '', 'param2': 'value2'}.
-                 If False: {'param2': 'value2'}.
+
         Returns:
             Dictionary containing the parameters and values.
             Example: 'example.com/index.html?param1=value1&param2=value2'
@@ -45,4 +45,5 @@ class Parser:
         """
         if query is None:
             query = self.query()
-        return urllib.parse.parse_qs(query, keep_blank_values=keep_blank_values)
+        return urllib.parse.parse_qs(query,
+                                     keep_blank_values=keep_blank_values)
