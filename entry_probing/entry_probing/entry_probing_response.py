@@ -6,6 +6,7 @@ for the entry probing process
 import abc
 import requests.models
 
+
 class ProbingResponse():
     """
     Abstract parent class for response handler definitions. Child classes
