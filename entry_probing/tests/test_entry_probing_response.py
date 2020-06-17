@@ -6,7 +6,8 @@ import unittest
 from unittest import mock
 
 from entry_probing import HTTPStatusProbingResponse, TextMatchProbingResponse,\
-                          BinaryFormatProbingResponse
+    BinaryFormatProbingResponse
+
 
 class ProbingResponseTest(unittest.TestCase):
     """
