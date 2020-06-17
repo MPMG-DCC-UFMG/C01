@@ -9,6 +9,7 @@ import urllib.parse
 
 class Parser:
     """Parse URL for form parameters"""
+
     def __init__(self, url: str):
         """Constructor for URLParser
 
