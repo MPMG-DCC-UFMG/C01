@@ -8,6 +8,7 @@ from typing import Any, Hashable, Optional
 import abc
 import requests
 
+
 class ProbingRequest():
     """
     Abstract parent class for request definitions. Child classes implement the

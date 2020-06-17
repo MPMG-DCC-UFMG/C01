@@ -8,6 +8,7 @@ import requests.exceptions
 
 from entry_probing import GETProbingRequest, POSTProbingRequest
 
+
 class ProbingRequestTest(unittest.TestCase):
     """
     Testing routines for the entry probing request
@@ -109,11 +110,11 @@ class ProbingRequestTest(unittest.TestCase):
         self.assertRaises(requests.exceptions.MissingSchema, probe.process)
 
         # Invalid POST property name
-        self.assertRaises(TypeError, POSTProbingRequest,\
+        self.assertRaises(TypeError, POSTProbingRequest,
                           "http://nonexistenturl/", [], 1)
 
         # Invalid POST request body
-        self.assertRaises(TypeError, POSTProbingRequest,\
+        self.assertRaises(TypeError, POSTProbingRequest,
                           "http://nonexistenturl/", "test", 1, [])
 
 

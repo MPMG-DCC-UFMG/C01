@@ -6,8 +6,9 @@ import unittest
 from unittest import mock
 
 from entry_probing import EntryProbing, GETProbingRequest,\
-                          HTTPStatusProbingResponse, TextMatchProbingResponse,\
-                          BinaryFormatProbingResponse
+    HTTPStatusProbingResponse, TextMatchProbingResponse,\
+    BinaryFormatProbingResponse
+
 
 class EntryProbingTest(unittest.TestCase):
     """
@@ -63,7 +64,7 @@ class EntryProbingTest(unittest.TestCase):
         probe = EntryProbing(GETProbingRequest("http://test.com/"))
         probe.add_response_handler(HTTPStatusProbingResponse(404,
                                                              opposite=True))\
-             .add_response_handler(TextMatchProbingResponse("entry found"))
+            .add_response_handler(TextMatchProbingResponse("entry found"))
         self.assertEqual(probe.check_entry(), True)
 
         # Checks the URL for a 404 code, a 200 code, and the string
@@ -95,7 +96,7 @@ class EntryProbingTest(unittest.TestCase):
         probe = EntryProbing(GETProbingRequest("http://test.com/"))
         probe.add_response_handler(HTTPStatusProbingResponse(404,
                                                              opposite=True))\
-             .add_response_handler(TextMatchProbingResponse("entry found"))
+            .add_response_handler(TextMatchProbingResponse("entry found"))
         self.assertEqual(probe.check_entry(), False)
 
         # Checks the URL for a 404 code and the string "entry not found"
