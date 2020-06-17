@@ -8,6 +8,7 @@ from typing import Any, Callable, Union
 
 from range_inference import RangeInference
 
+
 class RangeInferenceTest(unittest.TestCase):
     """
     Testing routines for the range inference
@@ -54,7 +55,7 @@ class RangeInferenceTest(unittest.TestCase):
         hit_check_90_95 = RangeInferenceTest.dummy_hit_check(90, 95)
         # Test against both intervals and returns True if it belongs to any of
         # them
-        hit_check = lambda x: (hit_check_25_48(x) or hit_check_90_95(x))
+        def hit_check(x): return (hit_check_25_48(x) or hit_check_90_95(x))
         last_entry = RangeInference.filter_numeric_range(0, 200, hit_check, 10)
         self.assertEqual(last_entry, 48)
 
@@ -132,6 +133,8 @@ class RangeInferenceTest(unittest.TestCase):
 
 
     # DATE RANGE
+
+
     def test_daterange_inference(self):
         """
         Tests simple date ranges
