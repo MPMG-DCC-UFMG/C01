@@ -7,6 +7,7 @@ import datetime
 from typing import Any, Callable, Generator, Tuple, Union
 from dateutil.relativedelta import relativedelta
 
+
 class RangeInference():
     """
     The RangeInference class contains the static methods to filter the search
@@ -45,17 +46,17 @@ class RangeInference():
         begin, end = limits
 
         if begin is None or end is None:
-            raise ValueError("The range limits should be supplied for the "+\
+            raise ValueError("The range limits should be supplied for the " +
                              "inference.")
         if begin > end:
-            raise ValueError("The beginning of the range should be lower than"+\
+            raise ValueError("The beginning of the range should be lower than" +
                              " the end.")
         if hit_check is None:
             raise ValueError("A valid entry probing function must be supplied.")
         if step_size is None:
             raise ValueError("A range step size must be supplied.")
         if mid_calc is None:
-            raise ValueError("A valid middle-calculating function must be "+\
+            raise ValueError("A valid middle-calculating function must be " +
                              "supplied.")
         if range_gen is None:
             raise ValueError("A valid range generator must be supplied.")
@@ -126,7 +127,7 @@ class RangeInference():
                              end: int,
                              hit_check: Callable[[int], bool],
                              cons_misses: int = 100
-                            ) -> int:
+                             ) -> int:
         """
         Does the binary search over a numeric range.
 
@@ -142,7 +143,7 @@ class RangeInference():
         """
         # Parameter validation
         if not isinstance(cons_misses, int) or cons_misses < 0:
-            raise ValueError("The number of consecutive misses must be a "+\
+            raise ValueError("The number of consecutive misses must be a " +
                              "positive integer.")
 
         def calc_mid(curr_begin, curr_end):
@@ -175,7 +176,7 @@ class RangeInference():
         if detail_level == 'D':
             return relativedelta(days=1)
 
-        raise ValueError("The detail level must be one of the following " +\
+        raise ValueError("The detail level must be one of the following " +
                          "options: 'Y', 'M' or 'D'.")
 
     @staticmethod
@@ -203,7 +204,7 @@ class RangeInference():
 
         # Parameter validation
         if not isinstance(cons_misses, int) or cons_misses < 0:
-            raise ValueError("The number of consecutive misses must be a "+\
+            raise ValueError("The number of consecutive misses must be a " +
                              "positive integer.")
 
         time_delta = RangeInference.__daterange_calc_stepsize(detail_level)
@@ -227,8 +228,8 @@ class RangeInference():
         def range_gen(mid, _, curr_end):
             i = mid
             while i <= mid + cons_misses * time_delta and \
-                  i <= curr_end and \
-                  i <= end:
+                    i <= curr_end and \
+                    i <= end:
                 yield i
                 i += time_delta
 
