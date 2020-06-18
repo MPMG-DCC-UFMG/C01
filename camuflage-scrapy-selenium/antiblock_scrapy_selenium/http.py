@@ -2,6 +2,7 @@
 
 from scrapy import Request
 
+
 class SeleniumRequest(Request):
     """Scrapy ``Request`` subclass providing additional arguments"""
 

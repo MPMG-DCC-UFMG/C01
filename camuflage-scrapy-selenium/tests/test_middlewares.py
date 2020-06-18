@@ -10,6 +10,7 @@ from antiblock_scrapy_selenium.middlewares import SeleniumMiddleware
 
 from .test_cases import BaseScrapySeleniumTestCase
 
+
 class SeleniumMiddlewareTestCase(BaseScrapySeleniumTestCase):
     """Test case for the ``SeleniumMiddleware`` middleware"""
 
