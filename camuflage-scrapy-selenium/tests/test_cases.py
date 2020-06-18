@@ -5,6 +5,7 @@ from unittest import TestCase
 
 import scrapy
 
+
 class BaseScrapySeleniumTestCase(TestCase):
     """Base test case for the ``scrapy-selenium`` package"""
 
