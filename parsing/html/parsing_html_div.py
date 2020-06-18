@@ -107,32 +107,6 @@ string or as the path to the file)
     default is output.csv)
     '''
 
-    # # Check if html file exists
-    # if (os.path.isfile(html_file)):
-    #     # Create output file based on the input file name
-    #     output_file = html_file.split('.html')[0]+".csv"
-    #     # set isString to false, since the HTML is in a html_file
-    #     isString = False
-    # # Ckeck if the html was passed as string
-    # elif (' ' in html_file) and (len(html_file)>2):
-    #     # If a name for the output is not given, the file is set to output.csv
-    #     if output_path is None:
-    #         output_file = "output.csv"
-    #     # set isString to true, since the HTML is in a string
-    #     isString = True
-    # # If the file does not exist and is not a raw string
-    # else:
-    #     raise Exception('The given HMTL file does not exist.')
-    #
-    # # Clean the html file
-    # html_file = clean_html(html_file,isString)
-    # # Fix the links in the file
-    # html_file = fix_links(html_file)
-    # # Extract the content
-    # csv_list_all = extrac_div(html_file)
-    # # Saves the content in a csv file
-    # write_csv(csv_list_all, output_file)
-
     # Check if html file exists
     if (os.path.isfile(html_file_path)) or is_string:
 
