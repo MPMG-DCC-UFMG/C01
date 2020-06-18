@@ -13,11 +13,11 @@ def clean_html(html_file, isString):
     '''
 
     # List of elements that are going to be removed from the html
-    remove_list = ["head", "header", "footer" , "polygon", "path", "script",
-                    "symbol", "meta", "link", "title", "style", "nav", "table",
-                    "form"]
-    remove_class = ["sidebar-inner","breadcrumb", "share", "navegacao",
-                    "skiptranslate", "goog-te-spinner-pos","social-list",
+    remove_list = ["head", "header", "footer", "polygon", "path", "script",
+                   "symbol", "meta", "link", "title", "style", "nav", "table",
+                   "form"]
+    remove_class = ["sidebar-inner", "breadcrumb", "share", "navegacao",
+                    "skiptranslate", "goog-te-spinner-pos", "social-list",
                     "social-icon", "copyright", "id_assist_frame",
                     "fbc-badge-tooltip"]
     remove_id = ["boxes", "mySidenav", "chat-panel"]
@@ -38,10 +38,10 @@ def clean_html(html_file, isString):
         if tag.name.lower() in remove_list:
             tag.extract()
     # Remove any div with the class in remove_class
-    for div in soup.find_all("div", {'class':remove_class}):
+    for div in soup.find_all("div", {'class': remove_class}):
         div.extract()
     # Remove any div with the id in remove_id
-    for div in soup.find_all("div", {'id':remove_id}):
+    for div in soup.find_all("div", {'id': remove_id}):
         div.extract()
 
     html_file = str(soup)
@@ -49,6 +49,7 @@ def clean_html(html_file, isString):
 
 
     return html_file
+
 
 def fix_links(html_file):
     '''
@@ -68,6 +69,7 @@ def fix_links(html_file):
 
     return html_file
 
+
 def extrac_div(html_file):
     '''
     Receives a html file and creates a list of elements with the content of the
@@ -77,7 +79,7 @@ def extrac_div(html_file):
     csv_list_all = []
     # Extract all the text in the page, ignoring tags and hierarchy
     for i, val in enumerate(xml.etree.ElementTree.fromstring(html_file).itertext()):
-        val.replace('\n',' ')
+        val.replace('\n', ' ')
         if val != '\n' and not val.isspace():
             csv_list_all.append(val)
 
@@ -111,7 +113,7 @@ string or as the path to the file)
     if (os.path.isfile(html_file_path)) or is_string:
 
         # Clean the html file
-        html_file = clean_html(html_file_path,is_string)
+        html_file = clean_html(html_file_path, is_string)
         # Fix the links in the file
         html_file = fix_links(html_file)
         # Extract the content
