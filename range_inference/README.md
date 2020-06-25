@@ -1,6 +1,22 @@
 # Range inference module
 Collection of helper methods to narrow a range of search space parameters when crawling.
 
+## Building
+
+This module is packaged as a Python Wheel file. To install it, run the following
+command in the `range_inference` folder:
+
+```
+pip install dist/range_inference.whl
+```
+
+To build the .whl file from the source code you need to have the `setuptools`
+and `wheel` packages installed. After both packages are installed, run:
+
+```
+python setup.py bdist_wheel
+```
+
 ## Main methods and usage
 As these methods are not state-dependent, they are implemented as static methods, and therefore don't require a class instance. Each method returns the last parameter value for which we found an entry. Below we give a high level overview of each main method, with examples:
 
