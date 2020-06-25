@@ -4,9 +4,9 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name='param_injection',  
+    name='param_injection',
     version='0.1',
-    scripts=[] ,
+    scripts=[],
     author="Lucas Augusto",
     author_email="luc.aug.freire@gmail.com",
     description="A parameter generation module",
@@ -16,4 +16,4 @@ setuptools.setup(
     classifiers=[
         "Programming Language :: Python :: 3"
     ],
- )
+)

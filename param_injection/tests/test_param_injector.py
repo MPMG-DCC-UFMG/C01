@@ -8,6 +8,7 @@ from collections import deque
 
 from param_injector import ParamInjector
 
+
 class ParamInjectorTest(unittest.TestCase):
     """
     Testing routines for the parameter injector
@@ -51,6 +52,8 @@ class ParamInjectorTest(unittest.TestCase):
     # TESTS
 
     # CODE GENERATOR
+
+
     def test_process_code_generator(self):
         """
         Tests generation of process codes
@@ -72,7 +75,7 @@ class ParamInjectorTest(unittest.TestCase):
                            '00000059720184020000', '00000057320184029999',
                            '00000056320194020000', '00000053920194029999']
 
-        proc_gen = ParamInjector.generate_format(code_format, param_limits, \
+        proc_gen = ParamInjector.generate_format(code_format, param_limits,
                         self.verif_code, 1)
         self.assertEqual(expected_output, list(proc_gen))
 
@@ -95,7 +98,7 @@ class ParamInjectorTest(unittest.TestCase):
                            '00000028420194029999', '00000036920194029999',
                            '00000045420194029999', '00000053920194029999']
 
-        proc_gen = ParamInjector.generate_format(code_format, param_limits, \
+        proc_gen = ParamInjector.generate_format(code_format, param_limits,
                         self.verif_code_switched, 1)
         self.assertEqual(expected_output, list(proc_gen))
 
@@ -117,7 +120,7 @@ class ParamInjectorTest(unittest.TestCase):
         """
         code_format = "{:07d}{:02d}{:04d}{:03d}{:04d}"
         param_limits = [(0, 5), (2018, 2019), [402], [0, 9999]]
-        proc_gen = ParamInjector.generate_format(code_format, param_limits, \
+        proc_gen = ParamInjector.generate_format(code_format, param_limits,
                         self.verif_code)
 
         # try to generate one process code entry without the verification digit
@@ -132,20 +135,22 @@ class ParamInjectorTest(unittest.TestCase):
         """
         code_format = "{:07d}{:02d}{:04d}{:03d}{:04d}"
         param_limits = [(0, 5), (2018, 2019), [402], 9999]
-        proc_gen = ParamInjector.generate_format(code_format, param_limits, \
+        proc_gen = ParamInjector.generate_format(code_format, param_limits,
                         self.verif_code)
 
         # invalid param_limits (one of the entries is an integer)
         self.assertRaises(ValueError, next, proc_gen)
 
         param_limits = [(0, 5), (2018, 2019), [402], (1, 2, 3)]
-        proc_gen = ParamInjector.generate_format(code_format, param_limits, \
+        proc_gen = ParamInjector.generate_format(code_format, param_limits,
                         self.verif_code)
         # invalid param_limits (one of the entries is a tuple with 3 elements)
         self.assertRaises(ValueError, next, proc_gen)
 
 
     # NUMERICAL SEQUENCE GENERATOR
+
+
     def test_number_generator_simple(self):
         """
         Tests generation of simple linear sequence of numbers without padding
@@ -240,6 +245,8 @@ class ParamInjectorTest(unittest.TestCase):
 
 
     # ALPHABETIC SEARCH PATTERN GENERATOR
+
+
     def test_alphabetic_generator_lower(self):
         """
         Tests generation of alphabetic search patterns (all lowercase)
@@ -350,6 +357,8 @@ class ParamInjectorTest(unittest.TestCase):
 
 
     # DATE RANGE GENERATOR
+
+
     def test_daterange_generator_simple(self):
         """
         Tests straightforward uses of the date range generator
@@ -358,18 +367,18 @@ class ParamInjectorTest(unittest.TestCase):
         # generate days from 01/01/1996 to 10/01/1996, in yyyy-mm-dd format
         start_date = datetime.date(1996, 1, 1)
         end_date = datetime.date(1996, 1, 10)
-        expected_output = list(map(lambda x: "1996-01-" + str(x+1).zfill(2),\
+        expected_output = list(map(lambda x: "1996-01-" + str(x + 1).zfill(2),
                                    range(10)))
-        date_gen = ParamInjector.generate_daterange("%Y-%m-%d", start_date,\
+        date_gen = ParamInjector.generate_daterange("%Y-%m-%d", start_date,
                                                     end_date, "D")
         self.assertEqual(expected_output, list(date_gen))
 
         # generate months from 01/01/1996 to 01/05/1996, in yyyy/mm format
         start_date = datetime.date(1996, 1, 1)
         end_date = datetime.date(1996, 5, 1)
-        expected_output = list(map(lambda x: "1996/" + str(x+1).zfill(2),\
+        expected_output = list(map(lambda x: "1996/" + str(x + 1).zfill(2),
                                    range(5)))
-        date_gen = ParamInjector.generate_daterange("%Y/%m", start_date,\
+        date_gen = ParamInjector.generate_daterange("%Y/%m", start_date,
                                                     end_date, "M")
         self.assertEqual(expected_output, list(date_gen))
 
@@ -389,25 +398,25 @@ class ParamInjectorTest(unittest.TestCase):
         # generate days from 10/01/1996 to 01/01/1996, in yyyy-mm-dd format
         start_date = datetime.date(1996, 1, 10)
         end_date = datetime.date(1996, 1, 1)
-        expected_output = list(map(lambda x: "1996-01-" + str(x+1).zfill(2),\
+        expected_output = list(map(lambda x: "1996-01-" + str(x + 1).zfill(2),
                                    reversed(range(10))))
-        date_gen = ParamInjector.generate_daterange("%Y-%m-%d", start_date,\
+        date_gen = ParamInjector.generate_daterange("%Y-%m-%d", start_date,
                                                     end_date, "D")
         self.assertEqual(expected_output, list(date_gen))
 
         # generate months from 01/05/1996 to 01/01/1996, in yyyy/mm format
         start_date = datetime.date(1996, 5, 1)
         end_date = datetime.date(1996, 1, 1)
-        expected_output = list(map(lambda x: "1996/" + str(x+1).zfill(2),\
+        expected_output = list(map(lambda x: "1996/" + str(x + 1).zfill(2),
                                    reversed(range(5))))
-        date_gen = ParamInjector.generate_daterange("%Y/%m", start_date,\
+        date_gen = ParamInjector.generate_daterange("%Y/%m", start_date,
                                                     end_date, "M")
         self.assertEqual(expected_output, list(date_gen))
 
         # generate years from 01/01/2005 to 01/01/1996, in yy format
         start_date = datetime.date(2005, 1, 1)
         end_date = datetime.date(1996, 1, 1)
-        expected_output = list(map(lambda x: str(x)[-2:],\
+        expected_output = list(map(lambda x: str(x)[-2:],
                                    reversed(range(1996, 2006))))
         date_gen = ParamInjector.generate_daterange("%y", start_date, end_date)
         self.assertEqual(expected_output, list(date_gen))
@@ -423,9 +432,9 @@ class ParamInjectorTest(unittest.TestCase):
         # should include Jan to Apr, without May
         start_date = datetime.date(1996, 1, 1)
         end_date = datetime.date(1996, 4, 30)
-        expected_output = list(map(lambda x: "1996/" + str(x+1).zfill(2),\
+        expected_output = list(map(lambda x: "1996/" + str(x + 1).zfill(2),
                                    range(4)))
-        date_gen = ParamInjector.generate_daterange("%Y/%m", start_date,\
+        date_gen = ParamInjector.generate_daterange("%Y/%m", start_date,
                                                     end_date, "M")
         self.assertEqual(expected_output, list(date_gen))
 
@@ -486,21 +495,21 @@ class ParamInjectorTest(unittest.TestCase):
         # frequency = None
         start_date = datetime.date(1996, 1, 1)
         end_date = datetime.date(1996, 1, 10)
-        date_gen = ParamInjector.generate_daterange("", start_date, end_date,\
+        date_gen = ParamInjector.generate_daterange("", start_date, end_date,
                                                     None)
         self.assertRaises(ValueError, list, date_gen)
 
         # frequency = "YEAR"
         start_date = datetime.date(1996, 1, 1)
         end_date = datetime.date(1996, 1, 10)
-        date_gen = ParamInjector.generate_daterange("", start_date, end_date,\
+        date_gen = ParamInjector.generate_daterange("", start_date, end_date,
                                                     "YEAR")
         self.assertRaises(ValueError, list, date_gen)
 
         # frequency = ""
         start_date = datetime.date(1996, 1, 1)
         end_date = datetime.date(1996, 1, 10)
-        date_gen = ParamInjector.generate_daterange("", start_date, end_date,\
+        date_gen = ParamInjector.generate_daterange("", start_date, end_date,
                                                     "")
         self.assertRaises(ValueError, list, date_gen)
 

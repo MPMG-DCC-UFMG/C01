@@ -4,9 +4,9 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name='range_inference',  
+    name='range_inference',
     version='0.1',
-    scripts=[] ,
+    scripts=[],
     author="Lucas Augusto",
     author_email="luc.aug.freire@gmail.com",
     description="A parameter space filter for crawling web pages",
@@ -16,4 +16,4 @@ setuptools.setup(
     classifiers=[
         "Programming Language :: Python :: 3"
     ],
- )
+)
