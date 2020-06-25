@@ -9,7 +9,7 @@ This module is packaged as a Python Wheel file. To install it, run the following
 command in the `entry_probing` folder:
 
 ```
-pip install dist/entry_probing.whl
+pip install dist/entry_probing-0.1-py3-none-any.whl
 ```
 
 To build the .whl file from the source code you need to have the `setuptools`

@@ -7,7 +7,7 @@ This module is packaged as a Python Wheel file. To install it, run the following
 command in the `range_inference` folder:
 
 ```
-pip install dist/range_inference.whl
+pip install dist/range_inference-0.1-py3-none-any.whl
 ```
 
 To build the .whl file from the source code you need to have the `setuptools`

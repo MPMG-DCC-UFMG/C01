@@ -7,7 +7,7 @@ This module is packaged as a Python Wheel file. To install it, run the following
 command in the `param_injection` folder:
 
 ```
-pip install dist/param_injection.whl
+pip install dist/param_injection-0.1-py3-none-any.whl
 ```
 
 To build the .whl file from the source code you need to have the `setuptools`
