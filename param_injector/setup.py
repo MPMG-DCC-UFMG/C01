@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name='param_injection',
+    name='param_injector',
     version='0.1',
     scripts=[],
     author="Lucas Augusto",
