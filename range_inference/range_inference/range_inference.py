@@ -8,6 +8,7 @@ from typing import Any, Callable, Generator, Tuple, Union
 from dateutil.relativedelta import relativedelta
 from entry_probing import EntryProbing
 
+
 class RangeInference():
     """
     The RangeInference class contains the static methods to filter the search
