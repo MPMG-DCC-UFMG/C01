@@ -19,7 +19,7 @@ class RangeInferenceTest(unittest.TestCase):
 
     @staticmethod
     def dummy_entry_probe(begin: Union[int, date], end: Union[int, date]
-                        ) -> EntryProbing:
+                          ) -> EntryProbing:
         """
         Helper function which returns a mock of an entry probe. The begin and
         end parameters determine the interval where it considers an entry as
@@ -42,6 +42,8 @@ class RangeInferenceTest(unittest.TestCase):
     # TESTS
 
     # NUMERIC RANGE
+
+
     def test_numeric_range_inference(self):
         """
         Tests simple numeric ranges
