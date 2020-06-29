@@ -3,18 +3,41 @@ Collection of helper methods to narrow a range of search space parameters when c
 
 ## Building
 
-This module is packaged as a Python Wheel file. To install it, run the following
-command in the `range_inference` folder:
-
-```
-pip install dist/range_inference-0.1-py3-none-any.whl
-```
-
-To build the .whl file from the source code you need to have the `setuptools`
-and `wheel` packages installed. After both packages are installed, run:
+This module is packaged as a Python Wheel file. To build the .whl file from the
+source code you need to have `setuptools` and `wheel` installed. After both
+packages are installed, run:
 
 ```
 python setup.py bdist_wheel
+```
+
+The Wheel file will be created inside the `dist` folder, and the name may vary
+depending on the version. To install it, you must have the `entry_probing`
+module installed. Run the following command in the `range_inference` folder,
+replacing the file name accordingly:
+
+```
+pip install dist/<wheel file name>
+```
+
+## Probing mechanism
+The `entry_probing` module is used to check for an entry's existence. It
+abstracts the whole process of requesting and validating the response, so that
+the range inference can focus on the filtering itself. More details can be found
+in the README file for `entry_probing`. We provide an example of how the probing
+module and this range inference should be used in conjunction:
+
+```
+# Creates a probe which visits a website and checks for a 200 HTTP status, a
+# text response, and the text "entry found" in the response's content
+probe = EntryProbing(GETProbingRequest("http://test.com/{}"))
+probe.add_response_handler(HTTPStatusProbingResponse(200))\
+     .add_response_handler(BinaryFormatProbingResponse(opposite=True))\
+     .add_response_handler(TextMatchProbingResponse("entry found"))
+
+# Uses the given probe to run the filtering method and check which entries are
+# valid
+RangeInference.filter_numeric_range(0, 1000, probe)
 ```
 
 ## Main methods and usage
@@ -30,23 +53,29 @@ We found some websites where we can have an empty interval between two populated
 Checks a range of numerical parameters and finds the maximum value for which we can find an entry.
 
 ```
-# Dummy check function, as an example (max param value is 100)
-hit_check = lambda x: 50 <= x <= 100
+from unittest import mock
 
-RangeInference.filter_numeric_range(0, 1000, hit_check) # 100
+def check(x): lambda x: 50 <= x <= 100
+# Mock of an EntryProbing instance, used as an example (max param value is 100)
+entry_probe = mock.MagicMock(spec=EntryProbing, check_entry=check)
+
+RangeInference.filter_numeric_range(0, 1000, entry_probe) # 100
 ```
 
 ### Date range filter
 Checks a range of date parameters and finds the maximum value for which we can find an entry. Works for daily, monthly or yearly ranges.
 
 ```
-# Dummy check function, as an example (max param value is date(2010, 1, 1))
-hit_check = lambda x: date(2000, 1, 1) <= x <= date(2010, 1, 1)
+from unittest import mock
 
-RangeInference.filter_daterange(date(2000, 1, 1), date(2020, 1, 1), hit_check)
+def check(x): lambda x: date(2000, 1, 1) <= x <= date(2010, 1, 1)
+# Mock of an EntryProbing instance, used as an example (max param value is date(2010, 1, 1))
+entry_probe = mock.MagicMock(spec=EntryProbing, check_entry=check)
+
+RangeInference.filter_daterange(date(2000, 1, 1), date(2020, 1, 1), entry_probe)
 # datetime.date(2010, 1, 1)
-RangeInference.filter_daterange(date(2000, 1, 1), date(2020, 1, 1), hit_check, 'M')
+RangeInference.filter_daterange(date(2000, 1, 1), date(2020, 1, 1), entry_probe, 'M')
 # datetime.date(2010, 1, 1)
-RangeInference.filter_daterange(date(2000, 1, 1), date(2020, 1, 1), hit_check, 'D')
+RangeInference.filter_daterange(date(2000, 1, 1), date(2020, 1, 1), entry_probe, 'D')
 # datetime.date(2010, 1, 1)
 ```

@@ -5,6 +5,7 @@ import unittest
 from unittest import mock
 
 import requests.exceptions
+import urllib3.exceptions
 
 from entry_probing import GETProbingRequest, POSTProbingRequest
 
@@ -30,14 +31,14 @@ class ProbingRequestTest(unittest.TestCase):
         """
 
         # GET request with a parameter
-        probe = GETProbingRequest("http://test.com/{}", 10)
-        probe.process()
+        probe = GETProbingRequest("http://test.com/{}")
+        probe.process(10)
         expected = [("http://test.com/10",), {}]
         self.assertEqual(list(get_mock.call_args), expected)
 
         # GET request with a formatted parameter
-        probe = GETProbingRequest("http://test.com/{:03d}", 10)
-        probe.process()
+        probe = GETProbingRequest("http://test.com/{:03d}")
+        probe.process(10)
         expected = [("http://test.com/010",), {}]
         self.assertEqual(list(get_mock.call_args), expected)
 
@@ -55,21 +56,21 @@ class ProbingRequestTest(unittest.TestCase):
 
         # If entry is present but URL doesn't have any placeholders it just uses
         # the given url
-        probe = GETProbingRequest("http://test.com/", 1)
-        probe.process()
+        probe = GETProbingRequest("http://test.com/")
+        probe.process(1)
         expected = [("http://test.com/",), {}]
         self.assertEqual(list(get_mock.call_args), expected)
 
         # POST request with a parameter in the request body
-        probe = POSTProbingRequest("http://test.com/", "test_prop", 100)
-        probe.process()
+        probe = POSTProbingRequest("http://test.com/", "test_prop")
+        probe.process(100)
         expected = [('http://test.com/',), {'data': {'test_prop': 100}}]
         self.assertEqual(list(post_mock.call_args), expected)
 
         # POST request with multiple parameters in the request body
-        probe = POSTProbingRequest("http://test.com/", "test_prop", 100,
+        probe = POSTProbingRequest("http://test.com/", "test_prop",
                                    {'extra1': 0, 'extra2': 1})
-        probe.process()
+        probe.process(100)
         expected = [('http://test.com/',), {'data': {'test_prop': 100,
                                                      'extra1': 0, 'extra2': 1}}]
         self.assertEqual(list(post_mock.call_args), expected)
@@ -81,8 +82,7 @@ class ProbingRequestTest(unittest.TestCase):
         self.assertEqual(list(post_mock.call_args), expected)
 
         # POST request using only the pre-made request body
-        probe = POSTProbingRequest("http://test.com/", None, None,
-                                   {'extra1': 0})
+        probe = POSTProbingRequest("http://test.com/", None, {'extra1': 0})
         probe.process()
         expected = [('http://test.com/',), {'data': {'extra1': 0}}]
         self.assertEqual(list(post_mock.call_args), expected)
@@ -102,20 +102,20 @@ class ProbingRequestTest(unittest.TestCase):
         self.assertRaises(requests.exceptions.MissingSchema, probe.process)
 
         # Non-existent URL
-        probe = POSTProbingRequest("http://nonexistenturl1234", "test", 1)
-        self.assertRaises(requests.exceptions.ConnectionError, probe.process)
+        probe = POSTProbingRequest("http://nonexistenturl1234", "test")
+        self.assertRaises(urllib3.exceptions.NewConnectionError, probe.process)
 
         # URL misses schema (http://)
-        probe = POSTProbingRequest("nonexistenturl/", "test", 1)
+        probe = POSTProbingRequest("nonexistenturl/", "test")
         self.assertRaises(requests.exceptions.MissingSchema, probe.process)
 
         # Invalid POST property name
-        self.assertRaises(TypeError, POSTProbingRequest,
-                          "http://nonexistenturl/", [], 1)
+        probe = POSTProbingRequest("http://nonexistenturl/", [])
+        self.assertRaises(TypeError, probe.process)
 
         # Invalid POST request body
         self.assertRaises(TypeError, POSTProbingRequest,
-                          "http://nonexistenturl/", "test", 1, [])
+                          "http://nonexistenturl/", "test", [])
 
 
 if __name__ == '__main__':

@@ -16,4 +16,5 @@ setuptools.setup(
     classifiers=[
         "Programming Language :: Python :: 3"
     ],
+    install_requires=['python-dateutil','entry_probing'],
 )

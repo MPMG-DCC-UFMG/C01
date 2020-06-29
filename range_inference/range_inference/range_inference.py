@@ -6,7 +6,7 @@ import datetime
 
 from typing import Any, Callable, Generator, Tuple, Union
 from dateutil.relativedelta import relativedelta
-
+from entry_probing import EntryProbing
 
 class RangeInference():
     """
@@ -20,7 +20,7 @@ class RangeInference():
     @staticmethod
     def __range_validate_input(limits: Tuple[Union[int, datetime.date],
                                              Union[int, datetime.date]],
-                               hit_check: Callable[[Any], bool],
+                               entry_probe: EntryProbing,
                                step_size: Union[int, relativedelta],
                                mid_calc: Callable[[Any, Any], int],
                                range_gen: Generator
@@ -29,19 +29,19 @@ class RangeInference():
         Takes in the parameters for __filter_range and validates them, raising
         an error if needed
 
-        :param limits:    tuple with lower and upper limits for the range to be
-                          checked
-        :param hit_check: function which does the request and returns True if
-                          it hits an entry or False if it doesn't
-        :param step_size: value to be added to a given index to go to the next
-                          one
-        :param mid_calc:  function which takes the beginning and end of the
-                          current range being considered and calculates the
-                          midpoint
-        :param range_gen: generator which takes the current mid point and the
-                          beginning and end of the current range being
-                          considered and yields all the points near the middle
-                          that we need to check
+        :param limits:      tuple with lower and upper limits for the range to be
+                            checked
+        :param entry_probe: instance of EntryProbing describing the request
+                            method and response validation
+        :param step_size:   value to be added to a given index to go to the next
+                            one
+        :param mid_calc:    function which takes the beginning and end of the
+                            current range being considered and calculates the
+                            midpoint
+        :param range_gen:   generator which takes the current mid point and the
+                            beginning and end of the current range being
+                            considered and yields all the points near the middle
+                            that we need to check
         """
         begin, end = limits
 
@@ -51,8 +51,9 @@ class RangeInference():
         if begin > end:
             raise ValueError("The beginning of the range should be lower than" +
                              " the end.")
-        if hit_check is None:
-            raise ValueError("A valid entry probing function must be supplied.")
+        if not isinstance(entry_probe, EntryProbing):
+            raise ValueError("A valid EntryProbing instance must be supplied" +
+                             " entry_probe.")
         if step_size is None:
             raise ValueError("A range step size must be supplied.")
         if mid_calc is None:
@@ -65,7 +66,7 @@ class RangeInference():
     @staticmethod
     def __filter_range(limits: Tuple[Union[int, datetime.date],
                                      Union[int, datetime.date]],
-                       hit_check: Callable[[Any], bool],
+                       entry_probe: EntryProbing,
                        step_size: Union[int, relativedelta],
                        mid_calc: Callable[[Any, Any], int],
                        range_gen: Generator
@@ -76,25 +77,25 @@ class RangeInference():
         before doing the division step. This method works for both dates and
         integers, and contains the barebones algorithm only.
 
-        :param limits:    tuple with lower and upper limits for the range to be
-                          checked
-        :param hit_check: function which does the request and returns True if it
-                          hits an entry or False if it doesn't
-        :param step_size: value to be added to a given index to go to the next
-                          one
-        :param mid_calc:  function which takes the beginning and end of the
-                          current range being considered and calculates the
-                          midpoint
-        :param range_gen: generator which takes the current mid point and the
-                          beginning and end of the current range being
-                          considered and yields all the points near the middle
-                          that we need to check
+        :param limits:      tuple with lower and upper limits for the range to be
+                            checked
+        :param entry_probe: instance of EntryProbing describing the request
+                            method and response validation
+        :param step_size:   value to be added to a given index to go to the next
+                            one
+        :param mid_calc:    function which takes the beginning and end of the
+                            current range being considered and calculates the
+                            midpoint
+        :param range_gen:   generator which takes the current mid point and the
+                            beginning and end of the current range being
+                            considered and yields all the points near the middle
+                            that we need to check
 
         :returns: position where the last hit entry was found, None if no
                   entries were found
         """
         # Validate inputs
-        RangeInference.__range_validate_input(limits, hit_check, step_size,
+        RangeInference.__range_validate_input(limits, entry_probe, step_size,
                                               mid_calc, range_gen)
 
         begin, end = limits
@@ -110,7 +111,7 @@ class RangeInference():
             # check the required number of entries before declaring a miss
             all_miss = True
             for i in range_gen(mid, curr_begin, curr_end):
-                if hit_check(i):
+                if entry_probe.check_entry(i):
                     all_miss = False
                     last_hit = i
 
@@ -125,7 +126,7 @@ class RangeInference():
     @staticmethod
     def filter_numeric_range(begin: int,
                              end: int,
-                             hit_check: Callable[[int], bool],
+                             entry_probe: EntryProbing,
                              cons_misses: int = 100
                              ) -> int:
         """
@@ -133,8 +134,8 @@ class RangeInference():
 
         :param begin:       lower limit for the range to be checked
         :param end:         upper limit for the range to be checked
-        :param hit_check:   function which does the request and returns True if
-                            it hits an entry or False if it doesn't
+        :param entry_probe: instance of EntryProbing describing the request
+                            method and response validation
         :param cons_misses: number of consecutive misses needed to discard all
                             following entries
 
@@ -153,7 +154,7 @@ class RangeInference():
             return range(mid, min(mid + cons_misses, curr_end + 1, end + 1))
 
 
-        return RangeInference.__filter_range((begin, end), hit_check, 1,
+        return RangeInference.__filter_range((begin, end), entry_probe, 1,
                                              calc_mid, range_gen)
 
 
@@ -182,7 +183,7 @@ class RangeInference():
     @staticmethod
     def filter_daterange(begin: datetime.date,
                          end: datetime.date,
-                         hit_check: Callable[[datetime.date], bool],
+                         entry_probe: EntryProbing,
                          detail_level: str = 'Y',
                          cons_misses: int = 100
                          ) -> datetime.date:
@@ -191,8 +192,8 @@ class RangeInference():
 
         :param begin:        lower limit for the range to be checked
         :param end:          upper limit for the range to be checked
-        :param hit_check:    function which does the request and returns True if
-                             it hits an entry or False if it doesn't
+        :param entry_probe:  instance of EntryProbing describing the request
+                             method and response validation
         :param detail_level: granularity of date check (Y = yearly, M = monthly,
                              D = daily)
         :param cons_misses:  number of consecutive misses needed to discard all
@@ -233,5 +234,5 @@ class RangeInference():
                 yield i
                 i += time_delta
 
-        return RangeInference.__filter_range((begin, end), hit_check,
+        return RangeInference.__filter_range((begin, end), entry_probe,
                                              time_delta, calc_mid, range_gen)
