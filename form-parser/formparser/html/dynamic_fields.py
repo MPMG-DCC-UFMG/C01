@@ -39,10 +39,9 @@ class DynamicFields:
 
     def get_dynamic_fields(self, fields_dict):
         """Calls check_fields for each field type to be checked
-            TODO: identify fields that change
 
         Args:
-            fields_dict: {'str': [<lxml.etree._Element>]}
+            fields_dict: {'field1_xpath': ['field2_xpath', 'field3_xpath']}
         """
         field_types = fields_dict.keys()
         for field_type in field_types:
