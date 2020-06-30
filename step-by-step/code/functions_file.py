@@ -18,11 +18,5 @@ async def clique(page, xpath):
         page.waitForNavigation(),
     ])
 
-
-async def elementos_nesse_xpath(page, xpath):
-    await page.waitForXPath(xpath)
-    elements = await page.xpath(xpath)
-    return [await element.getProperties() for element in elements]
-
 def espere(segs):
 	time.sleep(segs)
