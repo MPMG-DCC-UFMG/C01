@@ -26,9 +26,20 @@ class Parser:
         # TODO: throw exception when form == None and url == None
 
     @staticmethod
-    def fetch_form(url):
+    def fetch_form(url, form_index=-1):
+        """Gets form from url
+
+        Args:
+            url `str`: target url
+            form_index `int`: position of the form in the webpage,
+            set to -1 since most pages the first form corresponds to
+            a search box
+
+        Returns:
+            form `lxml.etree._Element`
+        """
         html = HTMLExtractor(url)
-        return html.get_forms()[-1]
+        return html.get_forms()[form_index]
 
     def number_of_fields(self) -> int:
         """Returns the number of fields in the form"""
@@ -44,7 +55,7 @@ class Parser:
         inputs = {}
         field_types = self.unique_field_types()
         for input_type in field_types:
-            if input_type is 'select':
+            if input_type == 'select':
                 inputs[input_type] = self.form.xpath("//select")
             else:
                 inputs[input_type] = self.form.xpath("//input[@type='" +
@@ -111,7 +122,9 @@ class Parser:
         return self.form.xpath("//input[@type='submit']")
 
     def dynamic_fields(self, form_url=None, dynamic_types=None) -> dict:
-        """Returns dict of dynamic form fields
+        """Returns dict of dynamic form fields. The keys show the
+        field that generated change, while the values are the fields that
+        changed after an action.
 
         Args:
             form_url: url of webpage where the form is (if not provided when
@@ -120,11 +133,10 @@ class Parser:
                            Default field types are 'select'
                            and 'radio'
         Returns:
-            {'type1': [field1, field2], 'type2': [field3]}
-            Example: {'text': [name, phone], 'radio': [year]}
+            {'field1_xpath': [field2_xpath, field3_xpath]}
         """
         if dynamic_types is None:
-            dynamic_types = ['select', 'radio']
+            dynamic_types = ['select', 'radio', 'checkbox']
         if self.url is not None:
             df = DynamicFields(self.url, self.form)
         else:

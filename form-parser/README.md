@@ -41,7 +41,8 @@ for form in form_list:
 ```ParsedForm.required_fields() # -> list(<Element input>)``` 
 
 - Retrieve dynamic fields
-```ParsedForm.dynamic_fields() # -> dict, {'field_type': [<Element input 1>, <Element input 2>], ...}``` 
+```ParsedForm.dynamic_fields() # -> dict, {'field1_xpath': ['field2_xpath'
+, 'field3_xpath'], ...}``` 
 
 - List select fields
 ```ParsedForm.select_fields() # -> list(<Element select>)```

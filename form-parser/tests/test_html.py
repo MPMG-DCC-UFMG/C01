@@ -88,15 +88,22 @@ class TestDynamicFields(unittest.TestCase):
         url = 'http://www5.trf5.jus.br/cp/'
         parsed_form = HTMLParser(url=url)
         dynamic_fields = parsed_form.dynamic_fields()
-        self.assertEqual((list(dynamic_fields.keys()),
-                          len(dynamic_fields['radio'])), (['radio'], 6))
+        self.assertEqual((list(dynamic_fields.keys())[0],
+                          len(dynamic_fields['/html/body/div['
+                                             '2]/div/div/form/dl/dd[2]/'
+                                             'input'])),
+                         ('/html/body/div[2]/div/div/form/dl/dd[2]/input', 3))
 
     def test_dyn_web(self):
         url = 'https://www.dyn-web.com/tutorials/forms/select/paired.php'
         parsed_form = HTMLParser(url=url)
         dynamic_fields = parsed_form.dynamic_fields()
-        self.assertEqual((list(dynamic_fields.keys()),
-                          len(dynamic_fields['select'])), (['select'], 1))
+        self.assertEqual((list(dynamic_fields.keys())[0],
+                          len(dynamic_fields['/html/body/div/div[2]/div['
+                                             '1]/div/form/fieldset/select['
+                                             '1]'])),
+                         ('/html/body/div/div[2]/div['
+                          '1]/div/form/fieldset/select[1]', 1))
 
 
 if __name__ == '__main__':
