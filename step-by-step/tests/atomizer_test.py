@@ -58,8 +58,39 @@ class TestExtractInfo(unittest.TestCase):
         }
 
         self.assertEqual(atom.decrase_depth(recipe_example),expected_result)
-        self.assertEqual(atom.decrsae_depth({"children":[], "depth":1}),{"children":[], "depth":0})
-    
+        self.assertEqual(atom.decrase_depth({"children":[], "depth":1}),{"children":[], "depth":0})
+
+
+    def test_for_to_attribution(self):
+        with open('recipe_examples.json') as file:
+            recipe_examples = json.load(file)
+
+        expected_result = [
+            {
+                "step": "attribution",
+                "source": 0,
+                "target": "i",
+                "depth": 1,
+            },
+            {
+                "step": "print_",
+                "arguments": {
+                    "word": "teste"
+                },
+                "depth": 1
+            }
+        ]
+
+
+        self.assertEqual(atom.for_to_attribution(recipe_examples['unique_for']['recipe']['children'][0], "i", 0), expected_result)
+        self.assertEqual(atom.for_to_attribution({"step":"for", "depth":0, "children":[]}, 'i', 2), [{"step":"attribution", "depth":0, "target":"i", "source":2}])
+
+
+    def test_replace_fors_to_attributions(self):
+        pass
+
+    def test_extend(self):
+        pass    
 
     
 
