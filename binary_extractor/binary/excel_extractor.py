@@ -5,7 +5,7 @@ This module extracts the content from Excel files.
 
 import pandas as pd
 
-from binary_extractor import BinaryExtractor
+from .binary_extractor import BinaryExtractor
 
 class ExcelExtractor(BinaryExtractor):
     """
@@ -25,11 +25,10 @@ class ExcelExtractor(BinaryExtractor):
         super().__init__(path)
 
         try:
-            pd.ExcelFile(self.path)
+            self.sheets = pd.ExcelFile(self.path).sheet_names
         except:
             raise TypeError('O arquivo não foi reconhecido como Excel.')
-        else:
-            self.sheets = pd.ExcelFile(self.path).sheet_names
+
 
     def read(self):
         """

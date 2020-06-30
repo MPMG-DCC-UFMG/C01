@@ -7,7 +7,7 @@ from pathlib import Path
 import abc
 
 from tika import parser
-from texts_processor import columns_to_dataframe
+from .texts_processor import columns_to_dataframe
 
 class BinaryExtractor():
     """
@@ -44,11 +44,9 @@ class BinaryExtractor():
 
         # file parsing
         try:
-            parser.from_file(self.path)
-        except:
-            TypeError('O arquivo não pôde ser extraído.')
-        else:
             self.open = parser.from_file(self.path)
+        except:
+            raise TypeError('O arquivo não pôde ser extraído.')
 
     @abc.abstractmethod
     def read(self):
@@ -84,7 +82,7 @@ class BinaryExtractor():
 
     def read_metadata(self):
         """
-        dict: This method access and return the metadata.
+        dict: This method accesses and returns the metadata.
 
         """
 

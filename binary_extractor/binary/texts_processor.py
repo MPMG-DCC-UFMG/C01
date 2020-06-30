@@ -1,5 +1,5 @@
 """
-This module processes the text content, separing the text and their titles.
+This module processes the text content, separating the text and their titles.
 
 """
 

@@ -3,8 +3,8 @@ This module extracts and processes non-tabular binary files.
 
 """
 
-from binary_extractor import BinaryExtractor
-from texts_processor import process_text, texts_to_columns, columns_to_dataframe
+from .binary_extractor import BinaryExtractor
+from .texts_processor import process_text, texts_to_columns, columns_to_dataframe
 
 class TextsExtractor(BinaryExtractor):
     """

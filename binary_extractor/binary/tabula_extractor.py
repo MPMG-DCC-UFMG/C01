@@ -4,7 +4,7 @@ This module extracts tables from pdf files, using tabula-java.
 """
 
 from tabula import read_pdf
-from binary_extractor import BinaryExtractor
+from .binary_extractor import BinaryExtractor
 
 class TabulaExtractor(BinaryExtractor):
     """

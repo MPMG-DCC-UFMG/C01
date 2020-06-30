@@ -3,22 +3,20 @@ This module calls the extraction of a binary file.
 
 """
 
-import sys
-from pathlib import Path
 import filetype
 
 from xlrd import open_workbook, XLRDError
 
-from excel_extractor import ExcelExtractor
-from texts_extractor import TextsExtractor
-from tabula_extractor import TabulaExtractor
+from .excel_extractor import ExcelExtractor
+from .texts_extractor import TextsExtractor
+from .tabula_extractor import TabulaExtractor
 
 class Extractor():
     """
     This class chooses the right binary extractor for the file.
 
     If the type of the file is an Excel, uses the ExcelExtractor; Otherwise, it
-    uses the TextsExtractor. Also, if the file has extra tables, other type of
+    uses the TextsExtractor. Also, if the file has extra tables, other types of
     extractor can be used.
 
     Args:
@@ -37,11 +35,9 @@ class Extractor():
         self.path = path
 
         try:
-            filetype.guess(path)
+            self.type = filetype.guess(path).extension
         except FileNotFoundError:
             raise FileNotFoundError('o caminho {} é inválido.'.format(path))
-        else:
-            self.type = filetype.guess(path).extension
 
     def guess_extractor(self):
         """
@@ -61,10 +57,10 @@ class Extractor():
 
     def extra(self):
         """
-        Method that verifies the existence of a extractor for extra contents.
+        Method that verifies the existence of an extractor for extra contents.
 
         Note:
-            For now, it only can look for tables in pdf files.
+            For now, it can only look for tables in pdf files.
 
         Returns:
             TabulaExtractor, if the file is a pdf, None otherwise.
@@ -89,35 +85,5 @@ class Extractor():
         extractor.output()
         extractor.metadata()
 
-        if not extra is None:
+        if extra is not None:
             extra.output()
-
-def main():
-    """
-    This function instantiates and calls the extraction.
-
-    Note:
-        There is a processing of the file path and the construction of a relati-
-        ve path between the file path and the current work directory.
-
-    Args:
-        argv[1] (str): File path.
-
-    Raises:
-        IsADirectoryError: The path is a directory path.
-
-    """
-
-    filepath = sys.argv[1]
-
-    current = Path(__file__).absolute()
-    basepath = current.parents[len(current.parents) - 1]
-    path = basepath.joinpath(filepath)
-
-    if Path.is_dir(path):
-        raise IsADirectoryError('o caminho {} é um diretório.'.format(path))
-
-    Extractor(str(path)).extractor()
-
-if __name__ == '__main__':
-    main()
