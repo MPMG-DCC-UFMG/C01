@@ -24,5 +24,5 @@ async def elementos_nesse_xpath(page, xpath):
     elements = await page.xpath(xpath)
     return [await element.getProperties() for element in elements]
 
-def wait(segs):
+def espere(segs):
 	time.sleep(segs)
