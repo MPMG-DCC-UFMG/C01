@@ -104,10 +104,16 @@ def for_to_attribution(recipe, target, source):
         A recipe with the for step replaced by an attribution
 
     """
+    if 'step' not in recipe or 'depth' not in recipe or 'children' not in recipe:
+        raise TypeError("This recipe is in the wrong format")
+
+    if recipe['step']!= 'for':
+        raise TypeError("This step is not a for")
+
     new_recipe = []
     attribution_step = {"step": "attribution",
-                        "from": source,
-                        "to": target,
+                        "source": source,
+                        "target": target,
                         "depth": recipe["depth"]}
     new_recipe.append(attribution_step)
     decrase_depth(recipe)
