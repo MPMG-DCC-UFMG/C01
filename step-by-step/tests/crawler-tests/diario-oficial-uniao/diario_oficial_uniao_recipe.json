@@ -1,0 +1,32 @@
+{
+    "step": "root",
+    "depth": 0,
+    "children": [
+        {
+            "step": "clique",
+            "arguments": {
+                "xpath": "//*[@id=\"banner\"]/div[1]/div[2]/div[1]/div/div/ul/li[3]/a"
+            },
+            "depth": 1
+        },
+        {
+            "step": "clique",
+            "arguments": {
+                "xpath": "//*[@id=\"portlet_leituradou_INSTANCE_GKE7NRmaCXgl\"]/div/div[2]/div/div[1]/div[3]/button[4]"
+            },
+            "depth": 1
+        },
+        {
+            "step": "espere",
+            "arguments": {
+                "segs": 3
+            },
+            "depth": 1
+        }
+    ]
+}
+
+
+
+
+
