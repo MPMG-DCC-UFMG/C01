@@ -20,15 +20,36 @@ def generate_body(recipe, module):
     code = ""
     for child in recipe['children']:
         if child['step'] == 'for':
+            iterable_parameter = "**" + str(child['iterable']['arguments'])
+            step_call = child['iterable']['step']
+            if inspect.iscoroutinefunction(getattr(module, child['iterable']['step'])):         
+                iterable_parameter += ", **missing_argument"
+                step_call = "await " + step_call
+
             code = code + (child['depth']) * '    ' \
                 + 'for ' + child['iterator'] \
-                + ' in ' + child['iterable']['step'] \
-                + '(**' + str(child['iterable']['arguments']) \
+                + ' in ' + step_call \
+                + '(' + iterable_parameter \
                 + '):' + '\n'
             code = code + generate_body(child, module)
 
+
+
+
         elif child['step'] == 'while':
-            pass
+            
+            iterable_parameter = "**" + str(child['condition']['arguments'])
+            step_call = child['condition']['step']
+            if inspect.iscoroutinefunction(getattr(module, child['condition']['step'])):         
+                iterable_parameter += ", **missing_argument"
+                step_call = "await " + step_call
+
+            code = code + (child['depth']) * '    ' \
+                + 'while ' \
+                + step_call \
+                + '(' + iterable_parameter + '):'\
+                + '\n'
+            code = code + generate_body(child, module)            
 
         elif child['step'] == 'if':
             pass
