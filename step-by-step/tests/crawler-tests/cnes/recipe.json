@@ -1,0 +1,95 @@
+{
+    "step": "root",
+    "depth": 0,
+    "children": [
+        {
+            "step": "for",
+            "iterator": "estado",
+            "iterable": {
+                "step": "opcoes",
+                "arguments": {"xpath": "/html/body/div[2]/main/div/div[2]/div/form[1]/div[2]/div[1]/div/select"}
+            },
+            "breakable": true,
+            "children": [
+                {
+                    "step": "selecione",
+                    "arguments": {
+                        "opcao": "estado",
+                        "xpath": "/html/body/div[2]/main/div/div[2]/div/form[1]/div[2]/div[1]/div/select"
+
+                    },
+                    "depth": 2
+                },
+                {
+                    "step": "espere",
+                    "arguments": {
+                        "segs" : 2
+                    },
+                    "depth": 2
+                },
+                {
+                    "step": "for",
+                    "iterator": "cidade",
+                    "iterable": {
+                        "step": "opcoes",
+                        "arguments": {"xpath": "/html/body/div[2]/main/div/div[2]/div/form[1]/div[2]/div[2]/div/select"}
+                    },
+                    "breakable": true,
+                    "children": [
+                        {
+                            "step": "selecione",
+                            "arguments": {
+                                "opcao": "cidade",
+                                "xpath": "/html/body/div[2]/main/div/div[2]/div/form[1]/div[2]/div[2]/div/select"
+
+                            },
+                            "depth": 3
+                        },
+                        {
+                            "step": "espere",
+                            "arguments": {
+                                "segs" : 2
+                            },
+                            "depth": 3
+                        },
+                        {
+                            "step": "clique",
+                            "arguments": {
+                                "xpath": "/html/body/div[2]/main/div/div[2]/div/form[2]/div/button"
+                            },
+                            "depth": 3
+                        },
+                        {
+                            "step": "espere",
+                            "arguments": {
+                                "segs" : 2
+                            },
+                            "depth": 3
+                        },
+                        {
+                            "step": "while",
+                            "condition": {
+                                "step": "for_clicavel",
+                                "arguments": {"xpath": "/html/body/div[2]/main/div/div[2]/div/div[3]/div/div/div/ul/li[5]/a"}
+                            },
+                            "children": [
+                                {
+                                    "step": "espere",
+                                    "arguments": {
+                                        "segs" : 2
+                                    },
+                                    "depth": 4
+                                }
+                            ],
+                            "depth": 3
+                        }
+
+
+                    ],
+                    "depth": 2
+                }
+            ],
+            "depth": 1
+        }
+    ]
+}
