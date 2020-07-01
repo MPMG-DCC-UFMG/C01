@@ -5,7 +5,7 @@ Form parser module for web crawling.
 
 #### URLParser
 ```
-from form_parser import URLParser
+from formparser import URLParser
 Parser = URLParser("myurl.com/param=value1&param2=value2")
 Parser.query() # param1=value1&param2=value2
 Parser.parameters() # {'param1': 'value1', 'param2': 'value2'}
@@ -14,7 +14,7 @@ Parser.parameters() # {'param1': 'value1', 'param2': 'value2'}
 - Extracts parameters from HTML forms using lxml.etree and XPaths
 #### HTMLParser
 ```
-from form_parser import HTMLExtractor, HTMLForm
+from formparser import HTMLExtractor, HTMLParser
 HTML = HTMLExtractor("myurl.com/param=value1&param2=value2")
 form_list = HTML.get_forms()
 for form in form_list:
@@ -22,20 +22,27 @@ for form in form_list:
 ```
 - List possible input types
 
-```ParsedForm.list_field_types() # -> list(str), ['text', 'radio', 'select']```
+```ParsedForm.unique_field_types() # -> list(str), ['text', 'radio', 'select']```
 - Count number of fields available
 
-```ParsedForm.get_number_fields() # -> int```
+```ParsedForm.number_of_fields() # -> int```
 
 - Retrieve full list of inputs
 
-```ParsedForm.input_types() # -> list(str), ['text', 'text', 'radio', 'select', 'select', ...]```
+```ParsedForm.list_input_types() # -> list(str), ['text', 'text', 'radio', 'select', 'select', ...]```
+- Retrieve list of inputs' labels
+
+```ParsedForm.list_input_labels() # -> list(str), ['Name', 'Phone', 'Year', 'City', 'State', ...]```
 - Retrieve field types and <Element input>
 
 ```ParsedForm.fields() # -> dict, {'field_type': [<Element input 1>, <Element input 2>], ...}```
 
 - List required fields
 ```ParsedForm.required_fields() # -> list(<Element input>)``` 
+
+- Retrieve dynamic fields
+```ParsedForm.dynamic_fields() # -> dict, {'field1_xpath': ['field2_xpath'
+, 'field3_xpath'], ...}``` 
 
 - List select fields
 ```ParsedForm.select_fields() # -> list(<Element select>)```
@@ -65,7 +72,8 @@ Note: also works for other types of ```<Element>``` objects
 
 
 ### TODO
+- [x] Identify dynamic form fields
 - [ ] Parse custom format types
 - [ ] Extract and parse non-HTML forms
-- [ ] Find void select options
+- [ ] Find select options to be ignored (e.g. "Selecione")
 - [ ] Increase test coverage 
