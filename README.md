@@ -18,5 +18,12 @@ Dentre as funcionalidades disponíveis para os coletores, temos:
 
 Os coletores também podem ser gerenciados através de uma API RESTful.
 
+## Execução
+
+Para execução da interface basta executar o seguinte comando:
+```
+python manage.py runserver
+```
+
 ## Fluxo de interação com a interface
 ![Fluxograma](fluxo_interface_coletor_20200625.png)

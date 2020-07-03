@@ -1,0 +1,41 @@
+{% extends 'main/base.html' %}
+
+{% block title %}
+Home
+{% endblock %}
+
+{% block content %}
+
+    <div class="col">
+        
+        <table class="table table-striped table-bordered searchable sortable" cellspacing="0" width="100%">
+            <thead>
+                <tr>
+                    <th scope="col">Source Name</th>
+                    <th scope="col">Base URL</th>
+                    <th scope="col">Created at</th>
+                    <th scope="col">Detail</th>
+                    <th scope="col">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for crawler in allcrawlers %}
+                <tr>
+                    <td>{{crawler.source_name }}</td>
+                    <td>{{crawler.base_url }}</td>
+                    <td>{{crawler.creation_date }}</td>
+                    <td><a class="btn btn-info" href="{% url 'detail_crawler' crawler.id %}">Detail</a></td>
+                    
+                    {% if crawler.running == True %}
+                        <td><span style="color: green;">Running</span></td>
+                    {% else %}
+                        <td><span style="color: blueviolet;">Stopped</span></td>
+                    {% endif %}
+                    
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+    {% endblock %}
