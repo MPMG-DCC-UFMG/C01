@@ -58,8 +58,11 @@ def get_iterable_objects(list_of_iterables, module=functions_file):
     """
     for i in range(len(list_of_iterables)):
         if 'call' in list_of_iterables[i]['iterable']:
-            func = getattr(module, list_of_iterables[i]['iterable']['step'])
-            list_of_iterables[i]['iterable'] = func(**(list_of_iterables[i]['iterable']['arguments']))
+            try:
+                func = getattr(module, list_of_iterables[i]['iterable']['call']['step'])
+                list_of_iterables[i]['iterable'] = func(**(list_of_iterables[i]['iterable']['call']['arguments']))
+            except:
+                raise TypeError(list_of_iterables[i])
         elif 'object' in list_of_iterables[i]['iterable']:
             list_of_iterables[i]['iterable'] = list_of_iterables[i]['iterable']['object']
         else:

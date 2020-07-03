@@ -29,11 +29,12 @@ with open('recipe.json') as file:
     recipe = json.load(file)
 
 with open('steps.py', 'w+') as file:
-    print(code_g.generate_code(recipe, functions_file), '\n\n\n\n')
-    file.write(code_g.generate_code(recipe, functions_file))
+    #code = code_g.generate_code(recipe, functions_file)
+    code = code_g.generate_code(atom.extend(recipe)[0], functions_file)
+    print(code)
+    file.write(code)
 
 asyncio.get_event_loop().run_until_complete(main())
-
 
 
 
