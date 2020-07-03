@@ -8,9 +8,11 @@
                     "step": "for",
                     "iterator": "h",
                     "iterable": {
-                        "step": "range_",
-                        "arguments": {
-                            "stop": 2
+                        "call":{
+                            "step": "range_",
+                            "arguments": {
+                                "stop": 2
+                            }
                         }
                     },
                     "breakable": true,
@@ -20,9 +22,11 @@
                             "step": "for",
                             "iterator": "i",
                             "iterable": {
-                                "step": "range_",
-                                "arguments": {
-                                    "stop": 2
+                                "call":{
+                                    "step": "range_",
+                                    "arguments": {
+                                        "stop": 2
+                                    }
                                 }
                             },
                             "breakable": false,
@@ -39,9 +43,11 @@
                                     "step": "for",
                                     "iterator": "j",
                                     "iterable": {
-                                        "step": "range_",
-                                        "arguments": {
-                                            "stop": 2
+                                        "call":{
+                                            "step": "range_",
+                                            "arguments": {
+                                                "stop": 2
+                                            }
                                         }
                                     },
                                     "breakable": true,
@@ -51,9 +57,11 @@
                                             "step": "for",
                                             "iterator": "k",
                                             "iterable": {
-                                                "step": "range_",
-                                                "arguments": {
-                                                    "stop": 2
+                                                "call":{
+                                                    "step": "range_",
+                                                    "arguments": {
+                                                        "stop": 2
+                                                    }
                                                 }
                                             },
                                             "breakable": true,
@@ -63,9 +71,11 @@
                                                     "step": "for",
                                                     "iterator": "l",
                                                     "iterable": {
-                                                        "step": "range_",
-                                                        "arguments": {
-                                                            "stop": 2
+                                                        "call":{
+                                                            "step": "range_",
+                                                            "arguments": {
+                                                                "stop": 2
+                                                            }
                                                         }
                                                     },
                                                     "breakable": true,
@@ -115,9 +125,11 @@
                     "step": "for",
                     "iterator": "i",
                     "iterable": {
-                        "step": "range_",
-                        "arguments": {
-                            "stop": 2
+                        "call":{
+                            "step": "range_",
+                            "arguments": {
+                                "stop": 2
+                            }
                         }
                     },
                     "breakable": true,
@@ -145,9 +157,11 @@
                     "step": "for",
                     "iterator": "i",
                     "iterable": {
-                        "step": "range_",
-                        "arguments": {
-                            "stop": 2
+                        "call":{
+                            "step": "range_",
+                            "arguments": {
+                                "stop": 2
+                            }
                         }
                     },
                     "breakable": true,
@@ -157,9 +171,11 @@
                             "step": "for",
                             "iterator": "j",
                             "iterable": {
-                                "step": "range_",
-                                "arguments": {
-                                    "stop": 2
+                                "call":{
+                                    "step": "range_",
+                                    "arguments": {
+                                        "stop": 2
+                                    }
                                 }
                             },
                             "breakable": true,
@@ -196,9 +212,11 @@
                     "step": "for",
                     "iterator": "i",
                     "iterable": {
-                        "step": "range_",
-                        "arguments": {
-                            "stop": 2
+                        "call":{
+                            "step": "range_",
+                            "arguments": {
+                                "stop": 2
+                            }
                         }
                     },
                     "breakable": true,
@@ -208,9 +226,11 @@
                             "step": "for",
                             "iterator": "j",
                             "iterable": {
-                                "step": "range_",
-                                "arguments": {
-                                    "stop": 2
+                                "call":{
+                                    "step": "range_",
+                                    "arguments": {
+                                        "stop": 2
+                                    }
                                 }
                             },
                             "breakable": false,
@@ -220,9 +240,11 @@
                                     "step": "for",
                                     "iterator": "k",
                                     "iterable": {
-                                        "step": "range_",
-                                        "arguments": {
-                                            "stop": 2
+                                        "call":{
+                                            "step": "range_",
+                                            "arguments": {
+                                                "stop": 2
+                                            }
                                         }
                                     },
                                     "breakable": true,
@@ -254,9 +276,11 @@
                     "step": "for",
                     "iterator": "i",
                     "iterable": {
-                        "step": "range_",
-                        "arguments": {
-                            "stop": 2
+                        "call":{
+                            "step": "range_",
+                            "arguments": {
+                                "stop": 2
+                            }
                         }
                     },
                     "breakable": true,

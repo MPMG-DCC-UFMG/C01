@@ -11,28 +11,28 @@ class TestExtractInfo(unittest.TestCase):
             recipe_examples = json.load(json_file)
 
         self.assertEqual(atom.track_parallelizable_fors(recipe_examples["unique_for"]["recipe"]),
-            [{'iterator': 'i', 'iterable': {'step': 'range_', 'arguments': {'stop': 2}}}])
+            [{'iterator': 'i', 'iterable':{'call':{'step': 'range_', 'arguments': {'stop': 2}}}}])
         self.assertEqual(atom.track_parallelizable_fors(recipe_examples["unbreakable_between_breakables"]["recipe"]),
             [
-                {'iterator': 'i', 'iterable': {'step': 'range_', 'arguments': {'stop': 2}}},
-                {'iterator': 'k', 'iterable': {'step': 'range_', 'arguments': {'stop': 2}}}
+                {'iterator': 'i', 'iterable':{'call':{'step': 'range_', 'arguments': {'stop': 2}}}},
+                {'iterator': 'k', 'iterable':{'call':{'step': 'range_', 'arguments': {'stop': 2}}}}
             ])
         self.assertEqual(atom.track_parallelizable_fors(recipe_examples["step_after_the_for"]["recipe"]),[])
         self.assertEqual(atom.track_parallelizable_fors(recipe_examples["step_before_the_for"]["recipe"]),
-            [{'iterator': 'i', 'iterable': {'step': 'range_', 'arguments': {'stop': 2}}}])
+            [{'iterator': 'i', 'iterable':{'call':{'step': 'range_', 'arguments': {'stop': 2}}}}])
         self.assertEqual(atom.track_parallelizable_fors(recipe_examples["all_cases"]["recipe"]),
             [
-                {'iterator': 'h', 'iterable': {'step': 'range_', 'arguments': {'stop': 2}}},
-                {'iterator': 'j', 'iterable': {'step': 'range_', 'arguments': {'stop': 2}}}
+                {'iterator': 'h', 'iterable':{'call':{'step': 'range_', 'arguments': {'stop': 2}}}},
+                {'iterator': 'j', 'iterable':{'call':{'step': 'range_', 'arguments': {'stop': 2}}}}
             ])
 
     def test_get_iterable_objects(self):
         ffe = __import__('functions_file_example')
         call_1 = [
-            {'iterator': 'j', 'iterable': {'step': 'no_params', 'arguments': {}}}
+            {'iterator': 'j', 'iterable':{'call':{'step': 'no_params', 'arguments': {}}}}
         ]
         self.assertEqual(atom.get_iterable_objects(call_1, module = ffe),
-            [{'iterator': 'j', 'iterable': [1,2]}])
+            [{'iterator': 'j', 'iterable':[1,2]}])
         self.assertEqual(atom.get_iterable_objects([], module = ffe),[])
 
     def test_decrase_depth(self):
