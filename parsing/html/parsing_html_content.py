@@ -7,16 +7,17 @@ import re
 import parsing_html_div
 import parsing_html_table
 
+
 def clean_html(html_file, isString):
     '''
     Receives the html file and removes unecessery parts, as header, footer, etc.
     '''
 
     # List of elements that are going to be removed from the html
-    remove_list = ["head", "header", "footer" , "polygon", "path", "script",
-                    "symbol", "meta", "link", "title", "style", "nav", "form"]
-    remove_class = ["sidebar-inner","breadcrumb", "share", "navegacao",
-                    "skiptranslate", "goog-te-spinner-pos","social-list",
+    remove_list = ["head", "header", "footer", "polygon", "path", "script",
+                   "symbol", "meta", "link", "title", "style", "nav", "form"]
+    remove_class = ["sidebar-inner", "breadcrumb", "share", "navegacao",
+                    "skiptranslate", "goog-te-spinner-pos", "social-list",
                     "social-icon", "copyright", "id_assist_frame",
                     "fbc-badge-tooltip"]
     remove_id = ["boxes", "mySidenav", "chat-panel"]
@@ -36,10 +37,10 @@ def clean_html(html_file, isString):
         if tag.name.lower() in remove_list:
             tag.extract()
     # Remove any div with the class in remove_class
-    for div in soup.find_all("div", {'class':remove_class}):
+    for div in soup.find_all("div", {'class': remove_class}):
         div.extract()
     # Remove any div with the id in remove_id
-    for div in soup.find_all("div", {'id':remove_id}):
+    for div in soup.find_all("div", {'id': remove_id}):
         div.extract()
 
     html_file = str(soup)
