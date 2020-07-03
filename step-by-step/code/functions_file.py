@@ -12,17 +12,17 @@ async def clique(page, xpath):
     elements = await page.xpath(xpath)
     await asyncio.wait([
         elements[0].click(),
-        page.waitForNavigation(),
+        #page.waitForNavigation(),
     ])
 
-async def opcoes(page, xpath):
+async def opcoes(page, xpath, exceto = []):
     option_values = []
     await page.waitForXPath(xpath)
     options = await page.xpath(xpath + "/option")
     for option in options:
         value = await option.getProperty("text")
         option_values.append(value.toString().split(":")[-1])
-    return option_values
+    return [value for value in option_values if value not in exceto]
 
 async def selecione(page, xpath, opcao):
     await page.waitForXPath(xpath)
@@ -32,3 +32,14 @@ async def selecione(page, xpath, opcao):
 
 def espere(segs):
 	time.sleep(segs)
+
+async def for_clicavel(page, xpath):
+    try:
+        await clique(page,xpath)
+        return 1
+    except:
+        print('error')
+        return 0
+
+
+

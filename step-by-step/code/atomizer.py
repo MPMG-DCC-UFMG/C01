@@ -57,9 +57,13 @@ def get_iterable_objects(list_of_iterables, module=functions_file):
             code of the correspondent for.
     """
     for i in range(len(list_of_iterables)):
-        func = getattr(module, list_of_iterables[i]['iterable']['step'])
-        list_of_iterables[i]['iterable'] = func(
-            **(list_of_iterables[i]['iterable']['arguments']))
+        if 'call' in list_of_iterables[i]['iterable']:
+            func = getattr(module, list_of_iterables[i]['iterable']['step'])
+            list_of_iterables[i]['iterable'] = func(**(list_of_iterables[i]['iterable']['arguments']))
+        elif 'object' in list_of_iterables[i]['iterable']:
+            list_of_iterables[i]['iterable'] = list_of_iterables[i]['iterable']['object']
+        else:
+            raise TypeError("Some iterable is in the wrong format")
     return list_of_iterables
 
 

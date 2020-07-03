@@ -1,6 +1,26 @@
 import inspect
 
 
+
+def dict_to_arguments(dict_of_arguments):
+    """
+    Generates a string that represents a parameter pass
+    """
+    return ', '.join([key + ' = ' + str(dict_of_arguments[key]) for key in dict_of_arguments])
+
+
+def generate_call(function_name, dict_of_arguments, is_coroutine=False):
+    """
+    Generates a string that represents a call function
+    """
+    call = function_name
+    if is_coroutine:
+        call = 'await ' + call + '(' + dict_to_arguments(dict_of_arguments) + ', **missing_arguments)'
+    else:
+        call = call + '(' + dict_to_arguments(dict_of_arguments) + ')'
+    return call
+
+
 def generate_head(module):
     """
     Generates the first part of the code, that is,
@@ -8,7 +28,7 @@ def generate_head(module):
     """
     code = "import sys \n" + "sys.path.append(\"code\")\n"
     code = code + "from " + module.__name__ + " import *\n\n"
-    code = code + "async def execute_steps(**missing_argument):\n"
+    code = code + "async def execute_steps(**missing_arguments):\n"
     return code
 
 
@@ -20,17 +40,20 @@ def generate_body(recipe, module):
     code = ""
     for child in recipe['children']:
         if child['step'] == 'for':
-            iterable_parameter = "**" + str(child['iterable']['arguments'])
-            step_call = child['iterable']['step']
-            if inspect.iscoroutinefunction(getattr(module, child['iterable']['step'])):         
-                iterable_parameter += ", **missing_argument"
-                step_call = "await " + step_call
+
+            if 'call' in child['iterable']:
+                is_coroutine = inspect.iscoroutinefunction(getattr(module, child['iterable']['call']['step']))
+                iterable = generate_call(child['iterable']['call']['step'], child['iterable']['call']['arguments'], is_coroutine)
+            elif 'object' in child['iterable']:
+                iterable = '[' + ', '.join(child['iterable']['object']) + ']'
+            else:
+                raise TypeError('This iterable is in the wrong format')
 
             code = code + (child['depth']) * '    ' \
                 + 'for ' + child['iterator'] \
-                + ' in ' + step_call \
-                + '(' + iterable_parameter \
-                + '):' + '\n'
+                + ' in '\
+                +  iterable\
+                + ':' + '\n'
             code = code + generate_body(child, module)
 
 
@@ -39,9 +62,10 @@ def generate_body(recipe, module):
         elif child['step'] == 'while':
             
             iterable_parameter = "**" + str(child['condition']['arguments'])
+            
             step_call = child['condition']['step']
             if inspect.iscoroutinefunction(getattr(module, child['condition']['step'])):         
-                iterable_parameter += ", **missing_argument"
+                iterable_parameter += ", **missing_arguments"
                 step_call = "await " + step_call
 
             code = code + (child['depth']) * '    ' \
@@ -56,18 +80,12 @@ def generate_body(recipe, module):
 
         elif child['step'] == 'attribution':
             code = code + (child['depth']) * '    ' + \
-                child['to'] + ' = ' + str(child['from']) + '\n'
-
-        elif inspect.iscoroutinefunction(getattr(module, child['step'])):
-            code = code + (child['depth']) * '    ' \
-                + 'await ' + \
-                child['step'] + '(**' + str(child['arguments']) + \
-                ', **missing_argument)' + '\n'
+                child['target'] + ' = ' + str(child['source']) + '\n'
         else:
+            is_coroutine = inspect.iscoroutinefunction(getattr(module, child['step']))
             code = code + (child['depth']) * '    ' \
-                + child['step'] \
-                + '(**' + str(child['arguments']) \
-                + ')\n'
+                + generate_call(child['step'], child['arguments'], is_coroutine)\
+                + '\n'
     return code
 
 
