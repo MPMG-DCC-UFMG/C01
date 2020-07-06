@@ -9,9 +9,12 @@ import unittest
 from lxml import etree
 from formparser.html import HTMLParser, HTMLExtractor
 from formparser import utils
+from entry_probing import EntryProbing, GETProbingRequest, \
+    TextMatchProbingResponse
 
 PORTAL_COMPRAS = 'https://www1.compras.mg.gov.br/processocompra/processo/' \
                  'consultaProcessoCompra.html'
+
 TEST_FORM_FIELD = {'type': 'text', 'name': 'codigoUnidadeCompra',
                    'maxlength': '7', 'size': '', 'value': '',
                    'onkeydown': ' return IsNumericKey(event, false);',
@@ -59,9 +62,6 @@ class TestFormPortalCompras(unittest.TestCase):
         self.assertListEqual(sorted(list(Form.unique_field_types())),
                              sorted(['checkbox', 'hidden', 'select', 'text']))
 
-    def test_required_fields(self):
-        self.assertEqual(Form.required_fields(), [])
-
     def test_fields(self):
         self.assertEqual(sum([len(Form.fields()[key]) for key in
                               Form.fields().keys()]), Form.number_of_fields())
@@ -104,6 +104,35 @@ class TestDynamicFields(unittest.TestCase):
                                              '1]'])),
                          ('/html/body/div/div[2]/div['
                           '1]/div/form/fieldset/select[1]', 1))
+
+
+class TestRequiredFields(unittest.TestCase):
+    def test_itabirito(self):
+        url = 'http://www.itabirito.mg.gov.br/licitacoes-em-andamento/'
+        extracted_form = HTMLExtractor(url).get_forms()[0]
+        parsed_form = HTMLParser(form=extracted_form)
+        probe = EntryProbing(GETProbingRequest(url)).add_response_handler(
+            TextMatchProbingResponse('Processo Licitário'))
+        sx = '/html/body/div/div/form/fieldset/div/div[7]/input'
+        required_fields = parsed_form.required_fields(probing_element=probe,
+                                                      submit_button_xpath=sx,
+                                                      form_url=url)
+        itabirito_form_fields = ['/html/body/footer/div[1]/div['
+                                 '1]/form/input[1]', '/html/body/footer/div['
+                                                     '1]/div[1]/form/input[2]']
+
+        self.assertListEqual(required_fields, itabirito_form_fields)
+
+    def test_valadares(self):
+        url = 'https://www.valadares.mg.gov.br/licitacoes'
+        parsed_form = HTMLParser(url=url)
+        probe = EntryProbing(GETProbingRequest(url)).add_response_handler(
+            TextMatchProbingResponse('Resultados encontrados'))
+        sx = '//*[@id="btn_aplicarFiltro"]'
+        required_fields = parsed_form.required_fields(probing_element=probe,
+                                                      submit_button_xpath=sx)
+        valadares_form_fields = []
+        self.assertListEqual(required_fields, valadares_form_fields)
 
 
 if __name__ == '__main__':

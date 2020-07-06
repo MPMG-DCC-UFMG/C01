@@ -8,9 +8,12 @@ import random
 import logging
 import time
 import collections
+import entry_probing
 
 from selenium.webdriver import FirefoxOptions
 from selenium import webdriver
+from selenium.common import exceptions
+from selenium.webdriver.support.ui import Select
 
 USER_AGENT_LIST = [
     'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, '
@@ -96,32 +99,22 @@ def get_xpath(element) -> str:
     return element.getroottree().getpath(element)
 
 
-def get_xpath_safe(element) -> str:
-    """Returns an element's xpath, returns the same element in case the
-    xpath cannot be obtained
-
-    Args:
-        element: 'lxml.etree._Element'
-
-    Returns:
-        element's xpath
-    """
-    try:
-        return element.getroottree().getpath(element)
-    except AttributeError:
-        logging.error('AttributeError: returning unchanged element')
-        return element
-
-
-def probing(browser, element="Não há resultado para a pesquisa.") -> bool:
+def probing(browser, probing_element="Não há resultado para a pesquisa.") -> \
+        bool:
     """Webpage probing to check for a particular element
-    TODO: Replace by probing module
 
     Returns:
         True, if element is found. False, otherwise.
     """
-    return element.lower() in str(browser.find_element_by_tag_name('body')
-                                  .text).lower()
+    try:
+        if isinstance(probing_element, str):
+            return probing_element.lower() in str(
+                browser.find_element_by_tag_name('body').text).lower()
+        elif isinstance(probing_element, entry_probing.EntryProbing):
+            return probing_element.response
+    except exceptions.UnexpectedAlertPresentException:
+        check_for_alert(browser)
+        probing(browser, probing_element)
 
 
 def to_xpath(data_structure):
@@ -174,3 +167,52 @@ def dict_to_xpath(element_dict: dict):
     for value in element_dict.values():
         values_xpath.append(list_to_xpath(list(value)))
     return dict(zip(keys_xpath, values_xpath))
+
+
+def get_xpath_safe(element) -> str:
+    """Returns an element's xpath, returns the same element in case the
+    xpath cannot be obtained
+
+    Args:
+        element: 'lxml.etree._Element'
+
+    Returns:
+        element's xpath
+    """
+    try:
+        return element.getroottree().getpath(element)
+    except AttributeError:
+        logging.error('AttributeError: returning unchanged element')
+        return element
+
+
+def change_select_field(element, include_hidden=True):
+    """Selects second option in a select field by index
+
+    Args:
+        element: Select element
+        include_hidden: if true, also processes hidden select fields
+    """
+    try:
+        if include_hidden:
+            select = Select(element)
+            select.select_by_index(1)
+        else:
+            if element.is_displayed():
+                select = Select(element)
+                select.select_by_index(1)
+    except exceptions.ElementNotInteractableException:
+        logging.info('[WARNING] Could not interact with select field ID <' +
+                     element.id + '>. Skipping')
+    except exceptions.UnexpectedTagNameException:
+        logging.info('[WARNING] Could not interact with element field ID <' +
+                     element.id + '>. Skipping')
+
+
+def check_for_alert(browser: webdriver.Firefox):
+    try:
+        alert = browser.switch_to.alert()
+        alert.accept()
+        return True
+    except exceptions.NoAlertPresentException:
+        return False

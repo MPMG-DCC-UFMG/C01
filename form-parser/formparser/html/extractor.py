@@ -13,7 +13,7 @@ from formparser import utils
 class Extractor:
     """Extract and parse HTML for forms"""
 
-    def __init__(self, url):
+    def __init__(self, url: str):
         """Constructor for HTMLExtractor
 
         Args:

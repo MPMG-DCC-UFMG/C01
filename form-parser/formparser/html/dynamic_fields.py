@@ -9,7 +9,6 @@ import time
 
 from formparser import utils
 from collections import defaultdict
-from selenium.webdriver.support.ui import Select
 from selenium.common import exceptions
 from formparser import html
 
@@ -17,7 +16,7 @@ from formparser import html
 class DynamicFields:
     """Identify dynamic fields in web forms"""
 
-    def __init__(self, url, form):
+    def __init__(self, url: str, form):
         """Constructor for DynamicFields
 
         Args:
@@ -29,7 +28,7 @@ class DynamicFields:
         self.form_text = self.get_text(self.form_xpath)
         self.dynamic_fields = defaultdict(list)
 
-    def get_text(self, xpath) -> str:
+    def get_text(self, xpath: str) -> str:
         """Returns the text within a web element
 
         Args:
@@ -47,7 +46,7 @@ class DynamicFields:
         for field_type in field_types:
             self.check_fields(fields_dict[field_type], field_type)
 
-    def check_fields(self, field_list, field_type, sleep_time=0.5):
+    def check_fields(self, field_list: list, field_type: str, sleep_time=0.5):
         """Triggers field changes and detect dynamic fields
 
         Args:
@@ -63,7 +62,7 @@ class DynamicFields:
             status_before_change = self.get_status(field_list)
             text_before_change = self.get_text(self.form_xpath)
             if field_type == 'select':
-                self.change_select_field(element)
+                utils.change_select_field(element)
             else:
                 element.click()
             time.sleep(sleep_time)
@@ -77,25 +76,12 @@ class DynamicFields:
                 self.dynamic_fields[xpath].append('')
             self.browser.refresh()
 
-    @staticmethod
-    def change_select_field(element):
-        """Selects second option in a select field by index
-
-        Args:
-            element: Select element
-        """
-        select = Select(element)
-        select.select_by_index(1)
-
-    def check_text_change(self, text_before_action) -> bool:
+    def check_text_change(self, text_before_action: str) -> bool:
         """Detects if text changed after action and fills dict with fields
 
         Args:
-            text_before_action: url of webpage where the form is (if not
-                                provided when constructing the object
-                                HTMLParser)
-            field: 'lxml.etree._Element'
-            field_type: str
+            text_before_action: text extracted from page before performing
+                                an action
 
         Returns
             True, if text changes.
@@ -108,7 +94,7 @@ class DynamicFields:
             self.form_xpath = utils.get_xpath(form)
             return text_before_action != self.get_text(self.form_xpath)
 
-    def get_status(self, field_list, attribute='is_displayed') -> dict:
+    def get_status(self, field_list: list, attribute='is_displayed') -> dict:
         """Checks status of a web element
 
         Args:
