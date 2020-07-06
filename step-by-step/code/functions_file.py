@@ -1,5 +1,6 @@
 import asyncio
 import time
+from cssify import cssify
 
 def range_(stop):
     return [i for i in range(stop)]
@@ -7,39 +8,39 @@ def range_(stop):
 def print_(word):
     return word
 
-async def clique(page, xpath):
-    await page.waitForXPath(xpath)
-    elements = await page.xpath(xpath)
-    await asyncio.wait([
-        elements[0].click(),
-        #page.waitForNavigation(),
-    ])
-
-async def opcoes(page, xpath, exceto = []):
-    option_values = []
-    await page.waitForXPath(xpath)
-    options = await page.xpath(xpath + "/option")
-    for option in options:
-        value = await option.getProperty("text")
-        option_values.append(value.toString().split(":")[-1])
-    return [value for value in option_values if value not in exceto]
-
-async def selecione(page, xpath, opcao):
-    await page.waitForXPath(xpath)
-    elements = await page.xpath(xpath)
-    select = elements[0]
-    await select.type(opcao)
-
 def espere(segs):
 	time.sleep(segs)
 
+async def waitPage(page):
+    jsWait = "document.readyState === 'complete' || \
+              document.readyState === 'iteractive'"
+    while not (await page.evaluate(jsWait)):
+        await page.waitFor(1)
+
+async def clique(page, xpath):
+    await page.waitForXPath(xpath)
+    await page.click(cssify(xpath))
+    await waitPage(page)
+
+async def selecione(page, xpath, opcao):
+    await page.waitForXPath(xpath)
+    await page.type(cssify(xpath), opcao)
+    await waitPage(page)
+
+async def opcoes(page, xpath, exceto=[]):
+    options = []
+    await page.waitForXPath(xpath)
+    for option in (await page.xpath(xpath + "/option")):
+        value = await option.getProperty("text")
+        options.append(value.toString().split(":")[-1])
+    return [value for value in options if value not in exceto]
+
 async def for_clicavel(page, xpath):
     try:
-        await clique(page,xpath)
-        return 1
+        await clique(page, xpath)
+        return True
     except:
-        print('error')
-        return 0
+        return False
 
 
 
