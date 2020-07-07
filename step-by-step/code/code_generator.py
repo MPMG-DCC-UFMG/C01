@@ -15,7 +15,7 @@ def generate_call(function_name, dict_of_arguments, is_coroutine=False):
     """
     call = function_name
     if is_coroutine:
-        call = 'await ' + call + '(' + dict_to_arguments(dict_of_arguments) + ', **missing_arguments)'
+        call = 'await ' + call + '(**missing_arguments, ' + dict_to_arguments(dict_of_arguments) + ')'
     else:
         call = call + '(' + dict_to_arguments(dict_of_arguments) + ')'
     return call
@@ -60,19 +60,11 @@ def generate_body(recipe, module):
 
 
         elif child['step'] == 'while':
+            is_coroutine = inspect.iscoroutinefunction(getattr(module, child['condition']['step']))
+            call = generate_call(child['condition']['step'], child['condition']['arguments'], is_coroutine)
             
-            iterable_parameter = "**" + str(child['condition']['arguments'])
-            
-            step_call = child['condition']['step']
-            if inspect.iscoroutinefunction(getattr(module, child['condition']['step'])):         
-                iterable_parameter += ", **missing_arguments"
-                step_call = "await " + step_call
-
             code = code + (child['depth']) * '    ' \
-                + 'while ' \
-                + step_call \
-                + '(' + iterable_parameter + '):'\
-                + '\n'
+                + 'while ' + call + ':'+ '\n'
             code = code + generate_body(child, module)            
 
         elif child['step'] == 'if':
