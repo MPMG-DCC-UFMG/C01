@@ -1,12 +1,14 @@
+import json
+
 import sys
 sys.path.append("../../../")
 
-import json
+from pyppeteer import launch
 
 from step_crawler import code_generator as code_g
-from step_crawler import atomizer as atom
-from step_crawler.functions_file import *
 from step_crawler import functions_file
+from step_crawler.functions_file import *
+from step_crawler import atomizer as atom
 
 from pyppeteer import launch
 from pyext import RuntimeModule
