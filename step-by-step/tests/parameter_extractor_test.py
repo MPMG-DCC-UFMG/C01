@@ -1,8 +1,10 @@
 import sys
 sys.path.append("../")
+sys.path.append("examples")
+
 import unittest
 
-from step_crawler.tests import functions_file_example as ffe
+import functions_file_example as ffe
 from step_crawler.parameter_extractor import *
 
 
