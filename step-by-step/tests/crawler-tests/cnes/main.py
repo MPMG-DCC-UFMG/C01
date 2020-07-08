@@ -19,9 +19,7 @@ async def main():
     page = await browser.newPage()
     await page.goto('http://cnes.datasus.gov.br/pages/estabelecimentos/'
                     'consulta.jsp')
-
     await steps.execute_steps(page = page)
-
     await browser.close()
     return
 
@@ -34,11 +32,3 @@ steps = RuntimeModule.from_string("steps", code)
 print(code)
 
 asyncio.get_event_loop().run_until_complete(main())
-
-
-
-
-
-
-
-
