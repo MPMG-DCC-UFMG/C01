@@ -1,5 +1,6 @@
 import asyncio
 import time
+import uuid
 
 
 def range_(stop):
@@ -13,13 +14,14 @@ def print_(word):
 def espere(segs):
     time.sleep(segs)
 
+def gera_nome_arquivo():
+    return "./{}.html".format(uuid.uuid4().hex)
 
 async def wait_page(page):
     jsWait = "document.readyState === 'complete' || \
               document.readyState === 'iteractive'"
     while not (await page.evaluate(jsWait)):
         await page.waitFor(1)
-
 
 async def clique(page, xpath):
     await page.waitForXPath(xpath)
@@ -44,6 +46,12 @@ async def selecione(page, xpath, opcao):
     select = elements[0]
     await select.type(opcao)
 
+
+async def salva_pagina(page, path):
+    content = await page.content()
+    body = str.encode(content)
+    with open(path, "w") as page_file:
+        page_file.write(body)
 
 async def elementos_nesse_xpath(page, xpath):
     await page.waitForXPath(xpath)
