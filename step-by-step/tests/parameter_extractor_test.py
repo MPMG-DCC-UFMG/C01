@@ -1,8 +1,7 @@
-import sys
-sys.path.append("../code")
-import functions_file_example as ffe
 import unittest
-from parameter_extractor import *
+
+from step_crawler.tests import functions_file_example as ffe
+from step_crawler.parameter_extractor import *
 
 
 class TestExtractInfo(unittest.TestCase):
@@ -15,7 +14,7 @@ class TestExtractInfo(unittest.TestCase):
             ],
             "optional_params": {
                 "to": 1,
-                "test": {}
+                "test": None
             }
         },
         {
@@ -55,13 +54,10 @@ class TestExtractInfo(unittest.TestCase):
         self.assertEqual(extract_info(ffe.no_params),
                          self.expected_results[3])
 
-    
-
-
-
-    # Testing this function, the get_module_functions is also implicitly tested
     def test_get_module_functions_info(self):
-        ffe = __import__('functions_file_example')
+        # Testing this function, the get_module_functions
+        # is also implicitly tested
+        ffe = __import__('step_crawler.tests.functions_file_example')
         result = get_module_functions_info(ffe)
 
         # Because they may be out of order, and contains unhashable items
