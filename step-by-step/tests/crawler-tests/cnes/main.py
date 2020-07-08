@@ -19,7 +19,8 @@ async def main():
     page = await browser.newPage()
     await page.goto('http://cnes.datasus.gov.br/pages/estabelecimentos/'
                     'consulta.jsp')
-    await steps.execute_steps(page = page)
+    pages = await steps.execute_steps(page = page)
+    print(len(pages))
     await browser.close()
     return
 
@@ -28,7 +29,7 @@ with open('recipe.json') as file:
     recipe = json.load(file)
 
 code = code_g.generate_code(atom.extend(recipe)[0], functions_file)
-steps = RuntimeModule.from_string("steps", code)
 print(code)
+steps = RuntimeModule.from_string("steps", code)
 
 asyncio.get_event_loop().run_until_complete(main())

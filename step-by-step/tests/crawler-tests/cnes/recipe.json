@@ -53,6 +53,11 @@
                                 "xpath": "\"/html/body/div[2]/main/div/div[2]/div/form[2]/div/button\""
                             },
                             "depth": 3
+                        },
+                        {
+                            "step": "salva_pagina",
+                            "arguments": {},
+                            "depth": 3
                         }
                     ],
                     "depth": 2
