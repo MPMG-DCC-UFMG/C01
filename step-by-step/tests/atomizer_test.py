@@ -1,13 +1,15 @@
 import sys
+sys.path.append("../")
 
 import unittest
 from step_crawler import atomizer as atom
 import json
+import step_crawler.tests.functions_file_example as ffe
 
 
 class TestExtractInfo(unittest.TestCase):
     def test_track_parallelizable_fors(self):
-        with open("../recipe_examples.json") as json_file:
+        with open("recipe_examples.json") as json_file:
             recipe_examples = json.load(json_file)
 
         self.assertEqual(atom.track_parallelizable_fors(
@@ -16,7 +18,7 @@ class TestExtractInfo(unittest.TestCase):
                              'call': {'step': 'range_',
                                       'arguments': {'stop': 2}}}}])
         self.assertEqual(atom.track_parallelizable_fors(
-            recipe_examples["unbreakable_between_breakables"]["recipe"]),
+            recipe_examples["unbreakable_between_breakable"]["recipe"]),
                          [
                              {'iterator': 'i', 'iterable': {
                                  'call': {'step': 'range_',
@@ -44,7 +46,6 @@ class TestExtractInfo(unittest.TestCase):
                          ])
 
     def test_get_iterable_objects(self):
-        ffe = __import__('step_crawler.tests.functions_file_example')
         call_1 = [
             {'iterator': 'j',
              'iterable': {'call': {'step': 'no_params', 'arguments': {}}}}
@@ -80,7 +81,7 @@ class TestExtractInfo(unittest.TestCase):
                          {"children": [], "depth": 0})
 
     def test_for_to_attribution(self):
-        with open('../recipe_examples.json') as file:
+        with open('recipe_examples.json') as file:
             recipe_examples = json.load(file)
 
         expected_result = [
@@ -93,7 +94,7 @@ class TestExtractInfo(unittest.TestCase):
             {
                 "step": "print_",
                 "arguments": {
-                    "word": "teste"
+                    "word": "\"teste\""
                 },
                 "depth": 1
             }

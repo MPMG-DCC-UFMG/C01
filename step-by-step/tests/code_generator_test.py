@@ -1,3 +1,6 @@
+import sys
+sys.path.append("../")
+
 import unittest
 import json
 
@@ -56,7 +59,7 @@ class TestExtractInfo(unittest.TestCase):
         self.assertEqual(expected_result, result)
 
     def test_generate_body(self):
-        with open("../recipe_examples.json") as file:
+        with open("recipe_examples.json") as file:
             recipe_examples = json.load(file)
         ff = __import__("step_crawler").functions_file
 
