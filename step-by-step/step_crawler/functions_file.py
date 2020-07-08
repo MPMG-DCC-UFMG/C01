@@ -1,5 +1,6 @@
 import asyncio
 import time
+import uuid
 from cssify import cssify
 
 
@@ -13,6 +14,10 @@ def print_(word):
 
 def espere(segs):
     time.sleep(segs)
+
+
+def gera_nome_arquivo():
+    return "./{}.html".format(uuid.uuid4().hex)
 
 
 async def wait_page(page):
@@ -32,6 +37,12 @@ async def selecione(page, xpath, opcao):
     await page.waitForXPath(xpath)
     await page.type(cssify(xpath), opcao)
     await wait_page(page)
+
+
+async def salva_pagina(page):
+    content = await page.content()
+    body = str.encode(content)
+    return body
 
 
 async def opcoes(page, xpath, exceto=None):
@@ -54,3 +65,22 @@ async def for_clicavel(page, xpath):
 
 
 
+async def pegue_os_links_da_paginacao(page, xpath_dos_botoes, xpath_dos_links, indice_do_botao_proximo = -1):
+    clickable = True
+    urls = []
+    while clickable:
+        urls += [await (await link.getProperty('href')).jsonValue() for link in await page.xpath(xpath_dos_links)] 
+
+
+        buttons = await page.xpath(xpath_dos_botoes)
+        if len(buttons) !=0:
+            next_button = buttons[indice_do_botao_proximo]
+            before_click = await page.content()
+            await next_button.click()
+            after_click = await page.content()
+            if before_click == after_click:
+                clickable = False
+        else:
+            clickable = False
+
+    

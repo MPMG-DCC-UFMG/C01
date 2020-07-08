@@ -53,6 +53,21 @@
                                 "xpath": "\"/html/body/div[2]/main/div/div[2]/div/form[2]/div/button\""
                             },
                             "depth": 3
+                        },
+                        {
+                            "step": "espere",
+                            "arguments": {
+                                "segs" : 2
+                            },
+                            "depth": 3
+                        },
+                        {
+                            "step": "pegue_os_links_da_paginacao",
+                            "arguments": {
+                                "xpath_dos_botoes": "\"/html/body/div[2]/main/div/div[2]/div/div[3]/div/div/div/ul/li/a\"",
+                                "xpath_dos_links": "\"/html/body/div[2]/main/div/div[2]/div/div[3]/table/tbody/tr/td[8]/a\""
+                            },
+                            "depth": 3
                         }
                     ],
                     "depth": 2

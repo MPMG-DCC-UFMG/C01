@@ -55,7 +55,7 @@ class TestExtractInfo(unittest.TestCase):
         expected_result = expected_result + "from " + "json" + " import *\n\n"
         expected_result = expected_result + "async def " \
                                             "execute_steps(" \
-                                            "**missing_arguments):\n"
+                                            "**missing_arguments):\n    pages = {}\n"
         self.assertEqual(expected_result, result)
 
     def test_generate_body(self):

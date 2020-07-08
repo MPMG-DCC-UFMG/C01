@@ -29,8 +29,8 @@ def generate_head(module):
     TODO: refactor
     """
     code = "import step_crawler\n"
-    code = code + "from " + module.__name__ + " import *\n\n"
-    code = code + "async def execute_steps(**missing_arguments):\n"
+    code += "from " + module.__name__ + " import *\n\n"
+    code += "async def execute_steps(**missing_arguments):\n    pages = {}\n"
     return code
 
 
@@ -55,33 +55,38 @@ def generate_body(recipe, module):
             else:
                 raise TypeError('This iterable is in the wrong format')
 
-            code = code + (child['depth']) * '    ' \
+            code += (child['depth']) * '    ' \
                 + 'for ' + child['iterator'] \
                 + ' in '\
                 + iterable\
                 + ':' + '\n'
-            code = code + generate_body(child, module)
+            code += generate_body(child, module)
 
         elif child['step'] == 'while':
             is_coroutine = inspect.iscoroutinefunction(
                 getattr(module, child['condition']['step']))
             call = generate_call(child['condition']['step'],
                                  child['condition']['arguments'], is_coroutine)
-            
-            code = code + (child['depth']) * '    ' \
+
+            code += (child['depth']) * '    ' \
                 + 'while ' + call + ':' + '\n'
-            code = code + generate_body(child, module)            
+            code += generate_body(child, module)
 
         elif child['step'] == 'if':
             pass
 
         elif child['step'] == 'attribution':
-            code = code + (child['depth']) * '    ' + \
+            code += (child['depth']) * '    ' + \
                 child['target'] + ' = ' + str(child['source']) + '\n'
+
+        elif child['step'] == 'salva_pagina':
+            code += (child['depth']) * '    ' + "pages[gera_nome_arquivo()] = " + \
+                    "await salva_pagina(**missing_arguments)\n"
+
         else:
             is_coroutine = inspect.iscoroutinefunction(getattr(module,
                                                                child['step']))
-            code = code + (child['depth']) * '    ' \
+            code += (child['depth']) * '    ' \
                 + generate_call(child['step'], child['arguments'],
                                 is_coroutine) + '\n'
     return code
@@ -92,5 +97,6 @@ def generate_code(recipe, module):
     Generates the entire code.
     """
     code = generate_head(module)
-    code = code + generate_body(recipe, module)
+    code += generate_body(recipe, module)
+    code += "    return pages"
     return code
