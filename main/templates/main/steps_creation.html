@@ -1,0 +1,94 @@
+{% extends 'main/base.html' %}
+{% load crispy_forms_tags %}
+{% block title %}
+Steps
+{% endblock %}
+
+{% block content %}
+<h2>Passo a Passo</h2>
+
+<form method="POST" action="steps/" class="form-group">{% csrf_token %} <!-- esse token é para segurança em forms do tipo POST -->
+    <div style="display: none;">
+        <input type="text" class="form-control" placeholder="Nome" id="collectorName" value="{{source_name}}">
+        <input type="text" class="form-control" placeholder="Nome" id="maxRequestsPerSecond" value="2">
+        <input type="checkbox" class="custom-control-input" id="rotateAddress">
+        <input type="text" class="form-control" placeholder="Nome" id="maxResquestsPerAddress" value="2">
+    </div>
+    
+    <!-- begin steps -->
+    <div class="row" style="background-color:white;color:white;padding:20px;">
+        <button type="button" id="myButton" onclick="ShowIframe()" class="btn btn-success" style="display: block; margin: 0 auto;">Show Website</button>
+    </div>
+    
+    <iframe id="myIframe" style="display: none;" height="500px" width="100%" src="{{url}}"></iframe>
+    <div class="row">
+        <div class="col">
+            
+            <div class="row">
+                <div class="col"  id="stepsContainer">
+                    <!-- begin selecionar ação -->
+                    <div class="stepContainer" id="stepMenuContainer">
+                        <div class="row">
+                            <div class="col">
+                                <h3>Adicionar Passo</h3>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="input-group">
+                                <select class="custom-select" id="stepMenu" onchange=enableAddStep()>
+                                    <option value="default" selected>Selecione um passo</option>
+                                    <option value="click">Clique no elemento </option>
+                                    <option value="select">Selecione opção </option>
+                                    <option value="table">Salve tabela </option>
+                                    <option value="save">Salve dados</option>
+                                    <option value="iframe">Mude para Iframe </option>
+                                    <option value="download">Baixe o arquivo</option>
+                                    <option value="pages">Para cada página </option>
+                                    <option value="captcha">Quebre o Captcha </option>
+                                    <option value="if">Se detectar elemento </option>
+                                </select>
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-primary" id="addStep" onclick=addNewStep() disabled>Adicionar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- end condicional  -->
+                </div>
+            </div>
+    
+            <br>
+            <div class="row">
+                <div class="col">
+                    <!-- begin end -->
+                    
+                        <div>
+                            <div class="row">
+                                <div class="col">
+                                    <h3>Finalizar</h3>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="input-group">
+                                    <button type="button" id="genJson" class="btn btn-primary" onclick=generateJson()>Gerar Json</button>
+                                    <input type="text" class="form-control" placeholder="{ " id="configJson">
+                                    <div class="input-group-append">
+                                        <button type="button" id="copyConfigJson" class="btn btn-primary clickableSpan" onclick=copyInputText()>Copiar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row" style="background-color:white;color:white;padding:20px;">
+                            <button type="submit" name="save" class="btn btn-success" style="display: block; margin: 0 auto;" onclick="showIframe">Next</button>
+                        </div>
+                        <!-- end end  -->
+    
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
