@@ -15,5 +15,5 @@ setup(
     author_email='TalesPanoutsos@users.noreply.github.com',
     packages=['step_crawler'],
     install_requires=['inspect', 'cssify', 'selenium', 'asyncio', 'copy',
-                      'pyppeteer']
+                      'pyppeteer', 'pyext']
 )
