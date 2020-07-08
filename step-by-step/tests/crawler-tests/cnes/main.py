@@ -10,6 +10,7 @@ from step_crawler import functions_file
 from step_crawler.functions_file import *
 from step_crawler import atomizer as atom
 
+from pyext import RuntimeModule
 
 
 async def main():
@@ -34,6 +35,7 @@ with open('steps.py', 'w+') as file:
     file.write(code)
 
 asyncio.get_event_loop().run_until_complete(main())
+
 
 
 
