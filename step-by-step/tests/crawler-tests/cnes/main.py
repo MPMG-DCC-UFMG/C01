@@ -1,3 +1,6 @@
+import sys
+sys.path.append("../../../")
+
 import json
 
 from step_crawler import code_generator as code_g

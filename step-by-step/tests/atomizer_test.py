@@ -1,15 +1,16 @@
 import sys
 sys.path.append("../")
+sys.path.append("examples")
 
 import unittest
 from step_crawler import atomizer as atom
 import json
-import step_crawler.tests.functions_file_example as ffe
+import functions_file_example as ffe
 
 
 class TestExtractInfo(unittest.TestCase):
     def test_track_parallelizable_fors(self):
-        with open("recipe_examples.json") as json_file:
+        with open("examples/recipe_examples.json") as json_file:
             recipe_examples = json.load(json_file)
 
         self.assertEqual(atom.track_parallelizable_fors(
@@ -81,7 +82,7 @@ class TestExtractInfo(unittest.TestCase):
                          {"children": [], "depth": 0})
 
     def test_for_to_attribution(self):
-        with open('recipe_examples.json') as file:
+        with open('examples/recipe_examples.json') as file:
             recipe_examples = json.load(file)
 
         expected_result = [
