@@ -5,3 +5,9 @@
 *.txt
 .DS_Store
 .idea
+__pycache__/
+.pyc
+_trial_temp
+.pyc
+_trial_temp
+__pycache__/
