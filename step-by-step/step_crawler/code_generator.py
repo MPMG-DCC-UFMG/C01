@@ -30,7 +30,9 @@ def generate_head(module):
     """
     code = "import step_crawler\n"
     code += "from " + module.__name__ + " import *\n\n"
-    code += "async def execute_steps(**missing_arguments):\n    pages = {}\n"
+    code += "async def execute_steps(**missing_arguments):\n"\
+        + "    pages = {}\n"\
+        + "    page = missing_arguments['page']\n"
     return code
 
 
@@ -55,7 +57,7 @@ def generate_body(recipe, module):
             else:
                 raise TypeError('This iterable is in the wrong format')
 
-            code += (child['depth']) * '    ' \
+            code += child['depth'] * '    ' \
                 + 'for ' + child['iterator'] \
                 + ' in '\
                 + iterable\
@@ -68,7 +70,7 @@ def generate_body(recipe, module):
             call = generate_call(child['condition']['step'],
                                  child['condition']['arguments'], is_coroutine)
 
-            code += (child['depth']) * '    ' \
+            code += child['depth'] * '    ' \
                 + 'while ' + call + ':' + '\n'
             code += generate_body(child, module)
 
@@ -76,17 +78,43 @@ def generate_body(recipe, module):
             pass
 
         elif child['step'] == 'attribution':
-            code += (child['depth']) * '    ' + \
+            code += child['depth'] * '    ' + \
                 child['target'] + ' = ' + str(child['source']) + '\n'
+        elif child['step'] == 'para_cada_pagina_em':
+            code += child['depth'] * '    '\
+                + 'clickable = True' + '\n'\
+                + child['depth'] * '    '\
+                + 'while clickable:' + '\n'\
+                + generate_body(child, module)\
+                + (1 + child['depth']) * '    '\
+                + "buttons = await page.xpath("+child["xpath_dos_botoes"]+")\n" \
+                + (1 + child['depth']) * '    '\
+                + "if len(buttons) !=0: \n" \
+                + (1 + child['depth']) * '    '\
+                + "    next_button = buttons["+ str(child["indice_do_botao_proximo"]) +"] \n" \
+                + (1 + child['depth']) * '    '\
+                + "    before_click = await page.content() \n" \
+                + (1 + child['depth']) * '    '\
+                + "    await next_button.click() \n" \
+                + (1 + child['depth']) * '    '\
+                + "    after_click = await page.content() \n" \
+                + (1 + child['depth']) * '    '\
+                + "    if before_click == after_click: \n" \
+                + (1 + child['depth']) * '    '\
+                + "        clickable = False \n" \
+                + (1 + child['depth']) * '    '\
+                + "else: \n" \
+                + (1 + child['depth']) * '    '\
+                + "    clickable = False \n" \
 
         elif child['step'] == 'salva_pagina':
-            code += (child['depth']) * '    ' + "pages[gera_nome_arquivo()] = " + \
+            code += child['depth'] * '    ' + "pages[gera_nome_arquivo()] = " + \
                     "await salva_pagina(**missing_arguments)\n"
 
         else:
             is_coroutine = inspect.iscoroutinefunction(getattr(module,
                                                                child['step']))
-            code += (child['depth']) * '    ' \
+            code += child['depth'] * '    ' \
                 + generate_call(child['step'], child['arguments'],
                                 is_coroutine) + '\n'
     return code
@@ -100,3 +128,5 @@ def generate_code(recipe, module):
     code += generate_body(recipe, module)
     code += "    return pages"
     return code
+
+

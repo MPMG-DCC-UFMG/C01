@@ -35,3 +35,4 @@ with open('steps.py', 'w+') as file:
     file.write(code)
 
 asyncio.get_event_loop().run_until_complete(main())
+
