@@ -62,11 +62,17 @@
                             "depth": 3
                         },
                         {
-                            "step": "pegue_os_links_da_paginacao",
-                            "arguments": {
-                                "xpath_dos_botoes": "\"/html/body/div[2]/main/div/div[2]/div/div[3]/div/div/div/ul/li/a\"",
-                                "xpath_dos_links": "\"/html/body/div[2]/main/div/div[2]/div/div[3]/table/tbody/tr/td[8]/a\""
-                            },
+                            "step": "para_cada_pagina_em",
+                            "xpath_dos_botoes": "\"/html/body/div[2]/main/div/div[2]/div/div[3]/div/div/div/ul/li/a\"",
+                            "indice_do_botao_proximo": -1,
+                            "children": [
+                                {
+                                    "step":"salva_pagina",
+                                    "depth": 4
+
+                                }
+
+                            ],
                             "depth": 3
                         }
                     ],
