@@ -114,6 +114,144 @@ def process_text(content):
 
     return texts
 
+def process_DOMM(content):
+    """
+    This function processes the  DOMM content.
+
+    It cleans empty lines, the pages headers and footers. Also, the lines from
+    the content are splited for separation of different 'Diários'.
+
+    Note:
+        The titles are enumerated, for distinction.
+
+    Args:
+        content(str): The extracted textual content of the file.
+
+    Returns:
+        dict: The keys are the titles; the values are the core texts.
+
+    """
+
+    lines = content.splitlines()
+    head = find_header_DOMM(lines)
+    process_header(head)
+    lines = [i for i in lines if i and not(is_header(i, head) or is_footer(i))]
+
+    texts = {}
+    section = []
+    text = []
+    entity = '0-' + head
+    texts[entity] = section
+
+    for i, line in enumerate(lines):
+        if i + 1 < len(lines):
+            if not is_entity(line, lines[i+1]):
+                if not is_entity(lines[i-1], line):
+                    text.append(line)
+
+                    if final_section(line):
+                        section.append(text)
+                        text = []
+            else:
+                section.append(text)
+                entity = str(i) + '-' + line + lines[i+1]
+                section = []
+                texts[entity] = section
+                text = []
+    section.append(text)
+
+    return texts
+
+def find_header_DOMM(lines):
+    """
+    This function finds the header of the Diario Oficial document.
+
+    Args:
+        lines(str): the document textual content.
+
+    Returns:
+        line(None/str): the founded header, if it exists.
+
+    """
+
+    terms = '•   Diário Oficial dos Municípios Mineiros   •'
+
+    for line in lines:
+        if terms in line:
+            return line
+    return None
+
+def process_header(header):
+    """
+    This function processes the document header.
+
+    Args:
+        header(str): the header line of the document.
+
+    """
+
+    pass
+
+def is_header(line, header):
+    """
+    This function determines if a line is a header of the document.
+
+    Args:
+        line(str): a line of the document.
+        header(str): the document header.
+
+    Returns:
+        True, if they are equal, False otherwise.
+
+    """
+
+    if line == header:
+        return True
+    return False
+
+def is_footer(line):
+    """
+    This function determines if a line is a footer of a Diario Oficial.
+
+    Args:
+        line(str): a line of the document.
+
+    Returns:
+        True, if the line is a footer, False otherwise.
+    """
+
+    return line.startswith('www.diariomunicipal.com.br/amm-mg')
+
+def is_entity(line, nextline):
+    """
+    This function determines if a line starts a Diario Oficial of a new entity.
+
+    Args:
+        line(str): a line of the document.
+        nextline(str): the next line of the document.
+
+    Returns:
+        True, if the lines indicate a new entity, False otherwise.
+
+    """
+
+    result = line.startswith('ESTADO DE MINAS GERAIS') and nextline.isupper()
+    return result
+
+def final_section(line):
+    """
+    This function determines if a line ends a Diario Oficial section.
+
+    Args:
+        line(str): a line of the document.
+
+    Returns:
+        True, if the line indicates end the of the section, False otherwise.
+
+    """
+
+    return line.startswith('Código Identificador:')
+
 def texts_to_columns(texts):
     """
     This function prepares the content dictionary for writing in tabular form.

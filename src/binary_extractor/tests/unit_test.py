@@ -16,6 +16,8 @@ from binary import TextsExtractor
 from binary import TabulaExtractor
 from binary import between_parenthesis, final_sentence, is_title
 from binary import process_text, texts_to_columns, columns_to_dataframe
+from binary import process_DOMM, find_header_DOMM, process_header, is_header
+from binary import is_footer, is_entity, final_section
 
 class TestExtractor(unittest.TestCase):
     """
@@ -102,10 +104,11 @@ class TestTextProcessing(unittest.TestCase):
             content = []
             for row in product:
                 content.append(row[0])
-                content.append(row[1])
+                content += row[1].splitlines()
 
-        text = [i for i in content if i]
-        assert text, safe
+        text = [c for i, c in enumerate(content) if c and i > 2]
+        
+        assert text == safe
 
     def test_between_parenthesis(self):
         """
@@ -143,6 +146,85 @@ class TestTextProcessing(unittest.TestCase):
         assert not is_title(8, self.lines)
         assert not is_title(9, self.lines)
         assert not is_title(10, self.lines)
+
+    def test_process_DOMM(self):
+        """
+        This function tests the behavior of the process_DOMM function.
+
+        It checks if the content is complete after the processing.
+
+        """
+
+        file = parser.from_file('tests/test_files/AMM/2768.pdf')
+        split = file['content'].splitlines()
+        h = find_header_DOMM(split)
+        safe = [i for i in split if i and not(is_header(i, h) or is_footer(i))]
+
+        with open('tests/test_files/AMM/2768/2768.csv') as outcsv:
+            product = csv.reader(outcsv)
+            content = []
+            for row in product:
+                content.append(row[0])
+                content.append(row[1])
+
+        text =  [i for i in content if i]
+        assert text == safe
+
+    def test_find_header_DOMM(self):
+        """
+        This function tests the behavior of the find_header_DOMM function.
+
+        """
+
+        domm = parser.from_file('tests/test_files/AMM/2768.pdf')
+        file = parser.from_file('tests/test_files/Edital.pdf')
+        h = find_header_DOMM(domm['content'].splitlines())
+        n = find_header_DOMM(file['content'].splitlines())
+
+        headerstart = 'Minas Gerais , 02 de Junho de 2020   •   Diário Oficial '
+
+        assert not n
+        assert h.startswith(headerstart)
+
+    def test_process_header(self):
+        """
+        This function tests the behavior of the process_header function.
+
+        """
+
+        pass
+
+    def test_is_header(self):
+        """
+        This function tests the behavior of the is_header function.
+
+        """
+
+        pass
+
+    def test_is_footer(self):
+        """
+        This function tests the behavior of the is_footer function.
+
+        """
+
+        pass
+
+    def test_is_entity(self):
+        """
+        This function tests the behavior of the is_entity function.
+
+        """
+
+        pass
+
+    def test_final_section(self):
+        """
+        This function tests the behavior of the final_section function.
+
+        """
+
+        pass
 
     def test_texts_to_columns(self):
         """

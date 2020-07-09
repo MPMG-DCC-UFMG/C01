@@ -1,0 +1,6 @@
+Minas Gerais , 02 de Junho de 2020   •   Diário Oficial dos Municípios Mineiros   •    ANO XII | Nº 2768
+
+www.diariomunicipal.com.br/amm-mg
+
+with open('out.txt', 'w') as new:
+    print(lines, file=new)
