@@ -48,9 +48,12 @@ def create_folders():
         except FileExistsError:
             pass
 
+
 def get_crawler_base_settings(config):
     """Returns scrapy base configurations."""
-    return {
+
+    downloader_middlewares = {"scrapy_selenium.SeleniumMiddleware": 0,}
+    crawler_config = {
         "BOT_NAME": "crawlers",
         "ROBOTSTXT_OBEY": True,
         "DOWNLOAD_DELAY": 1,
@@ -66,6 +69,16 @@ def get_crawler_base_settings(config):
         "AUTOTHROTTLE_START_DELAY": config["antiblock_autothrottle_start_delay"],
         "AUTOTHROTTLE_MAX_DELAY": config["antiblock_autothrottle_max_delay"],
     }
+
+
+    if config["antiblock_use_user_agents"]:
+        user_agents = json.loads(config['antiblock_user_agents'])
+        crawler_config["USER_AGENTS"] = [ua[1] for ua in user_agents["user-agents"].items()]
+        crawler_config["ROTATE_USER_AGENT_ENABLED"] = True
+        crawler_config["MIN_USER_AGENT_USAGE"] = config["antiblock_reqs_per_user_agent"]
+        crawler_config["MAX_USER_AGENT_USAGE"] = config["antiblock_reqs_per_user_agent"]
+
+    return crawler_config
 
 def crawler_process(crawler_id, config):
     """Starts crawling."""

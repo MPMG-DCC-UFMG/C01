@@ -32,6 +32,7 @@ class CrawlRequest(TimeStamped):
     antiblock_autothrottle_start_delay = models.IntegerField(blank=True, null=True)
     antiblock_autothrottle_max_delay = models.IntegerField(blank=True, null=True)
 
+
     # Options for antiblock masks
     ANTIBLOCK_MASK_TYPE = [
         ('none', 'None'),
@@ -41,7 +42,7 @@ class CrawlRequest(TimeStamped):
     ]
     antiblock_mask_type = models.CharField(max_length=15, choices=ANTIBLOCK_MASK_TYPE, blank=True, null=True, default='none')
     
-        # Options for IP rotation
+    # Options for IP rotation
     IP_TYPE = [
         ('tor', 'Tor'),
         ('proxy', 'Proxy'),
@@ -51,11 +52,12 @@ class CrawlRequest(TimeStamped):
     antiblock_max_reqs_per_ip = models.IntegerField(blank=True, null=True)
     antiblock_max_reuse_rounds = models.IntegerField(blank=True, null=True)
 
-        # Options for User Agent rotation 
+    # Options for User Agent rotation 
+    antiblock_use_user_agents = models.BooleanField(blank=True, null=True)
     antiblock_reqs_per_user_agent = models.IntegerField(blank=True, null=True)
-    antiblock_user_agents_file = models.CharField(max_length=2000, blank=True, null=True)
+    antiblock_user_agents = models.CharField(max_length=2000, blank=True, null=True)
 
-        # Options for Cookies
+    # Options for Cookies
     antiblock_cookies_file = models.CharField(max_length=2000, blank=True, null=True)
     antiblock_persist_cookies = models.BooleanField(blank=True, null=True)
 

@@ -17,8 +17,9 @@ class CrawlRequestForm(forms.ModelForm):
         antiblock_proxy_list = forms.CharField(required=False)
         antiblock_max_reqs_per_ip = forms.IntegerField(required=False)
         antiblock_max_reuse_rounds = forms.IntegerField(required=False)
+        antiblock_use_user_agents = forms.BooleanField(required=False)
         antiblock_reqs_per_user_agent = forms.IntegerField(required=False)
-        antiblock_user_agents_file = forms.CharField(required=False)
+        antiblock_user_agents = forms.CharField(required=False)
         antiblock_cookies_file = forms.CharField(required=False)
         antiblock_persist_cookies = forms.BooleanField(required=False)
 
@@ -60,8 +61,9 @@ class CrawlRequestForm(forms.ModelForm):
             'antiblock_max_reqs_per_ip',
             'antiblock_max_reuse_rounds',
             'antiblock_proxy_list',
+            'antiblock_use_user_agents',
             'antiblock_reqs_per_user_agent',
-            'antiblock_user_agents_file',
+            'antiblock_user_agents',
             'antiblock_cookies_file',
             'antiblock_persist_cookies',
 
@@ -126,7 +128,6 @@ class RawCrawlRequestForm(forms.Form):
         required=False, choices = (
             ('none', 'None'),
             # ('ip', 'IP rotation'),
-            # ('user_agent', 'User-agent rotation'),
             # ('delay', 'Delays'),
             # ('cookies', 'Use cookies'),
         ),
@@ -157,8 +158,9 @@ class RawCrawlRequestForm(forms.Form):
     )
     
     # Options for User Agent rotation
+    antiblock_use_user_agents = forms.BooleanField(required=False, label="Use rotating user-agents")
     antiblock_reqs_per_user_agent = forms.IntegerField(required=False, label="Requests per User Agent")
-    antiblock_user_agents_file = forms.CharField(
+    antiblock_user_agents = forms.CharField(
         required=False, max_length=2000, label="User Agents File",
         widget=forms.TextInput(attrs={'placeholder': 'Paste here the content of your user agents file'})
     )

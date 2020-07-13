@@ -73,6 +73,7 @@ function checkBasicInfo() {
 
 function checkAntiblock() {
     var valid = true;
+
     valid = (
         valid &&
         validateIntegerInput('id_antiblock_download_delay', can_be_empty = false, can_be_negative = false)
@@ -87,7 +88,6 @@ function checkAntiblock() {
     }
 
     var selected_option = getSelectedOptionValue("id_antiblock_mask_type");
-    console.log("id_antiblock_mask_type", selected_option);
     if (selected_option == 'ip') {
         valid = (
             valid &&
@@ -99,14 +99,23 @@ function checkAntiblock() {
         if (selected_proxy == "proxy")
             valid = validateTextInput('id_proxy_list');
     }
-    else if (selected_option == 'user_agent') {
-        valid = (
-            validateIntegerInput('id_antiblock_reqs_per_user_agent', can_be_empty = false, can_be_negative = false) &&
-            validateIntegerInput('id_antiblock_user_agents_file', can_be_empty = false, can_be_negative = false)
-        );
-    }
     else if (selected_option == 'cookies') {
         valid = validateTextInput('id_antiblock_cookies_file');
+    }
+
+
+    if (document.getElementById("id_antiblock_use_user_agents").checked) {
+        var user_agents = JSON.parse(document.getElementById('id_antiblock_user_agents').value);
+        var user_agents_valid = user_agents["n_entries"] > 0;
+
+        console.log(document.getElementById('id_antiblock_user_agents').value);
+        console.log(user_agents_valid)
+        console.log(user_agents["n_entries"])
+
+        valid = (
+            validateIntegerInput('id_antiblock_reqs_per_user_agent', can_be_empty = false, can_be_negative = false) &&
+            user_agents_valid
+        );
     }
 
     defineIcon("antiblock", valid);
@@ -161,7 +170,78 @@ $(document).ready(function () {
                 break;
         }
     });
+    
+    var user_agents = document.getElementById("id_antiblock_user_agents");
+    document.getElementById("id_antiblock_use_user_agents").onclick = function(){
+        var checkbox = document.getElementById("id_antiblock_use_user_agents");
+        var div = document.getElementById("user_agent")
+        if(checkbox.checked) div.removeAttribute("hidden");
+        else div.setAttribute('hidden', !checkbox.checked);
+        checkAntiblock();
+    }
+    document.getElementById("id_antiblock_user_agents").value = "{\"last_id\": 0, \"n_entries\": 0, \"user-agents\": {}}";
+    document.getElementById("btn-add-user-agent").onclick = addUserAgent;
 });
+
+function addUserAgent(){
+    if (validateTextInput("new-user-agent")) {
+        var input_field = document.getElementById("id_antiblock_user_agents");
+
+        console.log("addUserAgent", input_field);
+
+        var user_agents = JSON.parse(input_field.value)
+        user_agents["n_entries"] = user_agents["n_entries"] + 1; 
+        var new_id = user_agents["last_id"] + 1;
+        user_agents["last_id"] = user_agents["last_id"] + 1;
+        
+        var htmlString = `
+            <div class="input-group mb-3" id="container-ua-${new_id}">
+                <input type="text" class="form-control" placeholder="user-agent" id="input-ua-${new_id}"
+                    aria-label="user-agent" aria-describedby="btn-remove-ua-${new_id}" disabled>
+                <div class="input-group-append">
+                    <button class="btn btn-secondary" type="button" id="btn-remove-ua-${new_id}">
+                        Remove
+                    </button>
+                </div>
+            </div>
+        `
+        const div = document.createElement('div');
+        div.innerHTML = htmlString.trim();
+
+        var container = document.getElementById("added-agents");
+        var last_child = document.getElementById("added-agents-last-child");
+        container.insertBefore(div.firstChild, last_child);
+
+        var new_user_agent = document.getElementById("new-user-agent").value;
+        document.getElementById("new-user-agent").value = "";
+        user_agents["user-agents"][new_id] = new_user_agent
+
+        document.getElementById(`input-ua-${new_id}`).value = new_user_agent;
+
+        console.log("addUserAgent", user_agents);
+
+        input_field.value = JSON.stringify(user_agents);
+
+        document.getElementById(`btn-remove-ua-${new_id}`).addEventListener(
+            "click",
+            function () {
+                removeUserAgent(new_id);
+            }
+        );
+    }
+    checkAntiblock();
+}
+
+function removeUserAgent(key){
+    document.getElementById(`container-ua-${key}`).outerHTML = "";
+
+    var input_field = document.getElementById("id_antiblock_user_agents");
+    var user_agents = JSON.parse(input_field.value);
+    delete user_agents["user-agents"][key]
+    user_agents["n_entries"] = user_agents["n_entries"] - 1;
+    input_field.value = JSON.stringify(user_agents);
+    checkAntiblock();
+}
 
 function showBlock(clicked_id) {
 

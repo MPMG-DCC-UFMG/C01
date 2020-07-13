@@ -151,10 +151,39 @@ New Crawler
                                 </div>
                             </div>
                         </div>
+
                         <div class="row" style="padding:20px; border-top: 1px solid #DCDCDC;">
                             <div class="col md-6">
-                                {{ form.antiblock_mask_type | as_crispy_field}}
+                                {{ form.antiblock_use_user_agents | as_crispy_field}}
+                                <div id="user_agent" hidden>
+                                    {{ form.antiblock_reqs_per_user_agent | as_crispy_field}}
+                                    {{ form.antiblock_user_agents.as_hidden }}
+                                    <div>
+                                        <p>User agents:</p>
+                                    </div>
+                                    <div id="added-agents">
+                                        <div id="added-agents-last-child"></div>
+                                    </div>
+
+                                    <div class="input-group mb-3">
+                                        <input type="text" class="form-control" id="new-user-agent"
+                                            placeholder="Chrome/83.0.4103.116 Safari/537.36" name="antiblock_user_agent"
+                                            aria-label="Recipient's username" aria-describedby="btn-add-user-agent">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-primary" type="button" id="btn-add-user-agent"
+                                                id="add-user-agent">
+                                                Add user-agent
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>                
+                            </div>
+                        </div>
+
+                        <div class="row" style="padding:20px; border-top: 1px solid #DCDCDC;">
+                            <div class="col md-6">
                                 <div id="antiblock-mask-div">
+                                    {{ form.antiblock_mask_type | as_crispy_field}}
                                     <div class="antiblock-mask-div" id="none" hidden></div>
                                     <div class="antiblock-mask-div" id="ip" hidden>
                                         {{ form.antiblock_ip_rotation_type | as_crispy_field}}
@@ -166,13 +195,15 @@ New Crawler
                                         {{ form.antiblock_max_reqs_per_ip | as_crispy_field}}
                                         {{ form.antiblock_max_reuse_rounds | as_crispy_field}}
                                     </div>
-                                    <div class="antiblock-mask-div" id="user_agent" hidden>
-                                        {{ form.antiblock_reqs_per_user_agent | as_crispy_field}}
-                                        {{ form.antiblock_user_agents_file | as_crispy_field}}
-                                    </div>
                                     <div class="antiblock-mask-div" id="cookies" hidden>
                                         {{ form.antiblock_cookies_file | as_crispy_field}}
                                         {{ form.antiblock_persist_cookies | as_crispy_field}}
+                                        <!-- 
+                                        REFERENCE FOR ADDING COOKIE FILES
+                                        <div class="custom-file">
+                                            <input type="file" class="custom-file-input" id="customFileLang" lang="es">
+                                            <label class="custom-file-label" for="customFileLang">Seleccionar Archivo</label>
+                                        </div> -->
                                     </div>
                                 </div>
 
