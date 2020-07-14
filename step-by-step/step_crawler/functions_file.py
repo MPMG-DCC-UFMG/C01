@@ -83,4 +83,3 @@ async def pegue_os_links_da_paginacao(page, xpath_dos_botoes, xpath_dos_links, i
         else:
             clickable = False
 
-    

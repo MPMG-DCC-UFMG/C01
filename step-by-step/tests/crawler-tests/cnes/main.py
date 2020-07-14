@@ -15,22 +15,15 @@ from pyext import RuntimeModule
 
 
 async def main():
-
     browser = await launch(headless=False)
     page = await browser.newPage()
     await page.goto('http://cnes.datasus.gov.br/pages/estabelecimentos/consulta.jsp')
 
-    code = code_g.generate_code(recipe, functions_file)
-    print(code)
-
-    steps = RuntimeModule.from_string("steps", code)
-
-
+    steps = code_g.generate_code(recipe, functions_file)
     pages = await steps.execute_steps(page = page)
-    print(len(pages))
+
     await browser.close()
     return
-
 
 with open('recipe.json') as file:
    recipe = json.load(file)

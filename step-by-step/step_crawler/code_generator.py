@@ -1,5 +1,6 @@
 import inspect
 import step_crawler.step_generators as step_generators
+from pyext import RuntimeModule
 
 
 
@@ -60,6 +61,4 @@ def generate_code(recipe, module):
     code = generate_head(module)
     code += generate_body(recipe, module)
     code += "    return pages"
-    return code
-
-
+    return RuntimeModule.from_string("steps", code)
