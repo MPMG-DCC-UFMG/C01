@@ -61,6 +61,7 @@ def generate_para_cada_pagina_em(child, module):
         + (1 + child['depth']) * '    ' + "else: \n"\
         + (1 + child['depth']) * '    ' + "    clickable = False \n"
     return code
+
 def generate_salva_pagina(child, module):
     code = ""
     code += child['depth'] * '    ' + "pages[gera_nome_arquivo()] = "
