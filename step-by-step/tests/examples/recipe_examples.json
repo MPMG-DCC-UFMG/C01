@@ -8,12 +8,7 @@
                     "step": "for",
                     "iterator": "h",
                     "iterable": {
-                        "call":{
-                            "step": "range_",
-                            "arguments": {
-                                "stop": 2
-                            }
-                        }
+                        "object": [1,2,3]
                     },
                     "breakable": true,
                     "depth": 1,
@@ -212,12 +207,7 @@
                     "step": "for",
                     "iterator": "i",
                     "iterable": {
-                        "call":{
-                            "step": "range_",
-                            "arguments": {
-                                "stop": 2
-                            }
-                        }
+                        "object": [1,2,3]
                     },
                     "breakable": true,
                     "depth": 1,

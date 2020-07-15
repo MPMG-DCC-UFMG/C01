@@ -21,9 +21,10 @@ class TestExtractInfo(unittest.TestCase):
         self.assertEqual(atom.track_parallelizable_fors(
             recipe_examples["unbreakable_between_breakable"]["recipe"]),
                          [
-                             {'iterator': 'i', 'iterable': {
-                                 'call': {'step': 'range_',
-                                          'arguments': {'stop': 2}}}},
+                            {'iterator': 'i', "iterable": {
+                                    "object": [1,2,3]
+                                }
+                            },
                              {'iterator': 'k', 'iterable': {
                                  'call': {'step': 'range_',
                                           'arguments': {'stop': 2}}}}
@@ -37,14 +38,15 @@ class TestExtractInfo(unittest.TestCase):
                                       'arguments': {'stop': 2}}}}])
         self.assertEqual(atom.track_parallelizable_fors(
             recipe_examples["all_cases"]["recipe"]),
-                         [
-                             {'iterator': 'h', 'iterable': {
-                                 'call': {'step': 'range_',
-                                          'arguments': {'stop': 2}}}},
-                             {'iterator': 'j', 'iterable': {
-                                 'call': {'step': 'range_',
-                                          'arguments': {'stop': 2}}}}
-                         ])
+                        [
+                            {'iterator': 'h', "iterable": {
+                                    "object": [1,2,3]
+                                }
+                            },
+                            {'iterator': 'j', 'iterable': {
+                                'call': {'step': 'range_',
+                                         'arguments': {'stop': 2}}}}
+                        ])
 
     def test_get_iterable_objects(self):
         call_1 = [
