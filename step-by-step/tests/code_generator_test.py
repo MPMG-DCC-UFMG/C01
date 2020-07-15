@@ -51,11 +51,12 @@ class TestExtractInfo(unittest.TestCase):
 
     def test_generate_head(self):
         result = cg.generate_head(json)
-        expected_result = "import step_crawler\n"
-        expected_result = expected_result + "from " + "json" + " import *\n\n"
-        expected_result = expected_result + "async def " \
-                                            "execute_steps(" \
-                                            "**missing_arguments):\n    pages = {}\n"
+        expected_result = "import step_crawler\n" 
+        expected_result += "from " + "json" + " import *\n\n"
+        expected_result += "async def "
+        expected_result += "execute_steps(**missing_arguments):\n"
+        expected_result += "    pages = {}\n"
+        expected_result += "    page = missing_arguments['page']\n"
         self.assertEqual(expected_result, result)
 
     def test_generate_body(self):
