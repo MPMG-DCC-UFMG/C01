@@ -11,13 +11,33 @@ def generate_for(child, module):
                                           function_info['arguments'],
                                           is_coroutine)
     elif 'object' in child['iterable']:
-        iterable_statement= '[' + ', '.join(child['iterable']['object']) + ']'
+        iterable_statement= '[' + ', '.join([str(item) for item in child['iterable']['object']]) + ']'
     else:
         raise TypeError('This iterable is in the wrong format')
 
     code += child['depth'] * '    ' + 'for ' + child['iterator']
     code += ' in ' + iterable_statement+ ':' + '\n'
     code += cg.generate_body(child, module)
+    return code
+
+def generate_if(child, module):
+    code = ''
+    code += child['depth'] * '    ' + 'if '
+    if child['negation']:
+        code += 'not '
+    if 'call' in child['condition']:
+        call = child['condition']['call']
+        function = getattr(module, call['step'])
+        is_coroutine = inspect.iscoroutinefunction(function)
+        code += cg.generate_call(call['step'], call['arguments'], is_coroutine)
+        code += ':\n'
+    elif 'comparison' in child['condition']:
+        code += child['condition']['comparison'] + ':\n'
+    else:
+        raise TypeError('This iterable is in the wrong format')
+
+    code += cg.generate_body(child, module)
+
     return code
 
 def generate_while(child, module):
