@@ -83,3 +83,23 @@ async def pegue_os_links_da_paginacao(page, xpath_dos_botoes, xpath_dos_links, i
         else:
             clickable = False
 
+
+async def digite(page ,xpath, texto):
+    await page.type(cssify(xpath), texto)
+
+
+
+async def nesse_elemento_esta_escrito(page, xpath, texto):
+    elements = await page.xpath(xpath)
+    if len(elements):
+        element = elements[0]
+    else:
+        return 0
+
+    element_text_content = await element.getProperty('textContent')
+    element_text = await (element_text_content).jsonValue()
+    if texto in element_text:
+        return True
+    else:
+        return False
+
