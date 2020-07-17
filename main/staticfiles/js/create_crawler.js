@@ -87,22 +87,26 @@ function checkAntiblock() {
         );
     }
 
-    var selected_option = getSelectedOptionValue("id_antiblock_mask_type");
-    if (selected_option == 'ip') {
+    
+    if (getCheckboxState("id_antiblock_use_ip_rotation")) {
         valid = (
             valid &&
             validateIntegerInput('id_antiblock_max_reqs_per_ip', can_be_empty = false, can_be_negative = false) &&
             validateIntegerInput('id_antiblock_max_reuse_rounds', can_be_empty = false, can_be_negative = false)
         );
 
-        var selected_proxy = getSelectedOptionText("id_antiblock_mask_type");
-        if (selected_proxy == "proxy")
-            valid = validateTextInput('id_proxy_list');
-    }
-    else if (selected_option == 'cookies') {
-        valid = validateTextInput('id_antiblock_cookies_file');
+        var selected_proxy = getSelectedOptionValue("id_antiblock_ip_rotation_type");
+        if (selected_proxy == "proxy"){
+            var proxies = JSON.parse(document.getElementById('id_antiblock_proxy_list').value);
+            var proxy_valid = proxies["n_entries"] > 0;    
+            valid = valid && proxy_valid;
+        }
     }
 
+    if (getSelectedOptionValue("id_antiblock_cookies_management_type") == 'user-defined'){
+        valid = valid && validateTextInput("id_antiblock_cookies_user_defined");
+    }
+    
 
     if (document.getElementById("id_antiblock_use_user_agents").checked) {
         var user_agents = JSON.parse(document.getElementById('id_antiblock_user_agents').value);
@@ -179,27 +183,30 @@ $(document).ready(function () {
         else div.setAttribute('hidden', !checkbox.checked);
         checkAntiblock();
     }
-    document.getElementById("id_antiblock_user_agents").value = "{\"last_id\": 0, \"n_entries\": 0, \"user-agents\": {}}";
+    document.getElementById("id_antiblock_user_agents").value = "{\"last_id\": 0, \"n_entries\": 0, \"inputs\": {}}";
     document.getElementById("btn-add-user-agent").onclick = addUserAgent;
+    document.getElementById("id_antiblock_proxy_list").value = "{\"last_id\": 0, \"n_entries\": 0, \"inputs\": {}}";
+    document.getElementById("btn-add-proxies").onclick = addProxy;
+    document.getElementById("id_antiblock_use_ip_rotation").onchange = displayIpRotationConfig;
 });
 
-function addUserAgent(){
-    if (validateTextInput("new-user-agent")) {
-        var input_field = document.getElementById("id_antiblock_user_agents");
+function addStringInput(input_field_id, string_container_field_id, container_id, container_last_child_id, check_section){
+    if (validateTextInput(input_field_id)) {
+        var input_field = document.getElementById(string_container_field_id);
 
-        console.log("addUserAgent", input_field);
+        console.log("addStringInput", input_field_id, input_field);
 
-        var user_agents = JSON.parse(input_field.value)
-        user_agents["n_entries"] = user_agents["n_entries"] + 1; 
-        var new_id = user_agents["last_id"] + 1;
-        user_agents["last_id"] = user_agents["last_id"] + 1;
-        
+        var string_input = JSON.parse(input_field.value)
+        string_input["n_entries"] = string_input["n_entries"] + 1;
+        var new_id = string_input["last_id"] + 1;
+        string_input["last_id"] = string_input["last_id"] + 1;
+
         var htmlString = `
-            <div class="input-group mb-3" id="container-ua-${new_id}">
-                <input type="text" class="form-control" placeholder="user-agent" id="input-ua-${new_id}"
-                    aria-label="user-agent" aria-describedby="btn-remove-ua-${new_id}" disabled>
+            <div class="input-group mb-3" id="container-string-input-${new_id}">
+                <input type="text" class="form-control" placeholder="string-inputs" id="string-inputs-${new_id}"
+                    aria-label="string-inputs" aria-describedby="btn-remove-string-inputs-${new_id}" disabled>
                 <div class="input-group-append">
-                    <button class="btn btn-secondary" type="button" id="btn-remove-ua-${new_id}">
+                    <button class="btn btn-secondary" type="button" id="btn-remove-string-inputs-${new_id}">
                         Remove
                     </button>
                 </div>
@@ -208,39 +215,47 @@ function addUserAgent(){
         const div = document.createElement('div');
         div.innerHTML = htmlString.trim();
 
-        var container = document.getElementById("added-agents");
-        var last_child = document.getElementById("added-agents-last-child");
+        var container = document.getElementById(container_id);
+        var last_child = document.getElementById(container_last_child_id);
         container.insertBefore(div.firstChild, last_child);
 
-        var new_user_agent = document.getElementById("new-user-agent").value;
-        document.getElementById("new-user-agent").value = "";
-        user_agents["user-agents"][new_id] = new_user_agent
+        var new_string_input = document.getElementById(input_field_id).value;
+        document.getElementById(input_field_id).value = "";
+        string_input["inputs"][new_id] = new_string_input
 
-        document.getElementById(`input-ua-${new_id}`).value = new_user_agent;
+        document.getElementById(`string-inputs-${new_id}`).value = new_string_input;
 
-        console.log("addUserAgent", user_agents);
+        console.log("addStringInput", input_field_id, string_input);
 
-        input_field.value = JSON.stringify(user_agents);
+        input_field.value = JSON.stringify(string_input);
 
-        document.getElementById(`btn-remove-ua-${new_id}`).addEventListener(
+        document.getElementById(`btn-remove-string-inputs-${new_id}`).addEventListener(
             "click",
             function () {
-                removeUserAgent(new_id);
+                removeStringInput(new_id, string_container_field_id, check_section);
             }
         );
     }
-    checkAntiblock();
+    check_section();
 }
 
-function removeUserAgent(key){
-    document.getElementById(`container-ua-${key}`).outerHTML = "";
+function addUserAgent(){
+    addStringInput("new-user-agent", "id_antiblock_user_agents", "added-agents", "added-agents-last-child", checkAntiblock)
+}
 
-    var input_field = document.getElementById("id_antiblock_user_agents");
-    var user_agents = JSON.parse(input_field.value);
-    delete user_agents["user-agents"][key]
-    user_agents["n_entries"] = user_agents["n_entries"] - 1;
-    input_field.value = JSON.stringify(user_agents);
-    checkAntiblock();
+function addProxy() {
+    addStringInput("new-proxy", "id_antiblock_proxy_list", "added-proxies", "added-proxies-last-child", checkAntiblock)
+}
+
+function removeStringInput(div_id, string_container_field_id, check_section) {
+    document.getElementById(`container-string-input-${div_id}`).outerHTML = "";
+
+    var input_field = document.getElementById(string_container_field_id);
+    var string_inputs = JSON.parse(input_field.value);
+    delete string_inputs["inputs"][div_id]
+    string_inputs["n_entries"] = string_inputs["n_entries"] - 1;
+    input_field.value = JSON.stringify(string_inputs);
+    check_section();
 }
 
 function showBlock(clicked_id) {
@@ -289,16 +304,35 @@ function detailTemplatedUrlRequestType() {
 }
 
 function detailIpRotationType() {
-    var ipSelect = document.getElementById("id_ip_type");
-
-    const ip_rotation_type = ipSelect.options[ipSelect.selectedIndex].value;
-
     setHiddenState("tor_div", true);
     setHiddenState("proxy_div", true);
-
+    
+    var ip_rotation_type = document.getElementById("id_antiblock_ip_rotation_type").value;
     var id = ip_rotation_type + "_div";
     setHiddenState(id, false);
+    checkAntiblock();
 }
+
+function detailCookieType(){
+    var value = getSelectedOptionValue("id_antiblock_cookies_management_type");
+    if (value == 'default'){
+        setHiddenState("default_cookies", false);
+        setHiddenState("user_defined_cookies", true);
+    }
+    else if (value == 'user-defined') {
+        setHiddenState("default_cookies", true);
+        setHiddenState("user_defined_cookies", false);
+    }
+
+    checkAntiblock();
+}
+
+
+function displayIpRotationConfig() {
+    setHiddenState("ip-rotation-config", !document.getElementById("id_antiblock_use_ip_rotation").checked);
+    checkAntiblock();
+}
+
 
 function detailAntiblock() {
     var mainSelect = document.getElementById("id_antiblock_mask_type");

@@ -182,31 +182,43 @@ New Crawler
 
                         <div class="row" style="padding:20px; border-top: 1px solid #DCDCDC;">
                             <div class="col md-6">
-                                <div id="antiblock-mask-div">
-                                    {{ form.antiblock_mask_type | as_crispy_field}}
-                                    <div class="antiblock-mask-div" id="none" hidden></div>
-                                    <div class="antiblock-mask-div" id="ip" hidden>
-                                        {{ form.antiblock_ip_rotation_type | as_crispy_field}}
-                                        <div id="tor_div">
-                                        </div>
-                                        <div id="proxy_div" hidden>
-                                            {{ form.antiblock_proxy_list | as_crispy_field}}
-                                        </div>
+                                {{ form.antiblock_use_ip_rotation | as_crispy_field}}
+                                <div id="ip-rotation-config" hidden>
+                                    {{ form.antiblock_ip_rotation_type | as_crispy_field}}
+                                    <div id="tor_div">
                                         {{ form.antiblock_max_reqs_per_ip | as_crispy_field}}
                                         {{ form.antiblock_max_reuse_rounds | as_crispy_field}}
                                     </div>
-                                    <div class="antiblock-mask-div" id="cookies" hidden>
-                                        {{ form.antiblock_cookies_file | as_crispy_field}}
-                                        {{ form.antiblock_persist_cookies | as_crispy_field}}
-                                        <!-- 
-                                        REFERENCE FOR ADDING COOKIE FILES
-                                        <div class="custom-file">
-                                            <input type="file" class="custom-file-input" id="customFileLang" lang="es">
-                                            <label class="custom-file-label" for="customFileLang">Seleccionar Archivo</label>
-                                        </div> -->
+                                    <div id="proxy_div" hidden>
+                                        {{ form.antiblock_proxy_list.as_hidden}}
+                                        <div id="added-proxies">
+                                            <div id="added-proxies-last-child"></div>
+                                        </div>
+
+                                        <div class="input-group mb-3">
+                                            <input type="text" class="form-control" id="new-proxy"
+                                                placeholder="http://52.149.152.236/" name="proxy-list"
+                                                aria-label="Proxies" aria-describedby="btn-add-proxies">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-primary" type="button" id="btn-add-proxies">
+                                                    Add proxy
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
 
+                        <div class="row" style="padding:20px; border-top: 1px solid #DCDCDC;">
+                            <div class="col md-6">
+                                {{ form.antiblock_cookies_management_type | as_crispy_field}}
+                                <div id="default_cookies">
+                                    {{ form.antiblock_persist_cookies | as_crispy_field}}
+                                </div>
+                                <div id="user_defined_cookies" hidden>
+                                    {{ form.antiblock_cookies_user_defined | as_crispy_field}}
+                                </div>
                             </div>
                         </div>
                     </div>
