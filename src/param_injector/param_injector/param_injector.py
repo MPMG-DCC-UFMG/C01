@@ -10,6 +10,7 @@ import string
 from math import log10
 from typing import Callable, Generator, List, Optional, Tuple, Union
 
+
 class ParamInjector():
     """
     The ParamInjector contains static methods to generate a sequence of
@@ -119,7 +120,7 @@ class ParamInjector():
 
         # if verif function is supplied, check if verif_index is too
         if verif and not isinstance(verif_index, int):
-            message = "Verification number index must be supplied when using "+\
+            message = "Verification number index must be supplied when using " +\
                       "a verification function"
             raise ValueError(message)
 
@@ -222,7 +223,7 @@ class ParamInjector():
         for i in range(num_words):
             if i > 0:
                 result += " "
-            result += "".join(sequence[i * length : (i + 1) * length])
+            result += "".join(sequence[i * length: (i + 1) * length])
             result += "*"
 
         return result
@@ -276,7 +277,7 @@ class ParamInjector():
             raise ValueError("The start and end dates must be supplied.")
         if not isinstance(start_date, datetime.date) or \
            not isinstance(end_date, datetime.date):
-            raise ValueError("The start and end dates must be of type "+\
+            raise ValueError("The start and end dates must be of type " +
                              "datetime.date.")
 
 
@@ -295,7 +296,7 @@ class ParamInjector():
         """
 
         if frequency not in ['Y', 'M', 'D']:
-            raise ValueError("The frequency must be one of the following" +\
+            raise ValueError("The frequency must be one of the following" +
                              " options: 'Y', 'M' or 'D'.")
 
         # choose the required periodicity
@@ -355,7 +356,7 @@ class ParamInjector():
         :yields: the formatted dates in the given range
         """
 
-        ParamInjector.__daterange_validate_input(date_format, start_date, \
+        ParamInjector.__daterange_validate_input(date_format, start_date,
                                                  end_date)
 
         max_days, delta_coef = ParamInjector.__daterange_iter_params(start_date,

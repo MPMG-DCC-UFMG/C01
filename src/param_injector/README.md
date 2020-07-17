@@ -1,6 +1,24 @@
 # Parameter injection module
 Collection of helper methods to generate most common cases for search ranges during web crawling.
 
+## Building
+
+This module is packaged as a Python Wheel file. To build the .whl file from the
+source code you need to have `setuptools` and `wheel` installed. After both
+packages are installed, run:
+
+```
+python setup.py bdist_wheel
+```
+
+The Wheel file will be created inside the `dist` folder, and the name may vary
+depending on the version. To install it, run the following command in the
+`param_injector` folder, replacing the file name accordingly:
+
+```
+pip install dist/<wheel file name>
+```
+
 ## Main methods and usage
 As these methods are not state-dependent, they are implemented as static methods, and therefore don't require a class instance. Each method returns a Python generator, over which we can iterate to get all possible values. Below we give a high level overview of each main method, with examples:
 

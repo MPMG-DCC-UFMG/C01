@@ -1,6 +1,7 @@
 """
 This module tests the entry probing process as a whole
 """
+import requests.models
 import unittest
 
 from unittest import mock
@@ -79,6 +80,12 @@ class EntryProbingTest(unittest.TestCase):
         probe = EntryProbing(GETProbingRequest("http://test.com/"))
         self.assertEqual(probe.check_entry(), True)
 
+        # Check if response is stored properly
+        probe = EntryProbing(GETProbingRequest("http://test.com/"))
+        self.assertIsNone(probe.response)
+        probe.check_entry()
+        self.assertTrue(isinstance(probe.response, mock.Mock))
+
 
     @mock.patch('entry_probing.requests.get', response_404)
     def test_probing_not_found(self):
@@ -110,6 +117,12 @@ class EntryProbingTest(unittest.TestCase):
         probe.add_response_handler(HTTPStatusProbingResponse(503,
                                                              opposite=True))
         self.assertEqual(probe.check_entry(), True)
+
+        # Check if response is stored properly
+        probe = EntryProbing(GETProbingRequest("http://test.com/"))
+        self.assertIsNone(probe.response)
+        probe.check_entry()
+        self.assertTrue(isinstance(probe.response, mock.Mock))
 
 
     def test_probing_param_errors(self):
