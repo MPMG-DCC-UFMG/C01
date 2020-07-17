@@ -12,7 +12,7 @@ class CrawlRequestForm(forms.ModelForm):
         antiblock_autothrottle_enabled = forms.BooleanField(required=False)
         antiblock_autothrottle_start_delay = forms.IntegerField(required=False)
         antiblock_autothrottle_max_delay = forms.IntegerField(required=False)
-        antiblock_mask_type = forms.ChoiceField(required=False)
+        antiblock_use_ip_rotation = forms.BooleanField(required=False)
         antiblock_ip_rotation_type = forms.ChoiceField(required=False)
         antiblock_proxy_list = forms.CharField(required=False)
         antiblock_max_reqs_per_ip = forms.IntegerField(required=False)
@@ -20,8 +20,9 @@ class CrawlRequestForm(forms.ModelForm):
         antiblock_use_user_agents = forms.BooleanField(required=False)
         antiblock_reqs_per_user_agent = forms.IntegerField(required=False)
         antiblock_user_agents = forms.CharField(required=False)
-        antiblock_cookies_file = forms.CharField(required=False)
+        antiblock_cookies_management_type = forms.ChoiceField(required=False)
         antiblock_persist_cookies = forms.BooleanField(required=False)
+        antiblock_cookies_user_defined = forms.CharField(required=False)
 
         # Options for Captcha
         has_webdriver = forms.BooleanField(required=False)
@@ -56,16 +57,17 @@ class CrawlRequestForm(forms.ModelForm):
             'antiblock_autothrottle_enabled',
             'antiblock_autothrottle_start_delay',
             'antiblock_autothrottle_max_delay',
-            'antiblock_mask_type',
+            'antiblock_use_ip_rotation',
             'antiblock_ip_rotation_type',
+            'antiblock_proxy_list',
             'antiblock_max_reqs_per_ip',
             'antiblock_max_reuse_rounds',
-            'antiblock_proxy_list',
             'antiblock_use_user_agents',
             'antiblock_reqs_per_user_agent',
             'antiblock_user_agents',
-            'antiblock_cookies_file',
+            'antiblock_cookies_management_type',
             'antiblock_persist_cookies',
+            'antiblock_cookies_user_defined',
 
             'has_webdriver',
             'webdriver_path',
@@ -123,18 +125,12 @@ class RawCrawlRequestForm(forms.Form):
         initial=10,
     )
 
-    # Options for mask type
-    antiblock_mask_type = forms.ChoiceField(
-        required=False, choices = (
-            ('none', 'None'),
-            # ('ip', 'IP rotation'),
-            # ('delay', 'Delays'),
-            # ('cookies', 'Use cookies'),
-        ),
-        widget=forms.Select(attrs={'onchange': 'detailAntiblock();'})
-    )
-    
     # Options for IP rotation
+    antiblock_use_ip_rotation = forms.BooleanField(
+        required=False,
+        label="Use Ip rotation",
+    )
+
     antiblock_ip_rotation_type = forms.ChoiceField(
         required=False, choices = (
             ('tor', 'Tor'), 
@@ -166,11 +162,22 @@ class RawCrawlRequestForm(forms.Form):
     )
 
     # Options for Cookies
-    antiblock_cookies_file = forms.CharField(
-        required=False, max_length=2000, label="Cookies File",
+    antiblock_cookies_management_type = forms.ChoiceField(
+        required=False, choices=(
+            ('default', 'Default'),
+            # ('user-defined', 'User defined cookies'),
+        ),
+        widget=forms.Select(attrs={'onchange': 'detailCookieType();'})
+    )
+
+    antiblock_persist_cookies = forms.BooleanField(
+        required=False, label="Persist Cookies", initial=True
+    )
+
+    antiblock_cookies_user_defined = forms.CharField(
+        required=False, max_length=2000, label="User defined cookies",
         widget=forms.TextInput(attrs={'placeholder': 'Paste here the content of your cookies file'})
     )
-    antiblock_persist_cookies = forms.BooleanField(required=False, label="Persist Cookies")
 
     # CAPTCHA ############################################################################
     captcha = forms.ChoiceField(

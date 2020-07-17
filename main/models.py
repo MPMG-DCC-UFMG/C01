@@ -32,17 +32,8 @@ class CrawlRequest(TimeStamped):
     antiblock_autothrottle_start_delay = models.IntegerField(blank=True, null=True)
     antiblock_autothrottle_max_delay = models.IntegerField(blank=True, null=True)
 
-
-    # Options for antiblock masks
-    ANTIBLOCK_MASK_TYPE = [
-        ('none', 'None'),
-        ('ip', 'IP rotation'),
-        ('user_agent', 'User-agent rotation'),
-        ('cookies', 'Use cookies'),
-    ]
-    antiblock_mask_type = models.CharField(max_length=15, choices=ANTIBLOCK_MASK_TYPE, blank=True, null=True, default='none')
-    
     # Options for IP rotation
+    antiblock_use_ip_rotation = models.BooleanField(blank=True, null=True)
     IP_TYPE = [
         ('tor', 'Tor'),
         ('proxy', 'Proxy'),
@@ -58,8 +49,13 @@ class CrawlRequest(TimeStamped):
     antiblock_user_agents = models.CharField(max_length=2000, blank=True, null=True)
 
     # Options for Cookies
-    antiblock_cookies_file = models.CharField(max_length=2000, blank=True, null=True)
+    COOKIES_MANAGEMENT_TYPE = [
+        ('default', 'Default'),
+        ('user-defined', 'User defined cookies'),
+    ]
+    antiblock_cookies_management_type = models.CharField(max_length=20, choices=COOKIES_MANAGEMENT_TYPE, null=True, blank=True)
     antiblock_persist_cookies = models.BooleanField(blank=True, null=True)
+    antiblock_cookies_user_defined = models.CharField(max_length=2000, blank=True, null=True)
 
     # CAPTCHA #######################################################################
     CAPTCHA_TYPE = [
