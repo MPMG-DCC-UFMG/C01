@@ -18,12 +18,32 @@ Dentre as funcionalidades disponíveis para os coletores, temos:
 
 Os coletores também podem ser gerenciados através de uma API RESTful.
 
-## Execução
+## Dependencias
 
-Para execução da interface basta executar o seguinte comando:
+É necessário instalar alguns pacotes para o funcionamento da interface. TODO: melhorar lista de dependencias
+
+Dependências que vão deixar o programa rodar incorretamente e não te avisar:
+
+```
+pip install scrapy-selenium
+pip install scrapy-rotated-proxy
+```
+
+## Execução
+Antes da primeira execução é necessário criar o banco de dados que vai ser usado pela aplicação. Para isso execute:
+
+```
+python manage.py makemigrations main
+python manage.py migrate
+```
+
+Para execução da interface então basta:
+
 ```
 python manage.py runserver
 ```
+
+A aplicação irá executar na porta 8000 por default (http://127.0.0.1:8000/).
 
 ## Fluxo de interação com a interface
 ![Fluxograma](fluxo_interface_coletor_20200625.png)
