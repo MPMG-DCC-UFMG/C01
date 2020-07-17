@@ -1,0 +1,149 @@
+.navbar{
+    background-color: #286f99;
+}
+
+body {
+    padding-top: 56px;
+}
+
+.selected{
+    background-color: pink;
+}
+
+.sticky-offset {
+    top: 56px;
+}
+
+#body-row {
+    margin-left:0;
+    margin-right:0;
+}
+#sidebar-container {
+    min-height: 89vh;   
+    background-color: #333;
+    padding: 0;
+}
+
+/* Sidebar sizes when expanded and expanded */
+.sidebar-expanded {
+    width: 230px;
+}
+.sidebar-collapsed {
+    width: 60px;
+}
+
+/* Menu item*/
+#sidebar-container .list-group a {
+    height: 50px;
+    color: white;
+}
+
+#sidebar-container .list-group .disabled {
+    color: gray;
+}
+
+/* Submenu item*/
+#sidebar-container .list-group .sidebar-submenu a {
+    height: 45px;
+    padding-left: 30px;
+}
+.sidebar-submenu {
+    font-size: 0.9rem;
+}
+
+/* Separators */
+.sidebar-separator-title {
+    background-color: #333;
+    height: 35px;
+}
+.sidebar-separator {
+    background-color: #333;
+    height: 25px;
+}
+.logo-separator {
+    background-color: #333;    
+    height: 60px;
+}
+
+/* Closed submenu icon */
+#sidebar-container .list-group .list-group-item[aria-expanded="false"] .submenu-icon::after {
+  content: " \f0d7";
+  font-family: FontAwesome;
+  display: inline;
+  text-align: right;
+  padding-left: 10px;
+}
+/* Opened submenu icon */
+#sidebar-container .list-group .list-group-item[aria-expanded="true"] .submenu-icon::after {
+    content: " \f0da";
+    font-family: FontAwesome;
+    display: inline;
+    text-align: right;
+    padding-left: 10px;
+}
+
+.list-group-item{
+    background-color: #333 ;
+}
+
+.validation-icon{
+    padding-left: 30%;
+}
+
+.sidemenu-items{
+    padding-left: 0px !important;
+}
+
+.fa-warning{
+    color: yellow;
+}
+
+.fa-check{
+    color: #71ff3e;
+}
+
+.valid-button{
+    background-color: green !important;
+    color: white !important;
+}
+
+.list-group-mine .list-group-item-invalid{
+    pointer-events: none;
+    cursor: auto;
+    color: #6c757d;
+}
+
+.list-group-mine .list-group-item-valid {
+    background-color: green !important;
+    color: white;
+}
+
+.list-group-mine .list-group-item-valid:hover {
+    background-color: green !important;
+    color: white;
+}
+
+.list-group-mine .list-group-item{
+    background-color: #333;
+    padding: 0.75rem 1.25rem 0.75rem 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.confimation-div{
+    text-align: center;
+}
+
+table.dataTable thead .sorting:after,
+table.dataTable thead .sorting:before,
+table.dataTable thead .sorting_asc:after,
+table.dataTable thead .sorting_asc:before,
+table.dataTable thead .sorting_asc_disabled:after,
+table.dataTable thead .sorting_asc_disabled:before,
+table.dataTable thead .sorting_desc:after,
+table.dataTable thead .sorting_desc:before,
+table.dataTable thead .sorting_desc_disabled:after,
+table.dataTable thead .sorting_desc_disabled:before {
+    bottom: .5em;
+}
