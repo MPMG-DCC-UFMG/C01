@@ -6,7 +6,7 @@
             "step": "digite",
             "arguments": {
                 "xpath": "\"/html/body/div[2]/main/div/div[2]/div/form[2]/div/input\"",
-                "texto": "\"SUS\""
+                "texto": "\"SU\""
             },
             "depth": 1
         },
