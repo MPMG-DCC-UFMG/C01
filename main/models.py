@@ -16,14 +16,12 @@ class TimeStamped(models.Model):
         abstract = True
 
 class CrawlRequest(TimeStamped):
-    
-    running = models.BooleanField(default=False)
-    
+
     # BASIC INFO ####################################################################
     source_name = models.CharField(max_length=200)
     base_url  = models.CharField(max_length=200)
     obey_robots = models.BooleanField(blank=True, null=True)
-    
+
 
     # ANTIBLOCK #####################################################################
     # Options for Delay
@@ -51,7 +49,7 @@ class CrawlRequest(TimeStamped):
     antiblock_max_reqs_per_ip = models.IntegerField(blank=True, null=True)
     antiblock_max_reuse_rounds = models.IntegerField(blank=True, null=True)
 
-        # Options for User Agent rotation 
+        # Options for User Agent rotation
     antiblock_reqs_per_user_agent = models.IntegerField(blank=True, null=True)
     antiblock_user_agents_file = models.CharField(max_length=2000, blank=True, null=True)
 
@@ -61,7 +59,7 @@ class CrawlRequest(TimeStamped):
 
     # CAPTCHA #######################################################################
     CAPTCHA_TYPE = [
-        ('none', 'None'), 
+        ('none', 'None'),
         ('image', 'Image'),
         ('sound', 'Sound'),
     ]
@@ -76,21 +74,21 @@ class CrawlRequest(TimeStamped):
 
     # CRAWLER TYPE ###################################################################
     CRAWLER_TYPE = [
-        ('static_page', 'Static Page'), 
+        ('static_page', 'Static Page'),
         ('form_page', 'Page with Form'),
         ('single_file', 'Single File'),
         ('bundle_file', 'Bundle File'),
     ]
     crawler_type = models.CharField(max_length=15, choices=CRAWLER_TYPE, default='static_page')
     explore_links = models.BooleanField(blank=True, null=True)
-    link_extractor_max_depht = models.IntegerField(blank=True, null=True)
+    link_extractor_max_depth = models.IntegerField(blank=True, null=True)
     link_extractor_allow = models.CharField(max_length=1000, blank=True, null=True)
     link_extractor_allow_extensions = models.CharField(blank=True, null=True, max_length=2000)
 
     # TEMPLATED URL ###################################################################
     TEMPLATED_URL_TYPE = [
-        ('none', 'None'), 
-        ('get', 'GET'), 
+        ('none', 'None'),
+        ('get', 'GET'),
         ('post', 'POST'),
     ]
     # GET case
@@ -107,10 +105,21 @@ class CrawlRequest(TimeStamped):
     text_match_response = models.CharField(max_length=2000, blank=True, null=True)
     invert_text_match = models.BooleanField(blank=True, null=True)
 
+    @property
+    def running(self):
+        return self.instances.filter(running=True).exists()
+
+    @property
+    def running_instance(self):
+        inst_query = self.instances.filter(running=True)
+        if inst_query.exists():
+            return inst_query.get()
+        return None
+
     def __str__(self):
         return self.source_name
 
 class CrawlerInstance(TimeStamped):
-    crawler_id = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE)
+    crawler_id = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE, related_name='instances')
     instance_id = models.BigIntegerField(primary_key=True)
     running = models.BooleanField()

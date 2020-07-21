@@ -5,7 +5,7 @@
   <form method="POST" action="."> {% csrf_token %}
     <p>Are you sure you want to delete "{{crawler.source_name}}"?</p>
     <input type="submit" value="Confirm" class="btn btn-warning">
-    <a href="/crawlers" class="btn btn-secondary">Cancel</a>
+    <a href="{% url 'list_crawlers' %}" class="btn btn-secondary">Cancel</a>
 
   </form>
 </div>
