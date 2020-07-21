@@ -4,7 +4,7 @@ from .models import CrawlRequest
 class CrawlRequestForm(forms.ModelForm):
     class Meta:
         model = CrawlRequest
-        
+        """
         obey_robots = forms.BooleanField(required=False)
 
         # Options for antiblock
@@ -35,7 +35,7 @@ class CrawlRequestForm(forms.ModelForm):
 
         # Crawler type - Static
         explore_links = forms.BooleanField(required=False)
-        link_extractor_max_depht = forms.IntegerField(required=False)
+        link_extractor_max_depth = forms.IntegerField(required=False)
         link_extractor_allow = forms.CharField(required=False)
         # link_extractor_allow_domains = 
         link_extractor_allow_extensions = forms.CharField(required=False)
@@ -46,6 +46,7 @@ class CrawlRequestForm(forms.ModelForm):
         invert_http_status = forms.BooleanField(required=False)
         text_match_response = forms.CharField(required=False)
         invert_text_match = forms.BooleanField(required=False)
+        """
 
         fields = [
             'source_name',
@@ -75,7 +76,7 @@ class CrawlRequestForm(forms.ModelForm):
             'sound_xpath',
             'crawler_type',
             'explore_links',
-            'link_extractor_max_depht',
+            'link_extractor_max_depth',
             'link_extractor_allow',
             'link_extractor_allow_extensions',
             'templated_url_type',
@@ -87,7 +88,7 @@ class CrawlRequestForm(forms.ModelForm):
             'invert_text_match',
         ]
 
-class RawCrawlRequestForm(forms.Form):
+class RawCrawlRequestForm(CrawlRequestForm):
     # BASIC INFO #########################################################################
     source_name = forms.CharField(label="Source Name", max_length=200,
         widget=forms.TextInput(attrs={'placeholder': 'Example'})
@@ -218,7 +219,7 @@ class RawCrawlRequestForm(forms.Form):
     explore_links = forms.BooleanField(required=False, label="Explore links")
 
     # Crawler Type - Static
-    link_extractor_max_depht = forms.IntegerField(
+    link_extractor_max_depth = forms.IntegerField(
         required=False, label="Link extractor max depth (blank to not limit):"
     )
     link_extractor_allow = forms.CharField(

@@ -167,7 +167,7 @@ $(document).ready(function () {
                 break;
             case 'crawler_type':
             case 'explore_links':
-            case 'link_extractor_max_depht':
+            case 'link_extractor_max_depth':
             case 'link_extractor_allow':
             case 'link_extractor_allow_extensions':
                 checkCrawlerType();

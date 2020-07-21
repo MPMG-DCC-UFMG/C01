@@ -99,7 +99,7 @@ def crawler_process(crawler_id, config):
         raise NotImplementedError
     elif config["crawler_type"] == "static_page":
         process.crawl(StaticPageSpider, crawler_id=crawler_id)
-    
+
     def update_database():
         print(f"Error at: {crawler_id}")
         # TODO: get port as variable
@@ -121,10 +121,10 @@ def start_crawler(config):
 
     crawler_id = gen_key()
     print(os.getcwd())
-    
+
     with open(f"{CURR_FOLDER_FROM_ROOT}/config/{crawler_id}.json", "w+") as f:
         f.write(json.dumps(config, indent=2))
-    
+
     with open(f"{CURR_FOLDER_FROM_ROOT}/flags/{crawler_id}.json", "w+") as f:
         f.write(json.dumps({"stop": False}))
 
@@ -198,7 +198,7 @@ if __name__ == '__main__':
             "sound_url": None,
             "crawler_type": "static_page",
             "explore_links": True,
-            "link_extractor_max_depht": 1,
+            "link_extractor_max_depth": 1,
             "link_extractor_allow_extensions": "pdf",
             "link_extractor_allow": "(^https\\:\\/\\/saolourenco\\.mg\\.gov\\.br\\/poficiais\\.php|^https\\:\\/\\/saolourenco\\.mg\\.gov\\.br\\/arquivos\\/publicacaooficial\\/)"
         }
