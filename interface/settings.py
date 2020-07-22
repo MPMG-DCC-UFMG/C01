@@ -53,6 +53,15 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+DOWNLOADER_MIDDLEWARES = {
+    'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 110,
+    'antiblock_scrapy.middlewares.TorProxyMiddleware': 100
+}
+
+TOR_IPROTATOR_ENABLED = True
+TOR_IPROTATOR_CHANGE_AFTER = 2
+TOR_IPROTATOR_ALLOW_REUSE_IP_AFTER = 10
+
 ROOT_URLCONF = 'interface.urls'
 
 TEMPLATES = [
