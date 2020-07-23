@@ -22,11 +22,4 @@ async def main():
 with open('recipe.json') as file:
     recipe = json.load(file)
 
-# with open('steps.py', 'w+') as file:
-#     file.write(code_g.generate_code(recipe, functions_file))
-#
-# code = code_g.generate_code(recipe, functions_file)
-# steps = RuntimeModule.from_string("steps", code)
-# print(code)
-
 asyncio.get_event_loop().run_until_complete(main())
