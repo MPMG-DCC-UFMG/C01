@@ -4,7 +4,6 @@ from step_crawler import code_generator as code_g
 from step_crawler import functions_file
 from step_crawler.functions_file import *
 from pyppeteer import launch
-# from pyext import RuntimeModule
 
 
 async def main():
