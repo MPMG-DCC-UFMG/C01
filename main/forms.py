@@ -45,7 +45,15 @@ class CrawlRequestForm(forms.ModelForm):
         text_match_response = forms.CharField(required=False)
         invert_text_match = forms.BooleanField(required=False)
 
+        # Crawler type - Page with form
+
+
+
+
+
         fields = [
+
+
             'source_name',
             'base_url',
             'obey_robots',
@@ -81,6 +89,7 @@ class CrawlRequestForm(forms.ModelForm):
             'invert_http_status',
             'text_match_response',
             'invert_text_match',
+
         ]
 
 class RawCrawlRequestForm(forms.Form):
@@ -200,7 +209,7 @@ class RawCrawlRequestForm(forms.Form):
     crawler_type = forms.ChoiceField(
         required=False, choices = (
             ('static_page', 'Static Page'), 
-            # ('form_page', 'Page with Form'),
+            ('form_page', 'Page with Form'),
             # ('single_file', 'Single File'),
             # ('bundle_file', 'Bundle File'),
         ),

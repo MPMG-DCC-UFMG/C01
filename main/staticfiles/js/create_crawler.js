@@ -240,6 +240,7 @@ function detailCrawlerType() {
     for (const i in contents)
         contents[i].hidden = true;
     setHiddenState(crawler_type, false);
+    load_steps();
 
     checkCrawlerType();
 }
@@ -248,4 +249,5 @@ function autothrottleEnabled() {
     setHiddenState("autothrottle-options-div", !getCheckboxState("id_antiblock_autothrottle_enabled"));
 }
 
+// Create steps
 // TODO add new fields to validation 

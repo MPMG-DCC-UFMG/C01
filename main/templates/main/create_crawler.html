@@ -8,6 +8,7 @@
 New Crawler
 {% endblock %}
 
+
 {% block content %}
 
 <form id="myForm" method="POST" action="" class="form-group">{% csrf_token %} <!-- esse token é para segurança em forms do tipo POST -->
@@ -212,7 +213,16 @@ New Crawler
                                     {{ form.link_extractor_allow | as_crispy_field}}
                                     {{ form.link_extractor_allow_extensions | as_crispy_field}}
                                 </div>
-                                <div class="crawler-type-content-div" id="form_page" hidden></div>
+                                <div class="crawler-type-content-div" id="form_page" hidden >
+                                    <div id="step_board">
+                                        <div id="step_controler">
+                                            <a class="btn btn-primary" style="color:white;" id="add_step_button" onclick=add_block()>
+                                                Add block
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                </div>
                                 <div class="crawler-type-content-div" id="single_file" hidden></div>
                                 <div class="crawler-type-content-div" id="bundle_file" hidden></div>
                             </div>
@@ -266,5 +276,6 @@ New Crawler
 {% endblock %}
 
 {% block js %}
+<script src="{% static 'js/steps.js' %}"></script>
 <script src="{% static 'js/create_crawler.js' %}"></script>
 {% endblock %}

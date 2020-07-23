@@ -1,0 +1,14 @@
+[
+        {
+            "name":"digite",
+            "mandatory_params":["xpath", "texto"],
+            "optional_params":{"velocidade":1}
+
+        },
+        {
+            "name":"clique",
+            "mandatory_params":["xpath"],
+            "optional_params":{}
+
+        }
+]
