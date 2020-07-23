@@ -1,6 +1,7 @@
 import asyncio
 import time
 import uuid
+from cssify import cssify
 
 
 def range_(stop):
@@ -28,26 +29,14 @@ async def wait_page(page):
 
 async def clique(page, xpath):
     await page.waitForXPath(xpath)
-    elements = await page.xpath(xpath)
-    await asyncio.wait([
-        elements[0].click(),
-        #page.waitForNavigation(),
-    ])
+    await page.click(cssify(xpath))
+    await wait_page(page)
 
-async def opcoes(page, xpath, exceto = []):
-    option_values = []
-    await page.waitForXPath(xpath)
-    options = await page.xpath(xpath + "/option")
-    for option in options:
-        value = await option.getProperty("text")
-        option_values.append(value.toString().split(":")[-1])
-    return [value for value in option_values if value not in exceto]
 
 async def selecione(page, xpath, opcao):
     await page.waitForXPath(xpath)
-    elements = await page.xpath(xpath)
-    select = elements[0]
-    await select.type(opcao)
+    await page.type(cssify(xpath), opcao)
+    await wait_page(page)
 
 
 async def salva_pagina(page):
@@ -56,23 +45,43 @@ async def salva_pagina(page):
     return body
 
 
-async def elementos_nesse_xpath(page, xpath):
+async def opcoes(page, xpath, exceto=None):
+    if exceto is None:
+        exceto = []
+    options = []
     await page.waitForXPath(xpath)
-    elements = await page.xpath(xpath)
-    return [await element.getProperties() for element in elements]
-
-def espere(segs):
-	time.sleep(segs)
+    for option in (await page.xpath(xpath + "/option")):
+        value = await option.getProperty("text")
+        options.append(value.toString().split(":")[-1])
+    return [value for value in options if value not in exceto]
 
 
 async def for_clicavel(page, xpath):
     try:
-        await clique(page,xpath)
-        return 1
+        await clique(page, xpath)
+        return True
     except:
-        print('error')
-        return 0
+        return False
 
+
+
+async def pegue_os_links_da_paginacao(page, xpath_dos_botoes, xpath_dos_links, indice_do_botao_proximo = -1):
+    clickable = True
+    urls = []
+    while clickable:
+        urls += [await (await link.getProperty('href')).jsonValue() for link in await page.xpath(xpath_dos_links)] 
+
+
+        buttons = await page.xpath(xpath_dos_botoes)
+        if len(buttons) !=0:
+            next_button = buttons[indice_do_botao_proximo]
+            before_click = await page.content()
+            await next_button.click()
+            after_click = await page.content()
+            if before_click == after_click:
+                clickable = False
+        else:
+            clickable = False
 
 
 async def digite(page ,xpath, texto):

@@ -3,6 +3,14 @@
     "depth": 0,
     "children": [
         {
+            "step": "digite",
+            "arguments": {
+                "xpath": "\"/html/body/div[2]/main/div/div[2]/div/form[2]/div/input\"",
+                "texto": "\"SU\""
+            },
+            "depth": 1
+        },
+        {
             "step": "for",
             "iterator": "estado",
             "iterable":{
@@ -55,8 +63,45 @@
                             "depth": 3
                         },
                         {
-                            "step": "salva_pagina",
-                            "arguments": {},
+                            "step": "espere",
+                            "arguments": {
+                                "segs": 1
+                            },
+                            "depth": 3
+                        },
+                        {
+                            "step": "if",
+                            "negation": true,
+                            "condition": {
+                                "call":{
+                                    "step": "nesse_elemento_esta_escrito",
+                                    "arguments": {
+                                        "xpath": "\"/html/body/div[2]/main/div/div[2]/div/div[1]/strong\"",
+                                        "texto": "\"Não Existem Dados para a Pesquisa Solicitada.\""
+                                    }
+                                }
+                            },
+                            "children": [
+                                {
+                                    "step": "espere",
+                                    "arguments": {
+                                        "segs" : 2
+                                    },
+                                    "depth": 4
+                                },
+                                {
+                                    "step": "para_cada_pagina_em",
+                                    "xpath_dos_botoes": "\"/html/body/div[2]/main/div/div[2]/div/div[3]/div/div/div/ul/li/a\"",
+                                    "indice_do_botao_proximo": -1,
+                                    "children": [
+                                        {
+                                            "step":"salva_pagina",
+                                            "depth": 5
+                                        }
+                                    ],
+                                    "depth": 4
+                                }
+                            ],
                             "depth": 3
                         }
                     ],
