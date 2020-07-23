@@ -27,9 +27,9 @@ Home
                     <td><a class="btn btn-info" href="{% url 'detail_crawler' crawler.id %}">Detail</a></td>
                     
                     {% if crawler.running == True %}
-                        <td><span style="color: green;">Running</span></td>
+                        <td><span class="badge badge-success">Running</span></td>
                     {% else %}
-                        <td><span style="color: blueviolet;">Stopped</span></td>
+                        <td><span class="badge badge-warning">Not running</span></td>
                     {% endif %}
                     
                 </tr>
