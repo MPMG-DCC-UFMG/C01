@@ -53,10 +53,9 @@ def get_crawler_base_settings(config):
     """Returns scrapy base configurations."""
 
     downloader_middlewares = {
-        "scrapy_selenium.SeleniumMiddleware": 0,
-        "scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware": 110,
-        "antiblock_scrapy.middlewares.TorProxyMiddleware": 100
+        "scrapy_selenium.SeleniumMiddleware": 0
     }
+
     crawler_config = {
         "BOT_NAME": "crawlers",
         "ROBOTSTXT_OBEY": True,
@@ -74,10 +73,14 @@ def get_crawler_base_settings(config):
         "AUTOTHROTTLE_MAX_DELAY": config["antiblock_autothrottle_max_delay"],
     }
 
-    if config["antiblock_ip_rotation_type"] == "tor":
-        crawler_config["TOR_IPROTATOR_ENABLED"] = True
-        crawler_config["TOR_IPROTATOR_CHANGE_AFTER"] = config["antiblock_max_reqs_per_ip"]
-        crawler_config["TOR_IPROTATOR_ALLOW_REUSE_IP_AFTER"] = config["antiblock_max_reuse_rounds"]
+    if config["antiblock_use_ip_rotation"] == True:
+        if config["antiblock_ip_rotation_type"] == "tor":
+            downloader_middlewares["antiblock_scrapy.middlewares.TorProxyMiddleware"] = 100
+            crawler_config["TOR_IPROTATOR_ENABLED"] = True
+            crawler_config["TOR_IPROTATOR_CHANGE_AFTER"] = config["antiblock_max_reqs_per_ip"]
+            crawler_config["TOR_IPROTATOR_ALLOW_REUSE_IP_AFTER"] = config["antiblock_max_reuse_rounds"]
+        elif config["antiblock_ip_rotation_type"] == "proxy":
+            downloader_middlewares["scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware"] = 110
 
     if config["antiblock_use_user_agents"]:
         user_agents = json.loads(config['antiblock_user_agents'])
