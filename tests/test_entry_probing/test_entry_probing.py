@@ -1,14 +1,13 @@
 """
 This module tests the entry probing process as a whole
 """
-import requests.models
 import unittest
 
 from unittest import mock
 
 from entry_probing import EntryProbing, GETProbingRequest,\
     HTTPStatusProbingResponse, TextMatchProbingResponse,\
-    BinaryFormatProbingResponse
+    BinaryFormatProbingResponse, ResponseData
 
 
 class EntryProbingTest(unittest.TestCase):
@@ -18,26 +17,26 @@ class EntryProbingTest(unittest.TestCase):
     file
     """
 
-    def response_200(*_):
+    def response_200(*_) -> ResponseData:
         """
         Function used to return a mock of an HTTP response with status 200 and
         "entry found" in the text body
         """
 
-        return mock.Mock(headers={'Content-Type': 'text/html'},
-                         text="entry found",
-                         status_code=200)
+        return ResponseData(headers={'Content-Type': 'text/html'},
+                            text="entry found",
+                            status_code=200)
 
 
-    def response_404(*_):
+    def response_404(*_) -> ResponseData:
         """
         Function used to return a mock of an HTTP response with status 404 and
         "entry not found" in the text body
         """
 
-        return mock.Mock(headers={'Content-Type': 'text/html'},
-                         text="entry not found",
-                         status_code=404)
+        return ResponseData(headers={'Content-Type': 'text/html'},
+                            text="entry not found",
+                            status_code=404)
 
 
     @mock.patch('entry_probing.requests.get', response_200)
@@ -84,7 +83,7 @@ class EntryProbingTest(unittest.TestCase):
         probe = EntryProbing(GETProbingRequest("http://test.com/"))
         self.assertIsNone(probe.response)
         probe.check_entry()
-        self.assertTrue(isinstance(probe.response, mock.Mock))
+        self.assertTrue(isinstance(probe.response, ResponseData))
 
 
     @mock.patch('entry_probing.requests.get', response_404)
@@ -122,7 +121,7 @@ class EntryProbingTest(unittest.TestCase):
         probe = EntryProbing(GETProbingRequest("http://test.com/"))
         self.assertIsNone(probe.response)
         probe.check_entry()
-        self.assertTrue(isinstance(probe.response, mock.Mock))
+        self.assertTrue(isinstance(probe.response, ResponseData))
 
 
     def test_probing_param_errors(self):

@@ -24,8 +24,8 @@ class ProbingRequestTest(unittest.TestCase):
         Tests if the correct requests are sent to the specified URLs with the
         expected parameters
 
-        :param get_mock:  Mock function, called when requests.get is used inside
-                          the entry probing module
+        :param get_mock:  Mock function, called when requests.get is used
+                          inside the entry probing module
         :param post_mock: Mock function, called when requests.post is used
                           inside the entry probing module
         """
@@ -54,8 +54,8 @@ class ProbingRequestTest(unittest.TestCase):
         expected = [("http://test.com/{}",), {}]
         self.assertEqual(list(get_mock.call_args), expected)
 
-        # If entry is present but URL doesn't have any placeholders it just uses
-        # the given url
+        # If entry is present but URL doesn't have any placeholders it just
+        # uses the given url
         probe = GETProbingRequest("http://test.com/")
         probe.process(1)
         expected = [("http://test.com/",), {}]
@@ -72,7 +72,8 @@ class ProbingRequestTest(unittest.TestCase):
                                    {'extra1': 0, 'extra2': 1})
         probe.process(100)
         expected = [('http://test.com/',), {'data': {'test_prop': 100,
-                                                     'extra1': 0, 'extra2': 1}}]
+                                                     'extra1': 0,
+                                                     'extra2': 1}}]
         self.assertEqual(list(post_mock.call_args), expected)
 
         # POST request with no parameters in the request body
