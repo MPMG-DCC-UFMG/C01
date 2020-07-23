@@ -12,13 +12,13 @@ import json
 import random
 import datetime
 import hashlib
+import urllib.request
 
 
 class StaticPageSpider(BaseSpider):
     name = 'static_page'
 
     def start_requests(self):
-        print("At StaticPageSpider.start_requests")
         urls = [self.config["base_url"]]
 
         self.convert_allow_extesions()
