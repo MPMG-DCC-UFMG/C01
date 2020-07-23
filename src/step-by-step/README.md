@@ -1,4 +1,6 @@
 # Step crawler module
+Module to help create a interactive crawler through a web interface, similar
+ to the idea in `https://scratch.mit.edu/`.
 
 ## Building
 
@@ -105,3 +107,8 @@ Generates the code:
 i = 1
 send_keys(xpath= "/body/div["+i+"]", keys= "exemplo")
 ```
+
+## TODO
+[ ] Function to process `except` conditions
+[ ] Function to extract all links from a page
+[ ] Function to generate through url-encoded pagination  
