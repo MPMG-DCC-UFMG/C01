@@ -1,5 +1,5 @@
 # Step crawler module
-Module to help create a interactive crawler through a web interface, similar
+Back-end to create interactive crawlers through web interfaces, similar
  to the idea in `https://scratch.mit.edu/`.
 
 ## Building
@@ -10,7 +10,7 @@ This module is packaged as a Python Wheel file. To build the .whl file from the 
 python setup.py bdist_wheel
 ```
 
-The Wheel file will be created inside the `dist` folder, and the name may vary depending on the version. To install it, run the following command in the `entry_probing` folder, replacing the file name accordingly:
+The Wheel file will be created inside the `dist` folder, and the name may vary depending on the version. To install it, run the following command in the `step-by-step` folder, replacing the file name accordingly:
 
 ```
 pip install dist/<wheel file name>
@@ -109,6 +109,6 @@ send_keys(xpath= "/body/div["+i+"]", keys= "exemplo")
 ```
 
 ## TODO
-[ ] Function to process `except` conditions
-[ ] Function to extract all links from a page
-[ ] Function to generate through url-encoded pagination  
+- [ ] Function to process `except` conditions
+- [ ] Function to extract all links from a page
+- [ ] Function to generate through url-encoded pagination  
