@@ -109,6 +109,6 @@ send_keys(xpath= "/body/div["+i+"]", keys= "exemplo")
 ```
 
 ## TODO
-[ ] Function to process `except` conditions
-[ ] Function to extract all links from a page
-[ ] Function to generate through url-encoded pagination  
+- [ ] Function to process `except` conditions
+- [ ] Function to extract all links from a page
+- [ ] Function to generate through url-encoded pagination  
