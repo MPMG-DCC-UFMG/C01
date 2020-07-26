@@ -47,7 +47,7 @@ def df_to_csv(dfs, output_file, index=False):
             raise Exception("The system could not save the CSV file.")
 
 
-def html_to_csv(html_file_path, is_string=False, output_file='output.csv',
+def table_to_csv(html_file_path, is_string=False, output_file='output.csv',
 match='.+', flavor=None, header=None, index_col=None, skiprows=None,
  attrs=None, parse_dates=False, thousands=', ', encoding=None, decimal='.',
   converters=None, na_values=None, keep_default_na=True, displayed_only=True):

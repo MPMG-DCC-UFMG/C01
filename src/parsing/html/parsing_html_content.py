@@ -4,8 +4,8 @@ from bs4 import BeautifulSoup
 import csv
 import xml
 import re
-import parsing_html_div
-import parsing_html_table
+from src.parsing.html.parsing_html_table import *
+from src.parsing.html.parsing_html_div import *
 
 
 def clean_html(html_file, isString):
@@ -19,8 +19,8 @@ def clean_html(html_file, isString):
     remove_class = ["sidebar-inner", "breadcrumb", "share", "navegacao",
                     "skiptranslate", "goog-te-spinner-pos", "social-list",
                     "social-icon", "copyright", "id_assist_frame",
-                    "fbc-badge-tooltip"]
-    remove_id = ["boxes", "mySidenav", "chat-panel"]
+                    "fbc-badge-tooltip", "areaNaoImprimivel", "menu_container"]
+    remove_id = ["boxes", "mySidenav", "chat-panel", "footer"]
 
     # Check if the html_file is a string with the page or a path to the file
     if not isString:
@@ -42,13 +42,30 @@ def clean_html(html_file, isString):
     # Remove any div with the id in remove_id
     for div in soup.find_all("div", {'id': remove_id}):
         div.extract()
+    # Remove any tbale with the id in remove_id (bad html construction)
+    for tab in soup.find_all("table", {'id': remove_id}):
+        tab.extract()
 
     html_file = str(soup)
 
-
-
     return html_file
 
+
+def fix_links(html_file):
+    '''
+    Receives the html file and return the same file with the value of the links
+    as the text of the links
+    '''
+    f = html_file
+    soup = BeautifulSoup(f, 'html.parser')
+
+    for a in soup.find_all('a', href=True):
+        if "http" in a['href']:
+            a.string = a['href']
+
+    html_file = str(soup)
+
+    return html_file
 
 
 def check_div(html_file):
@@ -56,7 +73,6 @@ def check_div(html_file):
     Receives a html file and returns booleans indicating if the content is in
     a table or div
     '''
-
     # Boolean variables to indicate if the content is in table or div format
     table_content = False
     div_content = False
@@ -77,7 +93,6 @@ def check_div(html_file):
             div_content = True
 
     return table_content, div_content
-
 
 
 def html_detect_content(html_file, is_string=False, output_file='output.csv',
@@ -120,10 +135,8 @@ match='.+', flavor=None, header=None, index_col=None, skiprows=None,
      “display: none” should be parsed)
     '''
 
-
     # Check if html file exists
     if (os.path.isfile(html_file)) or is_string:
-
         # Clean the html file
         html_file = clean_html(html_file, is_string)
         # Fix the links in the file
@@ -131,14 +144,14 @@ match='.+', flavor=None, header=None, index_col=None, skiprows=None,
         # Check the content
         table_content, div_content = check_div(html_file)
         # Call the indicated parsing
-        if table_content:
-            # HAS A TABLE
-            parsing_html_table.html_to_csv(html_file, output_file, match, flavor, header, index_col, skiprows,
-             attrs, parse_dates, thousands, encoding, decimal,
-              converters, na_values, keep_default_na, displayed_only, is_string=True)
         if div_content:
             # HAS A DIV
-            parsing_html_div.html_to_csv(html_file, output_file, is_string=True)
+            div_to_csv(html_file, True, output_file)
+        if table_content:
+            # HAS A TABLE
+            table_to_csv(html_file, True, output_file, match, flavor, header, index_col, skiprows,
+             attrs, parse_dates, thousands, encoding, decimal,
+              converters, na_values, keep_default_na, displayed_only)
         # If the file has no table or div with content
         if (table_content or div_content) == False:
             raise ValueError('No content found.')
