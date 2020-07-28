@@ -11,6 +11,7 @@ import requests
 
 # Helper class
 
+
 class ResponseData():
     """
     Data class to store the response to a request in a more general form.
@@ -53,7 +54,7 @@ class ResponseData():
 
     async def create_from_pyppeteer(self,
                                     resp: pyppeteer.network_manager.Response
-                                   ) -> ResponseData:
+                                    ) -> ResponseData:
         """
         Create an appropriate object from a pyppeteer.network_manager.Response
         object
