@@ -9,7 +9,7 @@ import requests.exceptions
 import urllib3.exceptions
 
 from entry_probing import GETProbingRequest, POSTProbingRequest,\
-                          PyppeteerProbingRequest
+    PyppeteerProbingRequest
 
 
 # Helper functions
@@ -34,15 +34,15 @@ def create_mock_pyp_page(content_type: str = None,
         return text
 
     # mock of the Pyppeteer response
-    mock_pyp_resp = mock.MagicMock(spec= pyppeteer.network_manager.Response,
-                                   headers={'content-type': content_type },
+    mock_pyp_resp = mock.MagicMock(spec=pyppeteer.network_manager.Response,
+                                   headers={'content-type': content_type},
                                    status=status_code,
                                    text=lambda: return_async_text(text))
 
     on_event = mock.MagicMock(return_value=None)
     if trigger_response:
         # use the callback function as soon as it is set
-        on_event_func = lambda _, f: f(mock_pyp_resp)
+        def on_event_func(_, f): return f(mock_pyp_resp)
         # wrap this function in a mock object to be able to check how it is
         # called
         on_event = mock.MagicMock(side_effect=on_event_func)
