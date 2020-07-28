@@ -12,6 +12,7 @@ import pyppeteer
 
 from .entry_probing_response import ResponseData
 
+
 class ProbingRequest():
     """
     Abstract parent class for request definitions. Child classes implement the
