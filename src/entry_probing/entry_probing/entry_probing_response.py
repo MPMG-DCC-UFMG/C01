@@ -44,7 +44,10 @@ class ResponseData():
         """
         self.headers = resp.headers
         self.status_code = resp.status_code
-        self.text = resp.text
+
+        self.text = ""
+        if 'text' in resp.headers['Content-Type'].split('/')[0]:
+            self.text = resp.text
 
         return self
 
@@ -78,9 +81,9 @@ class ProbingResponse():
     """
     Abstract parent class for response handler definitions. Child classes
     implement the _validate_resp method, which should receive a
-    ResponseData object and return a boolean indicating if the desired condition
-    is met. The process method should be called externally, and accounts for
-    the possible negation of the result.
+    ResponseData object and return a boolean indicating if the desired
+    condition is met. The process method should be called externally, and
+    accounts for the possible negation of the result.
     """
     __metaclass__ = abc.ABCMeta
 
@@ -139,8 +142,8 @@ class HTTPStatusProbingResponse(ProbingResponse):
 
         :param response: ResponseData object to be validated
 
-        :returns: True if the response has the specified HTTP status code, false
-                  otherwise
+        :returns: True if the response has the specified HTTP status code,
+                  false otherwise
         """
         return response.status_code == self.status_code
 
@@ -174,7 +177,8 @@ class TextMatchProbingResponse(ProbingResponse):
 
 class BinaryFormatProbingResponse(ProbingResponse):
     """
-    Response handler which checks if the MIME-type received is a non-textual one
+    Response handler which checks if the MIME-type received is a non-textual
+    one
     """
 
     def _validate_resp(self, response: ResponseData) -> bool:
@@ -189,8 +193,10 @@ class BinaryFormatProbingResponse(ProbingResponse):
 
         # deal with different capitalizations of the content-type header name
         if 'Content-Type' in response.headers:
+            # Usual capitalization
             header_name = 'Content-Type'
         elif 'content-type' in response.headers:
+            # Pyppeteer capitalization
             header_name = 'content-type'
 
         return not 'text' in response.headers[header_name].split('/')[0]

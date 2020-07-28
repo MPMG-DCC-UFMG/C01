@@ -57,9 +57,11 @@ class GETProbingRequest(ProbingRequest):
 
         :returns: Response obtained from GET request
         """
+        resp = None
         if entry is None:
-            return requests.get(self.__url)
-        resp = requests.get(self.__url.format(entry))
+            resp = requests.get(self.__url)
+        else:
+            resp = requests.get(self.__url.format(entry))
         return ResponseData().create_from_requests(resp)
 
 
