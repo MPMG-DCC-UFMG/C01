@@ -1,14 +1,104 @@
 [
-        {
-            "name":"digite",
-            "mandatory_params":["xpath", "texto"],
-            "optional_params":{"velocidade":1}
-
-        },
-        {
-            "name":"clique",
-            "mandatory_params":["xpath"],
-            "optional_params":{}
-
+    {
+        "name": "clique",
+        "mandatory_params": [
+            "xpath"
+        ],
+        "optional_params": {}
+    },
+    {
+        "name": "cssify",
+        "mandatory_params": [
+            "xpath"
+        ],
+        "optional_params": {}
+    },
+    {
+        "name": "digite",
+        "mandatory_params": [
+            "xpath",
+            "texto"
+        ],
+        "optional_params": {}
+    },
+    {
+        "name": "espere",
+        "mandatory_params": [
+            "segs"
+        ],
+        "optional_params": {}
+    },
+    {
+        "name": "for_clicavel",
+        "mandatory_params": [
+            "xpath"
+        ],
+        "optional_params": {}
+    },
+    {
+        "name": "gera_nome_arquivo",
+        "mandatory_params": [],
+        "optional_params": {}
+    },
+    {
+        "name": "nesse_elemento_esta_escrito",
+        "mandatory_params": [
+            "xpath",
+            "texto"
+        ],
+        "optional_params": {}
+    },
+    {
+        "name": "opcoes",
+        "mandatory_params": [
+            "xpath"
+        ],
+        "optional_params": {
+            "exceto": "None"
         }
+    },
+    {
+        "name": "pegue_os_links_da_paginacao",
+        "mandatory_params": [
+            "xpath_dos_botoes",
+            "xpath_dos_links"
+        ],
+        "optional_params": {
+            "indice_do_botao_proximo": -1
+        }
+    },
+    {
+        "name": "print_",
+        "mandatory_params": [
+            "word"
+        ],
+        "optional_params": {}
+    },
+    {
+        "name": "range_",
+        "mandatory_params": [
+            "stop"
+        ],
+        "optional_params": {}
+    },
+    {
+        "name": "salva_pagina",
+        "mandatory_params": [
+        ],
+        "optional_params": {}
+    },
+    {
+        "name": "selecione",
+        "mandatory_params": [
+            "xpath",
+            "opcao"
+        ],
+        "optional_params": {}
+    },
+    {
+        "name": "wait_page",
+        "mandatory_params": [
+        ],
+        "optional_params": {}
+    }
 ]

@@ -214,14 +214,17 @@ New Crawler
                                     {{ form.link_extractor_allow_extensions | as_crispy_field}}
                                 </div>
                                 <div class="crawler-type-content-div" id="form_page" hidden >
-                                    <div id="step_board">
-                                        <div id="step_controler">
-                                            <a class="btn btn-primary" style="color:white;" id="add_step_button" onclick=add_block()>
-                                                Add block
-                                            </a>
-                                        </div>
+                                    <div id="step_controler">
+                                        <a class="btn btn-primary" style="color:white;" id="add_step_button" onclick=add_block()>
+                                            Add block
+                                        </a>
                                     </div>
-
+                                    <div id="step_board">
+                                    </div>
+                                    <a class="btn btn-primary" style="color:white; margin-top: 2em" id="add_step_button" onclick=build_json()>
+                                            generate json
+                                    </a>
+                                    <input id="json_output" placeholder="steps json" class="row form-control">
                                 </div>
                                 <div class="crawler-type-content-div" id="single_file" hidden></div>
                                 <div class="crawler-type-content-div" id="bundle_file" hidden></div>

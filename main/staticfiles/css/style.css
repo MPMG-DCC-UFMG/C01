@@ -155,7 +155,7 @@ table.dataTable thead .sorting_desc_disabled:before {
 }
 
 .step-block {
-    margin-top: 1em;
+    margin-top: 0em;
 }
 
 .select-step {
@@ -173,6 +173,10 @@ div.step-config-select{
     display:inline-block;
     width: 10em;
     margin: 0em 2em 0em 2em;
+}
+
+#step_controler {
+    margin-bottom: 1em;
 }
 
 

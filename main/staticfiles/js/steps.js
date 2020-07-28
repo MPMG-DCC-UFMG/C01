@@ -1,9 +1,3 @@
-
-
-
-
-
-
 function load_steps(){
     //O carregamento dos passos vem aqui::: ----
 
@@ -12,6 +6,7 @@ function load_steps(){
     xmlhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
         STEP_LIST = JSON.parse(this.responseText)
+        STEP_LIST = STEP_LIST.concat(JSON.parse('{"name":"para cada"}'))
       }
 
     };
@@ -21,112 +16,22 @@ function load_steps(){
     // ------------------------------------------
 }
 
-function hide(id){
-    var element = document.getElementById(id);
-    element.style.display = "none";
-}
-
-function show(id){
-    var element = document.getElementById(id);
-    element.style.display = "block";
-}
-
-function delete_step(id){
-    var element = document.getElementById(id);
-    element.outerHTML = ""
-}    
-
-function indent_step(id){
-    CURRENT_DEPTH+=1
-    step = document.getElementById(id)
-    step.style = "left:"+ CURRENT_DEPTH +"em;\n"
-    step.depth = CURRENT_DEPTH
-}    
-
-function unindent_step(id){
-    if(CURRENT_DEPTH > 0){
-        CURRENT_DEPTH-=1
-    }
-    step = document.getElementById(id)
-    step.style = "left:"+ CURRENT_DEPTH +"em;\n"
-    step.depth = CURRENT_DEPTH
-}    
-
-
 function add_block(){
-    step_id = genId()
+    step_block = new StepBlock(STEP_LIST)
     step_board = document.getElementById("step_board")
-    step_options=""
-    for (var i = 0; i < STEP_LIST.length; i++) {
-        step_options = step_options + "<option>"+ STEP_LIST[i].name + "</option>\n"
+    step_board.appendChild(step_block.element)
+}
+
+//-------------- UTIL-------------------------------
+
+function get_index_in_parent(element){
+    parent = element.parentElement
+    for(var i=0; i<parent.children.length; i++){
+        if(parent.children[i].id == element.id){
+            return i
+        }
     }
-    
-
-    
-    step_html = `<div class="card-body row step-config" id="step_config`+ step_id + `">
-                    <div class="step-config-select">
-                        <span class="row step_param_names">Step:</span>
-                        <select onchange=refresh_step("`+step_id+`") class="row form-control select-step" id="select_step`+ step_id + `">`+ step_options +`</select>
-                    </div>
-                    <div class="col-sm">
-                        <div class="row">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="conteiner block-controler" id="block_controler`+step_id+`">
-                    <div class="row block-controler-interface">
-                        <div class="col-sm" onclick=delete_step("` + step_id + `")>
-                            <img class="block-controler-button" src="/static/icons/x.svg">
-                        </div>
-                        <div class="col-sm">    
-                            <img class="block-controler-button" src="/static/icons/arrow-up-black.svg">
-                        </div>
-                        <div class="col-sm">    
-                            <img class="block-controler-button" src="/static/icons/arrow-down-black.svg">
-                        </div>
-                        <div class="col-sm" onclick=unindent_step("`+step_id+`")>
-                            <img class="block-controler-button" src="/static/icons/arrow-left-black.svg">
-                        </div>
-                        <div class="col-sm" onclick=indent_step("`+step_id+`")>    
-                            <img class="block-controler-button" src="/static/icons/arrow-right-black.svg">
-                        </div>
-                    </div>
-                <div>`
-
-    new_step = document.createElement("DIV")
-    new_step.style = "left:"+ CURRENT_DEPTH +"em;\n"
-    new_step.id = step_id
-    new_step.onmouseout = function(){hide("block_controler"+this.id)}
-    new_step.onmouseover = function(){show("block_controler"+this.id)}
-    new_step.className = "conteiner card step-block"
-    new_step.depth = CURRENT_DEPTH
-
-    new_step.innerHTML = step_html
-    step_board.appendChild(new_step)
-
-    refresh_step(step_id)    
-    hide("block_controler"+step_id)
 }
-
-
-function refresh_step(id){
-    select_value = document.getElementById("select_step"+id).value
-    
-    mandatory_params = get_step_info(select_value).mandatory_params
-    step = document.getElementById(id)
-
-    html_mandatory_params=``
-    for(var i = 0; i < mandatory_params.length; i++)
-        html_mandatory_params = html_mandatory_params + `<div class="col-sm"><span class="row step_param_names" >` + mandatory_params[i] + `</span><input class="row form-control"></div>`
-    
-
-    step.children[0].children[1].children[0].innerHTML = html_mandatory_params
-}
-
-
-
-
 function get_step_info(step_name){
     for (var i = 0; i < STEP_LIST.length; i++) {
         if(STEP_LIST[i].name == step_name){
@@ -135,12 +40,267 @@ function get_step_info(step_name){
     }
 }
 
+//--------------CLASSES------------------------------
+
+class StepBlock{
+    constructor(step_list){
+        this.id = genId()
+        this.element = this.init_block(step_list)
+        this.element.id = this.id
+        this.element.step_list = step_list
+        this.select_box = this.element.children[0].children[0].children[0]
+        this.select = this.select_box.children[0]
+        this.step = get_step_info(this.select.value)
+        this.element.step = this.step.name
+        this.controler = this.element.children[1]
+        this.select.onchange = refresh_step
+        this.select.onchange()
+        var controler = this.controler
+        this.element.onmouseout = function(){hide(this.children[1]); this.style.borderColor = ""}
+        this.element.onmouseover = function(){show(this.children[1]); this.style.borderColor = "rgba(0,143,255,.5)"}
+        this.element.onmouseout()
+        this.controler.children[0].children[0].addEventListener("click",function(){unindent_step(this.parentElement.parentElement.parentElement)})
+        this.controler.children[0].children[1].addEventListener("click",function(){indent_step(this.parentElement.parentElement.parentElement)})
+        this.controler.children[0].children[2].addEventListener("click",function(){move_up(this.parentElement.parentElement.parentElement)})
+        this.controler.children[0].children[3].addEventListener("click",function(){move_down(this.parentElement.parentElement.parentElement)})
+        this.controler.children[0].children[4].addEventListener("click",function(){delete_step(this.parentElement.parentElement.parentElement)})
+        this.element.turn_to_for_step = turn_to_for_step
+    }    
+
+    init_block(step_list){
+        var step_html = `<div class="col-sm">
+                           <div class="card-body row step-config">
+                                <div class="step-config-select">
+                                    <select class="row form-control select-step" id="select_step`+ this.id + `">`+ get_html_step_options(step_list) +`</select>
+                                </div>
+                                <div class="col-sm">
+                                    <div class="row">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="conteiner block-controler" id="block_controler`+this.id+`">
+                            <div class="row block-controler-interface">
+                                <div class="col-sm">
+                                    <img class="block-controler-button" src="/static/icons/arrow-left-black.svg">
+                                </div>
+                                <div class="col-sm">
+                                    <img class="block-controler-button" src="/static/icons/arrow-right-black.svg">
+                                </div>
+                                <div class="col-sm">
+                                    <img class="block-controler-button" src="/static/icons/arrow-up-black.svg">
+                                </div>
+                                <div class="col-sm">
+                                    <img class="block-controler-button" src="/static/icons/arrow-down-black.svg">
+                                </div>
+                                <div class="col-sm">
+                                    <img class="block-controler-button" src="/static/icons/x.svg">
+                                </div>
+                            </div>
+                        <div>`
+        var new_step = document.createElement("DIV")
+        var step_board = document.getElementById("step_board")
+        if (step_board.children.length!= 0){
+            var depth = step_board.children[step_board.children.length - 1].depth
+        }else{
+            var depth = 1
+        }
+        new_step.style.left = (depth*2-2) +"em"
+        new_step.depth = depth
+        new_step.className = "conteiner card step-block"
+        new_step.innerHTML = step_html
+        return new_step
+    }   
+}
+
+function get_html_step_options(step_list){
+    html_step_options=""
+    for (var i = 0; i < step_list.length; i++) {
+        html_step_options = html_step_options + "<option>"+ step_list[i].name + "</option>\n"
+    }
+    return html_step_options
+}
+
+function turn_to_for_step(){
+    second_row = document.createElement("DIV")
+    second_row.className = "card-body row step-config"
+    this.children[0].appendChild(second_row)
+    second_row.outerHTML = `<div class="card-body row step-config">
+                                <div class="col-sm">
+                                    <div class="row">
+                                    </div>
+                                </div>
+                            </div>`
+
+    inside_first_row = `<div class="col-sm"><input value="opcao" class="form-control"></div>
+                        <div style="width:3em;"><p style="margin-top:10%; text-align:center;">em</p></div>
+                        <div class="step-config-select">
+                            <select class="form-control select-step">` + get_html_step_options(this.step_list)+ `<option>objeto</option>` + `</select>
+                        </div>`
+
+
+    this.children[0].children[0].children[1].children[0].innerHTML = inside_first_row
+    select_iterable = this.children[0].children[0].children[1].children[0].children[2].children[0]
+    this.children[0].children[1].children[0].children[0].innerHTML = get_params_structure(select_iterable)
+    select_iterable.onchange = refresh_iterable
+    this.iterator_input = this.children[0].children[0].children[1].children[0].children[0].children[0]
+    alert(this.iterator_input.value)
+    this.iterable_select = this.children[0].children[0].children[1].children[0].children[2].children[0]
+    alert(this.iterable_select.value)
+    this.iterable_params_div = this.children[0].children[1].children[0].children[0]
+    alert(this.iterable_params_div.innerHTML)
+
+
+    return step_html
+}
+
+function refresh_iterable(){
+    step_html = get_params_structure(this)
+    commun_parent = this.parentElement.parentElement.parentElement.parentElement.parentElement
+    commun_parent.children[1].children[0].children[0].innerHTML = step_html
+    
+}
+
+function refresh_step(){
+    block = this.parentElement.parentElement.parentElement.parentElement
+    if(this.value=="para cada"){
+        block.turn_to_for_step()
+    }else{
+        step_html = get_params_structure(this)
+        commun_parent = this.parentElement.parentElement
+        commun_parent.children[1].children[0].innerHTML = step_html   
+        if(block.children[0].children[1]){
+            block.children[0].children[1].outerHTML = ""
+        }
+    }
+    block.step = this.value
+}
+
+
+function get_params_structure(select_step){
+    if(select_step.value == "objeto"){
+        return `<div style="margin-left: 1em;" class="col-sm"><input placeholder="objeto, ex: [1,2,3]" class="row form-control"></div>`
+    }
+    var mandatory_params = get_step_info(select_step.value).mandatory_params
+    var params_structure_html = ""
+    for(var i = 0; i < mandatory_params.length; i++)
+        params_structure_html = params_structure_html + `<div style="margin-left: 1em;" class="col-sm"><input placeholder="` + mandatory_params[i] + `" class="row form-control"></div>`
+    return params_structure_html
+}
+
+
+function hide(element){
+    element.style.display = "none";
+}
+
+function show(element){
+    element.style.display = "block";
+}
+
+function delete_step(element){
+    element.outerHTML = ""
+}    
+
+function indent_step(element){
+    element.depth+=1
+    element.style.left = (element.depth*2-2) +"em"
+}    
+
+function unindent_step(element){
+    if(element.depth > 1){
+        element.depth-=1
+    }
+    element.style.left = (element.depth*2-2) +"em"
+}    
+
+
+function move_up(element){
+    index = get_index_in_parent(element)
+    parent = element.parentElement
+    if(index>0){
+        parent.insertBefore(parent.children[index], parent.children[index-1]);
+    }
+}
+
+function move_down(element){
+    parent = element.parentElement
+    index = get_index_in_parent(element)
+    if(index<parent.children.length-1){
+        parent.insertBefore(parent.children[index+1], parent.children[index]);
+    }
+}
+
+function build_json(){
+    step_board = document.getElementById("step_board")
+    var root_step = {
+        step: "root",
+        depth: 0,
+        children: []
+    }
+
+    stack = [root_step]
+
+    for(step_element of step_board.children){
+        indent = step_element.depth - stack[stack.length-1].depth
+
+        step_dict = get_step_json_format(step_element)
+
+        if(indent == 1){
+            stack[stack.length-1].children.push(step_dict)
+            stack.push(step_dict)
+        }else if(indent == 0){
+            stack.pop()
+            stack[stack.length-1].children.push(step_dict)
+            stack.push(step_dict)
+        }else if(indent < 0){
+            for(var i = 0; i < -indent; i++){
+                stack.pop()
+            }
+        }else if(indent>1){
+            console.log("Indentation ERROR")
+        }
+
+    }
+    document.getElementById("json_output").value = JSON.stringify(root_step)
+    
+}
+
+function get_step_json_format(step_element){
+    step_dict={
+        step : step_element.step,
+        depth : step_element.depth,
+    }
+    if(step_element.step == "para cada"){
+        step_dict.iterator = step_element.iterator_input.value
+        step_dict.children = []
+        if(step_element.iterable_select.value == "objeto"){
+            step_dict.iterable = {objeto:{}}
+            step_dict.iterable.objeto = step_element.iterable_params_div.children[0].children[0].value
+        }else{
+            step_dict.iterable = {call:{}}
+            step_dict.iterable.call = {
+                step: step_element.iterable_select.value,
+                arguments:{}
+            }
+            for(param of step_element.iterable_params_div.children){
+                step_dict.iterable.call.arguments[param.children[0].placeholder] = param.children[0].value
+            }
+        }
+    }
+    else {
+        step_dict.arguments = {}
+        for(child of step_element.children[0].children[0].children[1].children[0].children){
+            step_dict.arguments[child.children[0].placeholder] = child.children[0].value
+        }
+    }
+    return step_dict
+}
+
+
 
 STEP_LIST = []
-CURRENT_DEPTH = 0
 
-
-
+//parent = iframe.parentElement
 
 
 
