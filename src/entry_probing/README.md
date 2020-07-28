@@ -77,7 +77,7 @@ asynchronously.
 browser = await launch()
 page = await browser.newPage()
 req = PyppeteerProbingRequest()
-page.goto("http://test.com")
+await page.goto("http://test.com")
 req.process()
 # creates a request handler which will capture the response received when the
 # request to http://test.com is sent
