@@ -5,6 +5,7 @@ existence
 
 # Allow postponed evaluation of type annotations
 from __future__ import annotations
+from typing import Any
 
 from .entry_probing_request import ProbingRequest
 from .entry_probing_response import ProbingResponse, ResponseData
