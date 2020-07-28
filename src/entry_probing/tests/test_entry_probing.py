@@ -6,12 +6,13 @@ import unittest
 from unittest import mock
 
 from entry_probing import EntryProbing, GETProbingRequest,\
-                          PyppeteerProbingRequest, HTTPStatusProbingResponse,\
-                          TextMatchProbingResponse,\
-                          BinaryFormatProbingResponse, ResponseData
+    PyppeteerProbingRequest, HTTPStatusProbingResponse,\
+    TextMatchProbingResponse,\
+    BinaryFormatProbingResponse, ResponseData
 
 # helper function to create a mock of a Pyppeteer.page.Page entry
 from .test_entry_probing_request import create_mock_pyp_page
+
 
 class EntryProbingTest(unittest.IsolatedAsyncioTestCase):
     """
