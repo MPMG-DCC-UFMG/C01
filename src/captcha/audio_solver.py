@@ -9,9 +9,9 @@ from selenium import webdriver
 from validators import url
 
 class AudioSolver:
-    def __init__(self, 
-                 url, 
-                 model=None, 
+    def __init__(self,
+                 url,
+                 model=None,
                  preprocessing=None,
                  webdriver=None,
                  download_dir=None):
@@ -26,31 +26,11 @@ class AudioSolver:
         if url is None:
             raise Exception("Usuário deve indicar uma url")
         self.url = url
-        self.predict = model or self._ocr 
+        self.predict = model or self._ocr
         self.preprocess = preprocessing or self._preprocess
         self.id = uuid.uuid4().hex
-        self.download_dir = download_dir or  "./" + self.id
-        self.driver = webdriver or self._get_webdriver()
-
-    def _get_webdriver(self):
-        """
-        Instantiate webdriver in case the user
-        didn't pass the webdriver to be used
-        """
-
-        options = webdriver.ChromeOptions()
-        # passing the download folder is necessary in case the audio is downloaded
-        options.add_experimental_option("prefs", {
-                "download.default_directory": self.download_dir,
-                "download.prompt_for_download": False,
-                "download.directory_upgrade": True,
-                "safebrowsing_for_trusted_sources_enabled": False,
-                "safebrowsing.enabled": False
-        })
-        options.add_argument("--headless")
-        options.add_argument('window-size=1920x1080')
-        driver = webdriver.Chrome("/usr/bin/chromedriver", chrome_options=options)
-        return driver
+        self.download_dir = download_dir or  "./"# + self.id
+        self.driver = webdriver
 
     def _get_audio(self, path):
         """
@@ -74,10 +54,10 @@ class AudioSolver:
         """
 
         audio = self.driver.get(url)
-        while not os.path.exists(self.download_dir + "/audio.wav"):
+        while not os.path.exists(self.download_dir + "audio.wav"):
             sleep(2)
         sleep(2)
-        return sr.AudioFile(self.download_dir + "/audio.wav")
+        return sr.AudioFile(self.download_dir + "audio.wav")
 
     def _preprocess(self, audio):
         """
@@ -98,22 +78,9 @@ class AudioSolver:
 
         recognizer = sr.Recognizer()
         with audio as source:
-            audio = recognizer.record(source)                        
+            audio = recognizer.record(source)
         text = recognizer.recognize_google(audio, language = "pt-BR")
         return text
-
-    def check_exists_by_xpath(self, xpath):
-        """
-        Check if XPATH element is present in the page
-
-        :xpath:    XPATH of the "Download audio" element in page
-        """ 
-
-        try:
-            self.driver.find_element_by_xpath(xpath)
-        except NoSuchElementException:
-            return False
-        return True
 
     def solve(self, audio=None, source=None):
         """
@@ -130,5 +97,4 @@ class AudioSolver:
 
         aud = audio or self._get_audio(source)
         aud = self.preprocess(aud)
-        text = self.predict(aud)
-        return text     
+        return self.predict(aud)
