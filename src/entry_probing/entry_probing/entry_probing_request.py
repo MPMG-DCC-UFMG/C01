@@ -148,7 +148,8 @@ class PyppeteerProbingRequest(ProbingRequest):
 
     async def process(self, *_) -> ResponseData:
         """
-        Returns the received response data from a request done using Pyppeteer
+        Returns the received response data from a request done using Pyppeteer,
+        overwriting the text property to get the current contents of the page
 
         Defined as a coroutine to be properly integrated with the Pyppeteer
         driver
@@ -163,4 +164,11 @@ class PyppeteerProbingRequest(ProbingRequest):
             # No response was received since the constructor was called
             raise ValueError("The page hasn't received any responses")
 
-        return await ResponseData().create_from_pyppeteer(self.__response)
+        result = await ResponseData().create_from_pyppeteer(self.__response)
+
+        # Update the text contents of the response with the current page
+        # contents, if it has a text type
+        if 'text' in result.headers['content-type'].split('/')[0]:
+            result.text = await self.__page.content()
+
+        return result

@@ -69,9 +69,9 @@ Implements a Pyppeteer request handler. Receives an instance of
 In its constructor, it adds a `response` event to the supplied page so that we
 can capture the response when we access the URL. The request must be done
 manually outside of this class, and before the call to `process` is made. The
-`process` method gets the response and returns it as a `ResponseData` instance.
-All methods are implemented as coroutines, since Pyppeteer works
-asynchronously.
+`process` method gets the response and returns it as a `ResponseData` instance,
+overwriting the `text` property with the text of the currently open page. All
+methods are implemented as coroutines, since Pyppeteer works asynchronously.
 
 ```
 browser = await launch()

@@ -48,7 +48,8 @@ def create_mock_pyp_page(content_type: str = None,
         on_event = mock.MagicMock(side_effect=on_event_func)
 
     # mock of the Pyppeteer page
-    mock_page = mock.MagicMock(spec=pyppeteer.page.Page, on=on_event)
+    mock_page = mock.MagicMock(spec=pyppeteer.page.Page, on=on_event,
+                               content=lambda: return_async_text(text))
 
     return mock_page
 
