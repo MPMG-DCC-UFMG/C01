@@ -221,10 +221,12 @@ New Crawler
                                     </div>
                                     <div id="step_board">
                                     </div>
-                                    <a class="btn btn-primary" style="color:white; margin-top: 2em" id="add_step_button" onclick=build_json()>
-                                            generate json
-                                    </a>
-                                    <input id="json_output" placeholder="steps json" class="row form-control">
+                                    <div class="row" style="margin-top: 1em">
+                                        <a class="btn btn-primary" style="color:white; width: 10em; margin-right: 2em" id="add_step_button" onclick=build_json()>
+                                                generate json
+                                        </a>
+                                        <input class="form-control col-sm" id="json_output" placeholder="steps json">
+                                    </div>
                                 </div>
                                 <div class="crawler-type-content-div" id="single_file" hidden></div>
                                 <div class="crawler-type-content-div" id="bundle_file" hidden></div>

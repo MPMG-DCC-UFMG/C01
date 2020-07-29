@@ -144,11 +144,8 @@ function turn_to_for_step(){
     this.children[0].children[1].children[0].children[0].innerHTML = get_params_structure(select_iterable)
     select_iterable.onchange = refresh_iterable
     this.iterator_input = this.children[0].children[0].children[1].children[0].children[0].children[0]
-    alert(this.iterator_input.value)
     this.iterable_select = this.children[0].children[0].children[1].children[0].children[2].children[0]
-    alert(this.iterable_select.value)
     this.iterable_params_div = this.children[0].children[1].children[0].children[0]
-    alert(this.iterable_params_div.innerHTML)
 
 
     return step_html
