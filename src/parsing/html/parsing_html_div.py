@@ -34,7 +34,7 @@ def write_file(list_content, output_name, to_csv):
             json.dump(list_content, f)
 
 
-def div_to_file(html_file_path,  output_file='output', to_csv=False):
+def div_to_file(html_file_path, output_file='output', to_csv=False):
     """
     Receives an html file path, converts the html to csv and saves the file on
     disk.
