@@ -113,7 +113,7 @@ class BaseSpider(scrapy.Spider):
         hsh = self.hash(response.url)
 
         html_detect_content(f"{CURR_FOLDER_FROM_ROOT}/data/{self.crawler_id}/files/{hsh}.{file_format}",
-                            is_string=False, output_file=f"{CURR_FOLDER_FROM_ROOT}/data/{self.crawler_id}/csv/output.csv",)
+                            is_string=False, output_file=f"{CURR_FOLDER_FROM_ROOT}/data/{self.crawler_id}/csv/output",)
 
     def store_html(self, response):
         """Stores raw html in a json file at data/{self.crawler_id}/raw_pages/."""

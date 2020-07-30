@@ -1,17 +1,14 @@
-import pandas as pd
 import os
 from bs4 import BeautifulSoup
-import csv
-import xml
-import re
+import errno
 from src.parsing.html.parsing_html_table import *
 from src.parsing.html.parsing_html_div import *
 
 
-def clean_html(html_file, isString):
-    '''
-    Receives the html file and removes unecessery parts, as header, footer, etc.
-    '''
+def clean_html(html_file, is_string):
+    """
+    Receives the html file and removes unnecessary parts, as header, footer, etc.
+    """
 
     # List of elements that are going to be removed from the html
     remove_list = ["head", "header", "footer", "polygon", "path", "script",
@@ -23,14 +20,14 @@ def clean_html(html_file, isString):
     remove_id = ["boxes", "mySidenav", "chat-panel", "footer"]
 
     # Check if the html_file is a string with the page or a path to the file
-    if not isString:
-        soup = ""
+    soup = ""
+    if is_string:
+        f = html_file
+        soup = BeautifulSoup(f, 'html.parser')
+    else:
         f = open(html_file, encoding="ISO-8859-1")
         soup = BeautifulSoup(f, 'html.parser')
         f.close()
-    if isString:
-        f = html_file
-        soup = BeautifulSoup(f, 'html.parser')
 
     # Remove any tag present in remove_list
     for tag in soup.find_all():
@@ -42,7 +39,7 @@ def clean_html(html_file, isString):
     # Remove any div with the id in remove_id
     for div in soup.find_all("div", {'id': remove_id}):
         div.extract()
-    # Remove any tbale with the id in remove_id (bad html construction)
+    # Remove any table with the id in remove_id (bad html construction)
     for tab in soup.find_all("table", {'id': remove_id}):
         tab.extract()
 
@@ -52,10 +49,10 @@ def clean_html(html_file, isString):
 
 
 def fix_links(html_file):
-    '''
+    """
     Receives the html file and return the same file with the value of the links
     as the text of the links
-    '''
+    """
     f = html_file
     soup = BeautifulSoup(f, 'html.parser')
 
@@ -69,10 +66,10 @@ def fix_links(html_file):
 
 
 def check_div(html_file):
-    '''
+    """
     Receives a html file and returns booleans indicating if the content is in
     a table or div
-    '''
+    """
     # Boolean variables to indicate if the content is in table or div format
     table_content = False
     div_content = False
@@ -95,19 +92,19 @@ def check_div(html_file):
     return table_content, div_content
 
 
-def html_detect_content(html_file, is_string=False, output_file='output.csv',
-match='.+', flavor=None, header=None, index_col=None, skiprows=None,
- attrs=None, parse_dates=False, thousands=', ', encoding=None, decimal='.',
-  converters=None, na_values=None, keep_default_na=True, displayed_only=True):
-    '''
-    Receives an html file path, converts the html to csv and saves the file on
+def html_detect_content(html_file, is_string=False, output_file='output',
+                        match='.+', flavor=None, header=None, index_col=None, skiprows=None,
+                        attrs=None, parse_dates=False, thousands=', ', encoding=None, decimal='.',
+                        converters=None, na_values=None, keep_default_na=True, displayed_only=True):
+    """
+    Receives an html file path, converts the html and saves the file on
     disk.
 
     :param html_file : str (A file-like object, or a raw string containing
      HTML.)
-    :param is_string : bool, default False (Wheter the html file is passed as a
+    :param is_string : bool, default False (Whether the html file is passed as a
     string or as the path to the file)
-    :param output_file: str (Name of the output file, default is output.csv)
+    :param output_file: str (Name of the output file, default is output)
     :param match : str or compiled regular expression (The set of tables
     containing text matching this regex or string will be returned. )
     :param flavor : str or None, container of strings (The parsing engine to
@@ -131,9 +128,9 @@ match='.+', flavor=None, header=None, index_col=None, skiprows=None,
     :param na_values : iterable, default None (Custom NA values)
     :param keep_default_na : bool, default True (If na_values are specified and
      keep_default_na is False the default NaN values are overridden)
-    :param display_only : bool, default True (Whether elements with
+    :param displayed_only : bool, default True (Whether elements with
      “display: none” should be parsed)
-    '''
+    """
 
     # Check if html file exists
     if (os.path.isfile(html_file)) or is_string:
@@ -146,16 +143,16 @@ match='.+', flavor=None, header=None, index_col=None, skiprows=None,
         # Call the indicated parsing
         if div_content:
             # HAS A DIV
-            div_to_csv(html_file, True, output_file)
+            div_to_file(html_file, output_file)
         if table_content:
             # HAS A TABLE
-            table_to_csv(html_file, True, output_file, match, flavor, header, index_col, skiprows,
-             attrs, parse_dates, thousands, encoding, decimal,
-              converters, na_values, keep_default_na, displayed_only)
+            table_to_file(html_file, output_file, match, flavor, header, index_col, skiprows,
+                          attrs, parse_dates, thousands, encoding, decimal,
+                          converters, na_values, keep_default_na, displayed_only)
         # If the file has no table or div with content
-        if (table_content or div_content) == False:
+        if not (table_content or div_content):
             raise ValueError('No content found.')
 
     else:
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT),
-        html_file)
+                                html_file)

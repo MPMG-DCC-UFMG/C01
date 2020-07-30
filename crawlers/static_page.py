@@ -50,12 +50,14 @@ class StaticPageSpider(BaseSpider):
         Parse responses of static pages.
         Will try to follow links if config["explor_links"] is set.
         """
+
+
         print(response.url, response.headers['Content-type'])
 
         if self.stop():
             return
 
-        self.extract_and_store_csv(response)
+        # self.extract_and_store_csv(response)
 
         if response.headers['Content-type'] == b'text/html':
             self.store_html(response)
@@ -119,3 +121,4 @@ class StaticPageSpider(BaseSpider):
                 # END CODE
         else:
             self.store_raw(response)
+        self.extract_and_store_csv(response)
