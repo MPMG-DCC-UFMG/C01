@@ -14,6 +14,7 @@ import time
 from crawlers.constants import *
 from src.parsing.html.parsing_html_content import *
 
+
 class BaseSpider(scrapy.Spider):
     name = 'base_spider'
 
@@ -88,7 +89,7 @@ class BaseSpider(scrapy.Spider):
         assert response.headers['Content-type'] != b'text/html'
 
         file_format = str(response.headers['Content-type']).split("/")[1][:-1].split(";")[0]
-        print('file_format: ',file_format)
+        print('file_format: ', file_format)
         hsh = self.hash(response.url)
         content = {
             "hash": hsh,
