@@ -268,6 +268,7 @@ function get_step_json_format(step_element){
         depth : step_element.depth,
     }
     if(step_element.step == "para cada"){
+        step_dict.step = "para_cada"
         step_dict.iterator = step_element.iterator_input.value
         step_dict.children = []
         if(step_element.iterable_select.value == "objeto"){
