@@ -24,10 +24,16 @@ class DynamicFields:
             url (`str`): target url.
             form (`lxml.etree._Element`): target form.
         """
-        self.browser = utils.open_driver(url)
+        self.driver = utils.open_driver(url)
         self.form_xpath = utils.get_xpath(form)
         self.form_text = self.get_text(self.form_xpath)
         self.dynamic_fields = defaultdict(list)
+
+    def __del__(self):
+        try:
+            self.driver.quit()
+        except:
+            pass
 
     def get_text(self, xpath) -> str:
         """Returns the text within a web element
@@ -35,7 +41,7 @@ class DynamicFields:
         Args:
             xpath: xpath of the element
         """
-        return self.browser.find_element_by_xpath(xpath).text
+        return self.driver.find_element_by_xpath(xpath).text
 
     def get_dynamic_fields(self, fields_dict):
         """Calls check_fields for each field type to be checked
@@ -57,7 +63,7 @@ class DynamicFields:
         """
         for field in field_list:
             xpath = utils.get_xpath(field)
-            element = self.browser.find_element_by_xpath(xpath)
+            element = self.driver.find_element_by_xpath(xpath)
             if not element.is_displayed():
                 continue
             status_before_change = self.get_status(field_list)
@@ -75,7 +81,7 @@ class DynamicFields:
                     self.dynamic_fields[xpath].append(changed_field)
             elif self.check_text_change(text_before_change):
                 self.dynamic_fields[xpath].append('')
-            self.browser.refresh()
+            self.driver.refresh()
 
     @staticmethod
     def change_select_field(element):
@@ -104,7 +110,7 @@ class DynamicFields:
             return text_before_action != self.get_text(self.form_xpath)
 
         except exceptions.StaleElementReferenceException:
-            form = html.HTMLParser(url=self.browser.current_url)
+            form = html.HTMLParser(url=self.driver.current_url)
             self.form_xpath = utils.get_xpath(form)
             return text_before_action != self.get_text(self.form_xpath)
 
@@ -122,7 +128,7 @@ class DynamicFields:
         status = {}
         for field in field_list:
             xpath = utils.get_xpath(field)
-            element = self.browser.find_element_by_xpath(xpath)
+            element = self.driver.find_element_by_xpath(xpath)
             if attribute == 'is_displayed':
                 status[xpath] = element.is_displayed()
             elif attribute == 'is_enabled':
