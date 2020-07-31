@@ -15,6 +15,9 @@ from crawlers.constants import *
 # from .crawlers.static_page import StaticPageSpider
 # from .crawlers.static_page import StaticPageSpider
 from crawlers.static_page import StaticPageSpider
+
+import crawling_utils.crawling_utils as crawling_utils
+
 import requests
 
 # TODO: implement following antiblock options
@@ -50,7 +53,7 @@ def get_crawler_base_settings(config):
         "ROBOTSTXT_OBEY": True,
         "DOWNLOAD_DELAY": 1,
         "SELENIUM_DRIVER_NAME": "chrome",
-        "SELENIUM_DRIVER_EXECUTABLE_PATH": shutil.which("{CURR_FOLDER_FROM_ROOT}/webdriver/chromedriver_win32_chr_81.exe"),
+        "SELENIUM_DRIVER_EXECUTABLE_PATH": shutil.which(crawling_utils.CHROME_WEBDRIVER_PATH),
         "SELENIUM_DRIVER_ARGUMENTS": ["--headless"],
         "DOWNLOADER_MIDDLEWARES": {"scrapy_selenium.SeleniumMiddleware": 0},
         "DOWNLOAD_DELAY": config["antiblock_download_delay"],
