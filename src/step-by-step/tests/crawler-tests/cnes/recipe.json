@@ -3,112 +3,71 @@
     "depth": 0,
     "children": [
         {
-            "step": "digite",
-            "arguments": {
-                "xpath": "\"/html/body/div[2]/main/div/div[2]/div/form[2]/div/input\"",
-                "texto": "\"SU\""
-            },
-            "depth": 1
-        },
-        {
-            "step": "for",
-            "iterator": "estado",
-            "iterable":{
-                "object": ["\"ACRE\"","\"ALAGOAS\"","\"AMAPA\"","\"AMAZONAS\"","\"BAHIA\"","\"CEARA\"","\"DISTRITO FEDERAL\"","\"ESPIRITO SANTO\"","\"GOIAS\"","\"MARANHAO\"","\"MATO GROSSO\"","\"MATO GROSSO DO SUL\"","\"MINAS GERAIS\"","\"PARA\"","\"PARAIBA\"","\"PARANA\"","\"PERNAMBUCO\"","\"PIAUI\"","\"RIO DE JANEIRO\"","\"RIO GRANDE DO NORTE\"","\"RIO GRANDE DO SUL\"","\"RONDONIA\"","\"RORAIMA\"","\"SANTA CATARINA\"","\"SAO PAULO\"","\"SERGIPE\"","\"TOCANTINS\""]
-            },
-            "breakable": true,
+            "step": "para cada",
+            "depth": 1,
+            "iterator": "opcao",
             "children": [
                 {
                     "step": "selecione",
+                    "depth": 2,
                     "arguments": {
-                        "opcao": "estado",
-                        "xpath": "\"/html/body/div[2]/main/div/div[2]/div/form[1]/div[2]/div[1]/div/select\""
-                    },
-                    "depth": 2
+                        "xpath": "\"/html/body/div[2]/main/div/div[2]/div/form[1]/div[2]/div[1]/div/select\"",
+                        "opcao": "opcao"
+                    }
                 },
                 {
                     "step": "espere",
+                    "depth": 2,
                     "arguments": {
-                        "segs" : 2
-                    },
-                    "depth": 2
+                        "segs": "2"
+                    }
                 },
                 {
-                    "step": "for",
-                    "iterator": "cidade",
-                    "iterable":{
-                        "call":{
-                            "step": "opcoes",
-                            "arguments": {
-                                "xpath": "\"/html/body/div[2]/main/div/div[2]/div/form[1]/div[2]/div[2]/div/select\"",
-                                "exceto": "[\"Selecione\"]"
-                            }
-                        }
-                    },
-                    "breakable": false,
+                    "step": "para cada",
+                    "depth": 2,
+                    "iterator": "opcao",
                     "children": [
                         {
                             "step": "selecione",
+                            "depth": 3,
                             "arguments": {
-                                "opcao": "cidade",
-                                "xpath": "\"/html/body/div[2]/main/div/div[2]/div/form[1]/div[2]/div[2]/div/select\""
-                            },
-                            "depth": 3
-                        },
-                        {
-                            "step": "clique",
-                            "arguments": {
-                                "xpath": "\"/html/body/div[2]/main/div/div[2]/div/form[2]/div/button\""
-                            },
-                            "depth": 3
+                                "xpath": "\"/html/body/div[2]/main/div/div[2]/div/form[1]/div[2]/div[2]/div/select\"",
+                                "opcao": "opcao"
+                            }
                         },
                         {
                             "step": "espere",
+                            "depth": 3,
                             "arguments": {
-                                "segs": 1
-                            },
-                            "depth": 3
+                                "segs": "2"
+                            }
                         },
                         {
-                            "step": "if",
-                            "negation": true,
-                            "condition": {
-                                "call":{
-                                    "step": "nesse_elemento_esta_escrito",
-                                    "arguments": {
-                                        "xpath": "\"/html/body/div[2]/main/div/div[2]/div/div[1]/strong\"",
-                                        "texto": "\"Não Existem Dados para a Pesquisa Solicitada.\""
-                                    }
-                                }
-                            },
-                            "children": [
-                                {
-                                    "step": "espere",
-                                    "arguments": {
-                                        "segs" : 2
-                                    },
-                                    "depth": 4
-                                },
-                                {
-                                    "step": "para_cada_pagina_em",
-                                    "xpath_dos_botoes": "\"/html/body/div[2]/main/div/div[2]/div/div[3]/div/div/div/ul/li/a\"",
-                                    "indice_do_botao_proximo": -1,
-                                    "children": [
-                                        {
-                                            "step":"salva_pagina",
-                                            "depth": 5
-                                        }
-                                    ],
-                                    "depth": 4
-                                }
-                            ],
-                            "depth": 3
+                            "step": "clique",
+                            "depth": 3,
+                            "arguments": {
+                                "xpath": "\"/html/body/div[2]/main/div/div[2]/div/form[2]/div/button\""
+                            }
                         }
                     ],
-                    "depth": 2
+                    "iterable": {
+                        "call": {
+                            "step": "clique",
+                            "arguments": {
+                                "xpath": "\"/html/body/div[2]/main/div/div[2]/div/form[1]/div[2]/div[2]/div/select\""
+                            }
+                        }
+                    }
                 }
             ],
-            "depth": 1
+            "iterable": {
+                "call": {
+                    "step": "opcoes",
+                    "arguments": {
+                        "xpath": "\"/html/body/div[2]/main/div/div[2]/div/form[1]/div[2]/div[1]/div/select\""
+                    }
+                }
+            }
         }
     ]
 }
