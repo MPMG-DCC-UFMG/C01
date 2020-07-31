@@ -1,7 +1,7 @@
 import inspect
 import step_crawler.code_generator as cg
 
-def generate_for(child, module):
+def generate_para_cada(child, module):
     code = ""
     if 'call' in child['iterable']:
         function_info = child['iterable']['call']
