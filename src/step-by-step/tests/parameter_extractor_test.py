@@ -1,11 +1,11 @@
+from step_crawler.parameter_extractor import *
+import functions_file_example as ffe
+import unittest
 import sys
 sys.path.append("../")
 sys.path.append("examples")
 
-import unittest
 
-import functions_file_example as ffe
-from step_crawler.parameter_extractor import *
 
 
 class TestExtractInfo(unittest.TestCase):
@@ -61,7 +61,7 @@ class TestExtractInfo(unittest.TestCase):
     def test_get_module_functions_info(self):
         # Testing this function, the get_module_functions
         # is also implicitly tested
-        
+
         result = get_module_functions_info(ffe)
 
         # Because they may be out of order, and contains unhashable items
