@@ -1,14 +1,14 @@
+from pyext import RuntimeModule
+from step_crawler.functions_file import *
+from step_crawler import functions_file
+from step_crawler import code_generator as code_g
+from pyppeteer import launch
 import json
 
 import sys
 sys.path.append("../../../")
 
-from pyppeteer import launch
 
-from step_crawler import code_generator as code_g
-from step_crawler import functions_file
-from step_crawler.functions_file import *
-from pyext import RuntimeModule
 
 
 
