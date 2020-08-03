@@ -75,7 +75,9 @@ def get_firefox_arguments():
 
 def open_driver(url, driver_arguments=get_firefox_arguments(), sleep_time=5):
     """Opens a webdriver and loads url"""
-    driver = crawling_utils.init_webdriver("firefox", arguments=driver_arguments)
+    driver = crawling_utils.init_webdriver(
+        "firefox", arguments=driver_arguments
+    )
     driver.get(url)
 
     time.sleep(sleep_time)

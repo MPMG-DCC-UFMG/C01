@@ -2,10 +2,15 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import time
 
-CHROME_WEBDRIVER_PATH = 'chromedriver'  # leave as 'chromedriver' if driver is on path
-# CHROME_WEBDRIVER_PATH = "D:/Users/gabri/Documents/GitHub/C04/src/crawling_utils/crawling_utils/chromedriver_win32_chr_83.exe"
-FIREFOX_WEBDRIVER_PATH = 'geckodriver'  # leave as 'geckodriver' if driver is on path
-# FIREFOX_WEBDRIVER_PATH = "D:/Users/gabri/Documents/GitHub/C04/src/crawling_utils/crawling_utils/geckodriver_v0_27_0_win_64.exe"
+# leave as 'chromedriver' if driver is on path
+CHROME_WEBDRIVER_PATH = 'chromedriver'
+# CHROME_WEBDRIVER_PATH = "D:/Users/gabri/Documents/GitHub/C04/src/" \
+#   "crawling_utils/crawling_utils/chromedriver_win32_chr_83.exe"
+# leave as 'geckodriver' if driver is on path
+FIREFOX_WEBDRIVER_PATH = 'geckodriver'
+# FIREFOX_WEBDRIVER_PATH = "D:/Users/gabri/Documents/GitHub/C04/src/" \
+#   "crawling_utils/crawling_utils/geckodriver_v0_27_0_win_64.exe"
+
 
 def init_webdriver(
     driver_type: str = "chrome",
@@ -23,7 +28,7 @@ def init_webdriver(
         options = webdriver.firefox.options.Options()
         if headless:
             pass
-    
+
     else:
         raise ValueError("Invalid driver type")
 
@@ -34,13 +39,14 @@ def init_webdriver(
         return webdriver.Chrome(
             executable_path=CHROME_WEBDRIVER_PATH,
             options=options
-        )    
+        )
 
     else:
         return webdriver.Firefox(
             executable_path=FIREFOX_WEBDRIVER_PATH,
             options=options
         )
+
 
 def test_webdriver(driver):
     driver.get("http://www.python.org")
@@ -53,11 +59,14 @@ def test_webdriver(driver):
     time.sleep(5)
     driver.close()
 
+
 def test_init_firefox_webdriver():
     test_webdriver(init_webdriver("firefox"))
-    
+
+
 def test_init_chrome_webdriver():
     test_webdriver(init_webdriver("chrome"))
+
 
 if __name__ == "__main__":
     test_webdriver(init_webdriver("firefox", headless=False))

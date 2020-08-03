@@ -32,7 +32,7 @@ class DynamicFields:
     def __del__(self):
         try:
             self.driver.quit()
-        except:
+        except Exception:
             pass
 
     def get_text(self, xpath) -> str:
