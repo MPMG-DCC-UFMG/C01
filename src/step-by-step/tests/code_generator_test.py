@@ -1,12 +1,12 @@
+from step_crawler import atomizer as atom
+from step_crawler import code_generator as cg
+from pyext import RuntimeModule
+import json
+import unittest
 import sys
 sys.path.append("../")
 
-import unittest
-import json
 
-from pyext import RuntimeModule
-from step_crawler import code_generator as cg
-from step_crawler import atomizer as atom
 
 
 class TestExtractInfo(unittest.TestCase):
@@ -52,7 +52,7 @@ class TestExtractInfo(unittest.TestCase):
 
     def test_generate_head(self):
         result = cg.generate_head(json)
-        expected_result = "import step_crawler\n" 
+        expected_result = "import step_crawler\n"
         expected_result += "from " + "json" + " import *\n\n"
         expected_result += "async def "
         expected_result += "execute_steps(**missing_arguments):\n"
@@ -87,7 +87,7 @@ class TestExtractInfo(unittest.TestCase):
 
     #     ff = __import__("step_crawler").functions_file
 
-    #     code  = "import step_crawler\n" 
+    #     code  = "import step_crawler\n"
     #     code += "from " + "step_crawler.functions_file" + " import *\n\n"
     #     code += "async def "
     #     code += "execute_steps(**missing_arguments):\n"
