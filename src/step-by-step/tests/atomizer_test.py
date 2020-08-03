@@ -1,11 +1,11 @@
+import functions_file_example as ffe
+import json
+from step_crawler import atomizer as atom
+import unittest
 import sys
 sys.path.append("../")
 sys.path.append("examples")
 
-import unittest
-from step_crawler import atomizer as atom
-import json
-import functions_file_example as ffe
 
 
 class TestExtractInfo(unittest.TestCase):
@@ -15,38 +15,38 @@ class TestExtractInfo(unittest.TestCase):
 
         self.assertEqual(atom.track_parallelizable_fors(
             recipe_examples["unique_for"]["recipe"]),
-                         [{'iterator': 'i', 'iterable': {
-                             'call': {'step': 'range_',
-                                      'arguments': {'stop': 2}}}}])
+            [{'iterator': 'i', 'iterable': {
+                'call': {'step': 'range_',
+                         'arguments': {'stop': 2}}}}])
         self.assertEqual(atom.track_parallelizable_fors(
             recipe_examples["unbreakable_between_breakable"]["recipe"]),
-                         [
-                            {'iterator': 'i', "iterable": {
-                                    "object": [1,2,3]
-                                }
-                            },
-                             {'iterator': 'k', 'iterable': {
-                                 'call': {'step': 'range_',
-                                          'arguments': {'stop': 2}}}}
-                         ])
+            [
+            {'iterator': 'i', "iterable": {
+                "object": [1, 2, 3]
+            }
+            },
+            {'iterator': 'k', 'iterable': {
+                'call': {'step': 'range_',
+                         'arguments': {'stop': 2}}}}
+        ])
         self.assertEqual(atom.track_parallelizable_fors(
             recipe_examples["step_after_the_for"]["recipe"]), [])
         self.assertEqual(atom.track_parallelizable_fors(
             recipe_examples["step_before_the_for"]["recipe"]),
-                         [{'iterator': 'i', 'iterable': {
-                             'call': {'step': 'range_',
-                                      'arguments': {'stop': 2}}}}])
+            [{'iterator': 'i', 'iterable': {
+                'call': {'step': 'range_',
+                         'arguments': {'stop': 2}}}}])
         self.assertEqual(atom.track_parallelizable_fors(
             recipe_examples["all_cases"]["recipe"]),
-                        [
-                            {'iterator': 'h', "iterable": {
-                                    "object": [1,2,3]
-                                }
-                            },
-                            {'iterator': 'j', 'iterable': {
-                                'call': {'step': 'range_',
-                                         'arguments': {'stop': 2}}}}
-                        ])
+            [
+            {'iterator': 'h', "iterable": {
+                "object": [1, 2, 3]
+            }
+            },
+            {'iterator': 'j', 'iterable': {
+                'call': {'step': 'range_',
+                         'arguments': {'stop': 2}}}}
+        ])
 
     def test_get_iterable_objects(self):
         call_1 = [
@@ -105,11 +105,11 @@ class TestExtractInfo(unittest.TestCase):
 
         self.assertEqual(atom.for_to_attribution(
             recipe_examples['unique_for']['recipe']['children'][0], "i", 0),
-                         expected_result)
+            expected_result)
         self.assertEqual(atom.for_to_attribution(
             {"step": "for", "depth": 0, "children": []}, 'i', 2), [
-                             {"step": "attribution", "depth": 0, "target": "i",
-                              "source": 2}])
+            {"step": "attribution", "depth": 0, "target": "i",
+             "source": 2}])
 
     def test_replace_fors_by_attributions(self):
         pass
