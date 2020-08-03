@@ -65,15 +65,15 @@ async def for_clicavel(page, xpath):
 
 
 
-async def pegue_os_links_da_paginacao(page, xpath_dos_botoes, xpath_dos_links, indice_do_botao_proximo = -1):
+async def pegue_os_links_da_paginacao(page, xpath_dos_botoes, xpath_dos_links, indice_do_botao_proximo=-1):
     clickable = True
     urls = []
     while clickable:
-        urls += [await (await link.getProperty('href')).jsonValue() for link in await page.xpath(xpath_dos_links)] 
+        urls += [await (await link.getProperty('href')).jsonValue() for link in await page.xpath(xpath_dos_links)]
 
 
         buttons = await page.xpath(xpath_dos_botoes)
-        if len(buttons) !=0:
+        if len(buttons) != 0:
             next_button = buttons[indice_do_botao_proximo]
             before_click = await page.content()
             await next_button.click()
@@ -84,7 +84,7 @@ async def pegue_os_links_da_paginacao(page, xpath_dos_botoes, xpath_dos_links, i
             clickable = False
 
 
-async def digite(page ,xpath, texto):
+async def digite(page, xpath, texto):
     await page.type(cssify(xpath), texto)
 
 
@@ -102,4 +102,3 @@ async def nesse_elemento_esta_escrito(page, xpath, texto):
         return True
     else:
         return False
-

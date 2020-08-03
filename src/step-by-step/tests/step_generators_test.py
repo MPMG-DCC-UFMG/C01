@@ -1,13 +1,13 @@
+from step_crawler import step_generators as sg
+import step_crawler.functions_file as ff
+import json
+import unittest
 import sys
 sys.path.append("../")
 
-import unittest
-import json
-
-import step_crawler.functions_file as ff
 
 
-from step_crawler import step_generators as sg
+
 
 
 class TestExtractInfo(unittest.TestCase):
