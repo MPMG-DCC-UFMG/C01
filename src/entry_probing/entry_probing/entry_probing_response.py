@@ -200,4 +200,4 @@ class BinaryFormatProbingResponse(ProbingResponse):
             # Pyppeteer capitalization
             header_name = 'content-type'
 
-        return not 'text' in response.headers[header_name].split('/')[0]
+        return 'text' not in response.headers[header_name].split('/')[0]
