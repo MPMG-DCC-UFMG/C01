@@ -70,7 +70,12 @@ class ResponseData():
         self.status_code = resp.status
 
         self.text = ""
-        if 'text' in resp.headers['content-type'].split('/')[0]:
+
+        no_redir = (not 300 <= resp.status < 400)
+        is_text = ('text' in resp.headers['content-type'].split('/')[0])
+        if no_redir and is_text:
+            # The following method only works when the content is text and the
+            # page status is not in the 3XX range (redirects)
             self.text = await resp.text()
 
         return self

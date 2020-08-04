@@ -118,21 +118,26 @@ class PyppeteerProbingRequest(ProbingRequest):
 
     The desired page must be requested after the constructor is called and
     before the call to the process() method. IMPORTANT: The HTTP headers and
-    status code are captured from the last response received by the Pyppeteer
-    page, but the text is collected from the page contents when the process()
-    method is called. This may cause synchronization issues in specific
-    contexts.
+    status code are captured from the first response received by the Pyppeteer
+    page after the constructor is called, but the text is collected from the
+    page contents when the process() method is called. This may cause
+    synchronization issues if multiple pages are requested in sequence between
+    these calls (e.g.: it will analyse the response to the first page request,
+    and the text contents of the last page).
     """
 
     def __intercept_response(self,
                              response: pyppeteer.network_manager.Response):
         """
-        Intercepts a response to a request made by the Pyppeteer page
+        Intercepts the response to the first request made by the Pyppeteer page
         configured in the constructor and stores it
 
         :param response: Response received by Pyppeteer
         """
-        self.__response = response
+
+        # Ignore all responses but the first
+        if self.__response is None:
+            self.__response = response
 
     def __init__(self,
                  page: pyppeteer.page.Page):
@@ -160,9 +165,12 @@ class PyppeteerProbingRequest(ProbingRequest):
 
         The Pyppeteer page must have gotten a response between the constructor
         call and this one. IMPORTANT: The HTTP headers and status code are
-        captured from the last response received by the Pyppeteer page, but the
-        text is collected from the page contents when the process() method is
-        called. This may cause synchronization issues in specific contexts.
+        captured from the first response received by the Pyppeteer page after
+        the constructor is called, but the text is collected from the page
+        contents when the process() method is called. This may cause
+        synchronization issues if multiple pages are requested in sequence
+        between these calls (e.g.: it will analyse the response to the first
+        page request, and the text contents of the last page).
 
         :returns: Response received from Pyppeteer
         """
