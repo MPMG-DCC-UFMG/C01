@@ -117,7 +117,11 @@ class PyppeteerProbingRequest(ProbingRequest):
     so it can be properly integrated with the Pyppeteer driver.
 
     The desired page must be requested after the constructor is called and
-    before the call to the process() method
+    before the call to the process() method. IMPORTANT: The HTTP headers and
+    status code are captured from the last response received by the Pyppeteer
+    page, but the text is collected from the page contents when the process()
+    method is called. This may cause synchronization issues in specific
+    contexts.
     """
 
     def __intercept_response(self,
@@ -155,7 +159,10 @@ class PyppeteerProbingRequest(ProbingRequest):
         driver
 
         The Pyppeteer page must have gotten a response between the constructor
-        call and this one
+        call and this one. IMPORTANT: The HTTP headers and status code are
+        captured from the last response received by the Pyppeteer page, but the
+        text is collected from the page contents when the process() method is
+        called. This may cause synchronization issues in specific contexts.
 
         :returns: Response received from Pyppeteer
         """

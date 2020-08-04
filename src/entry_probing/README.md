@@ -70,8 +70,12 @@ In its constructor, it adds a `response` event to the supplied page so that we
 can capture the response when we access the URL. The request must be done
 manually outside of this class, and before the call to `process` is made. The
 `process` method gets the response and returns it as a `ResponseData` instance,
-overwriting the `text` property with the text of the currently open page. All
-methods are implemented as coroutines, since Pyppeteer works asynchronously.
+overwriting the `text` property with the text of the currently open page. **The
+HTTP headers and status code are captured from the last response received by
+the Pyppeteer page, but the text is collected from the page contents when the
+`process` method is called. This may cause synchronization issues in specific
+contexts.** All methods are implemented as coroutines, since Pyppeteer works
+asynchronously.
 
 ```
 browser = await launch()
