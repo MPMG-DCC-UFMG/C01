@@ -121,3 +121,5 @@ class CrawlerInstance(TimeStamped):
     crawler_id = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE, related_name='instances')
     instance_id = models.BigIntegerField(primary_key=True)
     running = models.BooleanField()
+    scheduled = models.IntegerField(default=0)
+    collected = models.IntegerField(default=0)

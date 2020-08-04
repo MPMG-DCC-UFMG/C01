@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded',
 );
 
 function tail_logs(instance_id){
-    // calls tail log view and set logs
+    // calls tail log view and set logs, while also getting the progress status
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
@@ -31,6 +31,17 @@ function tail_logs(instance_id){
 
             document.getElementById("stdout_tail_update").innerText = "last update: " + response["time"]
             document.getElementById("stderr_tail_update").innerText = "last update: " + response["time"]
+
+            prog_bar = document.getElementById("last_instance_progress")
+            prog_bar.value = response["collected"]
+            prog_bar.max = response["scheduled"]
+
+            prop = parseInt(response["collected"]) / parseInt(response["scheduled"])
+            percentage = Math.round(prop * 100, 2)
+            prog_bar.innerText = percentage + " %"
+
+            document.getElementById("last_collected").innerText = response["collected"]
+            document.getElementById("last_scheduled").innerText = response["scheduled"]
         }
     };
     xhr.open("GET", "/tail_log_file/" + instance_id, true);
