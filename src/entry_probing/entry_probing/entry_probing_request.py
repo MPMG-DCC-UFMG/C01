@@ -63,7 +63,7 @@ class GETProbingRequest(ProbingRequest):
             resp = requests.get(self.__url)
         else:
             resp = requests.get(self.__url.format(entry))
-        return ResponseData().create_from_requests(resp)
+        return ResponseData.create_from_requests(resp)
 
 
 class POSTProbingRequest(ProbingRequest):
@@ -107,7 +107,7 @@ class POSTProbingRequest(ProbingRequest):
             self.__data[self.__property_name] = entry
 
         resp = requests.post(self.__url, data=self.__data)
-        return ResponseData().create_from_requests(resp)
+        return ResponseData.create_from_requests(resp)
 
 
 class PyppeteerProbingRequest(ProbingRequest):
@@ -179,7 +179,7 @@ class PyppeteerProbingRequest(ProbingRequest):
             # No response was received since the constructor was called
             raise ValueError("The page hasn't received any responses")
 
-        result = await ResponseData().create_from_pyppeteer(self.__response)
+        result = await ResponseData.create_from_pyppeteer(self.__response)
 
         # Update the text contents of the response with the current page
         # contents, if it has a text type

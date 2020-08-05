@@ -100,8 +100,8 @@ class through its constructor. The `process` method is defined in the main
 
 #### ResponseData
 A general wrapper for responses from any source. Contains the headers, HTTP
-status code and text content of a response. Has methods to create an instance
-out of a `requests.models.Response` instance as well as a
+status code and text content of a response. Has class methods to create an
+instance out of a `requests.models.Response` instance as well as a
 `pyppeteer.network_manager.Response` instance. If a response is detected to
 have a binary type, the text content is set to an empty string.
 

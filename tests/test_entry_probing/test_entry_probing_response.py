@@ -3,6 +3,7 @@ This module tests the classes which abstract the entry probing response
 handling
 """
 import unittest
+from unittest import mock
 
 from entry_probing import HTTPStatusProbingResponse, TextMatchProbingResponse,\
     BinaryFormatProbingResponse, ResponseData
@@ -19,8 +20,8 @@ class ProbingResponseTest(unittest.TestCase):
         """
 
         # Mock responses with 200 and 404 HTTP status codes
-        status200 = ResponseData(status_code=200)
-        status404 = ResponseData(status_code=404)
+        status200 = mock.MagicMock(spec=ResponseData, status_code=200)
+        status404 = mock.MagicMock(spec=ResponseData, status_code=404)
 
         # Validates the entry with an HTTP status of 200
         resp_handler = HTTPStatusProbingResponse(200)
@@ -43,8 +44,10 @@ class ProbingResponseTest(unittest.TestCase):
         """
 
         # Mock responses with different text contents
-        text_found = ResponseData(text="Page found in our database")
-        text_not_found = ResponseData(text="Sorry, page not found")
+        text_found = mock.MagicMock(spec=ResponseData,
+                                    text="Page found in our database")
+        text_not_found = mock.MagicMock(spec=ResponseData,
+                                        text="Sorry, page not found")
 
         # Validates response with a given text
         resp_handler = TextMatchProbingResponse("Page found")
@@ -73,9 +76,9 @@ class ProbingResponseTest(unittest.TestCase):
 
         # Mock text and binary responses
         text_header = {'Content-Type': 'text/json'}
-        text_resp = ResponseData(headers=text_header)
+        text_resp = mock.MagicMock(spec=ResponseData, headers=text_header)
         binary_header = {'Content-Type': 'application/vnd.ms-excel'}
-        binary_resp = ResponseData(headers=binary_header)
+        binary_resp = mock.MagicMock(spec=ResponseData, headers=binary_header)
 
         # Validates binary response
         resp_handler = BinaryFormatProbingResponse()
