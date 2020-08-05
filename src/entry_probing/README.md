@@ -102,8 +102,10 @@ class through its constructor. The `process` method is defined in the main
 A general wrapper for responses from any source. Contains the headers, HTTP
 status code and text content of a response. Has class methods to create an
 instance out of a `requests.models.Response` instance as well as a
-`pyppeteer.network_manager.Response` instance. If a response is detected to
-have a binary type, the text content is set to an empty string.
+`pyppeteer.network_manager.Response` instance. **Normally this class should be
+instantiated using one of these methods, and not the constructor**. If a
+response is detected to have a binary type, the text content is set to an empty
+string.
 
 #### ProbingResponse
 Abstract class, defines the interface for a probing response handler through the

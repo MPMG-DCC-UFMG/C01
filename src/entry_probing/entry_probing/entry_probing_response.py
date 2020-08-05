@@ -24,7 +24,7 @@ class ResponseData():
                  status_code: int = None,
                  text: str = None):
         """
-        Response constructor
+        Response constructor. Should be called from the create_from_* methods.
 
         :param headers:     HTTP headers for the response
         :param status_code: HTTP status code for the response
