@@ -106,8 +106,7 @@ class BaseSpider(scrapy.Spider):
 
     def extract_and_store_csv(self, response):
         """
-        Try to extract a csv from response data.
-        TODO Chama metodo do Caio
+        Try to extract a json/csv from response data.
         """
         file_format = str(response.headers['Content-type']).split("/")[1][:-1].split(";")[0]
         hsh = self.hash(response.url)
