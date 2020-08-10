@@ -1,49 +1,27 @@
 import requests
-import uuid
 import os
 import speech_recognition as sr
 from time import sleep
 
 from io import BytesIO
-from selenium import webdriver
 from validators import url
 
 class AudioSolver:
     def __init__(self,
-                 url,
                  model=None,
                  preprocessing=None,
                  webdriver=None,
                  download_dir=None):
         """
-        :url:           Base URL of the desired website
         :model:         Audio recognition model, default is None, so _ocr will be used
         :preprocessing: Audio processing method, default is None, so _preprocess will be used
         :webdriver:     Selenium webdrive loaded with the captcha page, default is None, so a new driver will be created
         :download_dir:  Webdriver download path, which contains the downloaded audios
         """
-
-        if url is None:
-            raise Exception("Usuário deve indicar uma url")
-        self.url = url
         self.predict = model or self._ocr
         self.preprocess = preprocessing or self._preprocess
-        self.id = uuid.uuid4().hex
-        self.download_dir = download_dir or  "./"# + self.id
         self.driver = webdriver
-
-    def _get_audio(self, path):
-        """
-        Download captcha image from a URL
-        the driver.get method triggers a download which is then treated in this function
-
-        :path:       URL of the audio file in server
-        """
-
-        # check if path passed is a valid URL
-        if not url(path):
-            raise Exception("URL informada não é válida")
-        return self._from_url(path)
+        self.download_dir = download_dir or  "./"
 
     def _from_url(self, url):
         """
@@ -95,6 +73,6 @@ class AudioSolver:
         if not audio and not source:
             raise Exception("Usuário deve informar uma fonte para audio")
 
-        aud = audio or self._get_audio(source)
+        aud = audio or self._from_url(source)
         aud = self.preprocess(aud)
         return self.predict(aud)
