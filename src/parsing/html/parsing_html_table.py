@@ -1,26 +1,18 @@
 import pandas as pd
-import os
 from bs4 import BeautifulSoup
-import errno
 
 
 def html_to_df(html_file, match, flavor, header, index_col, skiprows, attrs,
- parse_dates, thousands, encoding, decimal, converters, na_values,
- keep_default_na, displayed_only, is_string):
-    '''
+               parse_dates, thousands, encoding, decimal, converters, na_values,
+               keep_default_na, displayed_only):
+    """
     Receives the html file path and reads into a DataFrame structure using the
     Pandas module.
     This function also converts the link element attribute to it's value
-    '''
+    """
     try:
-        if is_string:
-            f = html_file
-            soup = BeautifulSoup(f, 'html.parser')
-        else:
-            soup = ""
-            f = open(html_file, encoding="ISO-8859-1")
-            soup = BeautifulSoup(f, 'html.parser')
-            f.close()
+        f = html_file
+        soup = BeautifulSoup(f, 'html.parser')
 
         for a in soup.find_all('a', href=True):
             a.string = a['href']
@@ -28,38 +20,44 @@ def html_to_df(html_file, match, flavor, header, index_col, skiprows, attrs,
         html_file = str(soup)
 
         dfs = pd.read_html(html_file, match, flavor, header, index_col,
-         skiprows, attrs, parse_dates, thousands, encoding, decimal,
-          converters, na_values, keep_default_na, displayed_only)
+                           skiprows, attrs, parse_dates, thousands, encoding, decimal,
+                           converters, na_values, keep_default_na, displayed_only)
     except:
         raise Exception("The table could not be found in the HTML file.")
 
     return dfs
 
 
-def df_to_csv(dfs, output_file, index=False):
-    '''
+def df_to_file(dfs, output_file, to_csv, index=False):
+    """
     Receives a list of DataFrames and write them to a csv file (output_file).
-    '''
+    """
     for i in range(0, len(dfs)):
-        try:
-            dfs[i].to_csv(output_file, index=index, mode='a', quoting=1)
-        except:
-            raise Exception("The system could not save the CSV file.")
+        if to_csv:
+            output_file += '.csv'
+            try:
+                dfs[i].to_csv(output_file, index=index, mode='a', quoting=1)
+            except:
+                raise Exception("The system could not save the CSV file.")
+        else:
+            try:
+                with open(output_file, "a", newline="") as f:
+                    dfs[i].to_json(f)
+            except:
+                raise Exception('The system could not save the JSON file.')
 
 
-def html_to_csv(html_file_path, is_string=False, output_file='output.csv',
-match='.+', flavor=None, header=None, index_col=None, skiprows=None,
- attrs=None, parse_dates=False, thousands=', ', encoding=None, decimal='.',
-  converters=None, na_values=None, keep_default_na=True, displayed_only=True):
-    '''
+def table_to_file(html_file_path, output_file='output',
+                  match='.+', flavor=None, header=None, index_col=None, skiprows=None,
+                  attrs=None, parse_dates=False, thousands=', ', encoding=None, decimal='.',
+                  converters=None, na_values=None, keep_default_na=True, displayed_only=True, to_csv=False):
+    """
     Receives an html file path, converts the html to csv and saves the file on
     disk.
 
-    :param html_file : str (A file-like object, or a raw string containing
+    :param html_file_path : str (A file-like object, or a raw string containing
      HTML.)
-    :param is_string : bool, default False (Wheter the html file is passed as a
-    string or as the path to the file)
-    :param output_file: str (Name of the output file, default is output.csv)
+    :param output_file: str (Name of the output file, default is output)
     :param match : str or compiled regular expression (The set of tables
     containing text matching this regex or string will be returned. )
     :param flavor : str or None, container of strings (The parsing engine to
@@ -83,19 +81,14 @@ match='.+', flavor=None, header=None, index_col=None, skiprows=None,
     :param na_values : iterable, default None (Custom NA values)
     :param keep_default_na : bool, default True (If na_values are specified and
      keep_default_na is False the default NaN values are overridden)
-    :param display_only : bool, default True (Whether elements with
+    :param displayed_only : bool, default True (Whether elements with
      “display: none” should be parsed)
-    '''
+    :param to_csv : bool, default False (Whether the output file should be csv or json)
+    """
 
-
-    # Check if html file exists
-    if (os.path.isfile(html_file_path)) or is_string:
-        # Convert html do Pandas DataFrame
-        dfs = html_to_df(html_file_path, match, flavor, header, index_col,
-        skiprows, attrs, parse_dates, thousands, encoding, decimal, converters,
-         na_values, keep_default_na, displayed_only, is_string)
-        # Save the Pandas DataFrame to a csv file
-        df_to_csv(dfs, output_file)
-    else:
-        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT),
-        html_file_path)
+    # Convert html do Pandas DataFrame
+    dfs = html_to_df(html_file_path, match, flavor, header, index_col,
+                     skiprows, attrs, parse_dates, thousands, encoding, decimal, converters,
+                     na_values, keep_default_na, displayed_only)
+    # Save the Pandas DataFrame to a file
+    df_to_file(dfs, output_file, to_csv)

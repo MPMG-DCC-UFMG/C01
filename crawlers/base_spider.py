@@ -12,6 +12,8 @@ import hashlib
 import time
 
 from crawlers.constants import *
+from src.parsing.html.parsing_html_content import *
+
 
 class BaseSpider(scrapy.Spider):
     name = 'base_spider'
@@ -40,7 +42,7 @@ class BaseSpider(scrapy.Spider):
                 os.mkdir(f)
             except FileExistsError:
                 pass
-        
+
         with open(f"{CURR_FOLDER_FROM_ROOT}/data/{crawler_id}/files/file_description.txt", "a+") as f:
             pass
 
@@ -86,7 +88,8 @@ class BaseSpider(scrapy.Spider):
         """Store file, TODO convert to csv?"""
         assert response.headers['Content-type'] != b'text/html'
 
-        file_format = str(response.headers['Content-type']).split("/")[1][:-1]
+        file_format = str(response.headers['Content-type']).split("/")[1][:-1].split(";")[0]
+        print('file_format: ', file_format)
         hsh = self.hash(response.url)
         content = {
             "hash": hsh,
@@ -104,15 +107,18 @@ class BaseSpider(scrapy.Spider):
 
     def extract_and_store_csv(self, response):
         """
-        Try to extract a csv from response data.
-        TODO Chama metodo do Caio
+        Try to extract a json/csv from response data.
         """
-        pass
+        file_format = str(response.headers['Content-type']).split("/")[1][:-1].split(";")[0]
+        hsh = self.hash(response.url)
+
+        html_detect_content(f"{CURR_FOLDER_FROM_ROOT}/data/{self.crawler_id}/files/{hsh}.{file_format}",
+                            is_string=False, output_file=f"{CURR_FOLDER_FROM_ROOT}/data/{self.crawler_id}/csv/output",)
 
     def store_html(self, response):
         """Stores raw html in a json file at data/{self.crawler_id}/raw_pages/."""
         assert response.headers['Content-type'] == b'text/html'
-        
+
         content = {
             "url": response.url,
             "crawler_id": self.crawler_id,

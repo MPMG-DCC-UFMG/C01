@@ -13,8 +13,9 @@ import random
 import datetime
 import hashlib
 
+
 class StaticPageSpider(BaseSpider):
-    name = 'static_page'    
+    name = 'static_page'
 
     def start_requests(self):
         print("TO NA START REQUESTS")
@@ -31,7 +32,7 @@ class StaticPageSpider(BaseSpider):
         #     pass
         # else:
         #     raise ValueError
-        
+
         if self.config["crawler_type"] == "single_file":
             raise ValueError
         elif self.config["crawler_type"] == "file_bundle":
@@ -41,7 +42,7 @@ class StaticPageSpider(BaseSpider):
         elif self.config["crawler_type"] == "static_page":
             # DO STUFF
             for url in urls:
-                yield scrapy.Request(url=url, callback=self.parse) 
+                yield scrapy.Request(url=url, callback=self.parse)
         else:
             raise ValueError
 
@@ -50,12 +51,14 @@ class StaticPageSpider(BaseSpider):
         Parse responses of static pages.
         Will try to follow links if config["explor_links"] is set.
         """
+
+
         print(response.url, response.headers['Content-type'])
 
         if self.stop():
             return
 
-        self.extract_and_store_csv(response)
+        # self.extract_and_store_csv(response)
 
         if response.headers['Content-type'] == b'text/html':
             self.store_html(response)
@@ -85,7 +88,7 @@ class StaticPageSpider(BaseSpider):
                     allow_domains=get_link_config("allow_domains", ()),
                     deny_domains=get_link_config("deny_domains", ()),
                     # Note here: changed the default value. It would ignore all links with extensions
-                    deny_extensions=get_link_config("deny_extensions", []), 
+                    deny_extensions=get_link_config("deny_extensions", []),
                     restrict_xpaths=get_link_config("restrict_xpaths", ()),
                     restrict_css=get_link_config("restrict_css", ()),
                     tags=get_link_config("tags", 'a'),
@@ -93,7 +96,7 @@ class StaticPageSpider(BaseSpider):
                     canonicalize=get_link_config("canonicalize", False),
                     unique=get_link_config("unique", True),
                     process_value=get_link_config("process_value", None),
-                    strip=get_link_config("strip", True) 
+                    strip=get_link_config("strip", True)
                 )
 
                 # As I could not make the allow parameter work, the code check the regex on the urls here
@@ -107,7 +110,7 @@ class StaticPageSpider(BaseSpider):
 
                     else:
                         match = True
-                    
+
                     if match:
                         print("calling")
                         yield scrapy.Request(url=url.url, callback=self.parse)
@@ -119,3 +122,4 @@ class StaticPageSpider(BaseSpider):
                 # END CODE
         else:
             self.store_raw(response)
+        self.extract_and_store_csv(response)
