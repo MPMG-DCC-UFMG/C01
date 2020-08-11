@@ -8,6 +8,7 @@ import random
 import logging
 import time
 import collections
+import crawling_utils.crawling_utils as crawling_utils
 
 from selenium.webdriver import FirefoxOptions
 from selenium import webdriver
@@ -54,27 +55,31 @@ def request_headers():
     return {'User-Agent': user_agent}
 
 
-def set_options():
-    """Configures webdriver options
+def get_firefox_arguments():
+    """
+    Returns list of arguments to initialize a firefox webdriver.
 
     Returns:
-        FirefoxOptions object
+        list of strings
     """
-    firefox_options = FirefoxOptions()
-    firefox_options.add_argument("--headless")
-    firefox_options.add_argument("--window-size=1920x1080")
-    firefox_options.add_argument("--disable-notifications")
-    firefox_options.add_argument('--no-sandbox')
-    firefox_options.add_argument('--verbose')
-    firefox_options.add_argument('--disable-gpu')
-    firefox_options.add_argument('--disable-software-rasterizer')
-    return firefox_options
+    return [
+        "--headless",
+        "--window-size=1920x1080",
+        "--disable-notifications",
+        '--no-sandbox',
+        '--verbose',
+        '--disable-gpu',
+        '--disable-software-rasterizer',
+    ]
 
 
-def open_driver(url, driver_options=set_options(), sleep_time=5):
+def open_driver(url, driver_arguments=get_firefox_arguments(), sleep_time=5):
     """Opens a webdriver and loads url"""
-    driver = webdriver.Firefox(options=driver_options)
+    driver = crawling_utils.init_webdriver(
+        "firefox", arguments=driver_arguments
+    )
     driver.get(url)
+
     time.sleep(sleep_time)
     return driver
 
