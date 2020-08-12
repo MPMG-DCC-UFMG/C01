@@ -4,6 +4,7 @@ This module can solve audio and image captcha, for each solver a simple preproce
 can create their own.
 
 ## Instalation
+
 User must install tesseract to user the image solver
 
 On Linux
@@ -17,20 +18,12 @@ sudo apt-get install libtesseract-dev
 ## Building
 
 This module is packaged as a Python Wheel file. To build the .whl file from the
-source code you need to have `setuptools` and `wheel` installed. After both
-packages are installed, run:
+source code you need to have `setuptools`, `wheel` and `python3` installed. After both
+packages are installed, go to src/captcha_solver and run:
 
 ```
-python setup.py bdist_wheel
-```
-
-The Wheel file will be created inside the `dist` folder, and the name may vary
-depending on the version. To install it, you must have the `entry_probing`
-module installed. Run the following command in the `range_inference` folder,
-replacing the file name accordingly:
-
-```
-pip install dist/<wheel file name>
+python3 setup.py bdist_wheel
+pip3 install dist/<wheel file name>.whl
 ```
 
 ## Usage
