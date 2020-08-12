@@ -20,7 +20,7 @@ class ImageSolverTest(unittest.TestCase):
 
         self.assertRaises(Exception, self.solver.solve)
 
-        img = Image.new('RGB', (100,100), color = (73, 109, 137))
+        img = Image.new('RGB', (100, 100), color=(73, 109, 137))
         self.assertEqual(self.solver.solve(img), "")
 
     def test_ocr(self):
@@ -30,13 +30,12 @@ class ImageSolverTest(unittest.TestCase):
             optical character recognition
         """
 
-        img = Image.new('RGB', (100,100), color = (73, 109, 137))
+        img = Image.new('RGB', (100, 100), color=(73, 109, 137))
         self.assertEqual(self.solver._ocr(img), "")
 
     def test_preprocess(self):
         """
             Tests the default method for image preprocessing
         """
-        img = Image.new('RGB', (100,100), color = (0, 0, 0))
-        self.assertTrue((self.solver.preprocess(img) == np.zeros(shape=(100,100))).all())
-
+        img = Image.new('RGB', (100, 100), color=(0, 0, 0))
+        self.assertTrue((self.solver.preprocess(img) == np.zeros(shape=(100, 100))).all())
