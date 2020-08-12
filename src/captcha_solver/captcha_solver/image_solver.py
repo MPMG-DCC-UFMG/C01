@@ -44,8 +44,8 @@ class ImageSolver:
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
         # apply mask to filter the desired color
-        lower = np.array([0,220,50])
-        upper = np.array([360,255,255])
+        lower = np.array([0, 220, 50])
+        upper = np.array([360, 255, 255])
         mask = cv2.inRange(hsv, lower, upper)
         img = cv2.bitwise_and(img, img, mask=mask)
 
