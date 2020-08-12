@@ -17,6 +17,7 @@ class ImageSolver:
         :model:         Character recognition model, default is None, so _ocr will be used
         :preprocessing: Image processing method, default is None, so _preprocess will be used
         """
+
         self.predict = model or self._ocr
         self.preprocess = preprocessing or self._preprocess
 
