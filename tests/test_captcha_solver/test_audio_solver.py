@@ -2,6 +2,7 @@ import unittest
 
 from captcha_solver.audio_solver import AudioSolver
 
+
 class AudioSolverTest(unittest.TestCase):
     def setUp(self):
         self.solver = AudioSolver()
