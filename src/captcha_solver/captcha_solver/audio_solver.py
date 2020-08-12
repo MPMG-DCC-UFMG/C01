@@ -6,6 +6,7 @@ from time import sleep
 from io import BytesIO
 from validators import url
 
+
 class AudioSolver:
     def __init__(self,
                  model=None,
@@ -21,7 +22,7 @@ class AudioSolver:
         self.predict = model or self._ocr
         self.preprocess = preprocessing or self._preprocess
         self.driver = webdriver
-        self.download_dir = download_dir or  "./"
+        self.download_dir = download_dir or "./"
 
     def _from_url(self, url):
         """
@@ -57,7 +58,7 @@ class AudioSolver:
         recognizer = sr.Recognizer()
         with audio as source:
             audio = recognizer.record(source)
-        text = recognizer.recognize_google(audio, language = "pt-BR")
+        text = recognizer.recognize_google(audio, language="pt-BR")
         return text
 
     def solve(self, audio=None, source=None):
