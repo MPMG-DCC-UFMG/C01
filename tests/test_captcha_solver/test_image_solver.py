@@ -14,10 +14,7 @@ class ImageSolverTest(unittest.TestCase):
             Test main method in the class, which the user access
         """
 
-        with self.assertRaises(Exception) as context:
-            self.solver.solve(image=1, source="")
-            self.assertTrue("Usuário deve informar apenas uma fonte para imagem" in context.exception)
-
+        self.assertRaises(Exception, self.solver.solve, **{"image":1, "source":""})
         self.assertRaises(Exception, self.solver.solve)
 
         img = Image.new('RGB', (100,100), color = (73, 109, 137))
@@ -37,6 +34,9 @@ class ImageSolverTest(unittest.TestCase):
         """
             Tests the default method for image preprocessing
         """
+
         img = Image.new('RGB', (100,100), color = (0, 0, 0))
         self.assertTrue((self.solver.preprocess(img) == np.zeros(shape=(100,100))).all())
 
+if __name__ == '__main__':
+    unittest.main()

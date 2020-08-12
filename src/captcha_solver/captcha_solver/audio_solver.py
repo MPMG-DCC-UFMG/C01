@@ -9,49 +9,38 @@ from validators import url
 class AudioSolver:
     def __init__(self,
                  model=None,
-                 preprocessing=None,
-                 webdriver=None,
-                 download_dir=None):
+                 preprocessing=None):
         """
         :model:         Audio recognition model, default is None, so _ocr will be used
         :preprocessing: Audio processing method, default is None, so _preprocess will be used
-        :webdriver:     Selenium webdrive loaded with the captcha page, default is None, so a new driver will be created
-        :download_dir:  Webdriver download path, which contains the downloaded audios
         """
         self.predict = model or self._ocr
         self.preprocess = preprocessing or self._preprocess
-        self.driver = webdriver
-        self.download_dir = download_dir or  "./"
 
-    def _from_url(self, url):
+    def _from_file(self, filename):
         """
-        Download captcha image from a URL
-        the driver.get method triggers a download which is then treated in this function
+        Load audio file from filename
 
-        :url:       URL of the audio file in server
+        :filename:  String representing the audio file
         """
 
-        audio = self.driver.get(url)
-        while not os.path.exists(self.download_dir + "audio.wav"):
-            sleep(2)
-        sleep(2)
-        return sr.AudioFile(self.download_dir + "audio.wav")
+        return sr.AudioFile(filename)
 
     def _preprocess(self, audio):
         """
         Default audio preprocessing for captcha images which is None
         so this method return original audio content
 
-        :audio:     Binary audio downloaded
+        :audio:     Binary audio
         """
 
         return audio
 
     def _ocr(self, audio):
         """
-        Defult character recognition, which uses google speach recognition library
+        Defult character recognition, which uses google speech recognition library
 
-        :audio:     Binary audio downloaded
+        :audio:     Binary audio
         """
 
         recognizer = sr.Recognizer()
@@ -65,7 +54,7 @@ class AudioSolver:
         User function to solve desired captcha
 
         :audio:     Binary audio loaded by user
-        :source:    XPATH of the "Download audio" element in page
+        :source:    String representing the audio file location
         """
 
         if audio and source:
@@ -73,6 +62,6 @@ class AudioSolver:
         if not audio and not source:
             raise Exception("Usuário deve informar uma fonte para audio")
 
-        aud = audio or self._from_url(source)
+        aud = audio or self._from_file(source)
         aud = self.preprocess(aud)
         return self.predict(aud)

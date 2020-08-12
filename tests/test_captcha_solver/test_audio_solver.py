@@ -11,10 +11,7 @@ class AudioSolverTest(unittest.TestCase):
             Test main method in the class, which the user access
         """
 
-        with self.assertRaises(Exception) as context:
-            self.solver.solve(image=1, source="")
-            self.assertTrue("Usuário deve informar apenas uma fonte para imagem" in context.exception)
-
+        self.assertRaises(Exception, self.solver.solve, **{"audio":1, "source":""})
         self.assertRaises(Exception, self.solver.solve)
 
     def test_preprocess(self):
@@ -23,3 +20,6 @@ class AudioSolverTest(unittest.TestCase):
         """
 
         self.assertEqual(self.solver.preprocess(1), 1)
+
+if __name__ == '__main__':
+    unittest.main()

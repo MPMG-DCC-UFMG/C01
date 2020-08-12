@@ -17,6 +17,7 @@ class ImageSolver:
         :model:         Character recognition model, default is None, so _ocr will be used
         :preprocessing: Image processing method, default is None, so _preprocess will be used
         """
+
         self.predict = model or self._ocr
         self.preprocess = preprocessing or self._preprocess
 
@@ -24,7 +25,7 @@ class ImageSolver:
         """
         Download captcha image from a URL
 
-        :url:       URL of the audio file in server
+        :url:       URL of the image file in server
         """
 
         image = requests.get(url).content
@@ -67,7 +68,7 @@ class ImageSolver:
         User function to solve desired captcha
 
         :image:     Binary image loaded by user
-        :source:    XPATH of the image element in page or the image URL
+        :source:    The image file URL
         """
 
         if image and source:

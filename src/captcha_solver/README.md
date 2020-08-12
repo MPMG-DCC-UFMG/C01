@@ -1,7 +1,11 @@
 # Captcha Solvers
 
-This module can solve audio and image captcha, for each solver a simple preprocessing were implemented but the users
-can create their own.
+This module can solve audio and image captcha.
+For each solver a simple preprocessing were implemented but the users can create their own.
+
+For image captchas, the Tesseract OCR (https://github.com/tesseract-ocr/tesseract) is set as the default OCR.
+
+For audio captchas, the SpeechRecognition (https://pypi.org/project/SpeechRecognition/) is the default method.
 
 ## Instalation
 
@@ -22,8 +26,8 @@ source code you need to have `setuptools`, `wheel` and `python3` installed. Afte
 packages are installed, go to src/captcha_solver and run:
 
 ```
-python3 setup.py bdist_wheel
-pip3 install dist/<wheel file name>.whl
+python3 setup.py bdist_wheel && rm -r captcha_solver.egg-info
+pip3 install dist/captcha_solver-1.0-py3-none-any.whl
 ```
 
 ## Usage
@@ -32,14 +36,8 @@ For dynamic pages:
 ```python
 from image_solver import ImageSolver
 
-# user must create selenium options variable
-# options = ...
-driver = webdriver.Chrome("/usr/bin/chromedriver", chrome_options=options)
-
-url = 'https://eproc.trf2.jus.br/eproc/externo_controlador.php?acao=processo_consulta_publica \
-       &acao_origem=&acao_retorno=processo_consulta_publica'
-driver.get(url)
-image = screenshot('//*[@id="imgCaptcha"]', driver)
+# user must create provide image variable, eg:
+# image = screenshot('//*[@id="imgCaptcha"]', driver)
 
 solver = ImageSolver()
 text = solver.solve(image=image)
