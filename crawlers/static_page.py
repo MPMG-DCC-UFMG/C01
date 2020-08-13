@@ -79,8 +79,6 @@ class StaticPageSpider(BaseSpider):
             
             for url in urls_found:
                 this_url = response.url
-                if url not in urls_filtered:
-                    print(f"From {this_url} ignoring url: {url}")
             
             urls_found = urls_filtered
 
@@ -103,7 +101,6 @@ class StaticPageSpider(BaseSpider):
             if "explore_links" in self.config and self.config["explore_links"]:
                 this_url = response.url
                 for url in self.extract_links(response):
-                    print(f"From {this_url} returning request for url {url}")
                     yield scrapy.Request(url=url, callback=self.parse)
         else:
             self.store_raw(response)
