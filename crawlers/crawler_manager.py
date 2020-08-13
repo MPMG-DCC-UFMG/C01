@@ -5,6 +5,8 @@ from multiprocessing import Process
 import os
 import sys
 import shutil
+from lxml.html.clean import Cleaner
+import codecs
 
 import scrapy
 from scrapy.crawler import CrawlerProcess
@@ -52,12 +54,12 @@ def get_crawler_base_settings(config):
         "BOT_NAME": "crawlers",
         "ROBOTSTXT_OBEY": True,
         "DOWNLOAD_DELAY": 1,
-        "SELENIUM_DRIVER_NAME": "chrome",
-        "SELENIUM_DRIVER_EXECUTABLE_PATH": shutil.which(
-            crawling_utils.CHROME_WEBDRIVER_PATH
-        ),
-        "SELENIUM_DRIVER_ARGUMENTS": ["--headless"],
-        "DOWNLOADER_MIDDLEWARES": {"scrapy_selenium.SeleniumMiddleware": 0},
+        # "SELENIUM_DRIVER_NAME": "chrome",
+        # "SELENIUM_DRIVER_EXECUTABLE_PATH": shutil.which(
+        #     crawling_utils.CHROME_WEBDRIVER_PATH
+        # ),
+        # "SELENIUM_DRIVER_ARGUMENTS": ["--headless"],
+        # "DOWNLOADER_MIDDLEWARES": {"scrapy_selenium.SeleniumMiddleware": 0},
         "DOWNLOAD_DELAY": config["antiblock_download_delay"],
         "RANDOMIZE_DOWNLOAD_DELAY": True,
         "AUTOTHROTTLE_ENABLED": config["antiblock_autothrottle_enabled"],
@@ -92,7 +94,6 @@ def crawler_process(crawler_id, config):
         requests.get(f'http://localhost:{port}/detail/stop_crawl/{config["id"]}/{crawler_id}')
 
     for crawler in process.crawlers:
-        crawler.signals.connect(update_database, signal=scrapy.signals.spider_error)
         crawler.signals.connect(update_database, signal=scrapy.signals.spider_closed)
 
     process.start()
