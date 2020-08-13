@@ -8,8 +8,8 @@ import re
 import json
 import random
 import datetime
-import hashlib
 import time
+import crawling_utils
 
 from crawlers.constants import *
 from src.parsing.html.parsing_html_content import *
@@ -23,19 +23,21 @@ class BaseSpider(scrapy.Spider):
         Spider init operations.
         Create folders to store files and some config and log files.
         """
-        print("TO NO INIT DO BASE SPIDER")
+        print("At BaseSpider.init")
         self.crawler_id = crawler_id
-        self.last_flag_check = int(time.time())
         self.stop_flag = False
 
-        with open(f"{CURR_FOLDER_FROM_ROOT}/config/{crawler_id}.json", "r") as f:
+        self.data_folder = f"{CURR_FOLDER_FROM_ROOT}/data/{crawler_id}"
+
+        cofig_file_path = f"{CURR_FOLDER_FROM_ROOT}/config/{crawler_id}.json"
+        with open(cofig_file_path, "r") as f:
             self.config = json.loads(f.read())
 
         folders = [
-            f"{CURR_FOLDER_FROM_ROOT}/data/{crawler_id}",
-            f"{CURR_FOLDER_FROM_ROOT}/data/{crawler_id}/raw_pages",
-            f"{CURR_FOLDER_FROM_ROOT}/data/{crawler_id}/csv",
-            f"{CURR_FOLDER_FROM_ROOT}/data/{crawler_id}/files",
+            f"{self.data_folder}",
+            f"{self.data_folder}/raw_pages",
+            f"{self.data_folder}/csv",
+            f"{self.data_folder}/files",
         ]
         for f in folders:
             try:
@@ -43,8 +45,13 @@ class BaseSpider(scrapy.Spider):
             except FileExistsError:
                 pass
 
-        with open(f"{CURR_FOLDER_FROM_ROOT}/data/{crawler_id}/files/file_description.txt", "a+") as f:
+        file = "file_description.jsonl"
+        with open(f"{self.data_folder}/files/{file}", "a+") as f:
+            pass        
+        with open(f"{self.data_folder}/raw_pages/{file}", "a+") as f:
             pass
+
+        self.get_file_format = lambda i: str(i).split("/")[1][:-1].split(";")[0]
 
     def start_requests(self):
         """
@@ -63,16 +70,11 @@ class BaseSpider(scrapy.Spider):
     def stop(self):
         """
         Checks if the crawler was signaled to stop.
-        It does so in intervals of at least 5 seconds, to avoid much disk reading.
         Should be called at the begining of every parse operation.
         """
-        now = int(time.time())
-        if now - self.last_flag_check < 5:
-            return self.stop_flag
-
-        self.last_flag_check = now
         with open(f"{CURR_FOLDER_FROM_ROOT}/flags/{self.crawler_id}.json") as f:
             flags = json.loads(f.read())
+
         self.stop_flag = flags["stop"]
 
         if self.stop_flag:
@@ -80,51 +82,51 @@ class BaseSpider(scrapy.Spider):
 
         return self.stop_flag
 
-    def hash(self, string):
-        """Returns the md5 hash of a function."""
-        return hashlib.md5(string.encode()).hexdigest()
+    def extract_and_store_csv(self, response):
+        """
+        Try to extract a json/csv from response data.
+        """
+        file_format = self.get_file_format(response.headers['Content-type'])
+        hsh = crawling_utils.hash(response.url)
 
-    def store_raw(self, response):
-        """Store file, TODO convert to csv?"""
-        assert response.headers['Content-type'] != b'text/html'
+        html_detect_content(
+            f"{self.data_folder}/raw_pages/{hsh}.{file_format}",
+            is_string=False, output_file=f"{self.data_folder}/csv/output",
+        )
 
-        file_format = str(response.headers['Content-type']).split("/")[1][:-1].split(";")[0]
-        print('file_format: ', file_format)
-        hsh = self.hash(response.url)
+    def store_raw(
+            self, response, file_format=None, binary=True, save_at="files"
+        ):
+        """Save response content."""
+        if file_format is None:
+            file_format = self.get_file_format(response.headers['Content-type'])
+        print(f'Saving file from {response.url}, file_format: {file_format}')
+        
+        if binary:
+            file_type = "wb"
+            body = response.body
+        else:
+            file_type = "w+"
+            body = str(response.body)
+
+        hsh = crawling_utils.hash(response.url)
+        
+        folder = f"{self.data_folder}/{save_at}"
+        with open(f"{folder}/{hsh}.{file_format}", file_type) as f:
+            f.write(body)
+
         content = {
-            "hash": hsh,
+            "file_name": f"{hsh}.{file_format}",
             "url": response.url,
             "crawler_id": self.crawler_id,
             "type": str(response.headers['Content-type']),
             "crawled_at_date": str(datetime.datetime.today()),
         }
 
-        with open(f"{CURR_FOLDER_FROM_ROOT}/data/{self.crawler_id}/files/{hsh}.{file_format}", "wb") as f:
-            f.write(response.body)
-
-        with open(f"{CURR_FOLDER_FROM_ROOT}/data/{self.crawler_id}/files/file_description.txt", "a+") as f:
+        with open(f"{folder}/file_description.jsonl", "a+") as f:
             f.write(json.dumps(content) + '\n')
 
-    def extract_and_store_csv(self, response):
-        """
-        Try to extract a json/csv from response data.
-        """
-        file_format = str(response.headers['Content-type']).split("/")[1][:-1].split(";")[0]
-        hsh = self.hash(response.url)
-
-        html_detect_content(f"{CURR_FOLDER_FROM_ROOT}/data/{self.crawler_id}/files/{hsh}.{file_format}",
-                            is_string=False, output_file=f"{CURR_FOLDER_FROM_ROOT}/data/{self.crawler_id}/csv/output",)
-
     def store_html(self, response):
-        """Stores raw html in a json file at data/{self.crawler_id}/raw_pages/."""
-        assert response.headers['Content-type'] == b'text/html'
-
-        content = {
-            "url": response.url,
-            "crawler_id": self.crawler_id,
-            "crawled_at_date": str(datetime.datetime.today()),
-            "html": str(response.body),
-        }
-
-        with open(f"{CURR_FOLDER_FROM_ROOT}/data/{self.crawler_id}/raw_pages/{self.hash(response.url)}.json", "w+") as f:
-            f.write(json.dumps(content, indent=2))
+        """Stores html and adds its description to file_description file."""
+        self.store_raw(
+            response, file_format="html", binary=False, save_at="raw_pages")
