@@ -12,8 +12,10 @@ import time
 import crawling_utils
 
 from crawlers.constants import *
-from src.parsing.html.parsing_html_content import *
+import parsing_html
 
+from lxml.html.clean import Cleaner
+import codecs
 
 class BaseSpider(scrapy.Spider):
     name = 'base_spider'
@@ -89,10 +91,17 @@ class BaseSpider(scrapy.Spider):
         file_format = self.get_file_format(response.headers['Content-type'])
         hsh = crawling_utils.hash(response.url)
 
-        html_detect_content(
-            f"{self.data_folder}/raw_pages/{hsh}.{file_format}",
-            is_string=False, output_file=f"{self.data_folder}/csv/output",
-        )
+        try:
+            parsing_html.content.html_detect_content(
+                f"{self.data_folder}/raw_pages/{hsh}.{file_format}",
+                is_string=False,
+                output_file=f"{self.data_folder}/csv/{hsh}",
+            )
+        except Exception as e:
+            print(
+                f"Could not extract csv from {response.url} -",
+                f"message: {str(type(e))}-{e}"
+            )
 
     def store_raw(
             self, response, file_format=None, binary=True, save_at="files"
@@ -103,17 +112,22 @@ class BaseSpider(scrapy.Spider):
         print(f'Saving file from {response.url}, file_format: {file_format}')
         
         if binary:
-            file_type = "wb"
+            file_mode = "wb"
             body = response.body
+            encoding = None            
         else:
-            file_type = "w+"
-            body = str(response.body)
+            cleaner = Cleaner(
+                style=True, links=False, scripts=True,
+                comments=True, page_structure=False
+            )
+
+            file_mode = "w+"
+            body = cleaner.clean_html(response.body.decode('utf-8-sig'))
+            encoding = "utf-8-sig"
 
         hsh = crawling_utils.hash(response.url)
         
         folder = f"{self.data_folder}/{save_at}"
-        with open(f"{folder}/{hsh}.{file_format}", file_type) as f:
-            f.write(body)
 
         content = {
             "file_name": f"{hsh}.{file_format}",
@@ -125,6 +139,13 @@ class BaseSpider(scrapy.Spider):
 
         with open(f"{folder}/file_description.jsonl", "a+") as f:
             f.write(json.dumps(content) + '\n')
+
+        with open(
+            file=f"{folder}/{hsh}.{file_format}",
+            mode=file_mode,
+            encoding=encoding,
+        ) as f:
+            f.write(body)
 
     def store_html(self, response):
         """Stores html and adds its description to file_description file."""
