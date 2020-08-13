@@ -12,13 +12,14 @@ def extract_div(html_file):
     # List to store the content of the page
     csv_list_all = []
     # Extract all the text in the page, ignoring tags and hierarchy
-    for i, val in enumerate(xml.etree.ElementTree.fromstring(html_file).itertext()):
+    parser = ElementTree.XMLParser(encoding='utf-8-sig')
+    tree = xml.etree.ElementTree.fromstring(html_file, parser=parser)
+    for i, val in enumerate(tree.itertext()):
         val.replace('\n', ' ')
         if val != '\n' and not val.isspace():
             csv_list_all.append(val)
     # Returns a list of list, with all the content
     return csv_list_all
-
 
 def write_file(list_content, output_name, to_csv):
     """
@@ -34,7 +35,7 @@ def write_file(list_content, output_name, to_csv):
             json.dump(list_content, f)
 
 
-def div_to_file(html_file_path, output_file='output', to_csv=False):
+def div_to_file(html_file_path, output_file='output', to_csv=True):
     """
     Receives an html file path, converts the html to csv and saves the file on
     disk.
