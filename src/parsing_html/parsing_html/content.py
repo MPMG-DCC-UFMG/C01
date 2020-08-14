@@ -1,8 +1,8 @@
 import os
 from bs4 import BeautifulSoup
 import errno
-from src.parsing.html.parsing_html_table import *
-from src.parsing.html.parsing_html_div import *
+from .table import *
+from .div import *
 
 
 def clean_html(html_file, is_string):
@@ -25,7 +25,7 @@ def clean_html(html_file, is_string):
         f = html_file
         soup = BeautifulSoup(f, 'html.parser')
     else:
-        f = open(html_file, encoding="ISO-8859-1")
+        f = open(html_file, encoding="utf-8-sig")
         soup = BeautifulSoup(f, 'html.parser')
         f.close()
 

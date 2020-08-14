@@ -1,6 +1,13 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import time
+import hashlib
+
+
+def hash(string):
+    """Returns the md5 hash of a function."""
+    return hashlib.md5(string.encode()).hexdigest()
+
 
 # leave as 'chromedriver' if driver is on path
 CHROME_WEBDRIVER_PATH = 'chromedriver'
