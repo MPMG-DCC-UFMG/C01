@@ -3,9 +3,11 @@ from selenium.webdriver.common.keys import Keys
 import time
 import hashlib
 
+
 def hash(string):
     """Returns the md5 hash of a function."""
     return hashlib.md5(string.encode()).hexdigest()
+
 
 # leave as 'chromedriver' if driver is on path
 CHROME_WEBDRIVER_PATH = 'chromedriver'
@@ -15,6 +17,7 @@ CHROME_WEBDRIVER_PATH = 'chromedriver'
 FIREFOX_WEBDRIVER_PATH = 'geckodriver'
 # FIREFOX_WEBDRIVER_PATH = "D:/Users/gabri/Documents/GitHub/C04/src/" \
 #   "crawling_utils/crawling_utils/geckodriver_v0_27_0_win_64.exe"
+
 
 def init_webdriver(
     driver_type: str = "chrome",
@@ -75,4 +78,3 @@ def test_init_chrome_webdriver():
 if __name__ == "__main__":
     test_webdriver(init_webdriver("firefox", headless=False))
     test_webdriver(init_webdriver("chrome", headless=False))
-

@@ -31,6 +31,7 @@ class StaticPageSpider(BaseSpider):
         allow_extension = f"link_extractor_allow_extensions"
         if (
             allow_extension in self.config and
+            self.config[allow_extension] is not None and
             self.config[allow_extension] != ""
         ):
             allowed_extensions = set(self.config[allow_extension].split(","))
@@ -39,8 +40,8 @@ class StaticPageSpider(BaseSpider):
                 i for i in extensions if i not in allowed_extensions
             ]
 
-    def extract_links(self, response): 
-        """Filter and return a set with links found in this response."""   
+    def extract_links(self, response):
+        """Filter and return a set with links found in this response."""
         pfx = "link_extractor_"
 
         # function to get other keys from dictionary
@@ -51,7 +52,7 @@ class StaticPageSpider(BaseSpider):
             return default
 
         links_extractor = LinkExtractor(
-            # TODO: cant make regex tested on https://regexr.com/ work 
+            # TODO: cant make regex tested on https://regexr.com/ work
             # here for some reason
             # allow=get_link_config("allow", ())
             deny=get_link_config("deny", ()),
@@ -71,15 +72,16 @@ class StaticPageSpider(BaseSpider):
         )
 
         urls_found = {i.url for i in links_extractor.extract_links(response)}
-        
+
         pattern = self.config["link_extractor_allow"]
         if pattern != "":
-            allow = lambda url: re.search(pattern, url) is not None 
+            def allow(url):
+                return re.search(pattern, url) is not None
             urls_filtered = set(filter(allow, urls_found))
-            
+
             for url in urls_found:
                 this_url = response.url
-            
+
             urls_found = urls_filtered
 
         return urls_found

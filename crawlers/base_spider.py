@@ -17,6 +17,7 @@ import parsing_html
 from lxml.html.clean import Cleaner
 import codecs
 
+
 class BaseSpider(scrapy.Spider):
     name = 'base_spider'
 
@@ -49,11 +50,11 @@ class BaseSpider(scrapy.Spider):
 
         file = "file_description.jsonl"
         with open(f"{self.data_folder}/files/{file}", "a+") as f:
-            pass        
+            pass
         with open(f"{self.data_folder}/raw_pages/{file}", "a+") as f:
             pass
 
-        self.get_file_format = lambda i: str(i).split("/")[1][:-1].split(";")[0]
+        self.get_format = lambda i: str(i).split("/")[1][:-1].split(";")[0]
 
     def start_requests(self):
         """
@@ -74,7 +75,8 @@ class BaseSpider(scrapy.Spider):
         Checks if the crawler was signaled to stop.
         Should be called at the begining of every parse operation.
         """
-        with open(f"{CURR_FOLDER_FROM_ROOT}/flags/{self.crawler_id}.json") as f:
+        flag_file = f"{CURR_FOLDER_FROM_ROOT}/flags/{self.crawler_id}.json"
+        with open(flag_file) as f:
             flags = json.loads(f.read())
 
         self.stop_flag = flags["stop"]
@@ -88,7 +90,7 @@ class BaseSpider(scrapy.Spider):
         """
         Try to extract a json/csv from response data.
         """
-        file_format = self.get_file_format(response.headers['Content-type'])
+        file_format = self.get_format(response.headers['Content-type'])
         hsh = crawling_utils.hash(response.url)
 
         try:
@@ -104,17 +106,18 @@ class BaseSpider(scrapy.Spider):
             )
 
     def store_raw(
-            self, response, file_format=None, binary=True, save_at="files"
-        ):
+            self, response, file_format=None, binary=True, save_at="files"):
         """Save response content."""
         if file_format is None:
-            file_format = self.get_file_format(response.headers['Content-type'])
+            file_format = self.get_format(
+                response.headers['Content-type']
+            )
         print(f'Saving file from {response.url}, file_format: {file_format}')
-        
+
         if binary:
             file_mode = "wb"
             body = response.body
-            encoding = None            
+            encoding = None
         else:
             cleaner = Cleaner(
                 style=True, links=False, scripts=True,
@@ -126,7 +129,7 @@ class BaseSpider(scrapy.Spider):
             encoding = "utf-8-sig"
 
         hsh = crawling_utils.hash(response.url)
-        
+
         folder = f"{self.data_folder}/{save_at}"
 
         content = {
