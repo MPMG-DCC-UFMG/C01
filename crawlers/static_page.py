@@ -97,7 +97,7 @@ class StaticPageSpider(BaseSpider):
         if self.stop():
             return
 
-        if response_type == b'text/html':
+        if b'text/html' in response_type:
             self.store_html(response)
 
             if "explore_links" in self.config and self.config["explore_links"]:
