@@ -1,5 +1,27 @@
 [
     {
+        "name": "opcoes",
+        "mandatory_params": [
+            "xpath"
+        ],
+        "optional_params": {
+            "exceto": "None"
+        }
+    },
+    {
+        "name": "digite",
+        "mandatory_params": [
+            "xpath",
+            "xpath",
+            "xpath",
+            "xpath",
+            "xpath",
+            "xpath",
+            "texto"
+        ],
+        "optional_params": {"a":"b","b":"c","c":"d","d":"e","e":"f"}
+    },
+    {
         "name": "clique",
         "mandatory_params": [
             "xpath"
@@ -10,14 +32,6 @@
         "name": "cssify",
         "mandatory_params": [
             "xpath"
-        ],
-        "optional_params": {}
-    },
-    {
-        "name": "digite",
-        "mandatory_params": [
-            "xpath",
-            "texto"
         ],
         "optional_params": {}
     },
@@ -47,15 +61,6 @@
             "texto"
         ],
         "optional_params": {}
-    },
-    {
-        "name": "opcoes",
-        "mandatory_params": [
-            "xpath"
-        ],
-        "optional_params": {
-            "exceto": "None"
-        }
     },
     {
         "name": "pegue_os_links_da_paginacao",

@@ -191,10 +191,10 @@ card .step{
     position: absolute;
     right:2.5%;
     top: -12.5px;
-
 }
 .block-controler-button {
     cursor: pointer;
+    margin: 0em;
 }
 
 

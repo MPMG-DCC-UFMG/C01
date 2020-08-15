@@ -214,19 +214,7 @@ New Crawler
                                     {{ form.link_extractor_allow_extensions | as_crispy_field}}
                                 </div>
                                 <div class="crawler-type-content-div" id="form_page" hidden >
-                                    <div id="step_controler">
-                                        <a class="btn btn-primary" style="color:white;" id="add_step_button" onclick=add_block()>
-                                            Add block
-                                        </a>
-                                    </div>
-                                    <div id="step_board">
-                                    </div>
-                                    <div class="row" style="margin-top: 1em">
-                                        <a class="btn btn-primary" style="color:white; width: 10em; margin-right: 2em" id="add_step_button" onclick=build_json()>
-                                                generate json
-                                        </a>
-                                        <input class="form-control col-sm" id="json_output" placeholder="steps json">
-                                    </div>
+                                    
                                 </div>
                                 <div class="crawler-type-content-div" id="single_file" hidden></div>
                                 <div class="crawler-type-content-div" id="bundle_file" hidden></div>
@@ -281,6 +269,10 @@ New Crawler
 {% endblock %}
 
 {% block js %}
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js" integrity="sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4" crossorigin="anonymous"></script>
 <script src="{% static 'js/steps.js' %}"></script>
+<script src="{% static 'js/step_block.js' %}"></script>
 <script src="{% static 'js/create_crawler.js' %}"></script>
 {% endblock %}

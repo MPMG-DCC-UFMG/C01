@@ -240,7 +240,8 @@ function detailCrawlerType() {
     for (const i in contents)
         contents[i].hidden = true;
     setHiddenState(crawler_type, false);
-    load_steps();
+    var outside_element = document.getElementById("form_page");
+    load_steps(outside_element);
 
     checkCrawlerType();
 }
