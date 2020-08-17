@@ -10,7 +10,7 @@ import os
 from range_inference import RangeInference
 from param_injector import ParamInjector
 from entry_probing import EntryProbing, GETProbingRequest,\
-                          HTTPStatusProbingResponse, TextMatchProbingResponse
+    HTTPStatusProbingResponse, TextMatchProbingResponse
 
 base = "http://geoobras.tce.mg.gov.br/cidadao/Obras/ObrasPaginaInteiraDetalhes.aspx?IDOBRA={}"
 not_found = "possivel localizar a obra"
@@ -26,9 +26,9 @@ print("UB: {}".format(upper_bound))
 for i in ParamInjector.generate_num_sequence(0, upper_bound, 1, False):
     found = probe.check_entry(i)
     if found:
-        response = probe.response # requests.get(base.format(i))
+        response = probe.response  # requests.get(base.format(i))
         content = response.text
-        folder = "obras" + str(int(i)%100)
+        folder = "obras" + str(int(i) % 100)
         if not os.path.exists("obras_tce/" + folder):
             os.makedirs("obras_tce/" + folder)
         with open("obras_tce/" + folder + "/obra_id" + str(i), "w") as f:
