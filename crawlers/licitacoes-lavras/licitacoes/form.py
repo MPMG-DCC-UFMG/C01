@@ -1,7 +1,7 @@
 """
 Rúbia Reis Guerra
 rubia-rg@github
-Fills 'Licitaçoes' search form at https://pocosdecaldas.mg.gov.br/
+Fills 'Licitaçoes' search form at https://lavras.mg.gov.br/
 """
 import time
 import logging
