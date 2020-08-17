@@ -1,7 +1,7 @@
 """
 Rúbia Reis Guerra
 rubia-rg@github
-Treats 'Licitaçoes' processes at https://pocosdecaldas.mg.gov.br/
+Treats 'Licitaçoes' processes at https://lavras.mg.gov.br/
 """
 from licitacoes import utils
 from selenium.common import exceptions
