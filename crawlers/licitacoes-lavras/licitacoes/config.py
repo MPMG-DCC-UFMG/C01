@@ -14,7 +14,7 @@ PROFILE_PATH = "/Users/work/Library/Application Support/Firefox/Profiles/" \
 # 1721 - 1729
 # 1916 - 1919
 # 2023 - 2029
-START_PROCESS = 1916
+START_PROCESS = 1
 MAX_PROCESSES = 5000
 
 MAX_SKIPPED_IDS = 20
