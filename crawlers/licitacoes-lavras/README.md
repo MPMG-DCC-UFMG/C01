@@ -1,6 +1,5 @@
 Crawler for https://lavras.mg.gov.br/glossario/licitacoes/. 
 
-As of March 30th 2020, there are 3868 processes. The crawler should run for a few hours achieve full coverage.
  
 ### Features
 - Using selenium (geckodriver)
