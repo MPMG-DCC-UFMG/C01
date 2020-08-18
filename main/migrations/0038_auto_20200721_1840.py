@@ -23,6 +23,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='crawlerinstance',
             name='crawler_id',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='instances', to='main.CrawlRequest'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='instances', to='main.CrawlRequest'),
         ),
     ]

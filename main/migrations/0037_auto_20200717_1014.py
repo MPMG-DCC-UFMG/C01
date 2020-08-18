@@ -22,7 +22,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='crawlrequest',
             name='antiblock_cookies_management_type',
-            field=models.CharField(blank=True, choices=[('default', 'Default'), ('user-defined', 'User defined cookies')], max_length=20, null=True),
+            field=models.CharField(blank=True, choices=[('default', 'Default'),
+                                   ('user-defined', 'User defined cookies')], max_length=20, null=True),
         ),
         migrations.AddField(
             model_name='crawlrequest',
