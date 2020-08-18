@@ -33,6 +33,7 @@ import requests
 # antiblock_cookies_file
 # antiblock_persist_cookies
 
+
 def create_folders():
     """Create essential folders for crawlers if they do not exists"""
     files = [
@@ -47,6 +48,7 @@ def create_folders():
             os.mkdir(f)
         except FileExistsError:
             pass
+
 
 def get_crawler_base_settings(config):
     """Returns scrapy base configurations."""
@@ -66,6 +68,7 @@ def get_crawler_base_settings(config):
         "AUTOTHROTTLE_START_DELAY": config["antiblock_autothrottle_start_delay"],
         "AUTOTHROTTLE_MAX_DELAY": config["antiblock_autothrottle_max_delay"],
     }
+
 
 def crawler_process(crawler_id, config):
     """Starts crawling."""
@@ -98,9 +101,11 @@ def crawler_process(crawler_id, config):
 
     process.start()
 
+
 def gen_key():
     """Generates a unique key based on time and a random seed."""
-    return str(int(time.time()*100)) + str((int(random.random() * 1000)))
+    return str(int(time.time() * 100)) + str((int(random.random() * 1000)))
+
 
 def start_crawler(config):
     """Create and starts a crawler as a new process."""
@@ -121,10 +126,12 @@ def start_crawler(config):
 
     return crawler_id
 
+
 def stop_crawler(crawler_id):
     """Sets the flags of a crawler to stop."""
     with open(f"{CURR_FOLDER_FROM_ROOT}/flags/{crawler_id}.json", "w+") as f:
         f.write(json.dumps({"stop": True}))
+
 
 def remove_crawler(crawler_id, are_you_sure=False):
     """
@@ -159,6 +166,7 @@ def remove_crawler(crawler_id, are_you_sure=False):
             shutil.rmtree(f)
         except OSError as e:
             print("Error: %s : %s" % (f, e.strerror))
+
 
 if __name__ == '__main__':
     start_crawler(

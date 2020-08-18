@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 
+
 class TimeStamped(models.Model):
     creation_date = models.DateTimeField()
     last_modified = models.DateTimeField()
@@ -15,11 +16,12 @@ class TimeStamped(models.Model):
     class Meta:
         abstract = True
 
+
 class CrawlRequest(TimeStamped):
 
     # BASIC INFO ####################################################################
     source_name = models.CharField(max_length=200)
-    base_url  = models.CharField(max_length=200)
+    base_url = models.CharField(max_length=200)
     obey_robots = models.BooleanField(blank=True, null=True)
 
 
@@ -37,23 +39,24 @@ class CrawlRequest(TimeStamped):
         ('user_agent', 'User-agent rotation'),
         ('cookies', 'Use cookies'),
     ]
-    antiblock_mask_type = models.CharField(max_length=15, choices=ANTIBLOCK_MASK_TYPE, blank=True, null=True, default='none')
-    
-        # Options for IP rotation
+    antiblock_mask_type = models.CharField(max_length=15, choices=ANTIBLOCK_MASK_TYPE,
+                                           blank=True, null=True, default='none')
+
+    # Options for IP rotation
     IP_TYPE = [
         ('tor', 'Tor'),
         ('proxy', 'Proxy'),
     ]
     antiblock_ip_rotation_type = models.CharField(max_length=15, choices=IP_TYPE, null=True, blank=True)
-    antiblock_proxy_list = models.CharField(max_length=2000, blank=True, null=True) # available for Proxy List
+    antiblock_proxy_list = models.CharField(max_length=2000, blank=True, null=True)  # available for Proxy List
     antiblock_max_reqs_per_ip = models.IntegerField(blank=True, null=True)
     antiblock_max_reuse_rounds = models.IntegerField(blank=True, null=True)
 
-        # Options for User Agent rotation
+    # Options for User Agent rotation
     antiblock_reqs_per_user_agent = models.IntegerField(blank=True, null=True)
     antiblock_user_agents_file = models.CharField(max_length=2000, blank=True, null=True)
 
-        # Options for Cookies
+    # Options for Cookies
     antiblock_cookies_file = models.CharField(max_length=2000, blank=True, null=True)
     antiblock_persist_cookies = models.BooleanField(blank=True, null=True)
 
@@ -67,9 +70,9 @@ class CrawlRequest(TimeStamped):
     has_webdriver = models.BooleanField(blank=True, null=True)
     webdriver_path = models.CharField(max_length=1000, blank=True, null=True)
     # Options for captcha
-        # Options for image
+    # Options for image
     img_xpath = models.CharField(max_length=100, blank=True, null=True)
-        # Options for sound
+    # Options for sound
     sound_xpath = models.CharField(max_length=100, blank=True, null=True)
 
     # CRAWLER TYPE ###################################################################
@@ -118,6 +121,7 @@ class CrawlRequest(TimeStamped):
 
     def __str__(self):
         return self.source_name
+
 
 class CrawlerInstance(TimeStamped):
     crawler_id = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE, related_name='instances')

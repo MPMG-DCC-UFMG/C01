@@ -18,6 +18,8 @@ import time
 import crawlers.crawler_manager as crawler_manager
 
 # Helper methods
+
+
 def process_run_crawl(crawler_id):
     instance = None
     with transaction.atomic():
@@ -39,6 +41,7 @@ def process_run_crawl(crawler_id):
 
     return instance
 
+
 def process_stop_crawl(crawler_id):
     instance = CrawlRequest.objects.filter(id=crawler_id).get().running_instance
 
@@ -58,8 +61,10 @@ def process_stop_crawl(crawler_id):
 
     return instance
 
+
 def getAllData():
     return CrawlRequest.objects.all().order_by('-creation_date')
+
 
 def create_instance(crawler_id, instance_id):
     mother = CrawlRequest.objects.filter(id=crawler_id)
@@ -68,9 +73,11 @@ def create_instance(crawler_id, instance_id):
 
 # Views
 
+
 def list_crawlers(request):
     context = {'allcrawlers': getAllData()}
     return render(request, "main/list_crawlers.html", context)
+
 
 def create_crawler(request):
     context = {}
@@ -79,12 +86,13 @@ def create_crawler(request):
         if my_form.is_valid():
             new_crawl = CrawlRequestForm(my_form.cleaned_data)
             new_crawl.save()
-            
+
             return redirect('list_crawlers')
     else:
         my_form = RawCrawlRequestForm()
     context['form'] = my_form
     return render(request, "main/create_crawler.html", context)
+
 
 def edit_crawler(request, id):
     crawler = get_object_or_404(CrawlRequest, pk=id)
@@ -95,16 +103,18 @@ def edit_crawler(request, id):
             form.save()
             return redirect('list_crawlers')
     else:
-        return render(request, 'main/create_crawler.html', {'form': form, 'crawler' : crawler})
-        
+        return render(request, 'main/create_crawler.html', {'form': form, 'crawler': crawler})
+
+
 def delete_crawler(request, id):
     crawler = CrawlRequest.objects.get(id=id)
-    
+
     if request.method == 'POST':
         crawler.delete()
         return redirect('list_crawlers')
-    
+
     return render(request, 'main/confirm_delete_modal.html', {'crawler': crawler})
+
 
 def detail_crawler(request, id):
     crawler = CrawlRequest.objects.get(id=id)
@@ -119,11 +129,14 @@ def detail_crawler(request, id):
 
     return render(request, 'main/detail_crawler.html', context)
 
+
 def monitoring(request):
     return HttpResponseRedirect("http://localhost:5000/")
 
+
 def create_steps(request):
     return render(request, "main/steps_creation.html", {})
+
 
 def stop_crawl(request, crawler_id):
     process_stop_crawl(crawler_id)
@@ -132,11 +145,13 @@ def stop_crawl(request, crawler_id):
     # context = {'instance':instance, 'crawler':crawler}
     # return render(request, "main/detail_crawler.html", context)
 
+
 def run_crawl(request, crawler_id):
     process_run_crawl(crawler_id)
     return redirect(detail_crawler, id=crawler_id)
     # context = {'instance':instance, 'crawler':crawler}
     # return render(request, "main/detail_crawler.html", context)
+
 
 def tail_log_file(request, instance_id):
     out = subprocess.run(["tail", f"crawlers/log/{instance_id}.out", "-n", "10"], stdout=subprocess.PIPE).stdout
@@ -147,8 +162,9 @@ def tail_log_file(request, instance_id):
         "time": str(datetime.fromtimestamp(time.time())),
     })
 
-#### API
+# API
 ########
+
 
 """
 API endpoints:
@@ -169,6 +185,7 @@ GET       /api/crawlers/<id>/stop   stop crawler instance
 GET       /api/instances/           list crawler instances
 GET       /api/instances/<id>       crawler instance detail
 """
+
 
 class CrawlerViewSet(viewsets.ModelViewSet):
     """
@@ -212,6 +229,7 @@ class CrawlerViewSet(viewsets.ModelViewSet):
             'instance': CrawlerInstanceSerializer(instance).data
         }
         return JsonResponse(data)
+
 
 class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     """
