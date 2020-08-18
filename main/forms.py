@@ -1,6 +1,7 @@
 from django import forms
 from .models import CrawlRequest
 
+
 class CrawlRequestForm(forms.ModelForm):
     class Meta:
         model = CrawlRequest
@@ -53,7 +54,7 @@ class CrawlRequestForm(forms.ModelForm):
             'base_url',
             'obey_robots',
             'captcha',
-            
+
             'antiblock_download_delay',
             'antiblock_autothrottle_enabled',
             'antiblock_autothrottle_start_delay',
@@ -88,6 +89,7 @@ class CrawlRequestForm(forms.ModelForm):
             'invert_text_match',
         ]
 
+
 class RawCrawlRequestForm(CrawlRequestForm):
     # BASIC INFO #########################################################################
     source_name = forms.CharField(label="Source Name", max_length=200,
@@ -95,10 +97,10 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
     base_url = forms.CharField(label="Base URL", max_length=200,
         widget=forms.TextInput(attrs={'placeholder': 'www.example.com/data/'})
-    )
+                               )
     obey_robots = forms.BooleanField(required=False, label="Obey robots.txt")
-    
-    # ANTIBLOCK ##########################################################################    
+
+    # ANTIBLOCK ##########################################################################
     # Options for Delay
     antiblock_download_delay = forms.IntegerField(
         required=False,
@@ -108,7 +110,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     antiblock_autothrottle_enabled = forms.BooleanField(
         required=False,
         label="Enable autothrottle",
-        
+
         widget=forms.CheckboxInput(
             attrs={
                 "onclick": "autothrottleEnabled();",
@@ -133,8 +135,8 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
 
     antiblock_ip_rotation_type = forms.ChoiceField(
-        required=False, choices = (
-            ('tor', 'Tor'), 
+        required=False, choices=(
+            ('tor', 'Tor'),
             ('proxy', 'Proxy'),
         ),
         widget=forms.Select(attrs={'onchange': 'detailIpRotationType();'})
@@ -145,7 +147,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
     antiblock_max_reqs_per_ip = forms.IntegerField(
         required=False,
-        label="Max Requisitions per IP",    
+        label="Max Requisitions per IP",
         initial=10,
     )
     antiblock_max_reuse_rounds = forms.IntegerField(
@@ -153,7 +155,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
         label="Max Reuse Rounds",
         initial=10,
     )
-    
+
     # Options for User Agent rotation
     antiblock_use_user_agents = forms.BooleanField(required=False, label="Use rotating user-agents")
     antiblock_reqs_per_user_agent = forms.IntegerField(required=False, label="Requests per User Agent")
@@ -182,8 +184,8 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     # CAPTCHA ############################################################################
     captcha = forms.ChoiceField(
-        choices = (
-            ('none', 'None'), 
+        choices=(
+            ('none', 'None'),
             ('image', 'Image'),
             ('sound', 'Sound'),
         ),
@@ -192,7 +194,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     # Options for Captcha
     has_webdriver = forms.BooleanField(
         required=False, label="Use webdriver",
-        widget = forms.CheckboxInput(attrs={'onchange': 'detailWebdriverType(); defineValid("captcha")'})
+        widget=forms.CheckboxInput(attrs={'onchange': 'detailWebdriverType(); defineValid("captcha")'})
     )
     webdriver_path = forms.CharField(
         required=False, max_length=2000, label="Download directory",
@@ -205,11 +207,11 @@ class RawCrawlRequestForm(CrawlRequestForm):
         required=False, label="Sound Xpath", max_length=100,
         widget=forms.TextInput(attrs={'placeholder': 'Sound Xpath'})
     )
-    
+
     # CRAWLER TYPE ########################################################################
     crawler_type = forms.ChoiceField(
-        required=False, choices = (
-            ('static_page', 'Static Page'), 
+        required=False, choices=(
+            ('static_page', 'Static Page'),
             # ('form_page', 'Page with Form'),
             # ('single_file', 'Single File'),
             # ('bundle_file', 'Bundle File'),
@@ -236,9 +238,9 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     # TEMPLATED URL ########################################################################
     templated_url_type = forms.ChoiceField(
-        required=False, choices = (
-            ('none', 'None'), 
-            ('get', 'GET'), 
+        required=False, choices=(
+            ('none', 'None'),
+            ('get', 'GET'),
             ('post', 'POST'),
         ),
         widget=forms.Select(attrs={'onchange': 'detailTemplatedUrlRequestType();'})
@@ -249,7 +251,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
         widget=forms.TextInput(attrs={'placeholder': 'https://obraspublicas.com/IDOBRA={}'})
     )
     # param
-    
+
     # templated url - POST
     post_dictionary = forms.CharField(
         required=False, max_length=2000, label="Dictionary of post params (format: {'name':value;})",
