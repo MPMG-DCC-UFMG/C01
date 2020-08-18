@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from .models import CrawlRequest, CrawlerInstance
 
+
 class CrawlerInstanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = CrawlerInstance
