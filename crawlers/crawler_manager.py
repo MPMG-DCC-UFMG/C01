@@ -91,7 +91,7 @@ def crawler_process(crawler_id, config):
         print(f"Error at: {crawler_id}")
         # TODO: get port as variable
         port = 8000
-        requests.get(f'http://localhost:{port}/detail/stop_crawl/{config["id"]}/{crawler_id}')
+        requests.get(f'http://localhost:{port}/detail/stop_crawl/{config["id"]}')
 
     for crawler in process.crawlers:
         crawler.signals.connect(update_database, signal=scrapy.signals.spider_closed)

@@ -5,8 +5,6 @@ from .models import CrawlRequest, CrawlerInstance
 class CrawlerInstanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = CrawlerInstance
-        read_only_fields = ['creation_date', 'last_modified', 'crawler_id',
-                            'instance_id', 'running']
         fields = '__all__'
 
 
