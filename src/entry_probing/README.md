@@ -26,10 +26,10 @@ pip install dist/<wheel file name>
 ### Probing request
 The request classes define how the request to the desired URL should be made.
 They all inherit from the abstract `ProbingRequest` class, and should implement
-the `process` method, which returns a `requests.models.Response` object obtained
-from the URL with the specified parameters. The parameters are provided to the
-class through its constructor, and the entry identifier is provided as an
-argument to the `process` method.
+the `process` method, which returns a `ResponseData` object obtained from the
+URL with the specified parameters. The parameters are provided to the class
+through its constructor, and the entry identifier is provided as an argument
+to the `process` method.
 
 #### ProbingRequest
 Abstract class, defines the interface for a probing request through the
@@ -39,7 +39,7 @@ Abstract class, defines the interface for a probing request through the
 Implements a GET request handler. Receives an URL to request with possible
 placeholders. The `process` method receives an optional entry identifier to be
 inserted in the URL, generates the target URL and uses the `requests.get`
-method to get a response.
+method to get a response, which is returned as a `ResponseData` entry.
 
 ```
 req = GETProbingRequest("http://test.com/{}")
@@ -53,7 +53,7 @@ Implements a POST request handler. Receives an URL to request, as well as the
 name of the parameter to be inserted in the request body. It optionally
 receives extra data to be included. The `process` method receives the entry
 identifier to insert in the request body and uses the `requests.post` method to
-send the data and get a response.
+send the data and get a response, which is returned as a `ResponseData` entry.
 
 ```
 req = POSTProbingRequest("http://test.com/", "test_prop")
@@ -63,14 +63,49 @@ req.process(100)
 # body when the process method is called
 ```
 
+#### PyppeteerProbingRequest
+Implements a Pyppeteer request handler. Receives an instance of
+`pyppeteer.page.Page`, which is the page where the desired URL will be loaded.
+In its constructor, it adds a `response` event to the supplied page so that we
+can capture the response when we access the URL. The request must be done
+manually outside of this class, and before the call to `process` is made. The
+`process` method gets the response and returns it as a `ResponseData` instance,
+overwriting the `text` property with the text of the currently open page. **The
+HTTP headers and status code are captured from the first response received by
+the Pyppeteer page after the constructor is called, but the text is collected
+from the page contents when the process() method is called. This may cause
+synchronization issues if multiple pages are requested in sequence between
+these calls (e.g.: it will analyse the response to the first page request, and
+the text contents of the last page).** All methods are implemented as
+coroutines, since Pyppeteer works asynchronously.
+
+```
+browser = await launch()
+page = await browser.newPage()
+req = PyppeteerProbingRequest()
+await page.goto("http://test.com")
+req.process()
+# creates a request handler which will capture the response received when the
+# request to http://test.com is sent
+```
+
 ### Probing response
 The response classes define which responses obtained should be considered valid.
 They all inherit from the abstract `ProbingResponse` class, and should implement
-the `_validate_resp` method, which gets a `requests.models.Response` object and
-returns a boolean indicating if it is valid or not. The parameters are provided
-to the class through its constructor. The `process` method is defined in the
-main `ProbingResponse` class, and returns the validation result using the
+the `_validate_resp` method, which gets a `ResponseData` object and returns a
+boolean indicating if it is valid or not. The parameters are provided to the
+class through its constructor. The `process` method is defined in the main
+`ProbingResponse` class, and returns the validation result using the
 `_validate_resp` method and the `opposite` attribute.
+
+#### ResponseData
+A general wrapper for responses from any source. Contains the headers, HTTP
+status code and text content of a response. Has class methods to create an
+instance out of a `requests.models.Response` instance as well as a
+`pyppeteer.network_manager.Response` instance. **Normally this class should be
+instantiated using one of these methods, and not the constructor**. If a
+response is detected to have a binary type, the text content is set to an empty
+string.
 
 #### ProbingResponse
 Abstract class, defines the interface for a probing response handler through the
@@ -119,7 +154,10 @@ constructor, and the `ProbingResponse` instances are added through the
 `add_response_handler` method. After the request and response handlers are
 properly set, the `check_entry` method can be used to execute the whole process
 and determine if an entry has been hit or not. The `check_entry` method takes
-in the entry identifier to be sent to the request handler.
+in the entry identifier to be sent to the request handler. The
+`async_check_entry` coroutine does the same as `check_entry`, except that it
+works asynchronously by awaiting the result of calling the `process` method in
+the `ProbingRequest` instance. This is used for working with Pyppeteer.
 
 
 #### EntryProbing
@@ -138,4 +176,22 @@ probe.check_entry(100)
 # "entry found"
 
 probe.response # Returns the obtained response
+```
+
+Another example, using Pyppeteer
+
+```
+browser = await launch()
+page = await browser.newPage()
+
+probe = EntryProbing(PyppeteerProbingRequest(page))
+probe.add_response_handler(HTTPStatusProbingResponse(200))\
+     .add_response_handler(BinaryFormatProbingResponse(opposite=True))\
+     .add_response_handler(TextMatchProbingResponse('entry found'))
+
+await page.goto("http://test.com/")
+
+is_valid = await probe.async_check_entry()
+
+await browser.close()
 ```
