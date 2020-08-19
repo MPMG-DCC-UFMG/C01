@@ -1,0 +1,291 @@
+{"all_cases": {
+        "description": "An exemple with all the cases",
+        "recipe": {
+            "step": "root",
+            "depth": 0,
+            "children": [
+                {
+                    "step": "for",
+                    "iterator": "h",
+                    "iterable": {
+                        "object": [1,2,3]
+                    },
+                    "breakable": true,
+                    "depth": 1,
+                    "children": [
+                        {
+                            "step": "for",
+                            "iterator": "i",
+                            "iterable": {
+                                "call":{
+                                    "step": "range_",
+                                    "arguments": {
+                                        "stop": 2
+                                    }
+                                }
+                            },
+                            "breakable": false,
+                            "depth": 2,
+                            "children": [
+                                {
+                                    "step": "print_",
+                                    "arguments": {
+                                        "word": "\"teste\""
+                                    },
+                                    "depth": 3
+                                },
+                                {
+                                    "step": "for",
+                                    "iterator": "j",
+                                    "iterable": {
+                                        "call":{
+                                            "step": "range_",
+                                            "arguments": {
+                                                "stop": 2
+                                            }
+                                        }
+                                    },
+                                    "breakable": true,
+                                    "depth": 3,
+                                    "children": [
+                                        {
+                                            "step": "for",
+                                            "iterator": "k",
+                                            "iterable": {
+                                                "call":{
+                                                    "step": "range_",
+                                                    "arguments": {
+                                                        "stop": 2
+                                                    }
+                                                }
+                                            },
+                                            "breakable": true,
+                                            "depth": 4,
+                                            "children": [
+                                                {
+                                                    "step": "for",
+                                                    "iterator": "l",
+                                                    "iterable": {
+                                                        "call":{
+                                                            "step": "range_",
+                                                            "arguments": {
+                                                                "stop": 2
+                                                            }
+                                                        }
+                                                    },
+                                                    "breakable": true,
+                                                    "depth": 5,
+                                                    "children": [
+                                                        {
+                                                            "step": "print_",
+                                                            "arguments": {
+                                                                "word": "\"teste\""
+                                                            },
+                                                            "depth": 6
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "step": "print_",
+                                            "arguments": {
+                                                "word": "\"teste\""
+                                            },
+                                            "depth": 4
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "step_before_the_for": {
+        "description": "A step before the for step",
+        "recipe": {
+            "step": "root",
+            "depth": 0,
+            "children": [
+                {
+                    "step": "print_",
+                    "arguments": {
+                        "word": "\"teste\""
+                    },
+                    "depth": 1
+                },
+                {
+                    "step": "for",
+                    "iterator": "i",
+                    "iterable": {
+                        "call":{
+                            "step": "range_",
+                            "arguments": {
+                                "stop": 2
+                            }
+                        }
+                    },
+                    "breakable": true,
+                    "depth": 1,
+                    "children": [
+                        {
+                            "step": "print_",
+                            "arguments": {
+                                "word": "\"teste\""
+                            },
+                            "depth": 2
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "step_after_the_for": {
+        "description": "A step after the for",
+        "recipe": {
+            "step": "root",
+            "depth": 0,
+            "children": [
+                {
+                    "step": "for",
+                    "iterator": "i",
+                    "iterable": {
+                        "call":{
+                            "step": "range_",
+                            "arguments": {
+                                "stop": 2
+                            }
+                        }
+                    },
+                    "breakable": true,
+                    "depth": 1,
+                    "children": [
+                        {
+                            "step": "for",
+                            "iterator": "j",
+                            "iterable": {
+                                "call":{
+                                    "step": "range_",
+                                    "arguments": {
+                                        "stop": 2
+                                    }
+                                }
+                            },
+                            "breakable": true,
+                            "depth": 2,
+                            "children": [
+                                {
+                                    "step": "print_",
+                                    "arguments": {
+                                        "word": "\"teste\""
+                                    },
+                                    "depth": 3
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "step": "print_",
+                    "arguments": {
+                        "word": "\"teste\""
+                    },
+                    "depth": 1
+                }
+            ]
+        }
+    },
+    "unbreakable_between_breakable": {
+        "description": "An unbreakable with a breakable for inside and inside a breakable for",
+        "recipe": {
+            "step": "root",
+            "depth": 0,
+            "children": [
+                {
+                    "step": "for",
+                    "iterator": "i",
+                    "iterable": {
+                        "object": [1,2,3]
+                    },
+                    "breakable": true,
+                    "depth": 1,
+                    "children": [
+                        {
+                            "step": "for",
+                            "iterator": "j",
+                            "iterable": {
+                                "call":{
+                                    "step": "range_",
+                                    "arguments": {
+                                        "stop": 2
+                                    }
+                                }
+                            },
+                            "breakable": false,
+                            "depth": 2,
+                            "children": [
+                                {
+                                    "step": "for",
+                                    "iterator": "k",
+                                    "iterable": {
+                                        "call":{
+                                            "step": "range_",
+                                            "arguments": {
+                                                "stop": 2
+                                            }
+                                        }
+                                    },
+                                    "breakable": true,
+                                    "depth": 3,
+                                    "children": [
+                                        {
+                                            "step": "print_",
+                                            "arguments": {
+                                                "word": "\"teste\""
+                                            },
+                                            "depth": 4
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "unique_for": {
+        "description": "A breakable and simple for",
+        "recipe": {
+            "step": "root",
+            "depth": 0,
+            "children": [
+                {
+                    "step": "for",
+                    "iterator": "i",
+                    "iterable": {
+                        "call":{
+                            "step": "range_",
+                            "arguments": {
+                                "stop": 2
+                            }
+                        }
+                    },
+                    "breakable": true,
+                    "depth": 1,
+                    "children": [
+                        {
+                            "step": "print_",
+                            "arguments": {
+                                "word": "\"teste\""
+                            },
+                            "depth": 2
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}
