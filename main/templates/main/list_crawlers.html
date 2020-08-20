@@ -12,6 +12,7 @@ Home
             <thead>
                 <tr>
                     <th scope="col">Source Name</th>
+                    <th scope="col">Crawler ID</th>
                     <th scope="col">Base URL</th>
                     <th scope="col">Created at</th>
                     <th scope="col">Detail</th>
@@ -21,9 +22,10 @@ Home
             <tbody>
                 {% for crawler in allcrawlers %}
                 <tr>
-                    <td>{{crawler.source_name }}</td>
-                    <td>{{crawler.base_url }}</td>
-                    <td>{{crawler.creation_date }}</td>
+                    <td>{{crawler.source_name}}</td>
+                    <td>{{crawler.id}}</td>
+                    <td>{{crawler.base_url}}</td>
+                    <td>{{crawler.creation_date}}</td>
                     <td><a class="btn btn-info" href="{% url 'detail_crawler' crawler.id %}">Detail</a></td>
                     
                     {% if crawler.running == True %}
