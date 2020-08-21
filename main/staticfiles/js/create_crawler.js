@@ -198,14 +198,39 @@ function detailCaptcha() {
     checkCaptcha();
 }
 
-function detailTemplatedUrlRequestType() {
-    var mainSelect = document.getElementById("id_templated_url_type");
-    const request_type = mainSelect.options[mainSelect.selectedIndex].value;
+function hideUnselectedSiblings(input, parentPath, siblingPath) {
+    const parentDiv = $(input).closest(parentPath);
+    const selectedVal = input.options[input.selectedIndex].value;
 
-    var contents = document.getElementsByClassName("templated-url-content-div");
-    for (const i in contents)
-        contents[i].hidden = true;
-    setHiddenState(request_type, false);
+    parentDiv.find(siblingPath).each(function() {
+        this.hidden = true;
+    });
+
+    if (selectedVal != "") {
+        parentDiv.find("#" + selectedVal).attr('hidden', false);
+    }
+}
+
+function detailTemplatedUrlRequestType(e) {
+    hideUnselectedSiblings(e.target, '#templated-url-config',
+        ".templated-url-content-div");
+    const input = e.target;
+    const selectedVal = input.options[input.selectedIndex].value;
+    if (selectedVal == "none") {
+        $("#templated-url-param")[0].hidden = true;
+    } else {
+        $("#templated-url-param")[0].hidden = false;
+    }
+}
+
+function detailTemplatedUrlResponseParams(e) {
+    hideUnselectedSiblings(e.target, '.templated-url-response-handling-step',
+        '.templated-url-response-params');
+}
+
+function detailTemplatedUrlParamType(e) {
+    hideUnselectedSiblings(e.target, '#templated-url-param',
+        '.templated-url-param-config');
 }
 
 function detailIpRotationType() {

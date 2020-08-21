@@ -1,8 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 
-from .forms import CrawlRequestForm, RawCrawlRequestForm
-from .models import CrawlRequest, CrawlerInstance
+from .forms import CrawlRequestForm, RawCrawlRequestForm,\
+                   ResponseHandlerFormSet, ProbingForm
+from .models import CrawlRequest, CrawlerInstance, ProbingConfiguration
 
 import subprocess
 from datetime import datetime
@@ -13,34 +14,56 @@ import crawlers.crawler_manager as crawler_manager
 def getAllData():
     return CrawlRequest.objects.all().order_by('-creation_date')
 
-def list_crawlers(response):
+def list_crawlers(request):
     context = {'allcrawlers': getAllData()}
-    return render(response, "main/list_crawlers.html", context)
+    return render(request, "main/list_crawlers.html", context)
 
-def create_crawler(response):
+def create_crawler(request):
     context = {}
-    if response.method == "POST":
-        my_form = RawCrawlRequestForm(response.POST)
-        if my_form.is_valid():
+    if request.method == "POST":
+        my_form = RawCrawlRequestForm(request.POST)
+        probing_form = ProbingForm(request.POST)
+        response_formset = ResponseHandlerFormSet(request.POST)
+        if my_form.is_valid() and probing_form.is_valid() and \
+           response_formset.is_valid():
+            probing_inst = probing_form.save()
+            response_formset.instance = probing_inst
+            response_formset.save()
             new_crawl = CrawlRequestForm(my_form.cleaned_data)
-            new_crawl.save()
+            new_crawl.instance.probing_config = probing_inst
+            instance = new_crawl.save()
             
             return HttpResponseRedirect('http://localhost:8000/crawlers/')
     else:
         my_form = RawCrawlRequestForm()
+        probing_form = ProbingForm()
+        response_formset = ResponseHandlerFormSet()
     context['form'] = my_form
-    return render(response, "main/create_crawler.html", context)
+    context['response_formset'] = response_formset
+    context['probing_form'] = probing_form
+    return render(request, "main/create_crawler.html", context)
 
 def edit_crawler(request, id):
     crawler = get_object_or_404(CrawlRequest, pk=id)
     form = CrawlRequestForm(request.POST or None, instance=crawler)
+    probing_form = ProbingForm(request.POST or None,
+        instance=crawler.probing_config)
+    response_formset = ResponseHandlerFormSet(request.POST or None,
+        instance=crawler.probing_config)
 
-    if(request.method == 'POST'):
-        if(form.is_valid()):
+    if request.method == 'POST' and form.is_valid() and \
+       probing_form.is_valid() and response_formset.is_valid():
             form.save()
+            probing_form.save()
+            response_formset.save()
             return HttpResponseRedirect('http://localhost:8000/crawlers/')
     else:
-        return render(request, 'main/create_crawler.html', {'form': form, 'crawler' : crawler})
+        return render(request, 'main/create_crawler.html', {
+            'form': form,
+            'response_formset': response_formset,
+            'probing_form': probing_form,
+            'crawler' : crawler
+        })
         
 def delete_crawler(request, id):
     crawler = CrawlRequest.objects.get(id=id)
@@ -64,13 +87,13 @@ def detail_crawler(request, id):
 
     return render(request, 'main/detail_crawler.html', context)
 
-def monitoring(response):
+def monitoring(request):
     return HttpResponseRedirect("http://localhost:5000/")
 
-def create_steps(response):
-    return render(response, "main/steps_creation.html", {})
+def create_steps(request):
+    return render(request, "main/steps_creation.html", {})
 
-def stop_crawl(response, crawler_id, instance_id):
+def stop_crawl(request, crawler_id, instance_id):
     crawler_manager.stop_crawler(instance_id)
     
     instance = CrawlerInstance.objects.get(instance_id=instance_id)
@@ -82,9 +105,9 @@ def stop_crawl(response, crawler_id, instance_id):
     crawler.save()
     context = {'instance':instance, 'crawler':crawler}
     return redirect(f"/detail/{crawler_id}")
-    # return render(response, "main/detail_crawler.html", context)
+    # return render(request, "main/detail_crawler.html", context)
 
-def run_crawl(response, crawler_id):
+def run_crawl(request, crawler_id):
     crawler = CrawlRequest.objects.filter(id=crawler_id)[0]
     crawler.running = True
     crawler.save()
@@ -92,13 +115,30 @@ def run_crawl(response, crawler_id):
     data = CrawlRequest.objects.filter(id=crawler_id).values()[0]
     del data['creation_date']
     del data['last_modified']
+
+    # Add probing configuration
+    probing_inst = ProbingConfiguration.objects\
+                        .filter(id=data['probing_config_id'])
+    probing_data = probing_inst.values()[0]
+    del probing_data['id']
+    data['probing_config'] = probing_data
+    del data['probing_config_id']
+
+    # Include information on response handling
+    response_handlers = []
+    for resp in probing_inst.get().response_handlers.values():
+        del resp['id']
+        del resp['config_id']
+        response_handlers.append(resp)
+    data['probing_config']['response_handlers'] = response_handlers
+    # TODO RESOLVER QUANDO PROBING CONFIG OU RESPONSE HANDLER FOREM NULL
     instance_id = crawler_manager.start_crawler(data)
     
     instance = create_instance(data['id'], instance_id)
     context = {'instance':instance, 'crawler':crawler}
     
     return redirect(f"/detail/{crawler_id}")
-    # return render(response, "main/detail_crawler.html", context)
+    # return render(request, "main/detail_crawler.html", context)
 
 def create_instance(crawler_id, instance_id):
     mother = CrawlRequest.objects.filter(id=crawler_id)

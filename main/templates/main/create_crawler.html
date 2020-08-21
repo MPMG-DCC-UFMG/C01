@@ -56,7 +56,7 @@ New Crawler
                     </div>
                 </div>
             </a>
-            <a onClick="showBlock(this.id)" href="#" class="disabled button-block bg-dark list-group-item list-group-item-action" id="templated-url-item">
+            <a onClick="showBlock(this.id)" href="#" class="button-block bg-dark list-group-item list-group-item-action" id="templated-url-item">
                 <div class="d-flex w-100 justify-content-start align-items-center">
                     <div class="col-md-10 sidemenu-items">
                         <span class="fa fa-sliders fa-fw mr-3"></span>
@@ -87,17 +87,6 @@ New Crawler
                 <div class="d-flex w-100 justify-content-start align-items-center">
                     <span class="fa fa-shield fa-fw mr-3"></span>
                     <span class="menu-collapsed">Some Setup</span>
-                </div>
-            </a>
-            <a onClick="showBlock(this.id);" href="#" class="disabled button-block bg-dark list-group-item list-group-item-action" id="probing-item">
-                <div class="d-flex w-100 justify-content-start align-items-center">
-                    <div class="col-md-10 sidemenu-items">
-                        <span class="fa fa-id-card-o fa-fw mr-3"></span>
-                        <span class="menu-collapsed">Probing</span>
-                    </div>
-                    <div class="col-md-2">
-                        <span id="probing-valid-icon" class="fa fa-check fa-fw mr-3 probing-valid-icon valid-icon"></span>
-                    </div>
                 </div>
             </a>
             <a href="#" class="disabled bg-dark list-group-item list-group-item-action">
@@ -218,45 +207,74 @@ New Crawler
                             </div>
                         </div>
                     </div>
-                    
                     <div id="templated-url-item-block" class="block" hidden>
                         <div class="row" style="padding:20px;">
-                            <div class="col md-6">
-                                {{ form.templated_url_type | as_crispy_field}}
+                            <div class="col md-6" id="templated-url-config">
+                                <!-- Request type -->
+                                {{ probing_form.templated_url_type | as_crispy_field}}
+                                <!-- Request configuration -->
                                 <div class="templated-url-content-div" id="none" hidden></div>
                                 <div class="templated-url-content-div" id="get" hidden>
-                                    {{ form.formatable_url | as_crispy_field}}
                                 </div>
                                 <div class="templated-url-content-div" id="post" hidden>
-                                    {{ form.post_dictionary | as_crispy_field}}
+                                    {{ probing_form.post_key | as_crispy_field}}
+                                    {{ probing_form.post_dictionary | as_crispy_field}}
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="probing-item-block" class="block" hidden>
-                        <div class="row" style="padding:20px;">
-                            <div class="col md-6">
-                                <div class="form-row">
-                                    <div class="form-group col-md-6 mb-0">
-                                      {{ form.http_status_response | as_crispy_field}}
-                                    </div>
-                                    <div class="form-group col-md-6 mb-0">
-                                      {{ form.invert_http_status | as_crispy_field}}
-                                    </div>
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group col-md-6 mb-0">
-                                      {{ form.text_match_response | as_crispy_field}}
-                                    </div>
-                                    <div class="form-group col-md-6 mb-0">
-                                      {{ form.invert_text_match | as_crispy_field}}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
+                                <div id="templated-url-param" hidden>
+                                    <div class="bordered-bottom-option"></div>
+                                    <br>
+                                    <!-- Parameter type-->
+                                    {{ probing_form.template_parameter_type | as_crispy_field }}
+                                    <!-- Parameter configuration -->
+                                    <div class="templated-url-param-config" id="none" hidden></div>
+                                    <div class="templated-url-param-config" id="formatted_str" hidden>
+                                        TODO
+                                    </div>
+                                    <div class="templated-url-param-config" id="number_seq" hidden>
+                                        {{ probing_form.first_num_param | as_crispy_field}}
+                                        {{ probing_form.last_num_param | as_crispy_field}}
+                                        {{ probing_form.step_num_param | as_crispy_field}}
+                                        {{ probing_form.leading_num_param | as_crispy_field}}
+                                    </div>
+                                    <div class="templated-url-param-config" id="alpha_seq" hidden>
+                                        {{ probing_form.length_alpha_param | as_crispy_field}}
+                                        {{ probing_form.num_words_alpha_param | as_crispy_field}}
+                                        {{ probing_form.no_upper_alpha_param | as_crispy_field}}
+                                    </div>
+                                    <div class="templated-url-param-config" id="date_seq" hidden>
+                                        {{ probing_form.frequency_date_param | as_crispy_field}}
+                                        {{ probing_form.date_format_date_param | as_crispy_field}}
+                                        {{ probing_form.start_date_date_param | as_crispy_field}}
+                                        {{ probing_form.end_date_date_param | as_crispy_field}}
+                                    </div>
+                                </div>
+                                <div class="bordered-bottom-option"></div>
+
+                                <div id="templated-url-response">
+                                    {{ response_formset.management_form }}
+                                    {% for subform in response_formset %}
+                                    <div class="row">
+                                        <div class="col md-6">
+                                            <div class="templated-url-response-handling-step bordered-bottom-option">
+                                                {{ subform.handler_type | as_crispy_field }}
+                                                <div class="templated-url-response-params" id="text" hidden>
+                                                    {{ subform.text_match_value | as_crispy_field }}
+                                                </div>
+                                                <div class="templated-url-response-params" id="http_status" hidden>
+                                                    {{ subform.http_status | as_crispy_field }}
+                                                </div>
+                                                <div class="templated-url-response-params" id="binary" hidden>
+                                                </div>
+                                                {{ subform.opposite | as_crispy_field}}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
@@ -267,4 +285,12 @@ New Crawler
 
 {% block js %}
 <script src="{% static 'js/create_crawler.js' %}"></script>
+<script>
+    $('.templated-url-response-handling-step').formset({
+        prefix: '{{ response_formset.prefix }}',
+        addText: 'add validation',
+        deleteText: '&times;',
+        deleteCssClass: 'close'
+    });
+</script>
 {% endblock %}

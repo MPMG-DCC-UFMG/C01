@@ -15,6 +15,61 @@ class TimeStamped(models.Model):
     class Meta:
         abstract = True
 
+
+class ProbingConfiguration(models.Model):
+    """
+    Defines the fields required to configure a probing routine. This includes
+    the request type definitions, response handlers, parameter injection
+    methods and range inference mechanisms
+    """
+    PARAM_TYPES = [
+        ('none', 'No parameter'),
+        ('formatted_str', 'Formatted code'),
+        ('number_seq', 'Number sequence'),
+        ('date_seq', 'Date sequence'),
+        ('alpha_seq', 'Alphabetic sequence'),
+    ]
+
+    TEMPLATED_URL_TYPES = [
+        ('none', 'None'),
+        ('get', 'GET'),
+        ('post', 'POST'),
+    ]
+    # GET case
+    templated_url_type = models.CharField(max_length=15,
+                                          choices=TEMPLATED_URL_TYPES,
+                                          default='none')
+    template_parameter_type = models.CharField(max_length=15,
+                                               choices=PARAM_TYPES,
+                                               default='none')
+
+    # Numeric param
+    first_num_param = models.IntegerField(null=True, blank=True)
+    last_num_param = models.IntegerField(null=True, blank=True)
+    step_num_param = models.IntegerField(null=True, blank=True)
+    leading_num_param = models.BooleanField(default=False)
+    # Alphabetic string param
+    length_alpha_param = models.IntegerField(null=True, blank=True)
+    num_words_alpha_param = models.IntegerField(null=True, blank=True)
+    no_upper_alpha_param = models.BooleanField(default=False)
+    # Date param
+    date_format_date_param = models.CharField(max_length=1000, blank=True)
+    start_date_date_param = models.DateField(null=True, blank=True)
+    end_date_date_param = models.DateField(null=True, blank=True)
+    DATE_FREQ = [
+        ('Y', 'Yearly'),
+        ('M', 'Monthly'),
+        ('D', 'Daily'),
+    ]
+    frequency_date_param = models.CharField(max_length=15,
+                                 choices=PARAM_TYPES,
+                                 default='D')
+
+    # POST case
+    post_key = models.CharField(max_length=100, blank=True)
+    post_dictionary = models.CharField(max_length=1000, blank=True, default="")
+
+
 class CrawlRequest(TimeStamped):
     
     running = models.BooleanField(default=False)
@@ -87,28 +142,30 @@ class CrawlRequest(TimeStamped):
     link_extractor_allow = models.CharField(max_length=1000, blank=True, null=True)
     link_extractor_allow_extensions = models.CharField(blank=True, null=True, max_length=2000)
 
-    # TEMPLATED URL ###################################################################
-    TEMPLATED_URL_TYPE = [
-        ('none', 'None'), 
-        ('get', 'GET'), 
-        ('post', 'POST'),
-    ]
-    # GET case
-    templated_url_type = models.CharField(max_length=15, choices=TEMPLATED_URL_TYPE, default='none')
-    formatable_url = models.CharField(max_length=200, blank=True, null=True)
-    param = models.CharField(max_length=200, blank=True, null=True)
-
-    # POST case
-    post_dictionary = models.CharField(max_length=1000, blank=True, null=True)
-
-    # PROBING #########################################################################
-    http_status_response = models.CharField(max_length=15, blank=True, null=True)
-    invert_http_status = models.BooleanField(blank=True, null=True)
-    text_match_response = models.CharField(max_length=2000, blank=True, null=True)
-    invert_text_match = models.BooleanField(blank=True, null=True)
+    probing_config = models.ForeignKey(ProbingConfiguration,
+        on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return self.source_name
+
+
+class ResponseHandler(models.Model):
+    """Details on how to handle a response during probing"""
+
+    # Configuration to which this handler is associated
+    config = models.ForeignKey(ProbingConfiguration, on_delete=models.CASCADE,
+                                related_name="response_handlers")
+
+    HANDLER_TYPES = [
+        ('text', 'Text match'),
+        ('http_status', 'HTTP status code'),
+        ('binary', 'Binary file type'),
+    ]
+    handler_type = models.CharField(max_length=15, choices=HANDLER_TYPES)
+    text_match_value = models.CharField(max_length=1000, blank=True)
+    http_status = models.PositiveIntegerField(null=True, blank=True)
+    opposite = models.BooleanField(default=False)
+
 
 class CrawlerInstance(TimeStamped):
     crawler_id = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE)

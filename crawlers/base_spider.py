@@ -1,18 +1,22 @@
 import scrapy
 from scrapy.exceptions import CloseSpider
 
-import requests
+import crawling_utils
+import datetime
+import json
 import logging
 import os
-import re
-import json
+import parsing_html
 import random
-import datetime
+import re
+import requests
 import time
-import crawling_utils
 
 from crawlers.constants import *
-import parsing_html
+from param_injector import ParamInjector
+from entry_probing import BinaryFormatProbingResponse, GETProbingRequest,\
+                          HTTPStatusProbingResponse, POSTProbingRequest,\
+                          TextMatchProbingResponse, EntryProbing
 
 from lxml.html.clean import Cleaner
 import codecs
@@ -69,6 +73,130 @@ class BaseSpider(scrapy.Spider):
         Should check self.stop() at every call.
         """
         raise NotImplementedError
+
+    def generate_initial_requests(self):
+        """
+        Generates the initial requests to be done from the templated requests
+        configuration. Yields the base URL if no template is used. Should be
+        called by start_requests.
+        """
+
+        base_url = self.config['base_url']
+        probing_config = self.config['probing_config']
+        req_type = probing_config['templated_url_type'].upper()
+        if req_type != 'NONE' and \
+           probing_config['template_parameter_type'] != 'none':
+
+            # Instantiate the parameter injector
+            param_type = probing_config['template_parameter_type']
+            param_gen = None
+            if param_type == "formatted_str":
+                # Formatted string generator
+                #TODO
+                pass
+            elif param_type == "number_seq":
+                # Number sequence generator
+                param_gen = ParamInjector.generate_num_sequence(
+                    first=probing_config['first_num_param'],
+                    last=probing_config['last_num_param'],
+                    step=probing_config['step_num_param'],
+                    leading=probing_config['leading_num_param'],
+                )
+            elif param_type == 'date_seq':
+                # Date sequence generator
+                param_gen = ParamInjector.generate_daterange(
+                    date_format=probing_config['date_format_date_param'],
+                    start_date=probing_config['start_date_date_param'],
+                    end_date=probing_config['end_date_date_param'],
+                    frequency=probing_config['frequency_date_param'],
+                )
+            elif param_type == 'alpha_seq':
+                # Alphabetic search parameter generator
+                param_gen = ParamInjector.generate_alpha(
+                    length=probing_config['length_alpha_param'],
+                    num_words=probing_config['num_words_alpha_param'],
+                    no_upper=probing_config['no_upper_alpha_param'],
+                )
+            else:
+                raise ValueError(f"Invalid parameter type: {param_type}")
+
+            # Request body (only used in POST requests)
+            req_body = {}
+            param_key = None
+            if req_type == 'POST':
+                if len(probing_config['post_dictionary']) > 0:
+                    req_body = json.loads(probing_config['post_dictionary'])
+
+                param_key = probing_config['post_key']
+
+            # Configure the probing process
+
+            # Probing request
+            probe = None
+            if req_type == 'GET':
+                probe = EntryProbing(GETProbingRequest(base_url))
+            elif req_type == 'POST':
+                probe = EntryProbing(
+                    POSTProbingRequest(url=base_url,
+                    property_name=param_key,
+                    data=req_body)
+                )
+            else:
+                raise AssertionError
+
+            # Probing response
+            for handler_data in probing_config['response_handlers']:
+                resp_handler = None
+
+                handler_type = handler_data['handler_type']
+                if handler_type == 'text':
+                    resp_handler = TextMatchProbingResponse(
+                        text_match=handler_data['text_match_value'],
+                        opposite = handler_data['opposite']
+                    )
+                elif handler_type == 'http_status':
+                    resp_handler = HTTPStatusProbingResponse(
+                        http_code=handler_data['http_status'],
+                        opposite = handler_data['opposite']
+                    )
+                elif handler_type == 'binary':
+                    resp_handler = BinaryFormatProbingResponse(
+                        opposite = handler_data['opposite']
+                    )
+                else:
+                    raise AssertionError
+
+                probe.add_response_handler(resp_handler)
+
+            # Generate the requests
+            for param_value in param_gen:
+                # Check if this entry hits a valid page
+                if probe.check_entry(param_value):
+                    req_body = {}
+                    curr_url = base_url
+
+                    # Insert parameter into URL, if using GET requests
+                    if req_type == 'GET':
+                        curr_url = base_url.format(param_value)
+                    elif req_type == 'POST':
+                        req_body[param_key] = param_value
+                    else:
+                        raise ValueError(f"Invalid request type: {param_type}")
+
+                    yield {
+                        'url': curr_url,
+                        'method': req_type,
+                        'body': req_body
+                    }
+
+        else:
+            # By default does a GET request to the base_url
+            yield {
+                'url': base_url,
+                'method': 'GET',
+                'body': {}
+            }
+
 
     def stop(self):
         """
@@ -128,6 +256,8 @@ class BaseSpider(scrapy.Spider):
             body = cleaner.clean_html(response.body.decode('utf-8-sig'))
             encoding = "utf-8-sig"
 
+        # TODO Potential issue: POST requests may access the same URL with
+        # different parameters
         hsh = crawling_utils.hash(response.url)
 
         folder = f"{self.data_folder}/{save_at}"
