@@ -95,7 +95,7 @@ def crawler_process(crawler_id, config):
     def update_database():
         # TODO: get port as variable
         port = 8000
-        address = f"http://localhost:{port}/detail/stop_crawl/{config["id"]}" \
+        address = f"http://localhost:{port}/detail/stop_crawl/{config['id']}" \
             f"/{crawler_id}"
         requests.get(address)
 
