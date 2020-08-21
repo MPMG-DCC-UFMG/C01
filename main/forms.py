@@ -90,6 +90,8 @@ class CrawlRequestForm(forms.ModelForm):
             'text_match_response',
             'invert_text_match',
 
+            'steps',
+
         ]
 
 class RawCrawlRequestForm(forms.Form):
@@ -230,6 +232,11 @@ class RawCrawlRequestForm(forms.Form):
         widget=forms.TextInput(attrs={'placeholder': 'pdf,xml'})
     )
     # Crawler Type - Page with form
+    steps = forms.CharField(label="Steps JSON", max_length=9999999,
+        widget=forms.TextInput(attrs={'placeholder': '{'+'}'})
+    )
+
+
     # Crawler Type - Single file
     # Crawler Type - Bundle file
 

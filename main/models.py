@@ -87,6 +87,10 @@ class CrawlRequest(TimeStamped):
     link_extractor_allow = models.CharField(max_length=1000, blank=True, null=True)
     link_extractor_allow_extensions = models.CharField(blank=True, null=True, max_length=2000)
 
+    # STEPS ##########################################################################
+
+    steps = models.CharField(max_length=9999999, default='{'+'}')
+
     # TEMPLATED URL ###################################################################
     TEMPLATED_URL_TYPE = [
         ('none', 'None'), 

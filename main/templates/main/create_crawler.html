@@ -213,8 +213,8 @@ New Crawler
                                     {{ form.link_extractor_allow | as_crispy_field}}
                                     {{ form.link_extractor_allow_extensions | as_crispy_field}}
                                 </div>
-                                <div class="crawler-type-content-div" id="form_page" hidden >
-                                    
+                                <div class="crawler-type-content-div" id="form_page" hidden>
+                                    {{ form.steps |  as_crispy_field }}
                                 </div>
                                 <div class="crawler-type-content-div" id="single_file" hidden></div>
                                 <div class="crawler-type-content-div" id="bundle_file" hidden></div>

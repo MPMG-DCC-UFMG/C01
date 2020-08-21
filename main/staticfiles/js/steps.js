@@ -1,13 +1,14 @@
 
 
-function load_steps(outside_element, json_path="/static/json/step_signatures.json"){
+function load_steps(outside_element, save_button, output_element, json_path="/static/json/step_signatures.json"){
     var xmlhttp = new XMLHttpRequest();
     
     xmlhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
         step_list = JSON.parse(this.responseText)
         step_list = step_list.concat(JSON.parse('{"name":"para cada"}'))
-        init_steps_creation_interface(outside_element, step_list)
+        step_list = step_list.concat(JSON.parse('{"name":"para cada pagina da paginacao"}'))
+        init_steps_creation_interface(outside_element, save_button, output_element, step_list)
       }
     };
 
@@ -19,34 +20,41 @@ function load_steps(outside_element, json_path="/static/json/step_signatures.jso
 
 //-------------- creation_interface ------------------------------
 
-function init_steps_creation_interface(outside_element, step_list){
-    outside_element.innerHTML = `<div class="row" style="margin-top: 1em">
-                            <a class="btn btn-primary" style="color:white; width: 10em; margin-right: 2em" id="add_step_button" onclick=build_json()>
-                                    generate json
-                            </a>
-                            <input class="form-control col-sm" id="json_output" placeholder="steps json">
-                        </div>
-                        `
+function init_steps_creation_interface(outside_element, save_button, output_element, step_list){
+    /*<div>
+        <iframe src="http://cnes.datasus.gov.br/"  height="500px" width="500px" id="lerolero">
+        </iframe>
+    </div>
+    <input type="text" id="path_input_container">*/
     steps_creation_interface = document.createElement("div")
     steps_creation_interface.type= "steps_creation_interface"
+    steps_creation_interface.id = "steps_creation_interface"
     
     step_controler = document.createElement("div")
     step_controler.type = "step_controler"
     step_board = init_step_board(step_list)
 
-    a = document.createElement("a")
-    a.className="btn btn-primary"
-    a.style.color = "white"
-    a.onclick = function(){step_board.add_block(step_list)}
-    a.innerText = "Adicionar Bloco"
 
-    step_controler.appendChild(a)
+    add_block_button = document.createElement("a")
+    add_block_button.className="btn btn-primary"
+    add_block_button.style.color = "white"
+    add_block_button.onclick = function(){step_board.add_block(step_list)}
+    add_block_button.innerText = "Adicionar Bloco"
+
+    step_controler.appendChild(add_block_button)
     steps_creation_interface.appendChild(step_controler)
     steps_creation_interface.appendChild(step_board)
     steps_creation_interface.step_controler = step_controler
     steps_creation_interface.step_board = step_board
+    steps_creation_interface.step_board.type
 
     outside_element.insertBefore(steps_creation_interface, outside_element.children[0])
+    outside_element.type = "root"
+    outside_element.steps_creation_interface = steps_creation_interface
+    outside_element.step_json_input = output_element
+    outside_element.save_button = save_button
+    outside_element.save_button.onclick = function(){build_json(step_board, output_element)}
+
 }
 
 //------------------- step board ------------------------------
@@ -57,6 +65,7 @@ function init_step_board(step_list){
     step_board.current_depth = 1
     step_board.get_last_depth = get_last_depth
     step_board.style.marginTop = "1em"
+    step_board.style.marginBottom = "1em"
     step_board.add_block = function(step_list){
         steps_creation_interface = find_parent_of_type(this, "steps_creation_interface")
         step_board = steps_creation_interface.step_board
@@ -86,8 +95,7 @@ function get_last_depth(){
 
 //--------------------- json build functions ---------------------------------
 
-function build_json(){
-    step_board = document.getElementById("step_board")
+function build_json(step_board, output_element){
     var root_step = {
         step: "root",
         depth: 0,
@@ -117,37 +125,41 @@ function build_json(){
         }
 
     }
-    document.getElementById("json_output").value = JSON.stringify(root_step)
+    output_element.value = JSON.stringify(root_step)
     
 }
 
-function get_step_json_format(step_element){
+function get_step_json_format(block){
+    param_name = block.step.name.replace(/ /g, "_")
     step_dict={
-        step : step_element.step,
-        depth : step_element.depth,
+        step : param_name,
+        depth : block.depth,
     }
-    if(step_element.step == "para cada"){
-        step_dict.step = "para_cada"
-        step_dict.iterator = step_element.iterator_input.value
+    if(param_name == "para_cada"){
+        step_dict.iterator = block.iterator_input.value
         step_dict.children = []
-        if(step_element.iterable_select.value == "objeto"){
+        if(block.iterable_select.value == "objeto"){
             step_dict.iterable = {objeto:{}}
-            step_dict.iterable.objeto = step_element.iterable_params_div.children[0].children[0].value
+            step_dict.iterable.objeto = block.params[0].children[0].value.replace(/ /g, "_")
         }else{
             step_dict.iterable = {call:{}}
             step_dict.iterable.call = {
-                step: step_element.iterable_select.value,
+                step: block.iterable_select.value,
                 arguments:{}
             }
-            for(param of step_element.iterable_params_div.children){
-                step_dict.iterable.call.arguments[param.children[0].placeholder] = param.children[0].value
+            for(param of block.params){
+                step_dict.iterable.call.arguments[param.children[0].placeholder] = param.children[0].value.replace(/ /g, "_")
             }
         }
-    }
-    else {
+    }else if(param_name == "para_cada_pagina_da_paginacao"){
+        step_dict.children = []
+        for(param of block.params){
+            step_dict[param.children[0].placeholder] = param.children[0].value.replace(/ /g, "_")
+        }
+    }else {
         step_dict.arguments = {}
-        for(child of step_element.children[0].children[0].children[1].children[0].children){
-            step_dict.arguments[child.children[0].placeholder] = child.children[0].value
+        for(param of block.params){
+            step_dict.arguments[param.children[0].placeholder] = param.children[0].value.replace(/ /g, "_")
         }
     }
     return step_dict
@@ -176,7 +188,8 @@ function get_params_element_list(step_name, step_list){
         object_div = document.createElement("DIV")
         object_div.className = "col-sm"
         object_div.innerHTML = `<input placeholder="objeto, ex: [1,2,3]" class="row form-control">`
-        return object_div
+        
+        return [object_div]
     }else{
         'use strict'
         var step = get_step_info(step_name, step_list)
@@ -220,15 +233,15 @@ function show(element){
     element.style.display = "block";
 }
 
-function find_parent_of_type(element, type){
-    if(element.type && element.type == type){
+function find_parent_of_type(element, value, attr = "type"){
+    if(element[attr] && element[attr] == value){
         return element
     }else {
         if(!element.parentElement){
-            console.log("This element isn't inside an element of type " + type)
+            console.log("This element isn't inside an element with attribute \""+ attr + "\" storing the value " + value)
             return false
         }else{
-            return find_parent_of_type(element.parentElement, type)
+            return find_parent_of_type(element.parentElement, value)
         }
     }
 }

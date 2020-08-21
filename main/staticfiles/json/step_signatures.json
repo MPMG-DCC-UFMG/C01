@@ -12,11 +12,6 @@
         "name": "digite",
         "mandatory_params": [
             "xpath",
-            "xpath",
-            "xpath",
-            "xpath",
-            "xpath",
-            "xpath",
             "texto"
         ],
         "optional_params": {"a":"b","b":"c","c":"d","d":"e","e":"f"}

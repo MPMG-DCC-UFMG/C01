@@ -20,6 +20,8 @@ function init_block(step_list, depth){
     //Seting up the lines of the object
     block.lines_box = block.children[0]
     block.lines = block.lines_box.children
+    block.params = []
+
     block.add_line = add_line
     block.add_line()
 
@@ -29,6 +31,7 @@ function init_block(step_list, depth){
 
     //Setting the estrutural steps builders
     block.turn_to_for_step = turn_to_for_step
+    block.turn_to_pagination_step = turn_to_pagination_step
 
     //Setting the border functions
     block.onmouseout = function(){hide(this.controler_box); this.style.borderColor = ""}
@@ -74,7 +77,7 @@ function init_block(step_list, depth){
 
 //---------------- parameters manager methods --------------------------
 
-function init_optional_params_button(optional_params){
+function init_optional_params_button(step){
     
     block = find_parent_of_type(this, "block")
 
@@ -100,9 +103,13 @@ function init_optional_params_button(optional_params){
     new_parameter_button_image.style.heigth = "1em"
 
     dropdown_menu.className = "dropdown-menu"
-    step = get_step_info(block.select.value, block.step_list)
-    dropdown_menu.innerHTML = get_this_texts_inside_each_tag(optional_params, '<a class="dropdown-item" style="cursor:pointer">')
 
+    if(!step){
+        step = block.step
+    }
+
+    optional_params = Object.keys(step.optional_params)
+    dropdown_menu.innerHTML = get_this_texts_inside_each_tag(optional_params, '<a class="dropdown-item" style="cursor:pointer">')
     for(child of dropdown_menu.children){
         child.onclick = function(){
             block = find_parent_of_type(this, "block")
@@ -110,18 +117,15 @@ function init_optional_params_button(optional_params){
             hide(this)
         }
     }
-    block.new_parameter_button.dropdown_menu = dropdown_menu
 
+    block.new_parameter_button.dropdown_menu = dropdown_menu
+    block.lines[last_line].appendChild(block.new_parameter_button_box) 
 }
 
 function add_param(param_name, optional_param = false){
     block = find_parent_of_type(this, "block")
     last_line = block.lines.length-1
-    max_params=3
-    if(last_line == 0){
-        max_params=2
-    }
-    if(block.lines[last_line].row.children.length == max_params){
+    if(block.lines[last_line].row.full){
         block.add_line()
         last_line++
         if(optional_param){
@@ -129,6 +133,9 @@ function add_param(param_name, optional_param = false){
             block.lines[last_line].appendChild(block.new_parameter_button_box)
         }
     }
+
+    param_name = param_name.replace(/_/g, " ")
+
     param_element = document.createElement("DIV")
     param_element.className = "col-sm"
     param_element.innerHTML = `<input placeholder="` + String(param_name) + `" class="row form-control">`
@@ -144,12 +151,15 @@ function add_param(param_name, optional_param = false){
         hide(remove_button)
         remove_button.onclick = function(){
             block = find_parent_of_type(this, "block")
+            line = find_parent_of_type(this, "line")
+            line.row.full = false
             for(param of block.new_parameter_button.dropdown_menu.children){
                 if(param.innerText == this.parentElement.children[0].placeholder){
                     show(param)
                 }
             }
             line = find_parent_of_type(this, "line")
+            
             this.parentElement.remove()
             
             if(block.lines[block.lines.length-1].row.children.length == 0){
@@ -166,6 +176,15 @@ function add_param(param_name, optional_param = false){
         param_element.onmouseout = function(){hide(this.remove_button)}
     }
     block.lines[last_line].row.appendChild(param_element)
+    block.params.push(param_element)
+
+    number_max_of_params=3
+    if(last_line == 0){
+        number_max_of_params=2
+    }
+    if(block.lines[last_line].row.children.length == number_max_of_params){
+        block.lines[last_line].row.full = true
+    }
 }
 
 //---------------- lines manager methods ------------------------------
@@ -197,28 +216,45 @@ function get_line(i){
     }
 }
 
-function delete_lines(len){
-    var n = len
-    for(var i=0; i<n; i++){
-        block.lines[0].remove()
+function delete_lines(m, n=null){
+    if(n===null){
+        n=m
+        m=0
+    }
+    for(var i=m; i<n; i++){
+        block.lines[m].remove()
     }
 }
 
 //---------------- refresh methods -----------------------------------
 
 function refresh_iterable(){
-    step_html = get_params_element_list(this.value)
-    commun_parent = this.parentElement.parentElement.parentElement.parentElement.parentElement
-    commun_parent.children[1].children[0].children[0].innerHTML = step_html
+    block = find_parent_of_type(this, "block")
+    block.iterable_step = get_step_info(this.value, block.step_list)
+
+    block.delete_lines(1, block.lines.length)
+    block.add_line()
+
+    for(param of block.iterable_step.mandatory_params){
+        block.add_param(param)
+    }
+
+    optional_params = Object.keys(block.iterable_step.optional_params)
+    if(optional_params.length!=0){
+        block.init_optional_params_button(block.iterable_step)
+    }
     
 }
 
 function refresh_step(){
     block = find_parent_of_type(this, "block")
     block.step = get_step_info(this.value, block.step_list)
+    block.params = []
 
     if(this.value=="para cada"){
         block.turn_to_for_step()
+    }else if(this.value=="para cada pagina da paginacao"){
+        block.turn_to_pagination_step()
     }else{
         block.delete_lines(block.lines.length)
         block.add_line()
@@ -229,11 +265,9 @@ function refresh_step(){
 
         optional_params = Object.keys(block.step.optional_params)
         if(optional_params.length!=0){
-            block.init_optional_params_button(optional_params)
-            block.lines[last_line].appendChild(block.new_parameter_button_box) 
+            block.init_optional_params_button(block.step)
         }
     }
-    
 }
 
 
@@ -243,28 +277,48 @@ function turn_to_for_step(){
     block = find_parent_of_type(this, "block")
     block.delete_lines(block.lines.length)
     block.add_line()
-    alert(block.lines.length)
 
-    inside_first_row = `<div class="col-sm"><input value="opcao" class="form-control"></div>
-                        <div style="width:3em;"><p style="margin-top:10%; text-align:center;">em</p></div>
-                        <div class="step-config-select">
-                            <select class="form-control select-step">` + get_this_texts_inside_each_tag(get_step_names(block.step_list), "<option>")+ `<option>objeto</option>` + `</select>
-                        </div>`
+    iterator_input_box = document.createElement("DIV")
+    iterator_input_box.className = "col-sm"    
+    iterator_input = document.createElement("INPUT")
+    iterator_input.value = "opcao"
+    iterator_input.className = "form-control row"
+    iterator_input_box.appendChild(iterator_input)
+    block.iterator_input = iterator_input
 
+    in_label_box = document.createElement("DIV")
+    in_label_box.style.width = "3em"
+    in_label = document.createElement("P")
+    in_label.style.marginTop = "10%"
+    in_label.style.textAlign = "center"
+    in_label.innerText = " em"
+    in_label_box.appendChild(in_label)    
 
-    block.lines[0].children[1].children[0].innerHTML = inside_first_row
-    select_iterable = block.lines[0].children[1].children[0].children[2].children[0]
-    for(param of get_params_element_list(select_iterable.value, block.step_list)){
-        block.lines[1].children[0].children[0].appendChild = param
-    }
-    select_iterable.onchange = refresh_iterable
-    block.iterator_input = block.lines[0].children[1].children[0].children[0].children[0]
-    block.iterable_select = block.lines[0].children[1].children[0].children[2].children[0]
-    block.iterable_params_div = block.lines[1].children[0].children[0]
+    iterable_select_box = document.createElement("DIV")
+    iterable_select_box.className = "step-config-select"
+    iterable_select = document.createElement("select")
+    iterable_select.className = "form-control select-step"
+    iterable_select.innerHTML = get_this_texts_inside_each_tag(get_step_names(block.step_list), "<option>") + `<option>objeto</option>`
+    iterable_select_box.appendChild(iterable_select)
+    block.iterable_select = iterable_select
 
-    return step_html
+    block.lines[0].row.appendChild(iterator_input_box)
+    block.lines[0].row.appendChild(in_label_box)
+    block.lines[0].row.appendChild(iterable_select_box)
+    block.lines[0].row.full = true
+
+    iterable_select.onchange = refresh_iterable
+    iterable_select.onchange()
 }
 
+function turn_to_pagination_step(){
+    block = find_parent_of_type(this, "block")
+    block.delete_lines(block.lines.length)
+    block.add_line()
+    block.add_param("xpath_dos_botoes")
+    block.add_param("indice_do_botao_proximo")
+    block.lines[0].row.full = true
+}
 
 
 //---------------- block menu methods ------------------------------

@@ -240,8 +240,20 @@ function detailCrawlerType() {
     for (const i in contents)
         contents[i].hidden = true;
     setHiddenState(crawler_type, false);
+    
+
+
+
     var outside_element = document.getElementById("form_page");
-    load_steps(outside_element);
+    //outside_element.children[0].hidden = true
+    steps_output_element = outside_element.children[0].children[1].children[0]
+    save_button = document.createElement("button")
+    save_button.innerText = "Save steps"
+    save_button.className="btn btn-primary"
+    save_button.style.color = "white"
+    outside_element.appendChild(save_button)
+
+    load_steps(outside_element, save_button, steps_output_element);
 
     checkCrawlerType();
 }
