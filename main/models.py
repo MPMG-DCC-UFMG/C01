@@ -16,11 +16,11 @@ class TimeStamped(models.Model):
         abstract = True
 
 
-class ProbingConfiguration(models.Model):
+class RequestConfiguration(models.Model):
     """
-    Defines the fields required to configure a probing routine. This includes
-    the request type definitions, response handlers, parameter injection
-    methods and range inference mechanisms
+    Defines the fields required to configure the request process for an URL.
+    This includes response handlers, parameter injection methods and range
+    inference mechanisms
     """
     PARAM_TYPES = [
         ('none', 'No parameter'),
@@ -30,15 +30,6 @@ class ProbingConfiguration(models.Model):
         ('alpha_seq', 'Alphabetic sequence'),
     ]
 
-    TEMPLATED_URL_TYPES = [
-        ('none', 'None'),
-        ('get', 'GET'),
-        ('post', 'POST'),
-    ]
-    # GET case
-    templated_url_type = models.CharField(max_length=15,
-                                          choices=TEMPLATED_URL_TYPES,
-                                          default='none')
     template_parameter_type = models.CharField(max_length=15,
                                                choices=PARAM_TYPES,
                                                default='none')
@@ -78,7 +69,14 @@ class CrawlRequest(TimeStamped):
     source_name = models.CharField(max_length=200)
     base_url  = models.CharField(max_length=200)
     obey_robots = models.BooleanField(blank=True, null=True)
-    
+
+    REQUEST_TYPES = [
+        ('GET', 'GET'),
+        ('POST', 'POST'),
+    ]
+    request_type = models.CharField(max_length=15,
+                                    choices=REQUEST_TYPES,
+                                    default='GET')
 
     # ANTIBLOCK #####################################################################
     # Options for Delay
@@ -142,7 +140,7 @@ class CrawlRequest(TimeStamped):
     link_extractor_allow = models.CharField(max_length=1000, blank=True, null=True)
     link_extractor_allow_extensions = models.CharField(blank=True, null=True, max_length=2000)
 
-    probing_config = models.ForeignKey(ProbingConfiguration,
+    probing_config = models.ForeignKey(RequestConfiguration,
         on_delete=models.CASCADE, null=True)
 
     def __str__(self):
@@ -153,7 +151,7 @@ class ResponseHandler(models.Model):
     """Details on how to handle a response during probing"""
 
     # Configuration to which this handler is associated
-    config = models.ForeignKey(ProbingConfiguration, on_delete=models.CASCADE,
+    config = models.ForeignKey(RequestConfiguration, on_delete=models.CASCADE,
                                 related_name="response_handlers")
 
     HANDLER_TYPES = [

@@ -2,8 +2,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm,\
-                   ResponseHandlerFormSet, ProbingForm
-from .models import CrawlRequest, CrawlerInstance, ProbingConfiguration
+                   ResponseHandlerFormSet, RequestConfigForm
+from .models import CrawlRequest, CrawlerInstance, RequestConfiguration
 
 import subprocess
 from datetime import datetime
@@ -22,11 +22,11 @@ def create_crawler(request):
     context = {}
     if request.method == "POST":
         my_form = RawCrawlRequestForm(request.POST)
-        probing_form = ProbingForm(request.POST)
+        templated_url_form = RequestConfigForm(request.POST)
         response_formset = ResponseHandlerFormSet(request.POST)
-        if my_form.is_valid() and probing_form.is_valid() and \
+        if my_form.is_valid() and templated_url_form.is_valid() and \
            response_formset.is_valid():
-            probing_inst = probing_form.save()
+            probing_inst = templated_url_form.save()
             response_formset.instance = probing_inst
             response_formset.save()
             new_crawl = CrawlRequestForm(my_form.cleaned_data)
@@ -36,32 +36,32 @@ def create_crawler(request):
             return HttpResponseRedirect('http://localhost:8000/crawlers/')
     else:
         my_form = RawCrawlRequestForm()
-        probing_form = ProbingForm()
+        templated_url_form = RequestConfigForm()
         response_formset = ResponseHandlerFormSet()
     context['form'] = my_form
     context['response_formset'] = response_formset
-    context['probing_form'] = probing_form
+    context['templated_url_form'] = templated_url_form
     return render(request, "main/create_crawler.html", context)
 
 def edit_crawler(request, id):
     crawler = get_object_or_404(CrawlRequest, pk=id)
     form = CrawlRequestForm(request.POST or None, instance=crawler)
-    probing_form = ProbingForm(request.POST or None,
+    templated_url_form = RequestConfigForm(request.POST or None,
         instance=crawler.probing_config)
     response_formset = ResponseHandlerFormSet(request.POST or None,
         instance=crawler.probing_config)
 
     if request.method == 'POST' and form.is_valid() and \
-       probing_form.is_valid() and response_formset.is_valid():
+       templated_url_form.is_valid() and response_formset.is_valid():
             form.save()
-            probing_form.save()
+            templated_url_form.save()
             response_formset.save()
             return HttpResponseRedirect('http://localhost:8000/crawlers/')
     else:
         return render(request, 'main/create_crawler.html', {
             'form': form,
             'response_formset': response_formset,
-            'probing_form': probing_form,
+            'templated_url_form': templated_url_form,
             'crawler' : crawler
         })
         
@@ -117,7 +117,7 @@ def run_crawl(request, crawler_id):
     del data['last_modified']
 
     # Add probing configuration
-    probing_inst = ProbingConfiguration.objects\
+    probing_inst = RequestConfiguration.objects\
                         .filter(id=data['probing_config_id'])
     probing_data = probing_inst.values()[0]
     del probing_data['id']

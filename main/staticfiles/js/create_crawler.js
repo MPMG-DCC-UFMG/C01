@@ -211,18 +211,6 @@ function hideUnselectedSiblings(input, parentPath, siblingPath) {
     }
 }
 
-function detailTemplatedUrlRequestType(e) {
-    hideUnselectedSiblings(e.target, '#templated-url-config',
-        ".templated-url-content-div");
-    const input = e.target;
-    const selectedVal = input.options[input.selectedIndex].value;
-    if (selectedVal == "none") {
-        $("#templated-url-param")[0].hidden = true;
-    } else {
-        $("#templated-url-param")[0].hidden = false;
-    }
-}
-
 function detailTemplatedUrlResponseParams(e) {
     hideUnselectedSiblings(e.target, '.templated-url-response-handling-step',
         '.templated-url-response-params');

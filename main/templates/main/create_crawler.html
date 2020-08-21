@@ -118,6 +118,7 @@ New Crawler
                             <div class="col md-6">
                                 {{ form.source_name | as_crispy_field}}
                                 {{ form.base_url | as_crispy_field}}
+                                {{ form.request_type | as_crispy_field}}
                                 {{ form.obey_robots | as_crispy_field}}
                             </div>
                         </div>
@@ -208,70 +209,9 @@ New Crawler
                         </div>
                     </div>
                     <div id="templated-url-item-block" class="block" hidden>
-                        <div class="row" style="padding:20px;">
+                        <div class="row">
                             <div class="col md-6" id="templated-url-config">
-                                <!-- Request type -->
-                                {{ probing_form.templated_url_type | as_crispy_field}}
-                                <!-- Request configuration -->
-                                <div class="templated-url-content-div" id="none" hidden></div>
-                                <div class="templated-url-content-div" id="get" hidden>
-                                </div>
-                                <div class="templated-url-content-div" id="post" hidden>
-                                    {{ probing_form.post_key | as_crispy_field}}
-                                    {{ probing_form.post_dictionary | as_crispy_field}}
-                                </div>
-
-                                <div id="templated-url-param" hidden>
-                                    <div class="bordered-bottom-option"></div>
-                                    <br>
-                                    <!-- Parameter type-->
-                                    {{ probing_form.template_parameter_type | as_crispy_field }}
-                                    <!-- Parameter configuration -->
-                                    <div class="templated-url-param-config" id="none" hidden></div>
-                                    <div class="templated-url-param-config" id="formatted_str" hidden>
-                                        TODO
-                                    </div>
-                                    <div class="templated-url-param-config" id="number_seq" hidden>
-                                        {{ probing_form.first_num_param | as_crispy_field}}
-                                        {{ probing_form.last_num_param | as_crispy_field}}
-                                        {{ probing_form.step_num_param | as_crispy_field}}
-                                        {{ probing_form.leading_num_param | as_crispy_field}}
-                                    </div>
-                                    <div class="templated-url-param-config" id="alpha_seq" hidden>
-                                        {{ probing_form.length_alpha_param | as_crispy_field}}
-                                        {{ probing_form.num_words_alpha_param | as_crispy_field}}
-                                        {{ probing_form.no_upper_alpha_param | as_crispy_field}}
-                                    </div>
-                                    <div class="templated-url-param-config" id="date_seq" hidden>
-                                        {{ probing_form.frequency_date_param | as_crispy_field}}
-                                        {{ probing_form.date_format_date_param | as_crispy_field}}
-                                        {{ probing_form.start_date_date_param | as_crispy_field}}
-                                        {{ probing_form.end_date_date_param | as_crispy_field}}
-                                    </div>
-                                </div>
-                                <div class="bordered-bottom-option"></div>
-
-                                <div id="templated-url-response">
-                                    {{ response_formset.management_form }}
-                                    {% for subform in response_formset %}
-                                    <div class="row">
-                                        <div class="col md-6">
-                                            <div class="templated-url-response-handling-step bordered-bottom-option">
-                                                {{ subform.handler_type | as_crispy_field }}
-                                                <div class="templated-url-response-params" id="text" hidden>
-                                                    {{ subform.text_match_value | as_crispy_field }}
-                                                </div>
-                                                <div class="templated-url-response-params" id="http_status" hidden>
-                                                    {{ subform.http_status | as_crispy_field }}
-                                                </div>
-                                                <div class="templated-url-response-params" id="binary" hidden>
-                                                </div>
-                                                {{ subform.opposite | as_crispy_field}}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
+                                {% include "main/request_config.html" with req_form=templated_url_form response_formset=response_formset only %}
                             </div>
                         </div>
                     </div>

@@ -82,8 +82,8 @@ class BaseSpider(scrapy.Spider):
         """
 
         base_url = self.config['base_url']
+        req_type = self.config['request_type']
         probing_config = self.config['probing_config']
-        req_type = probing_config['templated_url_type'].upper()
         if req_type != 'NONE' and \
            probing_config['template_parameter_type'] != 'none':
 
@@ -190,10 +190,10 @@ class BaseSpider(scrapy.Spider):
                     }
 
         else:
-            # By default does a GET request to the base_url
+            # By default does a request to the base_url
             yield {
                 'url': base_url,
-                'method': 'GET',
+                'method': req_type,
                 'body': {}
             }
 
