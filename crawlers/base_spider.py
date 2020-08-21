@@ -156,7 +156,7 @@ class BaseSpider(scrapy.Spider):
                     )
                 elif handler_type == 'http_status':
                     resp_handler = HTTPStatusProbingResponse(
-                        http_code=handler_data['http_status'],
+                        status_code=handler_data['http_status'],
                         opposite = handler_data['opposite']
                     )
                 elif handler_type == 'binary':
