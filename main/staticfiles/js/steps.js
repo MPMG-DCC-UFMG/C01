@@ -6,8 +6,8 @@ function load_steps(outside_element, save_button, output_element, json_path="/st
     xmlhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
         step_list = JSON.parse(this.responseText)
-        step_list = step_list.concat(JSON.parse('{"name":"para cada"}'))
-        step_list = step_list.concat(JSON.parse('{"name":"para cada pagina da paginacao"}'))
+        step_list = step_list.concat(JSON.parse('{"name":"para_cada"}'))
+        step_list = step_list.concat(JSON.parse('{"name":"para_cada_pagina_em"}'))
         init_steps_creation_interface(outside_element, save_button, output_element, step_list)
       }
     };
@@ -140,7 +140,7 @@ function get_step_json_format(block){
         step_dict.children = []
         if(block.iterable_select.value == "objeto"){
             step_dict.iterable = {objeto:{}}
-            step_dict.iterable.objeto = block.params[0].children[0].value.replace(/ /g, "_")
+            step_dict.iterable.objeto = block.params[0].children[0].value
         }else{
             step_dict.iterable = {call:{}}
             step_dict.iterable.call = {
@@ -148,18 +148,18 @@ function get_step_json_format(block){
                 arguments:{}
             }
             for(param of block.params){
-                step_dict.iterable.call.arguments[param.children[0].placeholder] = param.children[0].value.replace(/ /g, "_")
+                step_dict.iterable.call.arguments[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
             }
         }
-    }else if(param_name == "para_cada_pagina_da_paginacao"){
+    }else if(param_name == "para_cada_pagina_em"){
         step_dict.children = []
         for(param of block.params){
-            step_dict[param.children[0].placeholder] = param.children[0].value.replace(/ /g, "_")
+            step_dict[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
         }
     }else {
         step_dict.arguments = {}
         for(param of block.params){
-            step_dict.arguments[param.children[0].placeholder] = param.children[0].value.replace(/ /g, "_")
+            step_dict.arguments[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
         }
     }
     return step_dict

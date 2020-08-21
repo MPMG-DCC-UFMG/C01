@@ -251,9 +251,9 @@ function refresh_step(){
     block.step = get_step_info(this.value, block.step_list)
     block.params = []
 
-    if(this.value=="para cada"){
+    if(this.value=="para_cada"){
         block.turn_to_for_step()
-    }else if(this.value=="para cada pagina da paginacao"){
+    }else if(this.value=="para_cada_pagina_em"){
         block.turn_to_pagination_step()
     }else{
         block.delete_lines(block.lines.length)
