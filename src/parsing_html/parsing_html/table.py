@@ -33,7 +33,6 @@ def df_to_file(dfs, output_file, to_csv, index=False):
     """
     for i in range(0, len(dfs)):
         if to_csv:
-            output_file += '.csv'
             try:
                 dfs[i].to_csv(output_file, index=index, mode='a', quoting=1)
             except:

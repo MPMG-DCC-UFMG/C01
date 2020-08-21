@@ -107,4 +107,5 @@ class StaticPageSpider(BaseSpider):
         else:
             self.store_raw(response)
 
-        self.extract_and_store_csv(response)
+        # self.extract_and_store_csv(response)
+        self.extract_and_store_csv(response, self.config["output_filename"], self.config["save_csv"])

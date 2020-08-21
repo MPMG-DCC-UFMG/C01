@@ -30,9 +30,16 @@ class BaseSpider(scrapy.Spider):
         self.crawler_id = crawler_id
         self.stop_flag = False
 
-        self.data_folder = f"{CURR_FOLDER_FROM_ROOT}/data/{crawler_id}"
 
+        if self.config["output_path"] is None:
+            output_path = CURR_FOLDER_FROM_ROOT
+        else:
+            output_path = self.config["output_path"]
+
+        self.data_folder = f"{output_path}/data/{crawler_id}"
         cofig_file_path = f"{CURR_FOLDER_FROM_ROOT}/config/{crawler_id}.json"
+        self.flag_folder = f"{CURR_FOLDER_FROM_ROOT}/flags/"
+
         with open(cofig_file_path, "r") as f:
             self.config = json.loads(f.read())
 
@@ -56,6 +63,8 @@ class BaseSpider(scrapy.Spider):
 
         self.get_format = lambda i: str(i).split("/")[1][:-1].split(";")[0]
 
+        print("path:: ",)
+
     def start_requests(self):
         """
         Should be implemented by child class.
@@ -75,7 +84,7 @@ class BaseSpider(scrapy.Spider):
         Checks if the crawler was signaled to stop.
         Should be called at the begining of every parse operation.
         """
-        flag_file = f"{CURR_FOLDER_FROM_ROOT}/flags/{self.crawler_id}.json"
+        flag_file = f"{self.flag_folder}/{self.crawler_id}.json"
         with open(flag_file) as f:
             flags = json.loads(f.read())
 
@@ -86,18 +95,27 @@ class BaseSpider(scrapy.Spider):
 
         return self.stop_flag
 
-    def extract_and_store_csv(self, response):
+    def extract_and_store_csv(self, response, output_filename, save_csv):
         """
         Try to extract a json/csv from response data.
         """
         file_format = self.get_format(response.headers['Content-type'])
         hsh = crawling_utils.hash(response.url)
 
+        if output_filename is None:
+            output_filename = f"{self.data_folder}/csv/{hsh}"
+        else:
+            output_filename = f"{self.data_folder}/csv/" + output_filename
+        if save_csv and (".csv" not in output_filename):
+            output_filename += ".csv"
+
         try:
             parsing_html.content.html_detect_content(
                 f"{self.data_folder}/raw_pages/{hsh}.{file_format}",
                 is_string=False,
-                output_file=f"{self.data_folder}/csv/{hsh}",
+                # output_file=f"{self.data_folder}/csv/{hsh}",
+                output_file=output_filename,
+                to_csv=save_csv,
             )
         except Exception as e:
             print(

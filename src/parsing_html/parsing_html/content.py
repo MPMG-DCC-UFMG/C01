@@ -95,7 +95,7 @@ def check_div(html_file):
 def html_detect_content(html_file, is_string=False, output_file='output',
                         match='.+', flavor=None, header=None, index_col=None, skiprows=None,
                         attrs=None, parse_dates=False, thousands=', ', encoding=None, decimal='.',
-                        converters=None, na_values=None, keep_default_na=True, displayed_only=True):
+                        converters=None, na_values=None, keep_default_na=True, displayed_only=True, to_csv=False):
     """
     Receives an html file path, converts the html and saves the file on
     disk.
@@ -130,6 +130,7 @@ def html_detect_content(html_file, is_string=False, output_file='output',
      keep_default_na is False the default NaN values are overridden)
     :param displayed_only : bool, default True (Whether elements with
      “display: none” should be parsed)
+    :param to_csv: bool, default False (Save the output in a JSON or CSV file)
     """
 
     # Check if html file exists
@@ -143,12 +144,12 @@ def html_detect_content(html_file, is_string=False, output_file='output',
         # Call the indicated parsing
         if div_content:
             # HAS A DIV
-            div_to_file(html_file, output_file)
+            div_to_file(html_file, output_file, to_csv)
         if table_content:
             # HAS A TABLE
             table_to_file(html_file, output_file, match, flavor, header, index_col, skiprows,
                           attrs, parse_dates, thousands, encoding, decimal,
-                          converters, na_values, keep_default_na, displayed_only)
+                          converters, na_values, keep_default_na, displayed_only, to_csv)
         # If the file has no table or div with content
         if not (table_content or div_content):
             raise ValueError('No content found.')
