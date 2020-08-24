@@ -110,7 +110,7 @@ class CrawlRequest(TimeStamped):
     # PARSING #########################################################################
     output_filename = models.CharField(max_length=15, blank=True, null=True)
     save_csv = models.BooleanField(blank=True, null=True)
-    output_path = models.CharField(max_length=15, blank=True, null=True)
+    output_path = models.CharField(max_length=2000, blank=True, null=True)
 
     def __str__(self):
         return self.source_name

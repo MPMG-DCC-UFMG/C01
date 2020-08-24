@@ -21,24 +21,26 @@ import codecs
 class BaseSpider(scrapy.Spider):
     name = 'base_spider'
 
-    def __init__(self, crawler_id, *a, **kw):
+    def __init__(self, crawler_id, output_path, *a, **kw):
         """
         Spider init operations.
         Create folders to store files and some config and log files.
         """
-        print("At BaseSpider.init")
+        print("At BaseSpider.init 2")
+        print("crawler_id: ",crawler_id)
         self.crawler_id = crawler_id
         self.stop_flag = False
 
-
-        if self.config["output_path"] is None:
-            output_path = CURR_FOLDER_FROM_ROOT
-        else:
-            output_path = self.config["output_path"]
+        # # print("caminho: ",self.config["output_path"] )
+        # print("config: ", self.config)
+        # if self.config["output_path"] is None:
+        #     output_path = CURR_FOLDER_FROM_ROOT
+        # else:
+        #     output_path = self.config["output_path"]
 
         self.data_folder = f"{output_path}/data/{crawler_id}"
-        cofig_file_path = f"{CURR_FOLDER_FROM_ROOT}/config/{crawler_id}.json"
-        self.flag_folder = f"{CURR_FOLDER_FROM_ROOT}/flags/"
+        cofig_file_path = f"{output_path}/config/{crawler_id}.json"
+        self.flag_folder = f"{output_path}/flags/"
 
         with open(cofig_file_path, "r") as f:
             self.config = json.loads(f.read())

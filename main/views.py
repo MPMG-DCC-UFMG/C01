@@ -4,6 +4,8 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from .forms import CrawlRequestForm, RawCrawlRequestForm
 from .models import CrawlRequest, CrawlerInstance
 
+from crawlers.constants import *
+
 import subprocess
 from datetime import datetime
 import time
@@ -71,7 +73,8 @@ def create_steps(response):
     return render(response, "main/steps_creation.html", {})
 
 def stop_crawl(response, crawler_id, instance_id):
-    crawler_manager.stop_crawler(instance_id)
+    config = CrawlRequest.objects.filter(id=crawler_id).values()[0]
+    crawler_manager.stop_crawler(instance_id, config)
     
     instance = CrawlerInstance.objects.get(instance_id=instance_id)
     instance.running = False
@@ -105,7 +108,13 @@ def create_instance(crawler_id, instance_id):
     obj = CrawlerInstance.objects.create(crawler_id=mother[0], instance_id=instance_id, running=True)
     return obj
 
-def tail_log_file(request, instance_id):
+def tail_log_file(request, crawler_id, instance_id):
+    config = CrawlRequest.objects.filter(id=crawler_id).values()[0]
+    if config["output_path"] is None:
+        output_path = CURR_FOLDER_FROM_ROOT
+    else:
+        output_path = config["output_path"]
+
     out = subprocess.run(["tail", f"crawlers/log/{instance_id}.out", "-n", "10"], stdout=subprocess.PIPE).stdout
     err = subprocess.run(["tail", f"crawlers/log/{instance_id}.err", "-n", "10"], stdout=subprocess.PIPE).stdout
     return JsonResponse({

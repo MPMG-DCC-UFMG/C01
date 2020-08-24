@@ -12,5 +12,5 @@ urlpatterns = [
     path("monitoring/", views.monitoring, name="monitoring"),
     path("detail/run_crawl/<int:crawler_id>", views.run_crawl, name="run_crawl"),
     path("detail/stop_crawl/<int:crawler_id>/<int:instance_id>", views.stop_crawl, name="stop_crawl"),
-    path("tail_log_file/<str:instance_id>", views.tail_log_file, name="tail_log_file"),
+    path("tail_log_file/<int:crawler_id>/<str:instance_id>", views.tail_log_file, name="tail_log_file"),
 ]
