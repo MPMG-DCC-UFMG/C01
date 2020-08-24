@@ -102,3 +102,14 @@ async def nesse_elemento_esta_escrito(page, xpath, texto):
         return True
     else:
         return False
+
+
+async def break_captcha(page, xpath_input, xpath_output):
+    element = (await page.xpath(xpath_input))[0]
+    image_data = await element.screenshot(path="image.jpg")
+    image = Image.open(io.BytesIO(image_data))
+    solver = ImageSolver(preprocessing=lambda x: x)
+    text = solver.solve(image=image)
+    # preenche o campo de texto com o resultado
+    await page.type(cssify(xpath_output), text)
+    return text
