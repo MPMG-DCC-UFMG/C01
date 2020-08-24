@@ -1,18 +1,19 @@
 document.addEventListener('DOMContentLoaded',
     function () {
         var instance_id = document.getElementById("last_instance_id").innerText.trim();
+        var crawler_id = document.getElementById("crawler_id").innerText.trim();
         var last_as_running = document.getElementById("instance_running").innerText.trim() == "True";
         
         if(instance_id != "None")
-            tail_logs(instance_id);
+            tail_logs(instance_id, crawler_id);
 
         if(last_as_running)
-            tail_f_logs(instance_id);
+            tail_f_logs(instance_id, crawler_id);
     },
     false
 );
 
-function tail_logs(instance_id){
+function tail_logs(instance_id, crawler_id){
     // calls tail log view and set logs
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
@@ -34,14 +35,15 @@ function tail_logs(instance_id){
             document.getElementById("stderr_tail_update").innerText = "last update: " + response["time"]
         }
     };
-    xhr.open("GET", "/tail_log_file/" + instance_id, true);
+    console.log(crawler_id)
+    xhr.open("GET", "/tail_log_file/" + crawler_id+"/"+instance_id, true);
     xhr.send();
 }
 
-function tail_f_logs(instance_id){
+function tail_f_logs(instance_id, crawler_id){
     // Calls tail_logs every 5 seconds
     setInterval(
-        function(){ tail_logs(instance_id);},
+        function(){ tail_logs(instance_id, crawler_id);},
         5000
     ); 
 }

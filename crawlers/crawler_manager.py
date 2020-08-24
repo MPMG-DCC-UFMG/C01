@@ -74,7 +74,10 @@ def crawler_process(crawler_id, config):
     if config["output_path"] is None:
         output_path = CURR_FOLDER_FROM_ROOT
     else:
-        output_path = config["output_path"]
+        if config["output_path"][-1] == "/":
+            output_path = config["output_path"][:-1]
+        else:
+            output_path = config["output_path"]
 
     # Redirects process logs to files
     sys.stdout = open(f"{output_path}/log/{crawler_id}.out", "a", buffering=1)
@@ -114,7 +117,10 @@ def start_crawler(config):
     if config["output_path"] is None:
         output_path = CURR_FOLDER_FROM_ROOT
     else:
-        output_path = config["output_path"]
+        if config["output_path"][-1] == "/":
+            output_path = config["output_path"][:-1]
+        else:
+            output_path = config["output_path"]
 
     create_folders(output_path=output_path)
 
@@ -138,7 +144,10 @@ def stop_crawler(crawler_id,config):
     if config["output_path"] is None:
         output_path = CURR_FOLDER_FROM_ROOT
     else:
-        output_path = config["output_path"]
+        if config["output_path"][-1] == "/":
+            output_path = config["output_path"][:-1]
+        else:
+            output_path = config["output_path"]
 
     with open(f"{output_path}/flags/{crawler_id}.json", "w+") as f:
         f.write(json.dumps({"stop": True}))
