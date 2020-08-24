@@ -21,6 +21,7 @@ def extract_div(html_file):
     # Returns a list of list, with all the content
     return csv_list_all
 
+
 def write_file(list_content, output_name, to_csv):
     """
     Receives a list of content and the name of the output file, saves the file

@@ -1,10 +1,11 @@
 from django import forms
 from .models import CrawlRequest
 
+
 class CrawlRequestForm(forms.ModelForm):
     class Meta:
         model = CrawlRequest
-        
+
         obey_robots = forms.BooleanField(required=False)
 
         # Options for antiblock
@@ -35,7 +36,7 @@ class CrawlRequestForm(forms.ModelForm):
         explore_links = forms.BooleanField(required=False)
         link_extractor_max_depht = forms.IntegerField(required=False)
         link_extractor_allow = forms.CharField(required=False)
-        # link_extractor_allow_domains = 
+        # link_extractor_allow_domains =
         link_extractor_allow_extensions = forms.CharField(required=False)
         formatable_url = forms.CharField(required=False)
         post_dictionary = forms.CharField(required=False)
@@ -53,7 +54,7 @@ class CrawlRequestForm(forms.ModelForm):
             'base_url',
             'obey_robots',
             'captcha',
-            
+
             'antiblock_download_delay',
             'antiblock_autothrottle_enabled',
             'antiblock_autothrottle_start_delay',
@@ -89,6 +90,7 @@ class CrawlRequestForm(forms.ModelForm):
             'output_path',
         ]
 
+
 class RawCrawlRequestForm(forms.Form):
     # BASIC INFO #########################################################################
     source_name = forms.CharField(label="Source Name", max_length=200,
@@ -96,10 +98,10 @@ class RawCrawlRequestForm(forms.Form):
     )
     base_url = forms.CharField(label="Base URL", max_length=200,
         widget=forms.TextInput(attrs={'placeholder': 'www.example.com/data/'})
-    )
+                               )
     obey_robots = forms.BooleanField(required=False, label="Obey robots.txt")
-    
-    # ANTIBLOCK ##########################################################################    
+
+    # ANTIBLOCK ##########################################################################
     # Options for Delay
     antiblock_download_delay = forms.IntegerField(
         required=False,
@@ -109,7 +111,7 @@ class RawCrawlRequestForm(forms.Form):
     antiblock_autothrottle_enabled = forms.BooleanField(
         required=False,
         label="Enable autothrottle",
-        
+
         widget=forms.CheckboxInput(
             attrs={
                 "onclick": "autothrottleEnabled();",
@@ -129,7 +131,7 @@ class RawCrawlRequestForm(forms.Form):
 
     # Options for mask type
     antiblock_mask_type = forms.ChoiceField(
-        required=False, choices = (
+        required=False, choices=(
             ('none', 'None'),
             # ('ip', 'IP rotation'),
             # ('user_agent', 'User-agent rotation'),
@@ -138,11 +140,11 @@ class RawCrawlRequestForm(forms.Form):
         ),
         widget=forms.Select(attrs={'onchange': 'detailAntiblock();'})
     )
-    
+
     # Options for IP rotation
     antiblock_ip_rotation_type = forms.ChoiceField(
-        required=False, choices = (
-            ('tor', 'Tor'), 
+        required=False, choices=(
+            ('tor', 'Tor'),
             ('proxy', 'Proxy'),
         ),
         widget=forms.Select(attrs={'onchange': 'detailIpRotationType();'})
@@ -153,7 +155,7 @@ class RawCrawlRequestForm(forms.Form):
     )
     antiblock_max_reqs_per_ip = forms.IntegerField(
         required=False,
-        label="Max Requisitions per IP",    
+        label="Max Requisitions per IP",
         initial=10,
     )
     antiblock_max_reuse_rounds = forms.IntegerField(
@@ -161,7 +163,7 @@ class RawCrawlRequestForm(forms.Form):
         label="Max Reuse Rounds",
         initial=10,
     )
-    
+
     # Options for User Agent rotation
     antiblock_reqs_per_user_agent = forms.IntegerField(required=False, label="Requests per User Agent")
     antiblock_user_agents_file = forms.CharField(
@@ -178,8 +180,8 @@ class RawCrawlRequestForm(forms.Form):
 
     # CAPTCHA ############################################################################
     captcha = forms.ChoiceField(
-        choices = (
-            ('none', 'None'), 
+        choices=(
+            ('none', 'None'),
             ('image', 'Image'),
             ('sound', 'Sound'),
         ),
@@ -188,7 +190,7 @@ class RawCrawlRequestForm(forms.Form):
     # Options for Captcha
     has_webdriver = forms.BooleanField(
         required=False, label="Use webdriver",
-        widget = forms.CheckboxInput(attrs={'onchange': 'detailWebdriverType(); defineValid("captcha")'})
+        widget=forms.CheckboxInput(attrs={'onchange': 'detailWebdriverType(); defineValid("captcha")'})
     )
     webdriver_path = forms.CharField(
         required=False, max_length=2000, label="Download directory",
@@ -201,11 +203,11 @@ class RawCrawlRequestForm(forms.Form):
         required=False, label="Sound Xpath", max_length=100,
         widget=forms.TextInput(attrs={'placeholder': 'Sound Xpath'})
     )
-    
+
     # CRAWLER TYPE ########################################################################
     crawler_type = forms.ChoiceField(
-        required=False, choices = (
-            ('static_page', 'Static Page'), 
+        required=False, choices=(
+            ('static_page', 'Static Page'),
             # ('form_page', 'Page with Form'),
             # ('single_file', 'Single File'),
             # ('bundle_file', 'Bundle File'),
@@ -232,9 +234,9 @@ class RawCrawlRequestForm(forms.Form):
 
     # TEMPLATED URL ########################################################################
     templated_url_type = forms.ChoiceField(
-        required=False, choices = (
-            ('none', 'None'), 
-            ('get', 'GET'), 
+        required=False, choices=(
+            ('none', 'None'),
+            ('get', 'GET'),
             ('post', 'POST'),
         ),
         widget=forms.Select(attrs={'onchange': 'detailTemplatedUrlRequestType();'})
@@ -245,7 +247,7 @@ class RawCrawlRequestForm(forms.Form):
         widget=forms.TextInput(attrs={'placeholder': 'https://obraspublicas.com/IDOBRA={}'})
     )
     # param
-    
+
     # templated url - POST
     post_dictionary = forms.CharField(
         required=False, max_length=2000, label="Dictionary of post params (format: {'name':value;})",
