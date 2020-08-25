@@ -141,7 +141,13 @@ New Crawler
                                 {{ form.source_name | as_crispy_field}}
                                 {{ form.base_url | as_crispy_field}}
                                 {{ form.obey_robots | as_crispy_field}}
+                                {{ form.output_path | as_crispy_field}}
                             </div>
+{#                            <div class="form-row">#}
+{#                                <div class="form-group col-md-12 mb-0">#}
+{#                                  #}
+{#                                </div>#}
+{#                            </div>#}
                         </div>
                     </div>
                     
@@ -278,14 +284,6 @@ New Crawler
                                     <div class="form-group col-md-6 mb-0">
                                       {{ form.save_csv | as_crispy_field}}
                                     </div>
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group col-md-12 mb-0">
-                                      {{ form.output_path | as_crispy_field}}
-                                    </div>
-{#                                    <div class="form-group col-md-6 mb-0">#}
-{#                                      {{ form.invert_text_match | as_crispy_field}}#}
-{#                                    </div>#}
                                 </div>
                             </div>
                         </div>
