@@ -20,6 +20,8 @@ Os coletores também podem ser gerenciados através de uma API RESTful.
 
 ## Instalação
 
+Para usar o programa é necessário um _virtualenv_ ou uma máquina apenas com **Python 3.6+**, de maneira que os comandos _"python"_ referencie o Python 3.6+, e _"pip"_ procure a instalação de pacotes também do Python 3.6+.
+
 Para instalar todos os programas e suas dependencias execute o script install.py. Esse programa requer python>=3.6 e a instalação de pacotes usando pip.
 ```
 python install.py
