@@ -24,7 +24,10 @@ class StaticPageSpider(BaseSpider):
         self.convert_allow_extesions()
 
         for url in urls:
-            yield scrapy.Request(url=url, callback=self.parse)
+            yield scrapy.Request(
+                url=url, callback=self.parse,
+                meta={"referer": "start_requests"}
+            )
 
     def convert_allow_extesions(self):
         """Converts 'allow_extesions' configuration into 'deny_extesions'."""
@@ -103,8 +106,9 @@ class StaticPageSpider(BaseSpider):
             if "explore_links" in self.config and self.config["explore_links"]:
                 this_url = response.url
                 for url in self.extract_links(response):
-                    yield scrapy.Request(url=url, callback=self.parse)
+                    yield scrapy.Request(
+                        url=url, callback=self.parse,
+                        meta={"referer": response.url}
+                    )
         else:
             self.store_raw(response)
-
-        self.extract_and_store_csv(response)
