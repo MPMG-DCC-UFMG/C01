@@ -1,0 +1,65 @@
+{
+    "step": "root",
+    "depth": 0,
+    "children": [
+        {
+            "step": "for",
+            "iterator": "modalidade",
+            "iterable":{
+                "object": ["\"All\"","\"Carta Convite\"","\"Chamamento Público\"",
+                    "\"Concorrência\"","\"Concurso\"","\"Consulta Pública\"","\"Dispensa de Licitação\"",
+                    "\"Edital de Credenciamento\"","\"Inexigibilidade de Licitação\"","\"Leilão\"","\"Pregão Eletrônico\"",
+                    "\"Pregão Presencial\"","\"Procedimento de Manifestação de Interesse\"","\"Procedimento de Pré-qualificação\"",
+                    "\"Regime Diferenciado de Contratação\"",
+                    "\"Registro de Preços\"","\"Seleção Pública Simplificada\"","\"Tomada de Preço\""]
+            },
+            "breakable": true,
+            "children": [
+                {
+                    "step": "selecione",
+                    "arguments": {
+                        "opcao": "modalidade",
+                        "xpath": "\"//*[@id='edit-field-modalidade-de-licitacao-value']\""
+                    },
+                    "depth": 2
+                },
+                {
+                    "step": "espere",
+                    "arguments": {
+                        "segs" : 2
+                    },
+                    "depth": 2
+                },
+                {
+                    "step": "clique",
+                    "arguments": {
+                        "xpath": "\"//*[@id='edit-submit-programas-e-projetos']\""
+                    },
+                    "depth": 2
+                },
+                {
+                    "step": "espere",
+                    "arguments": {
+                        "segs" : 2
+                    },
+                    "depth": 2
+                },
+                {
+                    "step": "clique",
+                    "arguments": {
+                        "xpath": "\"/html/body/div[1]/div/div[5]/div/div/div/div/div/div/div/div/div[2]/div/ul/li/a\""
+                    },
+                    "depth": 2
+                },
+                {
+                    "step": "espere",
+                    "arguments": {
+                        "segs" : 2
+                    },
+                    "depth": 2
+                }
+            ],
+            "depth": 1
+        }
+    ]
+}

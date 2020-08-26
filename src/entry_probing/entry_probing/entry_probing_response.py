@@ -3,17 +3,93 @@ This module contains the classes which describe the response handling procedure
 for the entry probing process
 """
 
-import abc
-import requests.models
+# Allow postponed evaluation of type annotations
+from __future__ import annotations
 
+import abc
+import requests
+
+# Helper class
+
+
+class ResponseData():
+    """
+    Data class to store the response to a request in a more general form.
+    Contains class methods to generate a correct instance from another
+    library's response format.
+    """
+
+    def __init__(self,
+                 headers: dict = None,
+                 status_code: int = None,
+                 text: str = None):
+        """
+        Response constructor. Should be called from the create_from_* methods.
+
+        :param headers:     HTTP headers for the response
+        :param status_code: HTTP status code for the response
+        :param text:        text data received
+        """
+        self.headers = headers
+        self.status_code = status_code
+        self.text = text
+
+    @classmethod
+    def create_from_requests(cls,
+                             resp: requests.models.Response) -> ResponseData:
+        """
+        Create an appropriate object from a requests.models.Response object
+
+        :param resp: response received from the use of the requests library
+
+        :returns: an instance of ResponseData with the information in resp
+        """
+        text = ""
+        if 'text' in resp.headers['Content-Type'].split('/')[0]:
+            text = resp.text
+
+        return cls(headers=resp.headers,
+                   status_code=resp.status_code,
+                   text=text)
+
+    @classmethod
+    async def create_from_pyppeteer(cls,
+                                    resp: pyppeteer.network_manager.Response
+                                    ) -> ResponseData:
+        """
+        Create an appropriate object from a pyppeteer.network_manager.Response
+        object
+
+        Defined as a coroutine to be propeprly integrated with the Pyppeteer
+        driver
+
+        :param resp: response received from the use of the Pyppeteer library
+
+        :returns: an instance of ResponseData with the information in resp
+        """
+        text = ""
+
+        no_redir = (not 300 <= resp.status < 400)
+        is_text = ('text' in resp.headers['content-type'].split('/')[0])
+        if no_redir and is_text:
+            # The following method only works when the content is text and the
+            # page status is not in the 3XX range (redirects)
+            text = await resp.text()
+
+        return cls(headers=resp.headers,
+                   status_code=resp.status,
+                   text=text)
+
+
+# ProbingResponse entries
 
 class ProbingResponse():
     """
     Abstract parent class for response handler definitions. Child classes
     implement the _validate_resp method, which should receive a
-    requests.models.Response object and return a boolean indicating if the
-    desired condition is met. The process method should be called externally,
-    and accounts for the possible negation of the result.
+    ResponseData object and return a boolean indicating if the desired
+    condition is met. The process method should be called externally, and
+    accounts for the possible negation of the result.
     """
     __metaclass__ = abc.ABCMeta
 
@@ -30,20 +106,20 @@ class ProbingResponse():
         self.opposite = opposite
 
     @abc.abstractmethod
-    def _validate_resp(self, response: requests.models.Response) -> bool:
+    def _validate_resp(self, response: ResponseData) -> bool:
         """
         Abstract method: checks if the response meets the desired condition
 
-        :param response: Response object to be validated
+        :param response: ResponseData object to be validated
         """
         pass
 
-    def process(self, response: requests.models.Response) -> bool:
+    def process(self, response: ResponseData) -> bool:
         """
         Uses the _validate_resp method to check if the response meets the
         desired condition, and inverts the result if the opposite flag is set
 
-        :param response: Response object to be validated
+        :param response: ResponseData object to be validated
 
         :returns: a boolean indicating if the specified condition was met,
                   taking the opposite flag into consideration
@@ -66,14 +142,14 @@ class HTTPStatusProbingResponse(ProbingResponse):
         super().__init__(*args, **kwargs)
         self.status_code = status_code
 
-    def _validate_resp(self, response: requests.models.Response) -> bool:
+    def _validate_resp(self, response: ResponseData) -> bool:
         """
         Checks if the response has the specified HTTP status code
 
-        :param response: Response object to be validated
+        :param response: ResponseData object to be validated
 
-        :returns: True if the response has the specified HTTP status code, false
-                  otherwise
+        :returns: True if the response has the specified HTTP status code,
+                  false otherwise
         """
         return response.status_code == self.status_code
 
@@ -93,11 +169,11 @@ class TextMatchProbingResponse(ProbingResponse):
         super().__init__(*args, **kwargs)
         self.text_match = text_match
 
-    def _validate_resp(self, response: requests.models.Response) -> bool:
+    def _validate_resp(self, response: ResponseData) -> bool:
         """
         Checks if the response.text property has the specified string within it
 
-        :param response: Response object to be validated
+        :param response: ResponseData object to be validated
 
         :returns: True if the response contains the specified string, false
                   otherwise
@@ -107,16 +183,26 @@ class TextMatchProbingResponse(ProbingResponse):
 
 class BinaryFormatProbingResponse(ProbingResponse):
     """
-    Response handler which checks if the MIME-type received is a non-textual one
+    Response handler which checks if the MIME-type received is a non-textual
+    one
     """
 
-    def _validate_resp(self, response: requests.models.Response) -> bool:
+    def _validate_resp(self, response: ResponseData) -> bool:
         """
         Checks if the response's MIME-type does not contain the word 'text'
         in the first part (before the backslash)
 
-        :param response: Response object to be validated
+        :param response: ResponseData object to be validated
 
         :returns: True if the response is non-textual, false otherwise
         """
-        return not 'text' in response.headers['Content-Type'].split('/')[0]
+
+        # deal with different capitalizations of the content-type header name
+        if 'Content-Type' in response.headers:
+            # Usual capitalization
+            header_name = 'Content-Type'
+        elif 'content-type' in response.headers:
+            # Pyppeteer capitalization
+            header_name = 'content-type'
+
+        return 'text' not in response.headers[header_name].split('/')[0]
