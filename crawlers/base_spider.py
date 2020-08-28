@@ -200,24 +200,39 @@ class BaseSpider(scrapy.Spider):
 
         return self.stop_flag
 
-    def extract_and_store_csv(self, response):
+    def extract_and_store_csv(self, response, content):
         """
         Try to extract a json/csv from response data.
         """
         file_format = self.get_format(response.headers['Content-type'])
         hsh = crawling_utils.hash(response.url.encode() + response.body)
 
-        try:
-            parsing_html.content.html_detect_content(
-                f"{self.data_folder}/raw_pages/{hsh}.{file_format}",
-                is_string=False,
-                output_file=f"{self.data_folder}/csv/{hsh}",
-            )
-        except Exception as e:
-            print(
-                f"Could not extract csv from {response.url} -",
-                f"message: {str(type(e))}-{e}"
-            )
+        success = False
+
+        if b'text/html' in response.headers['Content-type']:
+            try:
+                parsing_html.content.html_detect_content(
+                    f"{self.data_folder}/raw_pages/{hsh}.{file_format}",
+                    is_string=False,
+                    output_file=f"{self.data_folder}/csv/{hsh}",
+                )
+                success = True
+
+            except Exception as e:
+                print(
+                    f"Could not extract csv from {response.url} -",
+                    f"message: {str(type(e))}-{e}"
+                )
+        else:
+            # TODO call binary_extractor
+            pass
+
+        content["type"] = "csv"
+        file_description_file = f"{self.data_folder}/csv/" \
+            "file_description.jsonl"
+        if success:
+            with open(file_description_file, "a+") as f:
+                f.write(json.dumps(content) + '\n')
 
     def store_raw(
             self, response, file_format=None, binary=True, save_at="files"):
@@ -254,6 +269,7 @@ class BaseSpider(scrapy.Spider):
             "crawler_id": self.crawler_id,
             "type": str(response.headers['Content-type']),
             "crawled_at_date": str(datetime.datetime.today()),
+            "referer": response.meta["referer"]
         }
 
         with open(f"{folder}/file_description.jsonl", "a+") as f:
@@ -265,6 +281,8 @@ class BaseSpider(scrapy.Spider):
             encoding=encoding,
         ) as f:
             f.write(body)
+
+        self.extract_and_store_csv(response, content)
 
     def store_html(self, response):
         """Stores html and adds its description to file_description file."""

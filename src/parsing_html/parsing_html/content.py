@@ -7,7 +7,7 @@ from .div import *
 
 def clean_html(html_file, is_string):
     """
-    Receives the html file and removes unnecessary parts, as header, footer, etc.
+    Receives the html file and removes unnecessary parts, as header and footer.
     """
 
     # List of elements that are going to be removed from the html
@@ -92,18 +92,20 @@ def check_div(html_file):
     return table_content, div_content
 
 
-def html_detect_content(html_file, is_string=False, output_file='output',
-                        match='.+', flavor=None, header=None, index_col=None, skiprows=None,
-                        attrs=None, parse_dates=False, thousands=', ', encoding=None, decimal='.',
-                        converters=None, na_values=None, keep_default_na=True, displayed_only=True):
+def html_detect_content(
+        html_file, is_string=False, output_file='output',
+        match='.+', flavor=None, header=None, index_col=None, skiprows=None,
+        attrs=None, parse_dates=False, thousands=', ', encoding=None,
+        decimal='.', converters=None, na_values=None, keep_default_na=True,
+        displayed_only=True):
     """
     Receives an html file path, converts the html and saves the file on
     disk.
 
     :param html_file : str (A file-like object, or a raw string containing
      HTML.)
-    :param is_string : bool, default False (Whether the html file is passed as a
-    string or as the path to the file)
+    :param is_string : bool, default False (Whether the html file is passed as
+    a string or as the path to the file)
     :param output_file: str (Name of the output file, default is output)
     :param match : str or compiled regular expression (The set of tables
     containing text matching this regex or string will be returned. )
@@ -132,27 +134,44 @@ def html_detect_content(html_file, is_string=False, output_file='output',
      “display: none” should be parsed)
     """
 
-    # Check if html file exists
-    if (os.path.isfile(html_file)) or is_string:
-        # Clean the html file
-        html_file = clean_html(html_file, is_string)
-        # Fix the links in the file
-        html_file = fix_links(html_file)
-        # Check the content
-        table_content, div_content = check_div(html_file)
-        # Call the indicated parsing
-        if div_content:
-            # HAS A DIV
-            div_to_file(html_file, output_file)
-        if table_content:
-            # HAS A TABLE
-            table_to_file(html_file, output_file, match, flavor, header, index_col, skiprows,
-                          attrs, parse_dates, thousands, encoding, decimal,
-                          converters, na_values, keep_default_na, displayed_only)
-        # If the file has no table or div with content
-        if not (table_content or div_content):
-            raise ValueError('No content found.')
+    # Check if html file exists. Will raise exception if not.
+    if not is_string:
+        with open(html_file, "r") as f:
+            pass
 
-    else:
-        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT),
-                                html_file)
+    try:
+        if is_string or os.path.isfile(html_file):
+            # Clean the html file
+            html_file = clean_html(html_file, is_string)
+            # Fix the links in the file
+            html_file = fix_links(html_file)
+            # Check the content
+            table_content, div_content = check_div(html_file)
+            # Call the indicated parsing
+            if div_content:
+                # HAS A DIV
+                div_to_file(html_file, output_file)
+            if table_content:
+                # HAS A TABLE
+                table_to_file(
+                    html_file, output_file, match, flavor, header, index_col,
+                    skiprows, attrs, parse_dates, thousands, encoding, decimal,
+                    converters, na_values, keep_default_na, displayed_only)
+            # If the file has no table or div with content
+            if not (table_content or div_content):
+                raise ValueError('No content found.')
+
+    except Exception as e:
+        # try to remove output file if any error occured
+        files = [
+            output_file,
+            output_file + ".csv",
+            output_file + ".json",
+        ]
+        for f in files:
+            try:
+                os.remove(f)
+            except FileNotFoundError:
+                pass
+        # raise the same exception
+        raise e
