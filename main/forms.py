@@ -24,9 +24,6 @@ class RequestConfigForm(forms.ModelForm):
             'start_date_date_param': 'Starting date:',
             'end_date_date_param': 'End date:',
             'frequency_date_param': 'Frequency to generate',
-            'post_key': 'Key to insert into POST body',
-            'post_dictionary': 'Dictionary of post params ' +
-                               '(format: {\'name\':value;})',
         }
 
         widgets = {
@@ -36,16 +33,13 @@ class RequestConfigForm(forms.ModelForm):
             'date_format_date_param': forms.TextInput(attrs={
                 'placeholder': '%m/%d/%Y'
             }),
-            'post_dictionary': forms.TextInput(attrs={
-                'placeholder': '{\'name1\': value1; \'name2\': value2}'
-            }),
         }
 
 
 class CrawlRequestForm(forms.ModelForm):
     class Meta:
         model = CrawlRequest
-        
+
         obey_robots = forms.BooleanField(required=False)
 
         # Options for antiblock
@@ -76,9 +70,8 @@ class CrawlRequestForm(forms.ModelForm):
         explore_links = forms.BooleanField(required=False)
         link_extractor_max_depht = forms.IntegerField(required=False)
         link_extractor_allow = forms.CharField(required=False)
-        # link_extractor_allow_domains = 
+        # link_extractor_allow_domains =
         link_extractor_allow_extensions = forms.CharField(required=False)
-        post_dictionary = forms.CharField(required=False)
 
         labels = {
             'request_type': 'Request method',
@@ -90,7 +83,7 @@ class CrawlRequestForm(forms.ModelForm):
             'request_type',
             'obey_robots',
             'captcha',
-            
+
             'antiblock_download_delay',
             'antiblock_autothrottle_enabled',
             'antiblock_autothrottle_start_delay',
@@ -122,10 +115,13 @@ class RawCrawlRequestForm(CrawlRequestForm):
         widget=forms.TextInput(attrs={'placeholder': 'Example'})
     )
     base_url = forms.CharField(label="Base URL", max_length=200,
-        widget=forms.TextInput(attrs={'placeholder': 'www.example.com/data/'})
+        widget=forms.TextInput(attrs={
+            'placeholder': 'www.example.com/data/',
+            'onchange': 'detailBaseUrl();'
+        })
     )
     obey_robots = forms.BooleanField(required=False, label="Obey robots.txt")
-    
+
     # ANTIBLOCK ###############################################################
     # Options for Delay
     antiblock_download_delay = forms.IntegerField(
@@ -136,7 +132,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     antiblock_autothrottle_enabled = forms.BooleanField(
         required=False,
         label="Enable autothrottle",
-        
+
         widget=forms.CheckboxInput(
             attrs={
                 "onclick": "autothrottleEnabled();",
@@ -165,11 +161,11 @@ class RawCrawlRequestForm(CrawlRequestForm):
         ),
         widget=forms.Select(attrs={'onchange': 'detailAntiblock();'})
     )
-    
+
     # Options for IP rotation
     antiblock_ip_rotation_type = forms.ChoiceField(
         required=False, choices = (
-            ('tor', 'Tor'), 
+            ('tor', 'Tor'),
             ('proxy', 'Proxy'),
         ),
         widget=forms.Select(attrs={'onchange': 'detailIpRotationType();'})
@@ -182,7 +178,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
     antiblock_max_reqs_per_ip = forms.IntegerField(
         required=False,
-        label="Max Requisitions per IP",    
+        label="Max Requisitions per IP",
         initial=10,
     )
     antiblock_max_reuse_rounds = forms.IntegerField(
@@ -190,7 +186,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
         label="Max Reuse Rounds",
         initial=10,
     )
-    
+
     # Options for User Agent rotation
     antiblock_reqs_per_user_agent = forms.IntegerField(required=False,
         label="Requests per User Agent")
@@ -214,7 +210,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     # CAPTCHA #################################################################
     captcha = forms.ChoiceField(
         choices = (
-            ('none', 'None'), 
+            ('none', 'None'),
             ('image', 'Image'),
             ('sound', 'Sound'),
         ),
@@ -241,11 +237,11 @@ class RawCrawlRequestForm(CrawlRequestForm):
         required=False, label="Sound Xpath", max_length=100,
         widget=forms.TextInput(attrs={'placeholder': 'Sound Xpath'})
     )
-    
+
     # CRAWLER TYPE ############################################################
     crawler_type = forms.ChoiceField(
         required=False, choices = (
-            ('static_page', 'Static Page'), 
+            ('static_page', 'Static Page'),
             # ('form_page', 'Page with Form'),
             # ('single_file', 'Single File'),
             # ('bundle_file', 'Bundle File'),
@@ -290,4 +286,4 @@ class ResponseHandlerForm(forms.ModelForm):
 
 # Formset for ResponseHandler forms
 ResponseHandlerFormSet = forms.inlineformset_factory(RequestConfiguration,
-    ResponseHandler, form=ResponseHandlerForm, exclude=[], extra=0, min_num=1)
+    ResponseHandler, form=ResponseHandlerForm, exclude=[], extra=1, min_num=0)

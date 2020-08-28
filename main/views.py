@@ -26,11 +26,11 @@ def create_crawler(request):
         response_formset = ResponseHandlerFormSet(request.POST)
         if my_form.is_valid() and templated_url_form.is_valid() and \
            response_formset.is_valid():
-            probing_inst = templated_url_form.save()
-            response_formset.instance = probing_inst
+            request_inst = templated_url_form.save()
+            response_formset.instance = request_inst
             response_formset.save()
             new_crawl = CrawlRequestForm(my_form.cleaned_data)
-            new_crawl.instance.probing_config = probing_inst
+            new_crawl.instance.templated_url_config = request_inst
             instance = new_crawl.save()
             
             return HttpResponseRedirect('http://localhost:8000/crawlers/')
@@ -47,9 +47,9 @@ def edit_crawler(request, id):
     crawler = get_object_or_404(CrawlRequest, pk=id)
     form = CrawlRequestForm(request.POST or None, instance=crawler)
     templated_url_form = RequestConfigForm(request.POST or None,
-        instance=crawler.probing_config)
+        instance=crawler.templated_url_config)
     response_formset = ResponseHandlerFormSet(request.POST or None,
-        instance=crawler.probing_config)
+        instance=crawler.templated_url_config)
 
     if request.method == 'POST' and form.is_valid() and \
        templated_url_form.is_valid() and response_formset.is_valid():
@@ -111,27 +111,9 @@ def run_crawl(request, crawler_id):
     crawler = CrawlRequest.objects.filter(id=crawler_id)[0]
     crawler.running = True
     crawler.save()
-    
+
     data = CrawlRequest.objects.filter(id=crawler_id).values()[0]
-    del data['creation_date']
-    del data['last_modified']
-
-    # Add probing configuration
-    probing_inst = RequestConfiguration.objects\
-                        .filter(id=data['probing_config_id'])
-    probing_data = probing_inst.values()[0]
-    del probing_data['id']
-    data['probing_config'] = probing_data
-    del data['probing_config_id']
-
-    # Include information on response handling
-    response_handlers = []
-    for resp in probing_inst.get().response_handlers.values():
-        del resp['id']
-        del resp['config_id']
-        response_handlers.append(resp)
-    data['probing_config']['response_handlers'] = response_handlers
-    # TODO RESOLVER QUANDO PROBING CONFIG OU RESPONSE HANDLER FOREM NULL
+    data = CrawlRequest.processConfigData(data)
     instance_id = crawler_manager.start_crawler(data)
     
     instance = create_instance(data['id'], instance_id)

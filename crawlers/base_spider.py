@@ -14,9 +14,9 @@ import time
 
 from crawlers.constants import *
 from param_injector import ParamInjector
-from entry_probing import BinaryFormatProbingResponse, GETProbingRequest,\
-                          HTTPStatusProbingResponse, POSTProbingRequest,\
-                          TextMatchProbingResponse, EntryProbing
+from entry_probing import BinaryFormatProbingResponse, HTTPProbingRequest,\
+                          HTTPStatusProbingResponse, TextMatchProbingResponse,\
+                          EntryProbing
 
 from lxml.html.clean import Cleaner
 import codecs
@@ -83,12 +83,12 @@ class BaseSpider(scrapy.Spider):
 
         base_url = self.config['base_url']
         req_type = self.config['request_type']
-        probing_config = self.config['probing_config']
-        if req_type != 'NONE' and \
-           probing_config['template_parameter_type'] != 'none':
+        templated_url_config = self.config['templated_url_config']
 
+        has_placeholder = "{}" in base_url
+        if has_placeholder:
             # Instantiate the parameter injector
-            param_type = probing_config['template_parameter_type']
+            param_type = templated_url_config['template_parameter_type']
             param_gen = None
             if param_type == "formatted_str":
                 # Formatted string generator
@@ -97,25 +97,25 @@ class BaseSpider(scrapy.Spider):
             elif param_type == "number_seq":
                 # Number sequence generator
                 param_gen = ParamInjector.generate_num_sequence(
-                    first=probing_config['first_num_param'],
-                    last=probing_config['last_num_param'],
-                    step=probing_config['step_num_param'],
-                    leading=probing_config['leading_num_param'],
+                    first=templated_url_config['first_num_param'],
+                    last=templated_url_config['last_num_param'],
+                    step=templated_url_config['step_num_param'],
+                    leading=templated_url_config['leading_num_param'],
                 )
             elif param_type == 'date_seq':
                 # Date sequence generator
                 param_gen = ParamInjector.generate_daterange(
-                    date_format=probing_config['date_format_date_param'],
-                    start_date=probing_config['start_date_date_param'],
-                    end_date=probing_config['end_date_date_param'],
-                    frequency=probing_config['frequency_date_param'],
+                    date_format=templated_url_config['date_format_date_param'],
+                    start_date=templated_url_config['start_date_date_param'],
+                    end_date=templated_url_config['end_date_date_param'],
+                    frequency=templated_url_config['frequency_date_param'],
                 )
             elif param_type == 'alpha_seq':
                 # Alphabetic search parameter generator
                 param_gen = ParamInjector.generate_alpha(
-                    length=probing_config['length_alpha_param'],
-                    num_words=probing_config['num_words_alpha_param'],
-                    no_upper=probing_config['no_upper_alpha_param'],
+                    length=templated_url_config['length_alpha_param'],
+                    num_words=templated_url_config['num_words_alpha_param'],
+                    no_upper=templated_url_config['no_upper_alpha_param'],
                 )
             else:
                 raise ValueError(f"Invalid parameter type: {param_type}")
@@ -124,28 +124,19 @@ class BaseSpider(scrapy.Spider):
             req_body = {}
             param_key = None
             if req_type == 'POST':
-                if len(probing_config['post_dictionary']) > 0:
-                    req_body = json.loads(probing_config['post_dictionary'])
+                if len(templated_url_config['post_dictionary']) > 0:
+                    req_body = json.loads(templated_url_config['post_dictionary'])
 
-                param_key = probing_config['post_key']
+                param_key = templated_url_config['post_key']
 
             # Configure the probing process
 
             # Probing request
-            probe = None
-            if req_type == 'GET':
-                probe = EntryProbing(GETProbingRequest(base_url))
-            elif req_type == 'POST':
-                probe = EntryProbing(
-                    POSTProbingRequest(url=base_url,
-                    property_name=param_key,
-                    data=req_body)
-                )
-            else:
-                raise AssertionError
+            probe = EntryProbing(HTTPProbingRequest(base_url, method=req_type,
+                                                    req_data=req_body))
 
             # Probing response
-            for handler_data in probing_config['response_handlers']:
+            for handler_data in templated_url_config['response_handlers']:
                 resp_handler = None
 
                 handler_type = handler_data['handler_type']
@@ -171,17 +162,12 @@ class BaseSpider(scrapy.Spider):
             # Generate the requests
             for param_value in param_gen:
                 # Check if this entry hits a valid page
-                if probe.check_entry(param_value):
-                    req_body = {}
+                if probe.check_entry([param_value]):
                     curr_url = base_url
 
-                    # Insert parameter into URL, if using GET requests
-                    if req_type == 'GET':
-                        curr_url = base_url.format(param_value)
-                    elif req_type == 'POST':
-                        req_body[param_key] = param_value
-                    else:
-                        raise ValueError(f"Invalid request type: {param_type}")
+                    # Insert parameter into URL
+                    curr_url = base_url.format(param_value)
+                    req_body = {}
 
                     yield {
                         'url': curr_url,
@@ -219,7 +205,7 @@ class BaseSpider(scrapy.Spider):
         Try to extract a json/csv from response data.
         """
         file_format = self.get_format(response.headers['Content-type'])
-        hsh = crawling_utils.hash(response.url)
+        hsh = crawling_utils.hash(response.url.encode() + response.body)
 
         try:
             parsing_html.content.html_detect_content(
@@ -256,9 +242,9 @@ class BaseSpider(scrapy.Spider):
             body = cleaner.clean_html(response.body.decode('utf-8-sig'))
             encoding = "utf-8-sig"
 
-        # TODO Potential issue: POST requests may access the same URL with
-        # different parameters
-        hsh = crawling_utils.hash(response.url)
+        # POST requests may access the same URL with different parameters, so
+        # we hash the URL with the response body
+        hsh = crawling_utils.hash(response.url.encode() + response.body)
 
         folder = f"{self.data_folder}/{save_at}"
 

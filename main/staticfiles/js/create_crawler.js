@@ -180,6 +180,19 @@ function showBlock(clicked_id) {
     document.getElementById(clicked_id).classList.add('active');
 }
 
+function detailBaseUrl() {
+    const base_url = $("#id_base_url").val();
+
+    // Check if a Templated URL is being used (if there is at least one
+    // occurrence of the substring "{}")
+    if (base_url.includes("{}")){
+        $("#templated-url-item").removeClass("disabled");
+    } else {
+        $("#templated-url-item").addClass("disabled");
+    }
+}
+
+
 function detailWebdriverType() {
     setHiddenState("webdriver_path_div", !getCheckboxState("id_has_webdriver"));
 }
@@ -260,5 +273,15 @@ function detailCrawlerType() {
 function autothrottleEnabled() {
     setHiddenState("autothrottle-options-div", !getCheckboxState("id_antiblock_autothrottle_enabled"));
 }
+
+// Run required validators (needed when editing a filled form)
+function runValidations() {
+    detailBaseUrl();
+
+    // Manually trigger onchange events
+    $(".templated-url-response-handling-step > .form-group select").change();
+    $("#id_template_parameter_type").change();
+}
+runValidations();
 
 // TODO add new fields to validation 
