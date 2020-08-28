@@ -1,17 +1,18 @@
 """
 This module tests the entry probing process as a whole
 """
+import pyppeteer
 import unittest
 
 from unittest import mock
 
-from entry_probing import EntryProbing, GETProbingRequest,\
+from entry_probing import EntryProbing, HTTPProbingRequest,\
     PyppeteerProbingRequest, HTTPStatusProbingResponse,\
     TextMatchProbingResponse,\
     BinaryFormatProbingResponse, ResponseData
 
 # helper function to create a mock of a Pyppeteer.page.Page entry
-from .test_entry_probing_request import create_mock_pyp_page
+from test_entry_probing_request import create_mock_pyp_page
 
 
 class EntryProbingTest(unittest.IsolatedAsyncioTestCase):
@@ -19,7 +20,7 @@ class EntryProbingTest(unittest.IsolatedAsyncioTestCase):
     Testing routines for the entry probing process
     """
 
-    def response_200(*_) -> mock.Mock:
+    def response_200(*_, **__) -> mock.Mock:
         """
         Function used to return a mock of an HTTP response with status 200 and
         "entry found" in the text body
@@ -30,7 +31,7 @@ class EntryProbingTest(unittest.IsolatedAsyncioTestCase):
                          status_code=200)
 
 
-    def response_404(*_) -> mock.Mock:
+    def response_404(*_, **__) -> mock.Mock:
         """
         Function used to return a mock of an HTTP response with status 404 and
         "entry not found" in the text body
@@ -41,7 +42,7 @@ class EntryProbingTest(unittest.IsolatedAsyncioTestCase):
                          status_code=404)
 
 
-    def response_binary(*_) -> mock.Mock:
+    def response_binary(*_, **__) -> mock.Mock:
         """
         Function used to return a mock of an HTTP response with status 200 and
         a MIME type of application/octet-stream, simulating a binary response.
@@ -53,31 +54,38 @@ class EntryProbingTest(unittest.IsolatedAsyncioTestCase):
                          status_code=200, text="entry found")
 
 
-    @mock.patch('entry_probing.requests.get', response_200)
     def test_probing_found_sync(self):
         """
         Tests the general working cases for probing a found entry using a non
-        asynchronous method. We only use GET requests, since the tests for
-        different request methods is done in a separate test file.
+        asynchronous method. We only use GET requests without extra parameters,
+        since the tests for different request methods is done in a separate
+        test file.
         """
+
+        # Changes the method used by the HTTPProbingRequest when using GET to
+        # use our mock
+        HTTPProbingRequest.REQUEST_METHODS["GET"] = self.response_200
 
         # checks the URL for a 200 code, the string "entry found" and a text
         # type
-        probe = EntryProbing(GETProbingRequest("http://test.com/"))
+        probe = EntryProbing(HTTPProbingRequest("http://test.com/",
+                                                method="GET"))
         probe.add_response_handler(HTTPStatusProbingResponse(200))\
              .add_response_handler(BinaryFormatProbingResponse(opposite=True))\
              .add_response_handler(TextMatchProbingResponse("entry found"))
         self.assertTrue(probe.check_entry())
 
         # the same as above but checks for a binary file
-        probe = EntryProbing(GETProbingRequest("http://test.com/"))
+        probe = EntryProbing(HTTPProbingRequest("http://test.com/",
+                                                method="GET"))
         probe.add_response_handler(HTTPStatusProbingResponse(200))\
              .add_response_handler(BinaryFormatProbingResponse())\
              .add_response_handler(TextMatchProbingResponse("entry found"))
         self.assertFalse(probe.check_entry())
 
         # checks the URL for a non-404 code and the string "entry found"
-        probe = EntryProbing(GETProbingRequest("http://test.com/"))
+        probe = EntryProbing(HTTPProbingRequest("http://test.com/",
+                                                method="GET"))
         probe.add_response_handler(HTTPStatusProbingResponse(404,
                                                              opposite=True))\
             .add_response_handler(TextMatchProbingResponse("entry found"))
@@ -85,18 +93,21 @@ class EntryProbingTest(unittest.IsolatedAsyncioTestCase):
 
         # checks the URL for a 404 code, a 200 code, and the string
         # "entry found" (should always fail)
-        probe = EntryProbing(GETProbingRequest("http://test.com/"))
+        probe = EntryProbing(HTTPProbingRequest("http://test.com/",
+                                                method="GET"))
         probe.add_response_handler(HTTPStatusProbingResponse(404))\
              .add_response_handler(HTTPStatusProbingResponse(200))\
              .add_response_handler(TextMatchProbingResponse("entry found"))
         self.assertFalse(probe.check_entry())
 
         # just requests without any checks (should default to True)
-        probe = EntryProbing(GETProbingRequest("http://test.com/"))
+        probe = EntryProbing(HTTPProbingRequest("http://test.com/",
+                                                method="GET"))
         self.assertTrue(probe.check_entry())
 
         # check if response is stored properly
-        probe = EntryProbing(GETProbingRequest("http://test.com/"))
+        probe = EntryProbing(HTTPProbingRequest("http://test.com/",
+                                                method="GET"))
         self.assertIsNone(probe.response)
         probe.check_entry()
         self.assertTrue(isinstance(probe.response, ResponseData))
@@ -153,28 +164,34 @@ class EntryProbingTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(isinstance(probe.response, ResponseData))
 
 
-    @mock.patch('entry_probing.requests.get', response_binary)
     def test_probing_binary_sync(self):
         """
         Tests the general cases for probing a page with binary content using a
         non asynchronous method.
         """
 
+        # Changes the method used by the HTTPProbingRequest when using GET to
+        # use our mock
+        HTTPProbingRequest.REQUEST_METHODS["GET"] = self.response_binary
+
         # checks the URL for a 200 code and binary content
-        probe = EntryProbing(GETProbingRequest("http://test.com/"))
+        probe = EntryProbing(HTTPProbingRequest("http://test.com/",
+                                                method="GET"))
         probe.add_response_handler(HTTPStatusProbingResponse(200))\
              .add_response_handler(BinaryFormatProbingResponse())
         self.assertTrue(probe.check_entry())
 
         # the same as above but checks for text content
-        probe = EntryProbing(GETProbingRequest("http://test.com/"))
+        probe = EntryProbing(HTTPProbingRequest("http://test.com/",
+                                                method="GET"))
         probe.add_response_handler(HTTPStatusProbingResponse(200))\
              .add_response_handler(BinaryFormatProbingResponse(opposite=True))
         self.assertFalse(probe.check_entry())
 
         # checks for the string "entry found" in the content (should fail
         # since the text is ignored)
-        probe = EntryProbing(GETProbingRequest("http://test.com/"))
+        probe = EntryProbing(HTTPProbingRequest("http://test.com/",
+                                                method="GET"))
         probe.add_response_handler(TextMatchProbingResponse("entry found"))
         self.assertFalse(probe.check_entry())
 
@@ -210,40 +227,48 @@ class EntryProbingTest(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(await probe.async_check_entry())
 
 
-    @mock.patch('entry_probing.requests.get', response_404)
     def test_probing_not_found_sync(self):
         """
         Tests the general working cases for probing a not found entry using a
         non asynchronous method
         """
 
+        # Changes the method used by the HTTPProbingRequest when using GET to
+        # use our mock
+        HTTPProbingRequest.REQUEST_METHODS["GET"] = self.response_404
+
         # checks the URL for a 200 code and the string "entry found"
-        probe = EntryProbing(GETProbingRequest("http://test.com/"))
+        probe = EntryProbing(HTTPProbingRequest("http://test.com/",
+                                                method="GET"))
         probe.add_response_handler(HTTPStatusProbingResponse(200))\
              .add_response_handler(TextMatchProbingResponse("entry found"))
         self.assertEqual(probe.check_entry(), False)
 
         # checks the URL for a non-404 code and the string "entry found"
-        probe = EntryProbing(GETProbingRequest("http://test.com/"))
+        probe = EntryProbing(HTTPProbingRequest("http://test.com/",
+                                                method="GET"))
         probe.add_response_handler(HTTPStatusProbingResponse(404,
                                                              opposite=True))\
             .add_response_handler(TextMatchProbingResponse("entry found"))
         self.assertEqual(probe.check_entry(), False)
 
         # checks the URL for a 404 code and the string "not found"
-        probe = EntryProbing(GETProbingRequest("http://test.com/"))
+        probe = EntryProbing(HTTPProbingRequest("http://test.com/",
+                                                method="GET"))
         probe.add_response_handler(HTTPStatusProbingResponse(404))\
              .add_response_handler(TextMatchProbingResponse("not found"))
         self.assertEqual(probe.check_entry(), True)
 
         # checks the URL for a non-503 code
-        probe = EntryProbing(GETProbingRequest("http://test.com/"))
+        probe = EntryProbing(HTTPProbingRequest("http://test.com/",
+                                                method="GET"))
         probe.add_response_handler(HTTPStatusProbingResponse(503,
                                                              opposite=True))
         self.assertEqual(probe.check_entry(), True)
 
         # check if response is stored properly
-        probe = EntryProbing(GETProbingRequest("http://test.com/"))
+        probe = EntryProbing(HTTPProbingRequest("http://test.com/",
+                                                method="GET"))
         self.assertIsNone(probe.response)
         probe.check_entry()
         self.assertTrue(isinstance(probe.response, ResponseData))
@@ -299,7 +324,8 @@ class EntryProbingTest(unittest.IsolatedAsyncioTestCase):
         self.assertRaises(TypeError, EntryProbing, [1])
 
         # invalid response handler
-        probe = EntryProbing(GETProbingRequest("http://test.com/"))
+        probe = EntryProbing(HTTPProbingRequest("http://test.com/",
+                                                method="GET"))
         self.assertRaises(TypeError, probe.add_response_handler, [1])
 
 

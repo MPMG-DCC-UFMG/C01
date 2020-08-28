@@ -8,15 +8,14 @@ import pyppeteer
 import requests.exceptions
 import urllib3.exceptions
 
-from entry_probing import GETProbingRequest, POSTProbingRequest,\
-    PyppeteerProbingRequest
+from entry_probing import HTTPProbingRequest, PyppeteerProbingRequest
 
 
 # Helper functions
 def create_mock_pyp_page(content_type: str = None,
                          status_code: int = None,
                          text: str = None,
-                         trigger_response: bool = True) -> mock.MagicMock:
+                         trigger_response: bool = True) -> mock.Mock:
     """
     Generates a mock of a Pyppeteer page and response. If the trigger_response
     parameter is True, the response event is triggered as soon as it is set.
@@ -34,21 +33,21 @@ def create_mock_pyp_page(content_type: str = None,
         return text
 
     # mock of the Pyppeteer response
-    mock_pyp_resp = mock.MagicMock(spec=pyppeteer.network_manager.Response,
+    mock_pyp_resp = mock.Mock(spec=pyppeteer.network_manager.Response,
                                    headers={'content-type': content_type},
                                    status=status_code,
                                    text=lambda: return_async_text(text))
 
-    on_event = mock.MagicMock(return_value=None)
+    on_event = mock.Mock(return_value=None)
     if trigger_response:
         # use the callback function as soon as it is set
         def on_event_func(_, f): return f(mock_pyp_resp)
         # wrap this function in a mock object to be able to check how it is
         # called
-        on_event = mock.MagicMock(side_effect=on_event_func)
+        on_event = mock.Mock(side_effect=on_event_func)
 
     # mock of the Pyppeteer page
-    mock_page = mock.MagicMock(spec=pyppeteer.page.Page, on=on_event,
+    mock_page = mock.Mock(spec=pyppeteer.page.Page, on=on_event,
                                content=lambda: return_async_text(text))
 
     return mock_page
@@ -61,83 +60,113 @@ class ProbingRequestTest(unittest.IsolatedAsyncioTestCase):
     IsolatedAsyncioTestCase to be compatible with Pyppeteer)
     """
 
-    @mock.patch('entry_probing.requests.get')
-    def test_succesful_req_get(self, get_mock: unittest.mock.MagicMock):
+    def test_succesful_req_http(self):
         """
-        Tests if the correct GET requests are sent to the specified URLs with
+        Tests if the correct HTTP requests are sent to the specified URLs with
         the expected parameters
-
-        :param get_mock:  Mock function, called when requests.get is used
-                          inside the entry probing module
         """
 
-        # GET request with a parameter
-        probe = GETProbingRequest("http://test.com/{}")
-        probe.process(10)
-        expected = [("http://test.com/10",), {}]
+        # Changes the method used by the HTTPProbingRequest when requesting to
+        # use our mock
+        mock_response = mock.Mock(headers= {'Content-Type': 'text/html'})
+
+        get_mock = mock.Mock(return_value=mock_response)
+        post_mock = mock.Mock(return_value=mock_response)
+        HTTPProbingRequest.REQUEST_METHODS["GET"] = get_mock
+        HTTPProbingRequest.REQUEST_METHODS["POST"] = post_mock
+
+        # GET request with a parameter in the URL
+        probe = HTTPProbingRequest("http://test.com/{}", "GET")
+        probe.process([10])
+        expected = [("http://test.com/10",), {'data':{}}]
         self.assertEqual(list(get_mock.call_args), expected)
 
-        # GET request with a formatted parameter
-        probe = GETProbingRequest("http://test.com/{:03d}")
-        probe.process(10)
-        expected = [("http://test.com/010",), {}]
+        # POST request with a parameter in the URL
+        probe = HTTPProbingRequest("http://test.com/{}", "POST")
+        probe.process([10])
+        expected = [("http://test.com/10",), {'data':{}}]
+        self.assertEqual(list(post_mock.call_args), expected)
+
+        # GET request with a formatted parameter in the URL
+        probe = HTTPProbingRequest("http://test.com/{:03d}", "GET")
+        probe.process([10])
+        expected = [("http://test.com/010",), {'data':{}}]
         self.assertEqual(list(get_mock.call_args), expected)
 
         # GET request with no parameter
-        probe = GETProbingRequest("http://test.com/")
+        probe = HTTPProbingRequest("http://test.com/", "GET")
         probe.process()
-        expected = [("http://test.com/",), {}]
+        expected = [("http://test.com/",), {'data':{}}]
         self.assertEqual(list(get_mock.call_args), expected)
 
         # GET request with placeholder but no parameter
-        probe = GETProbingRequest("http://test.com/{}")
+        probe = HTTPProbingRequest("http://test.com/{}", "GET")
         probe.process()
-        expected = [("http://test.com/{}",), {}]
+        expected = [("http://test.com/{}",), {'data':{}}]
         self.assertEqual(list(get_mock.call_args), expected)
 
         # If entry is present but URL doesn't have any placeholders it just
         # uses the given url
-        probe = GETProbingRequest("http://test.com/")
-        probe.process(1)
-        expected = [("http://test.com/",), {}]
+        probe = HTTPProbingRequest("http://test.com/", "GET")
+        probe.process([1])
+        expected = [("http://test.com/",), {'data':{}}]
         self.assertEqual(list(get_mock.call_args), expected)
 
+        # GET request with one parameter in the request body
+        probe = HTTPProbingRequest("http://test.com/", "GET")
+        probe.process([], {'test1': 100})
+        expected = [("http://test.com/",), {'data':{'test1': 100}}]
+        self.assertEqual(list(get_mock.call_args), expected)
 
-    @mock.patch('entry_probing.requests.post')
-    def test_succesful_req_post(self, post_mock: unittest.mock.MagicMock):
-        """
-        Tests if the correct POST requests are sent to the specified URLs with
-        the expected parameters
+        # GET request with two parameters in the URL and two in the request
+        # body
+        probe = HTTPProbingRequest("http://test.com/{}/{}", "GET")
+        probe.process([1, 2], {'test1': 10, 'test2': 200})
+        expected = [("http://test.com/1/2",), {'data':{'test1': 10,
+                                                       'test2': 200}}]
+        self.assertEqual(list(get_mock.call_args), expected)
 
-        :param post_mock: Mock function, called when requests.post is used
-                          inside the entry probing module
-        """
+        # GET request using only the pre-made request body
+        probe = HTTPProbingRequest("http://test.com/", "GET",
+                                   {'test1': 10, 'test2': 200})
+        probe.process()
+        expected = [("http://test.com/",), {'data':{'test1': 10,
+                                                    'test2': 200}}]
+        self.assertEqual(list(get_mock.call_args), expected)
 
         # POST request with a parameter in the request body
-        probe = POSTProbingRequest("http://test.com/", "test_prop")
-        probe.process(100)
+        probe = HTTPProbingRequest("http://test.com/", "POST")
+        probe.process([], {"test_prop": 100})
         expected = [('http://test.com/',), {'data': {'test_prop': 100}}]
         self.assertEqual(list(post_mock.call_args), expected)
 
         # POST request with multiple parameters in the request body
-        probe = POSTProbingRequest("http://test.com/", "test_prop",
+        probe = HTTPProbingRequest("http://test.com/", "POST",
                                    {'extra1': 0, 'extra2': 1})
-        probe.process(100)
+        probe.process([], {"test_prop": 100})
         expected = [('http://test.com/',), {'data': {'test_prop': 100,
                                                      'extra1': 0,
                                                      'extra2': 1}}]
         self.assertEqual(list(post_mock.call_args), expected)
 
         # POST request with no parameters in the request body
-        probe = POSTProbingRequest("http://test.com/")
+        probe = HTTPProbingRequest("http://test.com/", "POST")
         probe.process()
         expected = [('http://test.com/',), {'data': {}}]
         self.assertEqual(list(post_mock.call_args), expected)
 
         # POST request using only the pre-made request body
-        probe = POSTProbingRequest("http://test.com/", None, {'extra1': 0})
+        probe = HTTPProbingRequest("http://test.com/", "POST", {'extra1': 0})
         probe.process()
         expected = [('http://test.com/',), {'data': {'extra1': 0}}]
+        self.assertEqual(list(post_mock.call_args), expected)
+
+        # POST request with two parameters in the URL and two in the request
+        # body
+        probe = HTTPProbingRequest("http://test.com/{}/{}", "POST")
+        probe.process([1, 2], {'test1': 10, 'test2': 200})
+        expected = [("http://test.com/1/2",), {'data':{'test1': 10,
+                                                       'test2': 200}}]
         self.assertEqual(list(post_mock.call_args), expected)
 
 
@@ -178,40 +207,18 @@ class ProbingRequestTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.text, "")
 
 
-    def test_invalid_req_get(self):
+    def test_invalid_req_http(self):
         """
-        Tests invalid requests with GET
+        Tests invalid HTTP requests
         """
-
-        # Non-existent URL
-        probe = GETProbingRequest("http://nonexistenturl1234")
-        self.assertRaises(requests.exceptions.ConnectionError, probe.process)
 
         # URL misses schema (http://)
-        probe = GETProbingRequest("nonexistenturl/")
+        probe = HTTPProbingRequest("nonexistenturl/", "GET")
         self.assertRaises(requests.exceptions.MissingSchema, probe.process)
 
-
-    def test_invalid_req_post(self):
-        """
-        Tests invalid requests with POST
-        """
-
-        # Non-existent URL
-        probe = POSTProbingRequest("http://nonexistenturl1234", "test")
-        self.assertRaises(urllib3.exceptions.NewConnectionError, probe.process)
-
-        # URL misses schema (http://)
-        probe = POSTProbingRequest("nonexistenturl/", "test")
-        self.assertRaises(requests.exceptions.MissingSchema, probe.process)
-
-        # Invalid POST property name
-        probe = POSTProbingRequest("http://nonexistenturl/", [])
-        self.assertRaises(TypeError, probe.process)
-
-        # Invalid POST request body
-        self.assertRaises(TypeError, POSTProbingRequest,
-                          "http://nonexistenturl/", "test", [])
+        # Invalid request body
+        self.assertRaises(TypeError, HTTPProbingRequest,
+                          "http://nonexistenturl/", "POST", [])
 
 
     async def test_invalid_req_pyp(self):
