@@ -114,7 +114,6 @@ class CrawlRequest(TimeStamped):
     invert_text_match = models.BooleanField(blank=True, null=True)
 
     # PARSING #########################################################################
-    output_filename = models.CharField(max_length=15, blank=True, null=True)
     save_csv = models.BooleanField(blank=True, null=True)
 
 

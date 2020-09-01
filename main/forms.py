@@ -86,7 +86,6 @@ class CrawlRequestForm(forms.ModelForm):
             'invert_http_status',
             'text_match_response',
             'invert_text_match',
-            'output_filename',
             'save_csv',
             'output_path',
         ]
@@ -273,8 +272,4 @@ class RawCrawlRequestForm(forms.Form):
     invert_text_match = forms.BooleanField(required=False, label="Opposite")
 
     # PARSING #############################################################################
-    output_filename = forms.CharField(
-        required=False, max_length=2000, label="Output file name",
-        widget=forms.TextInput(attrs={'placeholder': 'output'})
-    )
     save_csv = forms.BooleanField(required=False, label="Save a CSV file")
