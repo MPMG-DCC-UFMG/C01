@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded',
     false
 );
 
-function tail_logs(instance_id, crawler_id){
+function tail_logs(instance_id){
     // calls tail log view and set logs
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
@@ -35,15 +35,14 @@ function tail_logs(instance_id, crawler_id){
             document.getElementById("stderr_tail_update").innerText = "last update: " + response["time"]
         }
     };
-    console.log(crawler_id)
-    xhr.open("GET", "/tail_log_file/" + crawler_id+"/"+instance_id, true);
+    xhr.open("GET", "/tail_log_file/"+instance_id, true);
     xhr.send();
 }
 
-function tail_f_logs(instance_id, crawler_id){
+function tail_f_logs(instance_id){
     // Calls tail_logs every 5 seconds
     setInterval(
-        function(){ tail_logs(instance_id, crawler_id);},
+        function(){ tail_logs(instance_id);},
         5000
     ); 
 }

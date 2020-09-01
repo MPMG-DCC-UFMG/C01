@@ -120,7 +120,11 @@ def create_instance(crawler_id, instance_id):
     return obj
 
 
-def tail_log_file(request, crawler_id, instance_id):
+def tail_log_file(request, instance_id):
+
+
+    crawler_id = CrawlerInstance.objects.filter(instance_id=instance_id).values()[0]["crawler_id_id"]
+
     config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
     if config["output_path"] is None:
         output_path = CURR_FOLDER_FROM_ROOT

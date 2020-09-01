@@ -26,8 +26,7 @@ class BaseSpider(scrapy.Spider):
         Spider init operations.
         Create folders to store files and some config and log files.
         """
-        print("At BaseSpider.init 2")
-        print("crawler_id: ", crawler_id)
+        print("At BaseSpider.init")
         self.crawler_id = crawler_id
         self.stop_flag = False
 
@@ -65,7 +64,6 @@ class BaseSpider(scrapy.Spider):
 
         self.get_format = lambda i: str(i).split("/")[1][:-1].split(";")[0]
 
-        print("path:: ",)
 
     def start_requests(self):
         """

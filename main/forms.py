@@ -101,11 +101,10 @@ class RawCrawlRequestForm(forms.Form):
         widget=forms.TextInput(attrs={'placeholder': 'www.example.com/data/'})
                                )
     obey_robots = forms.BooleanField(required=False, label="Obey robots.txt")
-    pathValid = RegexValidator(r'^[0-9a-zA-Z\/\\-_]*$', 'This is not a valid path.')
     output_path = forms.CharField(
         required=False, max_length=2000, label="Path to save the files",
         widget=forms.TextInput(attrs={'placeholder': '/home/user/Documents'}),
-        validators=[pathValid]
+        validators=[CrawlRequest.pathValid]
     )
     
     # ANTIBLOCK ##########################################################################
