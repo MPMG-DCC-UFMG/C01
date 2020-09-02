@@ -1,14 +1,13 @@
 document.addEventListener('DOMContentLoaded',
     function () {
         var instance_id = document.getElementById("last_instance_id").innerText.trim();
-        var crawler_id = document.getElementById("crawler_id").innerText.trim();
         var last_as_running = document.getElementById("instance_running").innerText.trim() == "True";
         
         if(instance_id != "None")
-            tail_logs(instance_id, crawler_id);
+            tail_logs(instance_id);
 
         if(last_as_running)
-            tail_f_logs(instance_id, crawler_id);
+            tail_f_logs(instance_id);
     },
     false
 );
