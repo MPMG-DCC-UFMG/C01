@@ -5,7 +5,7 @@ setuptools.setup(
     version='0.1',
     classifiers=["Programming Language :: Python :: 3"],
     install_requires=[
-        'django==2.1', 'django-crispy-forms', 'djangorestframework',
+        'django', 'django-crispy-forms', 'djangorestframework',
         'scrapy', 'requests', 'pytest'
     ],
 )
