@@ -5,11 +5,11 @@ rubia-rg@github
 Parse form parameters from HTML
 """
 from collections import defaultdict
-from formparser.html.extractor import Extractor as HTMLExtractor
+from formparser.html.extractor import HTMLExtractor
 from formparser.html.dynamic_fields import DynamicFields
 
 
-class Parser:
+class HTMLParser:
     """Parse HTML forms"""
 
     def __init__(self, url=None, form=None):
