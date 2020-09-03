@@ -141,16 +141,11 @@ def create_steps(request):
 def stop_crawl(request, crawler_id):
     process_stop_crawl(crawler_id)
     return redirect(detail_crawler, id=crawler_id)
-    # return redirect(f"/detail/{crawler_id}")
-    # context = {'instance':instance, 'crawler':crawler}
-    # return render(request, "main/detail_crawler.html", context)
 
 
 def run_crawl(request, crawler_id):
     process_run_crawl(crawler_id)
     return redirect(detail_crawler, id=crawler_id)
-    # context = {'instance':instance, 'crawler':crawler}
-    # return render(request, "main/detail_crawler.html", context)
 
 
 def tail_log_file(request, instance_id):
