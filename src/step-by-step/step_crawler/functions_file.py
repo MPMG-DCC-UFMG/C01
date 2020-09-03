@@ -1,7 +1,10 @@
+import io
 import asyncio
 import time
 import uuid
 from cssify import cssify
+from PIL import Image
+from captcha_solver.image_solver import ImageSolver
 
 
 def range_(stop):
