@@ -108,11 +108,34 @@ async def nesse_elemento_esta_escrito(page, xpath, texto):
 
 
 async def break_captcha(page, xpath_input, xpath_output):
+    text = "Teste"
     element = (await page.xpath(xpath_input))[0]
-    image_data = await element.screenshot(path="image.jpg")
+    await element.focus()
+    position = await element.boundingBox()
+    print(position)
+    image_data = await page.screenshot(path="image.jpg", fullPage=True)
     image = Image.open(io.BytesIO(image_data))
-    solver = ImageSolver(preprocessing=lambda x: x)
+    image = image.crop((int(position["x"]), int(position["y"]), int(position["x"]) + int(position["width"]), int(position["y"]) + int(position["height"])))
+
+    image.show()
+
+    solver = ImageSolver()
     text = solver.solve(image=image)
+    text = text.replace("\n", "").replace(" ", "").replace("\t", "")
+    print(text)
     # preenche o campo de texto com o resultado
-    await page.type(cssify(xpath_output), text)
+
+    # element = (await page.xpath(xpath_output))[0]
+    # position = await element.boundingBox()
+    # print(position)
+
+    # text = "Teste"
+    # await element.type(text, { "delay": 100 })
+    type_function = f"(text) => {{ (document.querySelector('{cssify(xpath_output)}')).value = text; }}"
+    print(type_function)
+    await page.evaluate(type_function, text)
+
+
+
+    # await page.keyboard.press('Enter')
     return text

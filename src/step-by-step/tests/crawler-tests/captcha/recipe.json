@@ -2,12 +2,18 @@
     "step": "root",
     "depth": 0,
     "children": [
-      {
-        "step": "break_captcha",
-        "depth": 2,
+        {
+        "step": "espere",
+        "depth": 1,
         "arguments": {
-          "xpath_input": "'/html/body/div/div[4]/span/center/div[1]/img'",
-          "xpath_output": "'/html/body/div/div[2]/form/div[2]/div[1]/div[1]/div/div[2]/input'"
+            "segs": 1
+        }
+      },{
+        "step": "break_captcha",
+        "depth": 1,
+        "arguments": {
+          "xpath_input": "'/html/body/div/div[2]/div[2]/div/div/form/div/fieldset/div/div/div/div[3]/img'",
+          "xpath_output": "'/html/body/div/div[2]/div[2]/div/div/form/div/fieldset/div/div/div/div[3]/input'"
         }
       }
     ]
