@@ -1,6 +1,210 @@
-Minas Gerais , 02 de Junho de 2020   •   Diário Oficial dos Municípios Mineiros   •    ANO XII | Nº 2768
+# Minas Gerais , 02 de Junho de 2020   •   Diário Oficial dos Municípios Mineiros   •    ANO XII | Nº 2768
+#
+# www.diariomunicipal.com.br/amm-mg
+#
+# with open('out.txt', 'w') as new:
+#     print(lines, file=new)
+#
+# end
+# return line.startswith('Código Identificador:')
+# new
+# line.startswith('ESTADO DE MINAS GERAIS')
+# footer
+# line.startswith('www.diariomunicipal.com.br/amm-mg')
+# header
+#
+#     terms = '•   Diário Oficial dos Municípios Mineiros   •'
 
-www.diariomunicipal.com.br/amm-mg
 
-with open('out.txt', 'w') as new:
-    print(lines, file=new)
+
+lines = content.splitlines()
+head = find_header_DOMM(lines)
+process_header(head)
+lines = [i for i in lines if i and not(is_header(i, head) or is_footer(i))]
+
+texts = {}
+section = []
+text = []
+entity = '0-' + head
+texts[entity] = section
+
+for i, line in enumerate(lines):
+    if i + 1 < len(lines):
+        if not is_entity(line, lines[i+1]):
+            if not is_entity(lines[i-1], line):
+                text.append(line)
+
+                if final_section(line):
+                    section.append(text)
+                    text = []
+        else:
+            section.append(text)
+            entity = str(i) + '-' + line + lines[i+1]
+            section = []
+            texts[entity] = section
+            text = []
+section.append(text)
+
+return texts
+
+lines = content.splitlines()
+head = find_header(lines)
+footer = find_footer(lines)
+process_header(head)
+lines = [i for i in lines if i and not(is_header(i, head) or is_footer(i))]
+
+
+texts = {}
+section = []
+text = []
+title = '-' + head
+texts[title] = section
+
+for i, line in enumerate(lines):
+    if not is_title(i, lines):
+        text.append(line)
+
+        if final_section(line):
+            section.append(text)
+            text = []
+    else:
+        section.append(text)
+        title = str(i) + '-' + lines[i]
+        section = []
+        texts[title] = section
+        text = []
+
+section.append(text)
+
+return texts
+
+"""
+This module processes the text content with customized elements detection.
+
+"""
+
+from default_processor import *
+from keyword_processor import *
+from docx_processor import *
+
+    f = {
+        'title': {
+            'method':  title,
+            'default': default_title_detection,
+            'keyword': keyword_title_detection,
+            'docx':    docx_title_detection
+        },
+
+        'header': {
+            'method': header,
+            'default': default_header_detection,
+            'keyword': keyword_header_detection,
+            'docx'   : docx_header_detection
+        },
+
+        'footer':{
+            'method': footer,
+            'default': default_footer_detection,
+            'keyword': keyword_footer_detection,
+            'docx'   : docx_footer_detection
+        },
+
+        'section': {
+            'method': section,
+            'default': default_section_detection,
+            'keyword': keyword_section_detection,
+            'docx'   : docx_section_detection
+        }
+    }
+
+class TextProcessor():
+    """
+    This class processes the text content.
+
+    Args:
+
+    Attributes:
+
+    Raises:
+
+    Returns:
+
+    """
+
+    def __init__(self, config, **keywords):
+        for elem in f:
+            self.fun_dict[elem] = config.get(elem, 'default')
+            self.arg_dict[elem] = keywords.get(elem, None)
+            self.check_args(elem)
+
+    def check_args(self, elem):
+        if self.fun_dict[elem] == 'keyword':
+            if self.arg_dict[elem] == None:
+                return AssertionError('Insert text for {} detection'.format(elem))
+        else:
+            if self.arg_dict[elem] is not None:
+                return AssertionError('The {} mode does not use keywords'.format(self.arg_dict[elem]))
+
+    def title(self):
+        return f['title'][self.fun_dict['title']](self.arg_dict['title'])
+
+    def header(self):
+        return f['header'][self.fun_dict['header']](self.arg_dict['header'])
+
+    def footer(self):
+        return f['footer'][self.fun_dict['footer']](self.arg_dict['footer'])
+
+    def section(self):
+        return f['section'][self.fun_dict['section']](self.arg_dict['section'])
+
+    def process(self):
+        ordered_list = []
+        for elem in self.fun_dict:
+            if self.fun_dict[elem] == 'docx':
+
+
+
+
+    """
+    This function processes the content.
+
+    It cleans empty lines, and the lines from the content are splited for separa
+    tion between texts and titles.
+
+    Note:
+        The titles are enumerated, for distinction.
+
+    Args:
+        content(str): The extracted textual content of the file.
+
+    Returns:
+        dict: The keys are the titles; the values are the core texts.
+
+    """
+
+    lines = content.splitlines()
+    lines = [i for i in lines if i]
+
+    texts = {}
+    text = []
+    paragraph = []
+    title = '0- ' + lines[0]
+    texts[title] = text
+
+    for i in range(len(lines)):
+        if not is_title(i, lines):
+            paragraph.append(lines[i])
+
+            if final_sentence(lines[i]):
+                text.append(paragraph)
+                paragraph = []
+        else:
+            text.append(paragraph)
+            title = str(i) + '-' + lines[i]
+            text = []
+            texts[title] = text
+            paragraph = []
+
+    text.append(paragraph)
+
+    return texts

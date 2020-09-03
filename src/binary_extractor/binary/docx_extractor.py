@@ -15,6 +15,26 @@ class DOCXExtractor(TextsExtractor):
 
     """
 
+    __doc__ = BinaryExtractor.__doc__ + __doc__
+
+    def read(self):
+        """
+        This method opens the main content of the docx file.
+
+        Returns:
+            str: textual extracted content.
+
+        Raises:
+            TypeError: The method couldn't extract text from the file.
+
+        """
+
+        content = self.open['content']
+        if content is None:
+            raise TypeError('Não foi possível detectar texto no arquivo.')
+
+        return content
+
     def process(self):
         """
         This method processes the content.

@@ -18,10 +18,10 @@ class BinaryExtractor():
 
     Attributes:
         path (str): File path.
-        meta (None/pd.DataFrame): Metadata of the document.
-        content(None/dict/pd.DataFrame): Main content of the document.
         name (str): File name, without its extension.
+        meta (None/pd.DataFrame): Metadata of the document.
         directory (Path): Created directory for saving the outputs.
+        content(None/dict/pd.DataFrame): Main content of the document.
 
     Raises:
         TypeError: The file can't be parsed.
