@@ -211,7 +211,7 @@ New Crawler
                     <div id="templated-url-item-block" class="block" hidden>
                         <div class="row">
                             <div class="col md-6" id="templated-url-config">
-                                {% include "main/request_config.html" with req_form=templated_url_form response_formset=response_formset only %}
+                                {% include "main/request_config.html" with parameter_formset=parameter_formset response_formset=response_formset %}
                             </div>
                         </div>
                     </div>
@@ -225,11 +225,25 @@ New Crawler
 
 {% block js %}
 <script>
+    function decreaseFormsetCount(prefix) {
+        let form_count = $("id_" + prefix + "-TOTAL_FORMS").val();
+        $("id_" + prefix + "-TOTAL_FORMS").val(form_count - 1);
+    }
+
+    // initialize formsets
+    $('.templated-url-param-step').formset({
+        prefix: '{{ parameter_formset.prefix }}',
+        addText: '',
+        deleteText: '',
+        deleteCssClass: 'close',
+        removed: decreaseFormsetCount('{{ parameter_formset.prefix }}'),
+    });
     $('.templated-url-response-handling-step').formset({
         prefix: '{{ response_formset.prefix }}',
         addText: 'add validation',
         deleteText: '&times;',
-        deleteCssClass: 'close'
+        deleteCssClass: 'close',
+        removed: decreaseFormsetCount('{{ response_formset.prefix }}'),
     });
 </script>
 <script src="{% static 'js/create_crawler.js' %}"></script>

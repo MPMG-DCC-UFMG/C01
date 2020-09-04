@@ -4,48 +4,59 @@
 <!-- Parameter injection -->
 <div id="templated-url-param">
     <br>
-    <!-- Parameter type-->
-    {{ req_form.template_parameter_type | as_crispy_field }}
-    <!-- Parameter configuration -->
-    <div class="templated-url-param-config" id="none" hidden></div>
-    <div class="templated-url-param-config" id="formatted_str" hidden>
-        TODO
+    {{ parameter_formset.management_form }}
+    {% for param_subform in parameter_formset.forms %}
+    <div class="row">
+        <div class="col md-6">
+            <div class="templated-url-param-step bordered-bottom-option">
+                {% if param_subform.instance.pk %}{{ form.DELETE }}{% endif %}
+                <!-- Parameter type-->
+                {{ param_subform.parameter_type | as_crispy_field }}
+                <!-- Parameter configuration -->
+                <div class="templated-url-param-config" data-option-type="none" hidden></div>
+                <div class="templated-url-param-config" data-option-type="formatted_str" hidden>
+                    TODO
+                </div>
+                <div class="templated-url-param-config" data-option-type="number_seq" hidden>
+                    {{ param_subform.first_num_param | as_crispy_field}}
+                    {{ param_subform.last_num_param | as_crispy_field}}
+                    {{ param_subform.step_num_param | as_crispy_field}}
+                    {{ param_subform.leading_num_param | as_crispy_field}}
+                </div>
+                <div class="templated-url-param-config" data-option-type="alpha_seq" hidden>
+                    {{ param_subform.length_alpha_param | as_crispy_field}}
+                    {{ param_subform.num_words_alpha_param | as_crispy_field}}
+                    {{ param_subform.no_upper_alpha_param | as_crispy_field}}
+                </div>
+                <div class="templated-url-param-config" data-option-type="date_seq" hidden>
+                    {{ param_subform.frequency_date_param | as_crispy_field}}
+                    {{ param_subform.date_format_date_param | as_crispy_field}}
+                    {{ param_subform.start_date_date_param | as_crispy_field}}
+                    {{ param_subform.end_date_date_param | as_crispy_field}}
+                </div>
+                <br>
+            </div>
+        </div>
     </div>
-    <div class="templated-url-param-config" id="number_seq" hidden>
-        {{ req_form.first_num_param | as_crispy_field}}
-        {{ req_form.last_num_param | as_crispy_field}}
-        {{ req_form.step_num_param | as_crispy_field}}
-        {{ req_form.leading_num_param | as_crispy_field}}
-    </div>
-    <div class="templated-url-param-config" id="alpha_seq" hidden>
-        {{ req_form.length_alpha_param | as_crispy_field}}
-        {{ req_form.num_words_alpha_param | as_crispy_field}}
-        {{ req_form.no_upper_alpha_param | as_crispy_field}}
-    </div>
-    <div class="templated-url-param-config" id="date_seq" hidden>
-        {{ req_form.frequency_date_param | as_crispy_field}}
-        {{ req_form.date_format_date_param | as_crispy_field}}
-        {{ req_form.start_date_date_param | as_crispy_field}}
-        {{ req_form.end_date_date_param | as_crispy_field}}
-    </div>
+    {% endfor %}
 </div>
-<div class="bordered-bottom-option"></div>
 
 <!-- Response handling-->
 <div id="templated-url-response">
     {{ response_formset.management_form }}
-    {% for subform in response_formset %}
+    {% for subform in response_formset.forms %}
     <div class="row">
         <div class="col md-6">
             <div class="templated-url-response-handling-step bordered-bottom-option">
+                {% if param_subform.instance.pk %}{{ form.DELETE }}{% endif %}
                 {{ subform.handler_type | as_crispy_field }}
-                <div class="templated-url-response-params" id="text" hidden>
+                <div class="templated-url-response-params" data-option-type="text" hidden>
                     {{ subform.text_match_value | as_crispy_field }}
                 </div>
-                <div class="templated-url-response-params" id="http_status" hidden>
+                <div class="templated-url-response-params" data-option-type="http_status" hidden>
                     {{ subform.http_status | as_crispy_field }}
                 </div>
-                <div class="templated-url-response-params" id="binary" hidden>
+                <div class="templated-url-response-params" data-option-type="binary" hidden>
                 </div>
                 {{ subform.opposite | as_crispy_field}}
             </div>

@@ -3,6 +3,7 @@ from scrapy.exceptions import CloseSpider
 
 import crawling_utils
 import datetime
+import itertools
 import json
 import logging
 import os
@@ -83,51 +84,55 @@ class BaseSpider(scrapy.Spider):
 
         base_url = self.config['base_url']
         req_type = self.config['request_type']
-        templated_url_config = self.config['templated_url_config']
 
         has_placeholder = "{}" in base_url
         if has_placeholder:
-            # Instantiate the parameter injector
-            param_type = templated_url_config['template_parameter_type']
-            param_gen = None
-            if param_type == "formatted_str":
-                # Formatted string generator
-                #TODO
-                pass
-            elif param_type == "number_seq":
-                # Number sequence generator
-                param_gen = ParamInjector.generate_num_sequence(
-                    first=templated_url_config['first_num_param'],
-                    last=templated_url_config['last_num_param'],
-                    step=templated_url_config['step_num_param'],
-                    leading=templated_url_config['leading_num_param'],
-                )
-            elif param_type == 'date_seq':
-                # Date sequence generator
-                param_gen = ParamInjector.generate_daterange(
-                    date_format=templated_url_config['date_format_date_param'],
-                    start_date=templated_url_config['start_date_date_param'],
-                    end_date=templated_url_config['end_date_date_param'],
-                    frequency=templated_url_config['frequency_date_param'],
-                )
-            elif param_type == 'alpha_seq':
-                # Alphabetic search parameter generator
-                param_gen = ParamInjector.generate_alpha(
-                    length=templated_url_config['length_alpha_param'],
-                    num_words=templated_url_config['num_words_alpha_param'],
-                    no_upper=templated_url_config['no_upper_alpha_param'],
-                )
-            else:
-                raise ValueError(f"Invalid parameter type: {param_type}")
+            # Instantiate the parameter injectors for the URL
+            url_injectors = []
+            for param in self.config['parameter_handlers']:
+                param_type = param['parameter_type']
+                param_gen = None
+                if param_type == "formatted_str":
+                    # Formatted string generator
+                    #TODO
+                    pass
+                elif param_type == "number_seq":
+                    # Number sequence generator
+                    param_gen = ParamInjector.generate_num_sequence(
+                        first=param['first_num_param'],
+                        last=param['last_num_param'],
+                        step=param['step_num_param'],
+                        leading=param['leading_num_param'],
+                    )
+                elif param_type == 'date_seq':
+                    # Date sequence generator
+                    param_gen = ParamInjector.generate_daterange(
+                        date_format=param['date_format_date_param'],
+                        start_date=param['start_date_date_param'],
+                        end_date=param['end_date_date_param'],
+                        frequency=param['frequency_date_param'],
+                    )
+                elif param_type == 'alpha_seq':
+                    # Alphabetic search parameter generator
+                    param_gen = ParamInjector.generate_alpha(
+                        length=param['length_alpha_param'],
+                        num_words=param['num_words_alpha_param'],
+                        no_upper=param['no_upper_alpha_param'],
+                    )
+                else:
+                    raise ValueError(f"Invalid parameter type: {param_type}")
 
-            # Request body (only used in POST requests)
+                url_injectors.append(param_gen)
+
+            # Request body (TODO)
             req_body = {}
+            """
             param_key = None
             if req_type == 'POST':
                 if len(templated_url_config['post_dictionary']) > 0:
                     req_body = json.loads(templated_url_config['post_dictionary'])
 
-                param_key = templated_url_config['post_key']
+                param_key = templated_url_config['post_key']"""
 
             # Configure the probing process
 
@@ -136,7 +141,7 @@ class BaseSpider(scrapy.Spider):
                                                     req_data=req_body))
 
             # Probing response
-            for handler_data in templated_url_config['response_handlers']:
+            for handler_data in self.config['templated_url_response_handlers']:
                 resp_handler = None
 
                 handler_type = handler_data['handler_type']
@@ -160,13 +165,14 @@ class BaseSpider(scrapy.Spider):
                 probe.add_response_handler(resp_handler)
 
             # Generate the requests
-            for param_value in param_gen:
+            param_generator = itertools.product(*url_injectors)
+            for param_combination in param_generator:
                 # Check if this entry hits a valid page
-                if probe.check_entry([param_value]):
+                if probe.check_entry(param_combination):
                     curr_url = base_url
 
                     # Insert parameter into URL
-                    curr_url = base_url.format(param_value)
+                    curr_url = base_url.format(*param_combination)
                     req_body = {}
 
                     yield {

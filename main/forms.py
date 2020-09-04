@@ -1,39 +1,5 @@
 from django import forms
-from .models import CrawlRequest, RequestConfiguration, ResponseHandler
-
-
-class RequestConfigForm(forms.ModelForm):
-    """
-    Contains fields related to the configuration of the requests to the initial
-    URLs. This includes the response handlers, parameter injection methods and
-    range inference mechanisms
-    """
-
-    class Meta:
-        model = RequestConfiguration
-        fields = '__all__'
-        labels = {
-            'first_num_param': 'First value to generate:',
-            'last_num_param': 'Last value to generate:',
-            'step_num_param': 'Step size:',
-            'leading_num_param': 'Leading zeros?',
-            'length_alpha_param': 'Word length:',
-            'num_words_alpha_param': 'Number of words:',
-            'no_upper_alpha_param': 'Lowercase only?',
-            'date_format_date_param': 'Date format to use:',
-            'start_date_date_param': 'Starting date:',
-            'end_date_date_param': 'End date:',
-            'frequency_date_param': 'Frequency to generate',
-        }
-
-        widgets = {
-            'template_parameter_type': forms.Select(attrs={
-                'onchange': 'detailTemplatedUrlParamType(event);'
-            }),
-            'date_format_date_param': forms.TextInput(attrs={
-                'placeholder': '%m/%d/%Y'
-            }),
-        }
+from .models import CrawlRequest, ParameterHandler, ResponseHandler
 
 
 class CrawlRequestForm(forms.ModelForm):
@@ -272,6 +238,10 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
 
 class ResponseHandlerForm(forms.ModelForm):
+    """
+    Contains the fields related to the configuration of a single step in the
+    response validation mechanism
+    """
     class Meta:
         model = ResponseHandler
         exclude = []
@@ -284,6 +254,46 @@ class ResponseHandlerForm(forms.ModelForm):
         }
 
 
+class ParameterHandlerForm(forms.ModelForm):
+    """
+    Contains the fields related to the configuration of the request parameters
+    to be injected
+    """
+
+    class Meta:
+        model = ParameterHandler
+        fields = '__all__'
+        labels = {
+            'first_num_param': 'First value to generate:',
+            'last_num_param': 'Last value to generate:',
+            'step_num_param': 'Step size:',
+            'leading_num_param': 'Leading zeros?',
+            'length_alpha_param': 'Word length:',
+            'num_words_alpha_param': 'Number of words:',
+            'no_upper_alpha_param': 'Lowercase only?',
+            'date_format_date_param': 'Date format to use:',
+            'start_date_date_param': 'Starting date:',
+            'end_date_date_param': 'End date:',
+            'frequency_date_param': 'Frequency to generate',
+        }
+
+        widgets = {
+            'parameter_type': forms.Select(attrs={
+                'onchange': 'detailTemplatedUrlParamType(event);'
+            }),
+            'date_format_date_param': forms.TextInput(attrs={
+                'placeholder': '%m/%d/%Y'
+            }),
+        }
+
+
 # Formset for ResponseHandler forms
-ResponseHandlerFormSet = forms.inlineformset_factory(RequestConfiguration,
-    ResponseHandler, form=ResponseHandlerForm, exclude=[], extra=1, min_num=0)
+ResponseHandlerFormSet = forms.inlineformset_factory(CrawlRequest,
+    ResponseHandler, form=ResponseHandlerForm, exclude=[], extra=1, min_num=0,
+    can_delete=True)
+
+
+# Formset for ParameterHandler forms
+ParameterHandlerFormSet = forms.inlineformset_factory(CrawlRequest,
+    ParameterHandler, form=ParameterHandlerForm, exclude=[], extra=1, min_num=0,
+    can_delete=True)

@@ -180,6 +180,46 @@ function showBlock(clicked_id) {
     document.getElementById(clicked_id).classList.add('active');
 }
 
+function setNumParamForms(num) {
+    /*
+    Adjusts the parameter configuration formset to have the supplied number
+    of forms
+
+    :param num: number of forms to be displayed
+    */
+
+    // count number of parameter forms (subtract one to account for the
+    // template form supplied)
+    let num_forms = parseInt($('#id_params-TOTAL_FORMS').val()),
+        add_btn = $('#templated-url-param .add-form-button');
+
+    while(num_forms--) {
+        let param_forms = $('.templated-url-param-step')
+        $(param_forms[param_forms.length-1]).find('.close')
+                                            .click()
+    }
+
+    while(num--) {
+        add_btn.click()
+    }
+
+    /*
+    let diff = num - num_forms
+    if (diff > 0) {
+        // add extra forms
+        while (diff--) {
+            add_btn.click()
+        }
+    } else if (diff < 0) {
+        // remove unnecessary forms
+        while (diff++) {
+            let param_forms = $('.templated-url-param-step')
+            $(param_forms[param_forms.length-1]).find('.remove-form-button')
+                                                .click()
+        }
+    }*/
+}
+
 function detailBaseUrl() {
     const base_url = $("#id_base_url").val();
 
@@ -187,8 +227,14 @@ function detailBaseUrl() {
     // occurrence of the substring "{}")
     if (base_url.includes("{}")){
         $("#templated-url-item").removeClass("disabled");
+        // count number of placeholders
+        let num_placeholders = (base_url.match(/\{\}/g) || []).length;
+        setNumParamForms(num_placeholders)
     } else {
         $("#templated-url-item").addClass("disabled");
+
+        // remove all parameter forms
+        setNumParamForms(0)
     }
 }
 
@@ -220,7 +266,8 @@ function hideUnselectedSiblings(input, parentPath, siblingPath) {
     });
 
     if (selectedVal != "") {
-        parentDiv.find("#" + selectedVal).attr('hidden', false);
+        parentDiv.find("[data-option-type=" + selectedVal + "]")
+                 .attr('hidden', false);
     }
 }
 
@@ -230,7 +277,7 @@ function detailTemplatedUrlResponseParams(e) {
 }
 
 function detailTemplatedUrlParamType(e) {
-    hideUnselectedSiblings(e.target, '#templated-url-param',
+    hideUnselectedSiblings(e.target, '.templated-url-param-step',
         '.templated-url-param-config');
 }
 
@@ -280,7 +327,7 @@ function runValidations() {
 
     // Manually trigger onchange events
     $(".templated-url-response-handling-step > .form-group select").change();
-    $("#id_template_parameter_type").change();
+    $(".templated-url-param > .form-group select").change();
 }
 runValidations();
 
