@@ -64,12 +64,14 @@ function init_block(step_list, depth){
     block.move_up = move_up
     block.move_down = move_down
     block.delete_step = delete_step
+    block.add_block_bellow = add_block_bellow
 
-    block.controler.children[0].onclick = block.unindent_step
-    block.controler.children[1].onclick = block.indent_step
-    block.controler.children[2].onclick = block.move_up
-    block.controler.children[3].onclick = block.move_down
-    block.controler.children[4].onclick = block.delete_step
+    block.controler.children[0].onclick = block.add_block_bellow
+    block.controler.children[1].onclick = block.unindent_step
+    block.controler.children[2].onclick = block.indent_step
+    block.controler.children[3].onclick = block.move_up
+    block.controler.children[4].onclick = block.move_down
+    block.controler.children[5].onclick = block.delete_step
 
     return block
 }
@@ -134,7 +136,6 @@ function add_param(param_name, optional_param = false){
         }
     }
 
-    param_name = param_name.replace(/_/g, " ")
 
     param_element = document.createElement("DIV")
     param_element.className = "col-sm"
@@ -251,9 +252,9 @@ function refresh_step(){
     block.step = get_step_info(this.value, block.step_list)
     block.params = []
 
-    if(this.value=="para_cada"){
+    if(this.value=="for each"){
         block.turn_to_for_step()
-    }else if(this.value=="para_cada_pagina_em"){
+    }else if(this.value=="for each page in"){
         block.turn_to_pagination_step()
     }else{
         block.delete_lines(block.lines.length)
@@ -281,7 +282,7 @@ function turn_to_for_step(){
     iterator_input_box = document.createElement("DIV")
     iterator_input_box.className = "col-sm"    
     iterator_input = document.createElement("INPUT")
-    iterator_input.value = "opcao"
+    iterator_input.value = "option"
     iterator_input.className = "form-control row"
     iterator_input_box.appendChild(iterator_input)
     block.iterator_input = iterator_input
@@ -291,7 +292,7 @@ function turn_to_for_step(){
     in_label = document.createElement("P")
     in_label.style.marginTop = "10%"
     in_label.style.textAlign = "center"
-    in_label.innerText = " em"
+    in_label.innerText = " in"
     in_label_box.appendChild(in_label)    
 
     iterable_select_box = document.createElement("DIV")
@@ -315,13 +316,21 @@ function turn_to_pagination_step(){
     block = find_parent_of_type(this, "block")
     block.delete_lines(block.lines.length)
     block.add_line()
-    block.add_param("xpath_dos_botoes")
-    block.add_param("indice_do_botao_proximo")
-    block.lines[0].row.full = true
+    block.add_param("buttons ambiguous xpath")
+    block.step.optional_params = {"next button index":-1}
+    block.init_optional_params_button()
 }
 
 
 //---------------- block menu methods ------------------------------
+
+function add_block_bellow(){
+    step_board = find_parent_of_type(this, "step_board")
+    block = find_parent_of_type(this, "block")
+    i=0
+    while(block != step_board.children[i]){i++}
+    step_board.add_block(step_list, i+1)
+}
 
 function unindent_step(){
     block = find_parent_of_type(this, "block")
@@ -370,6 +379,9 @@ function init_block_element(step_list){
                     <div class="conteiner block-controler">
                         <div class="row block-controler-interface">
                             <div class="col-sm">
+                                <img class="block-controler-button" src="/static/icons/black-plus.svg">
+                            </div>
+                            <div class="col-sm">
                                 <img class="block-controler-button" src="/static/icons/arrow-left-black.svg">
                             </div>
                             <div class="col-sm">
@@ -390,4 +402,4 @@ function init_block_element(step_list){
     new_step.innerHTML = step_html
     new_step.className = "conteiner card step-block"
     return new_step
-}  
+}

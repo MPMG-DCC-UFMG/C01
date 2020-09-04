@@ -1,23 +1,23 @@
 [
     {
-        "name": "opcoes",
+        "name": "options_of_the_select",
         "mandatory_params": [
             "xpath"
         ],
         "optional_params": {
-            "exceto": "None"
+            "except": "None"
         }
     },
     {
-        "name": "digite",
+        "name": "send_keys_in",
         "mandatory_params": [
             "xpath",
-            "texto"
+            "text"
         ],
-        "optional_params": {"a":"b","b":"c","c":"d","d":"e","e":"f"}
+        "optional_params": {}
     },
     {
-        "name": "clique",
+        "name": "click_on",
         "mandatory_params": [
             "xpath"
         ],
@@ -31,14 +31,14 @@
         "optional_params": {}
     },
     {
-        "name": "espere",
+        "name": "wait",
         "mandatory_params": [
-            "segs"
+            "seconds"
         ],
         "optional_params": {}
     },
     {
-        "name": "for_clicavel",
+        "name": "is_clickable",
         "mandatory_params": [
             "xpath"
         ],
@@ -48,24 +48,6 @@
         "name": "gera_nome_arquivo",
         "mandatory_params": [],
         "optional_params": {}
-    },
-    {
-        "name": "nesse_elemento_esta_escrito",
-        "mandatory_params": [
-            "xpath",
-            "texto"
-        ],
-        "optional_params": {}
-    },
-    {
-        "name": "pegue_os_links_da_paginacao",
-        "mandatory_params": [
-            "xpath_dos_botoes",
-            "xpath_dos_links"
-        ],
-        "optional_params": {
-            "indice_do_botao_proximo": -1
-        }
     },
     {
         "name": "print_",
@@ -82,16 +64,16 @@
         "optional_params": {}
     },
     {
-        "name": "salva_pagina",
+        "name": "save_page",
         "mandatory_params": [
         ],
         "optional_params": {}
     },
     {
-        "name": "selecione",
+        "name": "select_this_in",
         "mandatory_params": [
-            "xpath",
-            "opcao"
+            "option",
+            "xpath"
         ],
         "optional_params": {}
     },
@@ -102,3 +84,6 @@
         "optional_params": {}
     }
 ]
+
+
+

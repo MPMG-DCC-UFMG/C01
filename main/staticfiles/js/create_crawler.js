@@ -243,17 +243,13 @@ function detailCrawlerType() {
     
 
 
-
     var outside_element = document.getElementById("form_page");
-    //outside_element.children[0].hidden = true
-    steps_output_element = outside_element.children[0].children[1].children[0]
-    save_button = document.createElement("button")
-    save_button.innerText = "Save steps"
-    save_button.className="btn btn-primary"
-    save_button.style.color = "white"
-    outside_element.appendChild(save_button)
-
-    load_steps(outside_element, save_button, steps_output_element);
+    if(outside_element.type != "steps_creation_interface" ){
+        //outside_element.children[0].hidden = true
+        steps_output_element = outside_element.children[0].children[1].children[0]
+        load_steps(outside_element, steps_output_element);
+        outside_element.type = "steps_creation_interface" 
+    }
 
     checkCrawlerType();
 }

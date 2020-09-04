@@ -171,12 +171,17 @@ table.dataTable thead .sorting_desc_disabled:before {
 
 div.step-config-select{
     display:inline-block;
-    width: 10em;
     margin: 0em 1em 0em 2em;
+    width: 12em;
 }
 
 #step_controler {
     margin-bottom: 1em;
+}
+
+.step-controler-buttons {
+    margin-left: .5em;
+    margin-right: .5em;
 }
 
 

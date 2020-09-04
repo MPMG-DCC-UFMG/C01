@@ -1,14 +1,23 @@
 
 
-function load_steps(outside_element, save_button, output_element, json_path="/static/json/step_signatures.json"){
+function load_steps(outside_element, output_element, json_path="/static/json/step_signatures.json"){
     var xmlhttp = new XMLHttpRequest();
     
     xmlhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
         step_list = JSON.parse(this.responseText)
-        step_list = step_list.concat(JSON.parse('{"name":"para_cada"}'))
-        step_list = step_list.concat(JSON.parse('{"name":"para_cada_pagina_em"}'))
-        init_steps_creation_interface(outside_element, save_button, output_element, step_list)
+        step_list = step_list.concat(JSON.parse('{"name":"for_each", "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name":"for_each_page_in", "mandatory_params":[], "optional_params":{}}'))
+        for(step of step_list){
+            step.name = step.name.replace(/_/g, " ")
+            for(var param of step.mandatory_params){
+                param = param.replace(/_/g, " ")
+            }
+            for(var param in Object.keys(step.optional_params)) {
+                step.optional_params[param] = param.replace(/_/g, " ")
+            }
+        }
+        init_steps_creation_interface(outside_element, output_element, step_list)
       }
     };
 
@@ -20,7 +29,7 @@ function load_steps(outside_element, save_button, output_element, json_path="/st
 
 //-------------- creation_interface ------------------------------
 
-function init_steps_creation_interface(outside_element, save_button, output_element, step_list){
+function init_steps_creation_interface(outside_element, output_element, step_list){
     /*<div>
         <iframe src="http://cnes.datasus.gov.br/"  height="500px" width="500px" id="lerolero">
         </iframe>
@@ -36,12 +45,21 @@ function init_steps_creation_interface(outside_element, save_button, output_elem
 
 
     add_block_button = document.createElement("a")
-    add_block_button.className="btn btn-primary"
+    add_block_button.className="btn btn-primary step-controler-buttons"
     add_block_button.style.color = "white"
     add_block_button.onclick = function(){step_board.add_block(step_list)}
-    add_block_button.innerText = "Adicionar Bloco"
+    add_block_button.innerText = "Add step"
+
+
+    save_button = document.createElement("button")
+    save_button.innerText = "Save steps"
+    save_button.className="btn btn-primary step-controler-buttons"
+    save_button.style.color = "white"
+    outside_element.save_button = save_button
+    outside_element.save_button.onclick = function(){build_json(step_board, output_element)}
 
     step_controler.appendChild(add_block_button)
+    step_controler.appendChild(save_button)
     steps_creation_interface.appendChild(step_controler)
     steps_creation_interface.appendChild(step_board)
     steps_creation_interface.step_controler = step_controler
@@ -52,8 +70,6 @@ function init_steps_creation_interface(outside_element, save_button, output_elem
     outside_element.type = "root"
     outside_element.steps_creation_interface = steps_creation_interface
     outside_element.step_json_input = output_element
-    outside_element.save_button = save_button
-    outside_element.save_button.onclick = function(){build_json(step_board, output_element)}
 
 }
 
@@ -66,11 +82,15 @@ function init_step_board(step_list){
     step_board.get_last_depth = get_last_depth
     step_board.style.marginTop = "1em"
     step_board.style.marginBottom = "1em"
-    step_board.add_block = function(step_list){
+    step_board.add_block = function(step_list, index = -1){
         steps_creation_interface = find_parent_of_type(this, "steps_creation_interface")
         step_board = steps_creation_interface.step_board
         step_block = init_block(step_list, step_board.get_last_depth())
-        step_board.appendChild(step_block)
+        if(index != -1){
+            step_board.insertBefore(step_block, step_board.children[index])
+        }else{
+            step_board.appendChild(step_block)
+        }
     }    
     return step_board
 }    
@@ -81,7 +101,7 @@ function get_last_depth(){
         step_board = find_parent_of_type(this, "step_board")
         if(step_board.children.length>0){
             last_step = step_board.children[step_board.children.length-1]
-            if(last_step.step === "para cada"){
+            if(last_step.step.name == "for each" || last_step.step.name == "for each page in"){
                 return last_step.depth + 1
             }else{
                 return last_step.depth
@@ -91,7 +111,6 @@ function get_last_depth(){
         }
     }
 }
-
 
 //--------------------- json build functions ---------------------------------
 
@@ -135,7 +154,7 @@ function get_step_json_format(block){
         step : param_name,
         depth : block.depth,
     }
-    if(param_name == "para_cada"){
+    if(param_name == "for each"){
         step_dict.iterator = block.iterator_input.value
         step_dict.children = []
         if(block.iterable_select.value == "objeto"){
@@ -151,7 +170,7 @@ function get_step_json_format(block){
                 step_dict.iterable.call.arguments[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
             }
         }
-    }else if(param_name == "para_cada_pagina_em"){
+    }else if(param_name == "for each page in"){
         step_dict.children = []
         for(param of block.params){
             step_dict[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
