@@ -234,6 +234,7 @@ New Crawler
     $('.templated-url-param-step').formset({
         prefix: '{{ parameter_formset.prefix }}',
         addText: '',
+        addCssClass: 'add-form-button',
         deleteText: '',
         deleteCssClass: 'close',
         removed: decreaseFormsetCount('{{ parameter_formset.prefix }}'),
@@ -241,6 +242,7 @@ New Crawler
     $('.templated-url-response-handling-step').formset({
         prefix: '{{ response_formset.prefix }}',
         addText: 'add validation',
+        addCssClass: 'add-form-button',
         deleteText: '&times;',
         deleteCssClass: 'close',
         removed: decreaseFormsetCount('{{ response_formset.prefix }}'),
