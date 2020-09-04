@@ -225,11 +225,6 @@ New Crawler
 
 {% block js %}
 <script>
-    function decreaseFormsetCount(prefix) {
-        let form_count = $("id_" + prefix + "-TOTAL_FORMS").val();
-        $("id_" + prefix + "-TOTAL_FORMS").val(form_count - 1);
-    }
-
     // initialize formsets
     $('.templated-url-param-step').formset({
         prefix: '{{ parameter_formset.prefix }}',
@@ -237,7 +232,7 @@ New Crawler
         addCssClass: 'add-form-button',
         deleteText: '',
         deleteCssClass: 'close',
-        removed: decreaseFormsetCount('{{ parameter_formset.prefix }}'),
+        formCssClass: 'templated-url-param-step',
     });
     $('.templated-url-response-handling-step').formset({
         prefix: '{{ response_formset.prefix }}',
@@ -245,7 +240,7 @@ New Crawler
         addCssClass: 'add-form-button',
         deleteText: '&times;',
         deleteCssClass: 'close',
-        removed: decreaseFormsetCount('{{ response_formset.prefix }}'),
+        formCssClass: 'templated-url-response-handling-step',
     });
 </script>
 <script src="{% static 'js/create_crawler.js' %}"></script>

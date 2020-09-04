@@ -143,6 +143,16 @@
             }
             if (hasChildElements(row)) {
                 row.addClass(options.formCssClass);
+                // [EDITED]: This part was changed so that non-visible elements
+                // also get the delete button
+
+                // This pull request to the library repository fixes that, but
+                // it hasn't been merged yet:
+                // https://github.com/elo80ka/django-dynamic-formset/pull/137
+
+                // I created another pull request with the same contents before
+                // I found the previous one:
+                // https://github.com/elo80ka/django-dynamic-formset/pull/181
                 insertDeleteLink(row);
                 applyExtraClasses(row, i);
             }

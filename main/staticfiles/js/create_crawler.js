@@ -133,6 +133,7 @@ function checkCrawlerType() {
 
 $(document).ready(function () {
     setNavigation();
+    runValidations();
 
     $('input').on('blur keyup', function () {
         var input_name = $(this).attr('name');
@@ -329,6 +330,5 @@ function runValidations() {
     $(".templated-url-response-handling-step > .form-group select").change();
     $(".templated-url-param > .form-group select").change();
 }
-runValidations();
 
-// TODO add new fields to validation 
+// TODO add new fields to validation
