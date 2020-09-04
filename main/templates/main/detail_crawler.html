@@ -15,6 +15,7 @@ Crawler "{{ crawler.source_name }}"
             <h4>Details</h4>
             <ul>
                 <li>Source name: <strong>{{ crawler.source_name }}</strong></li>
+                <li>Crawler ID: <strong>{{ crawler.id }}</strong></li>
                 <li>Base URL: <strong>{{ crawler.base_url }}</strong></li>
                 <li>Creation date: <strong>{{ crawler.creation_date }}</strong></li>
                 
@@ -89,7 +90,7 @@ Crawler "{{ crawler.source_name }}"
             {% if crawler.running == True %}
             <a class="btn btn-success disabled">Run</a>
             <a class="btn btn-danger"
-                href="{% url 'stop_crawl' crawler_id=crawler.id instance_id=last_instance.instance_id %}">Stop</a>
+                href="{% url 'stop_crawl' crawler.id %}">Stop</a>
             {% elif crawler.running == False %}
             <a class="btn btn-success" href="{% url 'run_crawl' crawler.id %}">Run</a>
             <a class="btn btn-danger disabled">Stop</a>

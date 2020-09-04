@@ -95,9 +95,7 @@ def crawler_process(crawler_id, config):
     def update_database():
         # TODO: get port as variable
         port = 8000
-        address = f"http://localhost:{port}/detail/stop_crawl/{config['id']}" \
-            f"/{crawler_id}"
-        requests.get(address)
+        requests.get(f'http://localhost:{port}/detail/stop_crawl/{config["id"]}')
 
     for crawler in process.crawlers:
         crawler.signals.connect(
@@ -108,7 +106,8 @@ def crawler_process(crawler_id, config):
 
 def gen_key():
     """Generates a unique key based on time and a random seed."""
-    return str(int(time.time()*100)) + str((int(random.random() * 1000)))
+    return str(int(time.time() * 100)) + str((int(random.random() * 1000)))
+
 
 
 def start_crawler(config):
