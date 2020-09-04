@@ -143,8 +143,8 @@ class BaseSpider(scrapy.Spider):
             )
 
             file_mode = "w+"
-            body = cleaner.clean_html(response.body.decode('ascii', errors='ignore'))
-            # encoding = "utf-8-sig"
+            body = cleaner.clean_html(
+                response.body.decode('ascii', errors='ignore'))
 
         hsh = crawling_utils.hash(response.url)
 
@@ -165,7 +165,6 @@ class BaseSpider(scrapy.Spider):
         with open(
             file=f"{folder}/{hsh}.{file_format}",
             mode=file_mode,
-            # encoding=encoding,
         ) as f:
             f.write(body)
 
@@ -182,19 +181,19 @@ class BaseSpider(scrapy.Spider):
         # you may need the failure's type
         self.logger.error(repr(failure))
 
-        #if isinstance(failure.value, HttpError):
+        # if isinstance(failure.value, HttpError):
         if failure.check(HttpError):
             # you can get the response
             response = failure.value.response
             self.logger.error('HttpError on %s', response.url)
 
-        #elif isinstance(failure.value, DNSLookupError):
+        # elif isinstance(failure.value, DNSLookupError):
         elif failure.check(DNSLookupError):
             # this is the original request
             request = failure.request
             self.logger.error('DNSLookupError on %s', request.url)
 
-        #elif isinstance(failure.value, TimeoutError):
+        # elif isinstance(failure.value, TimeoutError):
         elif failure.check(TimeoutError):
             request = failure.request
             self.logger.error('TimeoutError on %s', request.url)
