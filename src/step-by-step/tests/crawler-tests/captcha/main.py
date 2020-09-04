@@ -16,8 +16,8 @@ sys.path.append("../../../")
 
 async def main():
     options = {
-                # "headless": False,
-                # 'args': ['--no-sandbox'],
+                "headless": False,
+                'args': ["--start-maximized", '--no-sandbox'],
                 'dumpio':True,
               }
     browser = await launch(options)
@@ -27,8 +27,7 @@ async def main():
 
     steps = code_g.generate_code(recipe, functions_file)
     pages = await steps.execute_steps(page=page)
-    print(pages)
-    await page.waitForNavigation()
+    # await page.waitForNavigation()
     await browser.close()
     return
 
