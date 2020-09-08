@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 
+
 class TimeStamped(models.Model):
     creation_date = models.DateTimeField()
     last_modified = models.DateTimeField()
@@ -18,11 +19,9 @@ class TimeStamped(models.Model):
 
 class CrawlRequest(TimeStamped):
 
-    running = models.BooleanField(default=False)
-
     # BASIC INFO ####################################################################
     source_name = models.CharField(max_length=200)
-    base_url  = models.CharField(max_length=200)
+    base_url = models.CharField(max_length=200)
     obey_robots = models.BooleanField(blank=True, null=True)
 
     REQUEST_TYPES = [
@@ -47,7 +46,8 @@ class CrawlRequest(TimeStamped):
         ('user_agent', 'User-agent rotation'),
         ('cookies', 'Use cookies'),
     ]
-    antiblock_mask_type = models.CharField(max_length=15, choices=ANTIBLOCK_MASK_TYPE, blank=True, null=True, default='none')
+    antiblock_mask_type = models.CharField(max_length=15, choices=ANTIBLOCK_MASK_TYPE,
+                                           blank=True, null=True, default='none')
 
     # Options for IP rotation
     IP_TYPE = [
@@ -55,19 +55,19 @@ class CrawlRequest(TimeStamped):
         ('proxy', 'Proxy'),
     ]
     antiblock_ip_rotation_type = models.CharField(max_length=15, choices=IP_TYPE, null=True, blank=True)
-    antiblock_proxy_list = models.CharField(max_length=2000, blank=True, null=True) # available for Proxy List
+    antiblock_proxy_list = models.CharField(max_length=2000, blank=True, null=True)  # available for Proxy List
     antiblock_max_reqs_per_ip = models.IntegerField(blank=True, null=True)
     antiblock_max_reuse_rounds = models.IntegerField(blank=True, null=True)
 
-        # Options for User Agent rotation
+    # Options for User Agent rotation
     antiblock_reqs_per_user_agent = models.IntegerField(blank=True, null=True)
     antiblock_user_agents_file = models.CharField(max_length=2000, blank=True, null=True)
 
-        # Options for Cookies
+    # Options for Cookies
     antiblock_cookies_file = models.CharField(max_length=2000, blank=True, null=True)
     antiblock_persist_cookies = models.BooleanField(blank=True, null=True)
 
-    # CAPTCHA #######################################################################
+    # CAPTCHA #################################################################
     CAPTCHA_TYPE = [
         ('none', 'None'),
         ('image', 'Image'),
@@ -77,12 +77,12 @@ class CrawlRequest(TimeStamped):
     has_webdriver = models.BooleanField(blank=True, null=True)
     webdriver_path = models.CharField(max_length=1000, blank=True, null=True)
     # Options for captcha
-        # Options for image
+    # Options for image
     img_xpath = models.CharField(max_length=100, blank=True, null=True)
-        # Options for sound
+    # Options for sound
     sound_xpath = models.CharField(max_length=100, blank=True, null=True)
 
-    # CRAWLER TYPE ###################################################################
+    # CRAWLER TYPE ############################################################
     CRAWLER_TYPE = [
         ('static_page', 'Static Page'),
         ('form_page', 'Page with Form'),
@@ -91,12 +91,9 @@ class CrawlRequest(TimeStamped):
     ]
     crawler_type = models.CharField(max_length=15, choices=CRAWLER_TYPE, default='static_page')
     explore_links = models.BooleanField(blank=True, null=True)
-    link_extractor_max_depht = models.IntegerField(blank=True, null=True)
+    link_extractor_max_depth = models.IntegerField(blank=True, null=True)
     link_extractor_allow = models.CharField(max_length=1000, blank=True, null=True)
     link_extractor_allow_extensions = models.CharField(blank=True, null=True, max_length=2000)
-
-    def __str__(self):
-        return self.source_name
 
     @staticmethod
     def process_config_data(crawler, config):
@@ -130,6 +127,20 @@ class CrawlRequest(TimeStamped):
         config['templated_url_response_handlers'] = response_handlers
         config['parameter_handlers'] = parameter_handlers
         return config
+
+    @property
+    def running(self):
+        return self.instances.filter(running=True).exists()
+
+    @property
+    def running_instance(self):
+        inst_query = self.instances.filter(running=True)
+        if inst_query.exists():
+            return inst_query.get()
+        return None
+
+    def __str__(self):
+        return self.source_name
 
 
 class ParameterHandler(models.Model):
@@ -204,6 +215,7 @@ class ResponseHandler(models.Model):
 
 
 class CrawlerInstance(TimeStamped):
-    crawler_id = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE)
+    crawler_id = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE,
+                                   related_name='instances')
     instance_id = models.BigIntegerField(primary_key=True)
     running = models.BooleanField()

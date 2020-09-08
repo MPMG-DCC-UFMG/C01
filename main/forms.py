@@ -2,42 +2,10 @@ from django import forms
 from .models import CrawlRequest, ParameterHandler, ResponseHandler
 
 
+
 class CrawlRequestForm(forms.ModelForm):
     class Meta:
         model = CrawlRequest
-
-        obey_robots = forms.BooleanField(required=False)
-
-        # Options for antiblock
-        antiblock_download_delay = forms.IntegerField(required=False)
-        antiblock_autothrottle_enabled = forms.BooleanField(required=False)
-        antiblock_autothrottle_start_delay = forms.IntegerField(required=False)
-        antiblock_autothrottle_max_delay = forms.IntegerField(required=False)
-        antiblock_mask_type = forms.ChoiceField(required=False)
-        antiblock_ip_rotation_type = forms.ChoiceField(required=False)
-        antiblock_proxy_list = forms.CharField(required=False)
-        antiblock_max_reqs_per_ip = forms.IntegerField(required=False)
-        antiblock_max_reuse_rounds = forms.IntegerField(required=False)
-        antiblock_reqs_per_user_agent = forms.IntegerField(required=False)
-        antiblock_user_agents_file = forms.CharField(required=False)
-        antiblock_cookies_file = forms.CharField(required=False)
-        antiblock_persist_cookies = forms.BooleanField(required=False)
-
-        # Options for Captcha
-        has_webdriver = forms.BooleanField(required=False)
-        webdriver_path = forms.CharField(required=False)
-        img_xpath = forms.CharField(required=False)
-        sound_xpath = forms.CharField(required=False)
-
-        # Crawler type
-        crawler_type = forms.CharField(required=False)
-
-        # Crawler type - Static
-        explore_links = forms.BooleanField(required=False)
-        link_extractor_max_depht = forms.IntegerField(required=False)
-        link_extractor_allow = forms.CharField(required=False)
-        # link_extractor_allow_domains =
-        link_extractor_allow_extensions = forms.CharField(required=False)
 
         labels = {
             'request_type': 'Request method',
@@ -70,13 +38,15 @@ class CrawlRequestForm(forms.ModelForm):
             'sound_xpath',
             'crawler_type',
             'explore_links',
-            'link_extractor_max_depht',
+            'link_extractor_max_depth',
             'link_extractor_allow',
             'link_extractor_allow_extensions',
         ]
 
+
 class RawCrawlRequestForm(CrawlRequestForm):
     # BASIC INFO ##############################################################
+
     source_name = forms.CharField(label="Source Name", max_length=200,
         widget=forms.TextInput(attrs={'placeholder': 'Example'})
     )
@@ -89,6 +59,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     obey_robots = forms.BooleanField(required=False, label="Obey robots.txt")
 
     # ANTIBLOCK ###############################################################
+
     # Options for Delay
     antiblock_download_delay = forms.IntegerField(
         required=False,
@@ -118,7 +89,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     # Options for mask type
     antiblock_mask_type = forms.ChoiceField(
-        required=False, choices = (
+        required=False, choices=(
             ('none', 'None'),
             # ('ip', 'IP rotation'),
             # ('user_agent', 'User-agent rotation'),
@@ -130,7 +101,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     # Options for IP rotation
     antiblock_ip_rotation_type = forms.ChoiceField(
-        required=False, choices = (
+        required=False, choices=(
             ('tor', 'Tor'),
             ('proxy', 'Proxy'),
         ),
@@ -175,7 +146,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     # CAPTCHA #################################################################
     captcha = forms.ChoiceField(
-        choices = (
+        choices=(
             ('none', 'None'),
             ('image', 'Image'),
             ('sound', 'Sound'),
@@ -206,7 +177,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     # CRAWLER TYPE ############################################################
     crawler_type = forms.ChoiceField(
-        required=False, choices = (
+        required=False, choices=(
             ('static_page', 'Static Page'),
             # ('form_page', 'Page with Form'),
             # ('single_file', 'Single File'),
@@ -217,7 +188,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     explore_links = forms.BooleanField(required=False, label="Explore links")
 
     # Crawler Type - Static
-    link_extractor_max_depht = forms.IntegerField(
+    link_extractor_max_depth = forms.IntegerField(
         required=False, label="Link extractor max depth (blank to not limit):"
     )
     link_extractor_allow = forms.CharField(
