@@ -25,7 +25,7 @@ def clean_html(html_file, is_string):
         f = html_file
         soup = BeautifulSoup(f, 'html.parser')
     else:
-        f = open(html_file, encoding="utf-8-sig")
+        f = open(html_file, "r", errors='ignore')
         soup = BeautifulSoup(f, 'html.parser')
         f.close()
 
@@ -136,7 +136,7 @@ def html_detect_content(
 
     # Check if html file exists. Will raise exception if not.
     if not is_string:
-        with open(html_file, "r") as f:
+        with open(html_file, "r", errors='ignore') as f:
             pass
 
     try:
