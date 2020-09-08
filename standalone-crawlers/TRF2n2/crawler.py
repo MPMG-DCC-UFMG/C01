@@ -3,6 +3,7 @@ import os
 import shutil
 import sys
 import time
+import re
 
 from joblib import Parallel, delayed
 
@@ -38,7 +39,7 @@ WAIT_INTERVAL = 2
 
 DOWNLOAD_ATTACHMENTS = True
 
-DOWNLOAD_FOLDER = os.path.join("/datalake/ufmg/coletatrf2", FOLDER_PATH)
+DOWNLOAD_FOLDER = os.path.join(os.getcwd(), FOLDER_PATH)
 TMP_DOWNLOAD = os.path.join(os.getcwd(), "tmp")
 
 ### GENERAL UTILS
@@ -72,7 +73,7 @@ def download_page(driver, file_name):
     :param file_name: name of the file to create
     """
     with open(file_name, 'wb') as html_file:
-        html_file.write(driver.page_source.encode('iso-8859-1'))
+        html_file.write(driver.page_source.encode('iso-8859-1', 'ignore'))
 
 
 def bin_search(driver, year, origin):
@@ -116,7 +117,7 @@ def bin_search(driver, year, origin):
 
 ### DRIVER INITIALIZATION AND CONNECTION
 
-def init_driver(tmp_folder, headless=True, timeout=30):
+def init_driver(tmp_folder, headless=True, timeout=300):
     """
     Initializes the Firefox Driver
 
@@ -135,17 +136,22 @@ def init_driver(tmp_folder, headless=True, timeout=30):
 
     fp = webdriver.FirefoxProfile()
     # Download files inside a folder called tmp in the current dir
-    fp.set_preference("browser.download.folderList", 2)
-    fp.set_preference("browser.download.dir", tmp_folder)
-    fp.set_preference("browser.download.downloadDir", tmp_folder)
-    fp.set_preference("browser.download.defaultFolder", tmp_folder)
-    fp.set_preference("pdfjs.disabled", True)
-    fp.set_preference("plugin.scan.Acrobat", "99.0");
-    fp.set_preference("plugin.scan.plid.all", False);
-    fp.set_preference("browser.download.manager.showWhenStarting", False)
-    fp.set_preference("browser.download.manager.focusWhenStarting", False)
-    fp.set_preference("browser.download.manager.closeWhenDone", True)
-    fp.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/pdf");
+    #fp.set_preference("browser.download.folderList", 2)
+    #fp.set_preference("browser.download.dir", tmp_folder)
+    #fp.set_preference("browser.download.downloadDir", tmp_folder)
+    #fp.set_preference("browser.download.defaultFolder", tmp_folder)
+    #fp.set_preference("pdfjs.disabled", True)
+    #fp.set_preference("plugin.scan.Acrobat", "99.0");
+    #fp.set_preference("plugin.scan.plid.all", False);
+    #fp.set_preference("browser.download.manager.showWhenStarting", False)
+    #fp.set_preference("browser.download.manager.focusWhenStarting", False)
+    #fp.set_preference("browser.download.manager.closeWhenDone", True)
+    #fp.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/pdf")
+    fp.set_preference('browser.cache.disk.enable', False)
+    fp.set_preference('browser.cache.memory.enable', False)
+    fp.set_preference('browser.cache.offline.enable', False)
+    fp.set_preference("network.http.use-cache", False)
+    #fp.set_preference('network.cookie.cookieBehavior', 2)
     #fp.set_preference("dom.max_script_run_time", 1)
 
     options = Options()
@@ -170,11 +176,12 @@ def load_or_retry(driver, url):
     while tries < RETRY_LIMIT:
         try:
             # leaves the loop if URL is correctly loaded
+            driver.delete_all_cookies()
             driver.get(url)
             break
         except:
             tries += 1
-            time.sleep(WAIT_INTERVAL * tries)
+            time.sleep(WAIT_INTERVAL)
 
     if tries >= RETRY_LIMIT:
         raise Exception("Couldn't reach {}".format(url))
@@ -238,7 +245,7 @@ def load_process_page(driver, num_proc):
     :return: the driver in the desired location
     """
     driver = load_or_retry(driver, TRF2_URL)
-    
+
     # process number input
     loaded = False
     while not loaded:
@@ -261,7 +268,7 @@ def load_process_page(driver, num_proc):
     # Checks the box to download everything
     elem = driver.find_element_by_name("baixado")
     elem.click()
-    
+
     # CAPTCHA "solving"
     elem = driver.find_element_by_id("gabarito")
     catpcha_sol = elem.get_attribute("value")
@@ -283,6 +290,15 @@ def load_process_page(driver, num_proc):
 
     return driver
 
+def url_from_js(js):
+    js_link_regexp = re.compile("javascript\\:MostraPeca\\(\\'(.*?)\\',\\'(.*?)\\',\\'(.*?)\\',\\'(.*?)\\',\\'(.*?)\\',\\'(.*?)\\',\\'(.*?)\\',\\'(.*?)\\'\\).*")
+    result = js_link_regexp.search(js)
+    url = "https://portal.trf2.jus.br/portal/consulta/mostraarquivo.asp?P1={}&P2={}&P3={}&DTI={}&NPI={}&NPT={}&TI={}&NV={}"
+    params = []
+    for i in range(1, 9):
+        params.append(result.group(i))
+    return url.format(*params)
+
 
 def process_page(driver, num_proc, tmp_folder, down_folder):
     """
@@ -293,6 +309,7 @@ def process_page(driver, num_proc, tmp_folder, down_folder):
     :param tmp_folder: folder for temporary downloads
     :param down_folder: folder for collection storage
     """
+    time.sleep(2)
 
     # Creates a folder for this process' files
     proc_folder = os.path.join(down_folder, str(num_proc))
@@ -313,96 +330,140 @@ def process_page(driver, num_proc, tmp_folder, down_folder):
         counter += 1
 
         # wait for it to load and then switch into it
-        time.sleep(2)
-        driver.switch_to.frame("dir")
+        #time.sleep(3)
+        #driver.switch_to.frame("dir")
+        WebDriverWait(driver, 10).until(EC.frame_to_be_available_and_switch_to_it((By.NAME,"dir")))
         print("Tab number {}".format(counter))
-
+        time.sleep(3)
         if counter == 1:
             # the first iframe has paging in it
-
+            num_pages = 1
             prev_btn = driver.find_elements_by_link_text("Anterior")
             # rewind to first page
             while len(prev_btn) > 0:
+                # clear the textarea so it doesn't give a connection error (i know right?)
+                driver.execute_script('document.getElementById("Resumo").removeAttribute("readonly")')
+                driver.find_element_by_id("Resumo").clear()
+                num_pages += 1
                 button = prev_btn[0]
                 button.click()
                 WebDriverWait(driver, 10).until(EC.staleness_of(button))
                 prev_btn = driver.find_elements_by_link_text("Anterior")
 
             # now we're at the first page
-            file_name = str(counter) + "-1.html"
+            """file_name = str(counter) + "-1.html"
             file_name = os.path.join(proc_folder, file_name)
-            download_page(driver, file_name)
+            download_page(driver, file_name)"""
 
-            next_btn = driver.find_elements_by_link_text("Próxima")
+            # next_btn = driver.find_elements_by_link_text("Próxima")
+            driver.switch_to.default_content()
+            el.click()
+            time.sleep(5)
+            #driver.switch_to.frame("dir")
+            WebDriverWait(driver, 10).until(EC.frame_to_be_available_and_switch_to_it((By.NAME,"dir")))
+            prev_btn = driver.find_elements_by_link_text("Anterior")
+
+            while num_pages > 0:
+                driver.execute_script('document.getElementById("Resumo").removeAttribute("readonly")')
+                driver.find_element_by_id("Resumo").clear()
+
+                file_name = str(counter) + "-" + str(num_pages) + ".html"
+                file_name = os.path.join(proc_folder, file_name)
+                download_page(driver, file_name)
+                if num_pages > 1:
+                    button = prev_btn[0]
+                    button.click()
+                    WebDriverWait(driver, 10).until(EC.staleness_of(button))
+                    prev_btn = driver.find_elements_by_link_text("Anterior")
+                num_pages -= 1
+
+
+
+
             # follow to next pages
-            page_counter = 1
+            """page_counter = 1
             while len(next_btn) > 0:
                 page_counter += 1
                 button = next_btn[0]
                 button.click()
+                time.sleep(2)
                 WebDriverWait(driver, 10).until(EC.staleness_of(button))
                 file_name = str(counter) + "-" + str(page_counter) + ".html"
                 file_name = os.path.join(proc_folder, file_name)
                 download_page(driver, file_name)
-                next_btn = driver.find_elements_by_link_text("Próxima")
+                next_btn = driver.find_elements_by_link_text("Próxima")"""
 
         elif counter == 6:
             # the sixth frame has attachments, save its links if needed
             inner_frame = driver.find_elements_by_css_selector("iframe")
-            driver.switch_to.frame(inner_frame[0])
+            if len(inner_frame) > 0:
+                #driver.switch_to.frame(inner_frame[0])
+                WebDriverWait(driver, 10).until(EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR,"iframe")))
 
-            # Download page
-            file_name = str(counter) + ".html"
-            file_name = os.path.join(proc_folder, file_name)
-            download_page(driver, file_name)
+                time.sleep(1)
 
-            if DOWNLOAD_ATTACHMENTS:
-                attachments = driver.find_elements_by_css_selector("a.link-under")
+                # Download page
+                file_name = str(counter) + ".html"
+                file_name = os.path.join(proc_folder, file_name)
+                download_page(driver, file_name)
 
-                if len(attachments) > 0:
-                    # create folder for attachments
-                    att_folder = os.path.join(proc_folder, "attachments")
-                    if not os.path.exists(att_folder):
-                        os.mkdir(att_folder)
+                if DOWNLOAD_ATTACHMENTS:
+                    attachments = driver.find_elements_by_css_selector("a.link-under")
 
-                    # save each attachment
-                    for i in attachments:
-                        i.click()
-                        time.sleep(2) ################################# LEFT
+                    if len(attachments) > 0:
+                        # create file for attachments
+                        att_file_name = os.path.join(proc_folder, "attachments.txt")
+                        with open(att_file_name, "w") as att_file:
+                            for i in attachments:
+                                att_file.write(url_from_js(i.get_attribute("href")))
+                                att_file.write('\n')
 
-                        window_before = driver.window_handles[0]
-                        window_after = driver.window_handles[-1]
-                        driver.switch_to.window(window_after)
 
-                        downloaded_file = wait_for_file(tmp_folder, 2)
-                        driver.close()
+                        #if not os.path.exists(att_folder):
+                        #    os.mkdir(att_folder)
 
-                        new_location = os.path.join(att_folder, downloaded_file)
-                        previous_location = os.path.join(tmp_folder, downloaded_file)
-                        shutil.move(previous_location, new_location)
+                        # save each attachment
+                        #for i in attachments:
+                            """
+                            i.click()
+                            time.sleep(1) ################################# LEFT
 
-                        # Wait for file to be removed
-                        #wait = WebDriverWait(driver, 30)
-                        #wait.until(lambda _: len(os.listdir(tmp_folder)) == 0)
+                            window_before = driver.window_handles[0]
+                            window_after = driver.window_handles[-1]
+                            driver.switch_to.window(window_after)
 
-                        driver.switch_to.window(window_before)
+                            downloaded_file = wait_for_file(tmp_folder, 2)
+                            driver.close()
 
-                    time.sleep(10) # wait for all files to be available
-                    # check if all attachments were downloaded
-                    #print("Assert for {} ".format(num_proc))
-                    assert len(os.listdir(att_folder)) == len(attachments)
+                            new_location = os.path.join(att_folder, downloaded_file)
+                            previous_location = os.path.join(tmp_folder, downloaded_file)
+                            shutil.move(previous_location, new_location)
+
+                            # Wait for file to be removed
+                            #wait = WebDriverWait(driver, 30)
+                            #wait.until(lambda _: len(os.listdir(tmp_folder)) == 0)
+
+                            driver.switch_to.window(window_before)
+                            """
+
+                        #time.sleep(1) # wait for all files to be available
+                        # check if all attachments were downloaded
+                        #print("Assert for {} ".format(num_proc))
+                        #assert len(os.listdir(att_folder)) == len(attachments)
 
         else:
             # Just download the inner iframe's contents
             inner_frame = driver.find_elements_by_css_selector("iframe")
             if len(inner_frame) > 0:
-                driver.switch_to.frame(inner_frame[0])
+                #driver.switch_to.frame(inner_frame[0])
+                WebDriverWait(driver, 10).until(EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR,"iframe")))
+                time.sleep(1)
                 file_name = str(counter) + ".html"
                 file_name = os.path.join(proc_folder, file_name)
                 download_page(driver, file_name)
 
         driver.switch_to.default_content()
-        #time.sleep(2) ###################### REMOVED
+        time.sleep(2)
 
     """if not DOWNLOAD_ATTACHMENTS:
         # save links in a text file
@@ -420,7 +481,13 @@ def check_number(driver, num_proc):
     :return: true if the checked number was hit, false if it missed
     """
 
-    driver = load_process_page(driver, num_proc)
+    success = False
+    while not success:
+        try:
+            driver = load_process_page(driver, num_proc)
+            success = True
+        except selenium.common.exceptions.TimeoutException as e:
+            print("Timeout, retry")
 
     if "cons_procs" in driver.current_url:
         return False
@@ -463,9 +530,9 @@ def run_year(year):
 
     hit = 0
     for origin in ORIGINS:
-        #print("* Year {}:".format(year))
+        print("* Year {}:".format(year))
         upper_lim = bin_search(driver, year, origin)
-        #print("** Verify from 0 to {}".format(upper_lim))
+        print("** Verify from 0 to {}".format(upper_lim))
         for i in range(0, upper_lim):
             code = build_from_data(year, origin, i)
             processed = False
@@ -476,17 +543,25 @@ def run_year(year):
                         hit += 1
                         print("{} --- Done processing {}".format(year, code))
                     processed = True
-                except:
+                except Exception as e:
                     print("Error at {}, retrying...".format(year, code))
-                    pass
-            sys.stdout.flush()
+                    print(e)
+                    driver.switch_to.default_content()
+                    time.sleep(1)
+                    #print("Re-creating driver...")
+                    #driver.quit()
+                    #time.sleep(50)
+                    #driver = init_driver(tmp_folder, True)
+                    #pass
+
+            #sys.stdout.flush()
 
     print("Year {} had {} hits".format(year, hit))
-    sys.stdout.flush()
+    #sys.stdout.flush()
 
     time.sleep(5)
 
-    driver.close()
+    driver.quit()
 
 def main():
     if not os.path.exists(DOWNLOAD_FOLDER):
