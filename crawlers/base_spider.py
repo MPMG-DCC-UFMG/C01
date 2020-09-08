@@ -17,6 +17,9 @@ import parsing_html
 from lxml.html.clean import Cleaner
 import codecs
 
+from scrapy.spidermiddlewares.httperror import HttpError
+from twisted.internet.error import DNSLookupError
+from twisted.internet.error import TimeoutError
 
 class BaseSpider(scrapy.Spider):
     name = 'base_spider'
@@ -140,8 +143,8 @@ class BaseSpider(scrapy.Spider):
             )
 
             file_mode = "w+"
-            body = cleaner.clean_html(response.body.decode('utf-8-sig'))
-            encoding = "utf-8-sig"
+            body = cleaner.clean_html(
+                response.body.decode('utf-8', errors='ignore'))
 
         hsh = crawling_utils.hash(response.url)
 
@@ -162,7 +165,6 @@ class BaseSpider(scrapy.Spider):
         with open(
             file=f"{folder}/{hsh}.{file_format}",
             mode=file_mode,
-            encoding=encoding,
         ) as f:
             f.write(body)
 
@@ -172,3 +174,23 @@ class BaseSpider(scrapy.Spider):
         """Stores html and adds its description to file_description file."""
         self.store_raw(
             response, file_format="html", binary=False, save_at="raw_pages")
+
+    def errback_httpbin(self, failure):
+        # log all errback failures,
+        # in case you want to do something special for some errors,
+        # you may need the failure's type
+        self.logger.error(repr(failure))
+
+        if failure.check(HttpError):
+            # you can get the response
+            response = failure.value.response
+            self.logger.error('HttpError on %s', response.url)
+
+        elif failure.check(DNSLookupError):
+            # this is the original request
+            request = failure.request
+            self.logger.error('DNSLookupError on %s', request.url)
+
+        elif failure.check(TimeoutError):
+            request = failure.request
+            self.logger.error('TimeoutError on %s', request.url)
