@@ -10,7 +10,7 @@ from lxml import etree
 from formparser import utils
 
 
-class Extractor:
+class HTMLExtractor:
     """Extract and parse HTML for forms"""
 
     def __init__(self, url):
