@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 from .extractor import Extractor
 
+
 def main(filepath):
     """
     This function instantiates and calls the extraction.
@@ -34,6 +35,7 @@ def main(filepath):
         raise IsADirectoryError('o caminho {} é um diretório.'.format(path))
 
     Extractor(str(path)).extractor()
+
 
 if __name__ == '__main__':
     main()
