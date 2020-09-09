@@ -24,7 +24,7 @@ from twisted.internet.error import TimeoutError
 class BaseSpider(scrapy.Spider):
     name = 'base_spider'
 
-    def __init__(self, crawler_id, *a, **kw):
+    def __init__(self, crawler_id, output_path, *a, **kw):
         """
         Spider init operations.
         Create folders to store files and some config and log files.
@@ -33,9 +33,10 @@ class BaseSpider(scrapy.Spider):
         self.crawler_id = crawler_id
         self.stop_flag = False
 
-        self.data_folder = f"{CURR_FOLDER_FROM_ROOT}/data/{crawler_id}"
+        self.data_folder = f"{output_path}/data/{crawler_id}"
+        cofig_file_path = f"{output_path}/config/{crawler_id}.json"
+        self.flag_folder = f"{output_path}/flags/"
 
-        cofig_file_path = f"{CURR_FOLDER_FROM_ROOT}/config/{crawler_id}.json"
         with open(cofig_file_path, "r") as f:
             self.config = json.loads(f.read())
 
@@ -59,6 +60,7 @@ class BaseSpider(scrapy.Spider):
 
         self.get_format = lambda i: str(i).split("/")[1][:-1].split(";")[0]
 
+
     def start_requests(self):
         """
         Should be implemented by child class.
@@ -78,7 +80,7 @@ class BaseSpider(scrapy.Spider):
         Checks if the crawler was signaled to stop.
         Should be called at the begining of every parse operation.
         """
-        flag_file = f"{CURR_FOLDER_FROM_ROOT}/flags/{self.crawler_id}.json"
+        flag_file = f"{self.flag_folder}/{self.crawler_id}.json"
         with open(flag_file) as f:
             flags = json.loads(f.read())
 
@@ -89,7 +91,8 @@ class BaseSpider(scrapy.Spider):
 
         return self.stop_flag
 
-    def extract_and_store_csv(self, response, content):
+
+    def extract_and_store_csv(self, response, content, save_csv):
         """
         Try to extract a json/csv from response data.
         """
@@ -98,12 +101,17 @@ class BaseSpider(scrapy.Spider):
 
         success = False
 
+        output_filename = f"{self.data_folder}/csv/{hsh}"
+        if save_csv and (".csv" not in output_filename):
+            output_filename += ".csv"
+
         if b'text/html' in response.headers['Content-type']:
             try:
                 parsing_html.content.html_detect_content(
                     f"{self.data_folder}/raw_pages/{hsh}.{file_format}",
                     is_string=False,
-                    output_file=f"{self.data_folder}/csv/{hsh}",
+                    output_file=output_filename,
+                    to_csv=save_csv
                 )
                 success = True
 
@@ -122,6 +130,7 @@ class BaseSpider(scrapy.Spider):
         if success:
             with open(file_description_file, "a+") as f:
                 f.write(json.dumps(content) + '\n')
+
 
     def store_raw(
             self, response, file_format=None, binary=True, save_at="files"):
@@ -145,6 +154,7 @@ class BaseSpider(scrapy.Spider):
             file_mode = "w+"
             body = cleaner.clean_html(
                 response.body.decode('utf-8', errors='ignore'))
+            flag_html=True
 
         hsh = crawling_utils.hash(response.url)
 
@@ -167,13 +177,16 @@ class BaseSpider(scrapy.Spider):
             mode=file_mode,
         ) as f:
             f.write(body)
-
-        self.extract_and_store_csv(response, content)
+        if flag_html:
+            return content
+        else:
+            self.extract_and_store_csv(response, content, save_csv)
 
     def store_html(self, response):
         """Stores html and adds its description to file_description file."""
-        self.store_raw(
+        content = self.store_raw(
             response, file_format="html", binary=False, save_at="raw_pages")
+        return content
 
     def errback_httpbin(self, failure):
         # log all errback failures,

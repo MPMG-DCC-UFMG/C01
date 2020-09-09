@@ -1,5 +1,8 @@
 from django.db import models
 from django.utils import timezone
+from django.core.validators import RegexValidator
+
+
 
 
 class TimeStamped(models.Model):
@@ -23,7 +26,8 @@ class CrawlRequest(TimeStamped):
     source_name = models.CharField(max_length=200)
     base_url = models.CharField(max_length=200)
     obey_robots = models.BooleanField(blank=True, null=True)
-
+    pathValid = RegexValidator(r'^[0-9a-zA-Z\/\\-_]*$', 'This is not a valid path.')
+    output_path = models.CharField(max_length=2000, blank=True, null=True, validators=[pathValid])
 
     # ANTIBLOCK #####################################################################
     # Options for Delay
@@ -108,6 +112,10 @@ class CrawlRequest(TimeStamped):
     text_match_response = models.CharField(max_length=2000, blank=True, null=True)
     invert_text_match = models.BooleanField(blank=True, null=True)
 
+    # PARSING #########################################################################
+    save_csv = models.BooleanField(blank=True, null=True)
+
+
     @property
     def running(self):
         return self.instances.filter(running=True).exists()
@@ -118,6 +126,7 @@ class CrawlRequest(TimeStamped):
         if inst_query.exists():
             return inst_query.get()
         return None
+
 
     def __str__(self):
         return self.source_name

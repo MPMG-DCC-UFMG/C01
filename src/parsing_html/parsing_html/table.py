@@ -1,6 +1,7 @@
 import pandas as pd
 from bs4 import BeautifulSoup
 
+
 def html_to_df(html_file, match, flavor, header, index_col, skiprows, attrs,
                parse_dates, thousands, encoding, decimal, converters, na_values,
                keep_default_na, displayed_only):
@@ -33,7 +34,6 @@ def df_to_file(dfs, output_file, to_csv, index=False):
     """
     for i in range(0, len(dfs)):
         if to_csv:
-            output_file += '.csv'
             try:
                 dfs[i].to_csv(output_file, index=index, mode='a', quoting=1)
             except:

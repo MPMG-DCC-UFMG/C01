@@ -1,11 +1,14 @@
 from django import forms
 from .models import CrawlRequest
+from django.core.validators import RegexValidator
+
 
 
 class CrawlRequestForm(forms.ModelForm):
     class Meta:
         model = CrawlRequest
         """
+
         obey_robots = forms.BooleanField(required=False)
 
         # Options for antiblock
@@ -36,7 +39,7 @@ class CrawlRequestForm(forms.ModelForm):
         explore_links = forms.BooleanField(required=False)
         link_extractor_max_depth = forms.IntegerField(required=False)
         link_extractor_allow = forms.CharField(required=False)
-        # link_extractor_allow_domains = 
+        # link_extractor_allow_domains =
         link_extractor_allow_extensions = forms.CharField(required=False)
         formatable_url = forms.CharField(required=False)
         post_dictionary = forms.CharField(required=False)
@@ -46,6 +49,9 @@ class CrawlRequestForm(forms.ModelForm):
         text_match_response = forms.CharField(required=False)
         invert_text_match = forms.BooleanField(required=False)
         """
+
+        output_filename = forms.CharField(required=False)
+        save_csv = forms.BooleanField(required=False)
 
         fields = [
             'source_name',
@@ -83,10 +89,13 @@ class CrawlRequestForm(forms.ModelForm):
             'invert_http_status',
             'text_match_response',
             'invert_text_match',
+            'save_csv',
+            'output_path',
         ]
 
 
 class RawCrawlRequestForm(CrawlRequestForm):
+
     # BASIC INFO #########################################################################
     source_name = forms.CharField(label="Source Name", max_length=200,
         widget=forms.TextInput(attrs={'placeholder': 'Example'})
@@ -96,6 +105,12 @@ class RawCrawlRequestForm(CrawlRequestForm):
                                )
     obey_robots = forms.BooleanField(required=False, label="Obey robots.txt")
 
+    output_path = forms.CharField(
+        required=False, max_length=2000, label="Path to save the files",
+        widget=forms.TextInput(attrs={'placeholder': '/home/user/Documents'}),
+        validators=[CrawlRequest.pathValid]
+    )
+    
     # ANTIBLOCK ##########################################################################
     # Options for Delay
     antiblock_download_delay = forms.IntegerField(
@@ -260,3 +275,6 @@ class RawCrawlRequestForm(CrawlRequestForm):
         widget=forms.TextInput(attrs={'placeholder': 'Processo não encontrado'})
     )
     invert_text_match = forms.BooleanField(required=False, label="Opposite")
+
+    # PARSING #############################################################################
+    save_csv = forms.BooleanField(required=False, label="Save a CSV file")
