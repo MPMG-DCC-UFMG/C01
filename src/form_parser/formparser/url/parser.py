@@ -7,7 +7,7 @@ Extract form fields from URL and returns dict {'field_name': 'value', ...}
 import urllib.parse
 
 
-class Parser:
+class URLParser:
     """Parse URL for form parameters"""
 
     def __init__(self, url: str):

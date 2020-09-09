@@ -14,5 +14,6 @@ subprocess.run(["pip", "install", "."])
 print()
 
 print(f"Creating database...")
+subprocess.run(["python", "manage.py", "makemigrations"])
 subprocess.run(["python", "manage.py", "migrate"])
 print()
