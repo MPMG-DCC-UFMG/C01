@@ -7,7 +7,11 @@ import unittest
 import csv
 
 from pathlib import Path
+
+import tika
+tika.initVM()
 from tika import parser
+
 import pandas as pd
 
 from binary import Extractor
@@ -16,6 +20,11 @@ from binary import TextsExtractor
 from binary import TabulaExtractor
 from binary import between_parenthesis, final_sentence, is_title
 from binary import process_text, texts_to_columns, columns_to_dataframe
+
+# global variables for file paths in each class test.
+image =  str(Path.cwd().joinpath('tests/test_files/files/Trees.jpg'))
+edital = str(Path.cwd().joinpath('tests/test_files/files/Edital.pdf'))
+cotacao = str(Path.cwd().joinpath('tests/test_files/files/Cotacao.xlsx'))
 
 class TestExtractor(unittest.TestCase):
     """
@@ -29,7 +38,7 @@ class TestExtractor(unittest.TestCase):
 
         """
 
-        path = str(Path.cwd().joinpath('tests/test_files/Edital.pdf'))
+        path = str(Path.cwd().joinpath('tests/test_files/files/Edital.pdf'))
         Extractor(path)
 
     def test_guess_extractor(self):
@@ -38,8 +47,8 @@ class TestExtractor(unittest.TestCase):
 
         """
 
-        text = str(Path.cwd().joinpath('tests/test_files/Edital.pdf'))
-        excl = str(Path.cwd().joinpath('tests/test_files/Cotacao.xlsx'))
+        text = edital
+        excl = cotacao
 
         self.assertIsInstance(Extractor(text).guess_extractor(), TextsExtractor)
         self.assertIsInstance(Extractor(excl).guess_extractor(), ExcelExtractor)
@@ -50,8 +59,8 @@ class TestExtractor(unittest.TestCase):
 
         """
 
-        path1 = str(Path.cwd().joinpath('tests/test_files/Edital.pdf'))
-        path2 = str(Path.cwd().joinpath('tests/test_files/Cotacao.xlsx'))
+        path1 = edital
+        path2 = cotacao
 
         self.assertIsInstance(Extractor(path1).extra(), TabulaExtractor)
         self.assertEqual(Extractor(path2).extra(), None)
@@ -83,7 +92,7 @@ class TestTextProcessing(unittest.TestCase):
 
     """
 
-    with open(str(Path.cwd().joinpath('tests/test_files/lines'))) as example:
+    with open(str(Path.cwd().joinpath('tests/test_files/files/lines'))) as example:
         texts = example.read()
         lines = texts.splitlines()
 
@@ -92,12 +101,12 @@ class TestTextProcessing(unittest.TestCase):
         This method checks if the content is complete after the processing.
 
         """
-        path = str(Path.cwd().joinpath('tests/test_files/Edital.pdf'))
+        path = edital
         file = parser.from_file(path)
         split = file['content'].splitlines()
         safe = [i for i in split if i]
 
-        with open('tests/test_files/Edital/Edital.csv') as outcsv:
+        with open('tests/test_files/csv/Edital/Edital.csv') as outcsv:
             product = csv.reader(outcsv)
             content = []
             for row in product:
@@ -183,8 +192,8 @@ class TestBinaryExtractor(unittest.TestCase):
 
         """
 
-        text = str(Path.cwd().joinpath('tests/test_files/Edital.pdf'))
-        excl = str(Path.cwd().joinpath('tests/test_files/Cotacao.xlsx'))
+        text = edital
+        excl = cotacao
 
         self.assertIsInstance(TextsExtractor(text).read(), str)
         self.assertIsInstance(TabulaExtractor(text).read()[0], pd.DataFrame)
@@ -196,7 +205,7 @@ class TestBinaryExtractor(unittest.TestCase):
 
         """
 
-        text = str(Path.cwd().joinpath('tests/test_files/Edital.pdf'))
+        text = edital
         self.assertIsInstance(TextsExtractor(text).process(), pd.DataFrame)
 
     def test_output(self):
@@ -207,16 +216,16 @@ class TestBinaryExtractor(unittest.TestCase):
 
         """
 
-        text = str(Path.cwd().joinpath('tests/test_files/Edital.pdf'))
-        excl = str(Path.cwd().joinpath('tests/test_files/Cotacao.xlsx'))
+        text = edital
+        excl = cotacao
 
         TextsExtractor(text).output()
         ExcelExtractor(excl).output()
         TabulaExtractor(text).output()
 
-        assert Path('tests/test_files/Edital/Edital.csv').exists()
-        assert Path('tests/test_files/Cotacao/Original.csv').exists()
-        assert Path('tests/test_files/Edital/table0.csv').exists()
+        assert Path('tests/test_files/csv/Edital/Edital.csv').exists()
+        assert Path('tests/test_files/csv/Cotacao/Original.csv').exists()
+        assert Path('tests/test_files/csv/Edital/table0.csv').exists()
 
     def test_metadata(self):
         """
@@ -226,14 +235,14 @@ class TestBinaryExtractor(unittest.TestCase):
 
         """
 
-        text = str(Path.cwd().joinpath('tests/test_files/Edital.pdf'))
-        excl = str(Path.cwd().joinpath('tests/test_files/Cotacao.xlsx'))
+        text = edital
+        excl = cotacao
 
         TextsExtractor(text).metadata()
         ExcelExtractor(excl).metadata()
 
-        assert Path('tests/test_files/Edital/metadata.csv').exists()
-        assert Path('tests/test_files/Cotacao/metadata.csv').exists()
+        assert Path('tests/test_files/csv/Edital/metadata.csv').exists()
+        assert Path('tests/test_files/csv/Cotacao/metadata.csv').exists()
 
     # Exceptions
 
@@ -243,7 +252,7 @@ class TestBinaryExtractor(unittest.TestCase):
 
         """
 
-        path = str(Path.cwd().joinpath('tests/test_files/Trees.jpg'))
+        path = image
         self.assertRaises(TypeError, Extractor(path).extractor)
 
     def test_exception_tabula(self):
@@ -252,7 +261,7 @@ class TestBinaryExtractor(unittest.TestCase):
 
         """
 
-        path = str(Path.cwd().joinpath('tests/test_files/Trees.jpg'))
+        path = image
         self.assertRaises(TypeError, TabulaExtractor, path)
 
     def test_exception_excel(self):
@@ -261,7 +270,7 @@ class TestBinaryExtractor(unittest.TestCase):
 
         """
 
-        path = str(Path.cwd().joinpath('tests/test_files/Edital.pdf'))
+        path = edital
         self.assertRaises(TypeError, ExcelExtractor, path)
 
 if __name__ == '__main__':

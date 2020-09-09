@@ -6,7 +6,10 @@ This module extracts contents from binary files.
 from pathlib import Path
 import abc
 
+import tika
+tika.initVM()
 from tika import parser
+
 from .texts_processor import columns_to_dataframe
 
 class BinaryExtractor():
@@ -39,7 +42,7 @@ class BinaryExtractor():
         # create directory for outputs
         pure = Path(self.path)
         self.name = pure.stem
-        self.directory = pure.parent.joinpath(self.name)
+        self.directory = pure.parents[1].joinpath('csv/'+ self.name)
         Path.mkdir(self.directory, exist_ok=True)
 
         # file parsing
