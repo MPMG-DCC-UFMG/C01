@@ -3,6 +3,14 @@ This module tests the extractors and the processing of binary file contents.
 
 """
 
+from binary import process_text, texts_to_columns, columns_to_dataframe
+from binary import between_parenthesis, final_sentence, is_title
+from binary import TabulaExtractor
+from binary import TextsExtractor
+from binary import ExcelExtractor
+from binary import Extractor
+import pandas as pd
+from tika import parser
 import unittest
 import csv
 
@@ -10,21 +18,14 @@ from pathlib import Path
 
 import tika
 tika.initVM()
-from tika import parser
 
-import pandas as pd
 
-from binary import Extractor
-from binary import ExcelExtractor
-from binary import TextsExtractor
-from binary import TabulaExtractor
-from binary import between_parenthesis, final_sentence, is_title
-from binary import process_text, texts_to_columns, columns_to_dataframe
 
 # global variables for file paths in each class test.
-image =  str(Path.cwd().joinpath('tests/test_files/files/Trees.jpg'))
+image = str(Path.cwd().joinpath('tests/test_files/files/Trees.jpg'))
 edital = str(Path.cwd().joinpath('tests/test_files/files/Edital.pdf'))
 cotacao = str(Path.cwd().joinpath('tests/test_files/files/Cotacao.xlsx'))
+
 
 class TestExtractor(unittest.TestCase):
     """
@@ -272,6 +273,7 @@ class TestBinaryExtractor(unittest.TestCase):
 
         path = edital
         self.assertRaises(TypeError, ExcelExtractor, path)
+
 
 if __name__ == '__main__':
     unittest.main()
