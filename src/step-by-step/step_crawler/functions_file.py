@@ -5,6 +5,7 @@ import uuid
 from cssify import cssify
 from PIL import Image
 from captcha_solver.image_solver import ImageSolver
+from pyext import RuntimeModule
 
 
 def range_(stop):
@@ -107,35 +108,26 @@ async def nesse_elemento_esta_escrito(page, xpath, texto):
         return False
 
 
-async def break_captcha(page, xpath_input, xpath_output):
-    text = "Teste"
+async def break_image_captcha(page, xpath_input, xpath_output, preprocessing=None):
+    """This step downloads the captcha image then solves it and fills its respective form field
+
+        :param page : a pyppeteer page
+        :param xpath_input : XPATH of the captcha image element
+        :param xpath_output : XPATH of the form field for captcha text.
+        :param preprocessing (optional): The preprocessing function, to be applied
+                                         before character recognition. Defaults to None.
+        :returns text: the string representing the captcha characters
+    """
+
     element = (await page.xpath(xpath_input))[0]
-    await element.focus()
-    position = await element.boundingBox()
-    print(position)
-    image_data = await page.screenshot(path="image.jpg", fullPage=True)
+    image_data = await element.screenshot(path="image.jpg")
     image = Image.open(io.BytesIO(image_data))
-    image = image.crop((int(position["x"]), int(position["y"]), int(position["x"]) + int(position["width"]), int(position["y"]) + int(position["height"])))
-
-    image.show()
-
-    solver = ImageSolver()
+    if preprocessing:
+        module = RuntimeModule.from_string("preprocessing", preprocessing)
+        solver = ImageSolver(preprocessing=module.preprocessing)
+    else:
+        solver = ImageSolver()
     text = solver.solve(image=image)
-    text = text.replace("\n", "").replace(" ", "").replace("\t", "")
-    print(text)
-    # preenche o campo de texto com o resultado
-
-    # element = (await page.xpath(xpath_output))[0]
-    # position = await element.boundingBox()
-    # print(position)
-
-    # text = "Teste"
-    # await element.type(text, { "delay": 100 })
     type_function = f"(text) => {{ (document.querySelector('{cssify(xpath_output)}')).value = text; }}"
-    print(type_function)
     await page.evaluate(type_function, text)
-
-
-
-    # await page.keyboard.press('Enter')
     return text

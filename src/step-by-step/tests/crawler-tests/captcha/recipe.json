@@ -9,7 +9,7 @@
             "segs": 1
         }
       },{
-        "step": "break_captcha",
+        "step": "break_image_captcha",
         "depth": 1,
         "arguments": {
           "xpath_input": "'/html/body/div/div[2]/div[2]/div/div/form/div/fieldset/div/div/div/div[3]/img'",

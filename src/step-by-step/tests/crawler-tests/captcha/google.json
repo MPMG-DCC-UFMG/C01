@@ -11,11 +11,12 @@
         }
         },
         {
-        "step": "break_captcha",
+        "step": "break_image_captcha",
         "depth": 1,
         "arguments": {
           "xpath_input": "'/html/body/div/div[4]/span/center/div[1]/img'",
-          "xpath_output": "'/html/body/div/div[2]/form/div[2]/div[1]/div[1]/div/div[2]/input'"
+          "xpath_output": "'/html/body/div/div[2]/form/div[2]/div[1]/div[1]/div/div[2]/input'",
+          "preprocessing": "'def preprocessing(img):\\n\\treturn img'"
         }
       }
     ]
