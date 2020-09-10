@@ -10,9 +10,9 @@ sys.path.append("../../../")
 
 async def main():
     options = {
-                'args': ["--start-maximized", '--no-sandbox'],
-                'dumpio':True,
-              }
+        'args': ["--start-maximized", '--no-sandbox'],
+        'dumpio': True,
+    }
     browser = await launch(options)
     page = await browser.newPage()
     tests = [('https://eproc.trf2.jus.br/eproc/externo_controlador.php?acao=advogado_cadastrar', 'recipe.json'),
