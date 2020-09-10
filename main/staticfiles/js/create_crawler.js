@@ -131,6 +131,17 @@ function checkCaptcha() {
 function checkCrawlerType() {
 }
 
+function runValidations() {
+    /*
+    Run required validators (needed when editing a filled form)
+    */
+    detailBaseUrl(false);
+
+    // Manually trigger onchange events
+    $(".templated-url-response-handling-step > .form-group select").change();
+    $(".templated-url-param-step > .form-group select").change();
+}
+
 $(document).ready(function () {
     setNavigation();
     runValidations();
@@ -203,25 +214,9 @@ function setNumParamForms(num) {
     while(num--) {
         add_btn.click()
     }
-
-    /*
-    let diff = num - num_forms
-    if (diff > 0) {
-        // add extra forms
-        while (diff--) {
-            add_btn.click()
-        }
-    } else if (diff < 0) {
-        // remove unnecessary forms
-        while (diff++) {
-            let param_forms = $('.templated-url-param-step')
-            $(param_forms[param_forms.length-1]).find('.remove-form-button')
-                                                .click()
-        }
-    }*/
 }
 
-function detailBaseUrl() {
+function detailBaseUrl(update_param_list=true) {
     const base_url = $("#id_base_url").val();
 
     // Check if a Templated URL is being used (if there is at least one
@@ -230,12 +225,12 @@ function detailBaseUrl() {
         $("#templated-url-item").removeClass("disabled");
         // count number of placeholders
         let num_placeholders = (base_url.match(/\{\}/g) || []).length;
-        setNumParamForms(num_placeholders)
+        if (update_param_list) setNumParamForms(num_placeholders)
     } else {
         $("#templated-url-item").addClass("disabled");
 
         // remove all parameter forms
-        setNumParamForms(0)
+        if (update_param_list) setNumParamForms(0)
     }
 }
 
@@ -320,15 +315,6 @@ function detailCrawlerType() {
 
 function autothrottleEnabled() {
     setHiddenState("autothrottle-options-div", !getCheckboxState("id_antiblock_autothrottle_enabled"));
-}
-
-// Run required validators (needed when editing a filled form)
-function runValidations() {
-    detailBaseUrl();
-
-    // Manually trigger onchange events
-    $(".templated-url-response-handling-step > .form-group select").change();
-    $(".templated-url-param > .form-group select").change();
 }
 
 // TODO add new fields to validation

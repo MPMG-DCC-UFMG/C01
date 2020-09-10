@@ -9,6 +9,9 @@
     <div class="row">
         <div class="col md-6">
             <div class="templated-url-param-step bordered-bottom-option">
+                {% for hidden_field in param_subform.hidden_fields %}
+                    {{ hidden_field }}
+                {% endfor %}
                 {% if param_subform.instance.pk %}{{ form.DELETE }}{% endif %}
                 <!-- Parameter type-->
                 {{ param_subform.parameter_type | as_crispy_field }}
@@ -48,6 +51,9 @@
     <div class="row">
         <div class="col md-6">
             <div class="templated-url-response-handling-step bordered-bottom-option">
+                {% for hidden_field in subform.hidden_fields %}
+                    {{ hidden_field }}
+                {% endfor %}
                 {% if param_subform.instance.pk %}{{ form.DELETE }}{% endif %}
                 {{ subform.handler_type | as_crispy_field }}
                 <div class="templated-url-response-params" data-option-type="text" hidden>

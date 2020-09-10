@@ -118,6 +118,11 @@ def edit_crawler(request, id):
     response_formset = ResponseHandlerFormSet(request.POST or None,
         instance=crawler, prefix='responses')
 
+    if (len(parameter_formset) > 1):
+        # we have at least one parameter to use as a base, no need to add an
+        # empty one
+        parameter_formset.extra=0
+
     if request.method == 'POST' and form.is_valid() and \
        parameter_formset.is_valid() and response_formset.is_valid():
             form.save()

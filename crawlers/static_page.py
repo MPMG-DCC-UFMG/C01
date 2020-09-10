@@ -27,8 +27,8 @@ class StaticPageSpider(BaseSpider):
                 method=req['method'],
                 body=json.dumps(req['body']),
                 callback=self.parse,
-                meta={"referer": "start_requests"}),
-                errback=self.errback_httpbin
+                meta={"referer": "start_requests"},
+                errback=self.errback_httpbin)
 
     def convert_allow_extesions(self):
         """Converts 'allow_extesions' configuration into 'deny_extesions'."""
