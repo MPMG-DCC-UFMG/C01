@@ -7,6 +7,7 @@ import filetype
 
 from xlrd import open_workbook, XLRDError
 
+from .amm_extractor import AMMExtractor
 from .excel_extractor import ExcelExtractor
 from .texts_extractor import TextsExtractor
 from .tabula_extractor import TabulaExtractor
