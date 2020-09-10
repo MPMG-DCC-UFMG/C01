@@ -20,9 +20,9 @@ import tika
 tika.initVM()
 
 # global variables for file paths in each class test.
-image = str(Path.cwd().joinpath('tests/test_files/files/Trees.jpg'))
-edital = str(Path.cwd().joinpath('tests/test_files/files/Edital.pdf'))
-cotacao = str(Path.cwd().joinpath('tests/test_files/files/Cotacao.xlsx'))
+image = str(Path.cwd().joinpath('test_binary/test_files/files/Trees.jpg'))
+edital = str(Path.cwd().joinpath('test_binary/test_files/files/Edital.pdf'))
+cotacao = str(Path.cwd().joinpath('test_binary/test_files/files/Cotacao.xlsx'))
 
 
 class TestExtractor(unittest.TestCase):
@@ -81,7 +81,7 @@ class TestExtractor(unittest.TestCase):
 
         """
 
-        path = str(Path.cwd().joinpath('tests/test_files/'))
+        path = str(Path.cwd().joinpath('test_binary/test_files/'))
         self.assertRaises(IsADirectoryError, Extractor, path)
 
 
@@ -91,7 +91,7 @@ class TestTextProcessing(unittest.TestCase):
 
     """
 
-    with open(str(Path.cwd().joinpath('tests/test_files/files/lines'))) as example:
+    with open(str(Path.cwd().joinpath('test_binary/test_files/files/lines'))) as example:
         texts = example.read()
         lines = texts.splitlines()
 
@@ -105,7 +105,7 @@ class TestTextProcessing(unittest.TestCase):
         split = file['content'].splitlines()
         safe = [i for i in split if i]
 
-        with open('tests/test_files/csv/Edital/Edital.csv') as outcsv:
+        with open('test_binary/test_files/csv/Edital/Edital.csv') as outcsv:
             product = csv.reader(outcsv)
             content = []
             for row in product:
@@ -222,9 +222,9 @@ class TestBinaryExtractor(unittest.TestCase):
         ExcelExtractor(excl).output()
         TabulaExtractor(text).output()
 
-        assert Path('tests/test_files/csv/Edital/Edital.csv').exists()
-        assert Path('tests/test_files/csv/Cotacao/Original.csv').exists()
-        assert Path('tests/test_files/csv/Edital/table0.csv').exists()
+        assert Path('test_binary/test_files/csv/Edital/Edital.csv').exists()
+        assert Path('test_binary/test_files/csv/Cotacao/Original.csv').exists()
+        assert Path('test_binary/test_files/csv/Edital/table0.csv').exists()
 
     def test_metadata(self):
         """
@@ -240,8 +240,8 @@ class TestBinaryExtractor(unittest.TestCase):
         TextsExtractor(text).metadata()
         ExcelExtractor(excl).metadata()
 
-        assert Path('tests/test_files/csv/Edital/metadata.csv').exists()
-        assert Path('tests/test_files/csv/Cotacao/metadata.csv').exists()
+        assert Path('test_binary/test_files/csv/Edital/metadata.csv').exists()
+        assert Path('test_binary/test_files/csv/Cotacao/metadata.csv').exists()
 
     # Exceptions
 

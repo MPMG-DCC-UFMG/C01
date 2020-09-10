@@ -29,7 +29,8 @@ where path is the **absolute path** from the root of your file system.
 **Example:** `'/home/user/files/text.pdf'`.
 
 ### Executing the unit tests ###
-`python -m tests.test_binary`
+In tests directory, run:
+`python -m unittest test_binary.test_binary`
 
 
 The module will guess the type of your file and use the best extracting modules for the content.
