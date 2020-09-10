@@ -75,13 +75,7 @@ def get_crawler_base_settings(config):
 def crawler_process(crawler_id, config):
     """Starts crawling."""
 
-    if config["output_path"] is None:
-        output_path = CURR_FOLDER_FROM_ROOT
-    else:
-        if config["output_path"][-1] == "/":
-            output_path = config["output_path"][:-1]
-        else:
-            output_path = config["output_path"]
+    output_path = config["output_path"]
 
     # Redirects process logs to files
     sys.stdout = open(f"{output_path}/log/{crawler_id}.out", "a", buffering=1)
@@ -120,14 +114,8 @@ def gen_key():
 
 def start_crawler(config):
     """Create and starts a crawler as a new process."""
-    if config["output_path"] is None:
-        output_path = CURR_FOLDER_FROM_ROOT
-    else:
-        if config["output_path"][-1] == "/":
-            output_path = config["output_path"][:-1]
-        else:
-            output_path = config["output_path"]
 
+    output_path = config["output_path"]
     create_folders(output_path=output_path)
 
     crawler_id = gen_key()
@@ -150,14 +138,7 @@ def start_crawler(config):
 
 def stop_crawler(crawler_id, config):
     """Sets the flags of a crawler to stop."""
-    if config["output_path"] is None:
-        output_path = CURR_FOLDER_FROM_ROOT
-    else:
-        if config["output_path"][-1] == "/":
-            output_path = config["output_path"][:-1]
-        else:
-            output_path = config["output_path"]
-
+    output_path = config["output_path"]
     with open(f"{output_path}/flags/{crawler_id}.json", "w+") as f:
         f.write(json.dumps({"stop": True}))
 

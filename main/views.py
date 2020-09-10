@@ -37,6 +37,15 @@ def process_run_crawl(crawler_id):
 
         del data['creation_date']
         del data['last_modified']
+        
+        if data["output_path"] is None:
+            data["output_path"] = CURR_FOLDER_FROM_ROOT
+        else:
+            if data["output_path"][-1] == "/":
+                data["output_path"] = data["output_path"][:-1]
+            else:
+                data["output_path"] = data["output_path"]
+
         instance_id = crawler_manager.start_crawler(data)
 
         instance = create_instance(data['id'], instance_id)
@@ -161,14 +170,7 @@ def tail_log_file(request, instance_id):
     crawler_id = CrawlerInstance.objects.filter(instance_id=instance_id).values()[0]["crawler_id_id"]
 
     config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
-    if config["output_path"] is None:
-        output_path = CURR_FOLDER_FROM_ROOT
-    else:
-        if config["output_path"][-1] == "/":
-            output_path = config["output_path"][:-1]
-        else:
-            output_path = config["output_path"]
-
+    output_path = config["output_path"]
 
     out = subprocess.run(["tail", f"{output_path}/log/{instance_id}.out", "-n", "10"], stdout=subprocess.PIPE).stdout
     err = subprocess.run(["tail", f"{output_path}/log/{instance_id}.err", "-n", "10"], stdout=subprocess.PIPE).stdout

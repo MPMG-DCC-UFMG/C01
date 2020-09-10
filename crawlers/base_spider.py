@@ -33,12 +33,15 @@ class BaseSpider(scrapy.Spider):
         self.crawler_id = crawler_id
         self.stop_flag = False
 
+
         self.data_folder = f"{output_path}/data/{crawler_id}"
         cofig_file_path = f"{output_path}/config/{crawler_id}.json"
         self.flag_folder = f"{output_path}/flags/"
 
         with open(cofig_file_path, "r") as f:
             self.config = json.loads(f.read())
+
+        print('config output: ', self.config["output_path"])
 
         folders = [
             f"{self.data_folder}",
@@ -133,7 +136,7 @@ class BaseSpider(scrapy.Spider):
 
 
     def store_raw(
-            self, response, file_format=None, binary=True, save_at="files"):
+            self, response, to_csv, file_format=None, binary=True, save_at="files"):
         """Save response content."""
         if file_format is None:
             file_format = self.get_format(
@@ -154,7 +157,6 @@ class BaseSpider(scrapy.Spider):
             file_mode = "w+"
             body = cleaner.clean_html(
                 response.body.decode('utf-8', errors='ignore'))
-            flag_html=True
 
         hsh = crawling_utils.hash(response.url)
 
@@ -177,16 +179,14 @@ class BaseSpider(scrapy.Spider):
             mode=file_mode,
         ) as f:
             f.write(body)
-        if flag_html:
-            return content
-        else:
-            self.extract_and_store_csv(response, content, save_csv)
 
-    def store_html(self, response):
+        self.extract_and_store_csv(response, content, to_csv)
+
+    def store_html(self, response, to_csv=False):
         """Stores html and adds its description to file_description file."""
-        content = self.store_raw(
-            response, file_format="html", binary=False, save_at="raw_pages")
-        return content
+        self.store_raw(
+            response, to_csv, file_format="html", binary=False, save_at="raw_pages")
+        
 
     def errback_httpbin(self, failure):
         # log all errback failures,
