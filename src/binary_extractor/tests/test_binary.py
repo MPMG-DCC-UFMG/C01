@@ -3,6 +3,7 @@ This module tests the extractors and the processing of binary file contents.
 
 """
 
+from tika import parser
 from binary import process_text, texts_to_columns, columns_to_dataframe
 from binary import between_parenthesis, final_sentence, is_title
 from binary import TabulaExtractor
@@ -17,7 +18,6 @@ from pathlib import Path
 
 import tika
 tika.initVM()
-from tika import parser
 
 # global variables for file paths in each class test.
 image = str(Path.cwd().joinpath('tests/test_files/files/Trees.jpg'))

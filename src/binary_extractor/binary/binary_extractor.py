@@ -3,13 +3,14 @@ This module extracts contents from binary files.
 
 """
 
+from tika import parser
 from .texts_processor import columns_to_dataframe
 from pathlib import Path
 import abc
 
 import tika
 tika.initVM()
-from tika import parser
+
 
 class BinaryExtractor():
     """
