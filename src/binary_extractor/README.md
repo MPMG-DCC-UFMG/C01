@@ -30,7 +30,7 @@ where path is the **absolute path** from the root of your file system.
 
 ### Executing the unit tests ###
 In tests directory, run:
-`python -m unittest test_binary.test_binary`
+`python -m unittest tests.test_binary.test_binary`
 
 
 The module will guess the type of your file and use the best extracting modules for the content.
