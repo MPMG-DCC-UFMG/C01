@@ -4,14 +4,12 @@ This module extracts contents from binary files.
 """
 
 from .texts_processor import columns_to_dataframe
-from tika import parser
 from pathlib import Path
 import abc
 
 import tika
 tika.initVM()
-
-
+from tika import parser
 
 class BinaryExtractor():
     """
@@ -50,7 +48,7 @@ class BinaryExtractor():
         try:
             self.open = parser.from_file(self.path)
         except:
-            raise TypeError('O arquivo não pôde ser extraído.')
+            raise TypeError('The file content could not be extracted.')
 
     @abc.abstractmethod
     def read(self):

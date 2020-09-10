@@ -10,7 +10,6 @@ from binary import TextsExtractor
 from binary import ExcelExtractor
 from binary import Extractor
 import pandas as pd
-from tika import parser
 import unittest
 import csv
 
@@ -18,8 +17,7 @@ from pathlib import Path
 
 import tika
 tika.initVM()
-
-
+from tika import parser
 
 # global variables for file paths in each class test.
 image = str(Path.cwd().joinpath('tests/test_files/files/Trees.jpg'))
@@ -39,7 +37,7 @@ class TestExtractor(unittest.TestCase):
 
         """
 
-        path = str(Path.cwd().joinpath('tests/test_files/files/Edital.pdf'))
+        path = edital
         Extractor(path)
 
     def test_guess_extractor(self):

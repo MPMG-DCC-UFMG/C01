@@ -9,7 +9,7 @@ from pathlib import Path
 from .extractor import Extractor
 
 
-def main(filepath):
+def main():
     """
     This function instantiates and calls the extraction.
 
@@ -25,7 +25,7 @@ def main(filepath):
 
     """
 
-    #filepath = sys.argv[1]
+    filepath = sys.argv[1]
 
     current = Path(__file__).absolute()
     basepath = current.parents[len(current.parents) - 1]
