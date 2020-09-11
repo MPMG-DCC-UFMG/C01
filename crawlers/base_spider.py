@@ -13,6 +13,7 @@ import crawling_utils
 
 from crawlers.constants import *
 import parsing_html
+import binary
 
 from lxml.html.clean import Cleaner
 import codecs
@@ -29,9 +30,11 @@ class BaseSpider(scrapy.Spider):
         Spider init operations.
         Create folders to store files and some config and log files.
         """
+
         print("At BaseSpider.init")
         self.crawler_id = crawler_id
         self.stop_flag = False
+
 
 
         self.data_folder = f"{output_path}/data/{crawler_id}"
@@ -83,7 +86,9 @@ class BaseSpider(scrapy.Spider):
         Checks if the crawler was signaled to stop.
         Should be called at the begining of every parse operation.
         """
+
         flag_file = f"{self.flag_folder}/{self.crawler_id}.json"
+
         with open(flag_file) as f:
             flags = json.loads(f.read())
 
@@ -99,6 +104,7 @@ class BaseSpider(scrapy.Spider):
         """
         Try to extract a json/csv from response data.
         """
+
         file_format = self.get_format(response.headers['Content-type'])
         hsh = crawling_utils.hash(response.url)
 
@@ -124,12 +130,23 @@ class BaseSpider(scrapy.Spider):
                     f"message: {str(type(e))}-{e}"
                 )
         else:
-            # TODO call binary_extractor
-            pass
+            new_file = f"{self.data_folder}/files/{hsh}.{file_format}"
+
+            try:
+                out = binary.extractor.Extractor(new_file)
+                out.extractor()
+                success = True
+
+            except Exception as e:
+                print(
+                    f"Could not extract csv files from {hsh}.{file_format} -",
+                    f"message: {str(type(e))}-{e}"
+                )
 
         content["type"] = "csv"
         file_description_file = f"{self.data_folder}/csv/" \
             "file_description.jsonl"
+
         if success:
             with open(file_description_file, "a+") as f:
                 f.write(json.dumps(content) + '\n')
@@ -138,10 +155,10 @@ class BaseSpider(scrapy.Spider):
     def store_raw(
             self, response, to_csv, file_format=None, binary=True, save_at="files"):
         """Save response content."""
+
         if file_format is None:
-            file_format = self.get_format(
-                response.headers['Content-type']
-            )
+            file_format = self.get_format(response.headers['Content-type'])
+
         print(f'Saving file from {response.url}, file_format: {file_format}')
 
         if binary:
