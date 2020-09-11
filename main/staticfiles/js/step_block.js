@@ -107,7 +107,7 @@ function init_block(step_list, depth){
 
 function init_optional_params_button(step){
     
-    block = find_parent_of_type(this, "block")
+    block = find_parent_with_attr_worth(this, "block")
 
     block.new_parameter_button_box = document.createElement("DIV")
     block.new_parameter_button = document.createElement("BUTTON")
@@ -140,7 +140,7 @@ function init_optional_params_button(step){
     dropdown_menu.innerHTML = get_this_texts_inside_each_tag(optional_params, '<a class="dropdown-item" style="cursor:pointer">')
     for(child of dropdown_menu.children){
         child.onclick = function(){
-            block = find_parent_of_type(this, "block")
+            block = find_parent_with_attr_worth(this, "block")
             block.add_param(this.innerText, true)
             hide(this)
         }
@@ -151,7 +151,7 @@ function init_optional_params_button(step){
 }
 
 function add_param(param_name, optional_param = false){
-    block = find_parent_of_type(this, "block")
+    block = find_parent_with_attr_worth(this, "block")
     last_line = block.lines.length-1
     if(block.lines[last_line].row.full){
         block.add_line()
@@ -169,7 +169,7 @@ function add_param(param_name, optional_param = false){
     if(optional_param){
         remove_button = document.createElement("A")
         remove_img = document.createElement("IMG")
-        remove_img.src = "/static/icons/x.svg"
+        remove_img.src = "/static/icons/black-x.svg"
         remove_button.appendChild(remove_img)
         remove_button.style.position = "absolute"
         remove_button.style.top = "-.75em"
@@ -177,15 +177,15 @@ function add_param(param_name, optional_param = false){
         remove_button.style.cursor = "pointer"
         hide(remove_button)
         remove_button.onclick = function(){
-            block = find_parent_of_type(this, "block")
-            line = find_parent_of_type(this, "line")
+            block = find_parent_with_attr_worth(this, "block")
+            line = find_parent_with_attr_worth(this, "line")
             line.row.full = false
             for(param of block.new_parameter_button.dropdown_menu.children){
                 if(param.innerText == this.parentElement.children[0].placeholder){
                     show(param)
                 }
             }
-            line = find_parent_of_type(this, "line")
+            line = find_parent_with_attr_worth(this, "line")
             
             this.parentElement.remove()
             
@@ -217,7 +217,7 @@ function add_param(param_name, optional_param = false){
 //---------------- lines manager methods ------------------------------
 
 function add_line(){
-    block = find_parent_of_type(this, "block")
+    block = find_parent_with_attr_worth(this, "block")
     new_line = document.createElement("DIV")
     new_line.className = "card-body row step-config"
     new_line.col = document.createElement("DIV")
@@ -256,7 +256,7 @@ function delete_lines(m, n=null){
 //---------------- refresh methods -----------------------------------
 
 function refresh_iterable(){
-    block = find_parent_of_type(this, "block")
+    block = find_parent_with_attr_worth(this, "block")
     block.iterable_step = get_step_info(this.value, block.step_list)
 
     block.delete_lines(1, block.lines.length)
@@ -274,7 +274,7 @@ function refresh_iterable(){
 }
 
 function refresh_step(){
-    block = find_parent_of_type(this, "block")
+    block = find_parent_with_attr_worth(this, "block")
     block.step = get_step_info(this.value, block.step_list)
     block.params = []
 
@@ -301,7 +301,7 @@ function refresh_step(){
 //---------------- "turn to" methods ---------------------------------
 
 function turn_to_for_step(){
-    block = find_parent_of_type(this, "block")
+    block = find_parent_with_attr_worth(this, "block")
     block.delete_lines(block.lines.length)
     block.add_line()
 
@@ -325,7 +325,7 @@ function turn_to_for_step(){
     iterable_select_box.className = "step-config-select"
     iterable_select = document.createElement("select")
     iterable_select.className = "form-control select-step"
-    iterable_select.innerHTML = get_this_texts_inside_each_tag(get_step_names(block.step_list), "<option>") + `<option>objeto</option>`
+    iterable_select.innerHTML = get_this_texts_inside_each_tag(get_step_names(block.step_list), "<option>")
     iterable_select_box.appendChild(iterable_select)
     block.iterable_select = iterable_select
 
@@ -339,7 +339,7 @@ function turn_to_for_step(){
 }
 
 function turn_to_pagination_step(){
-    block = find_parent_of_type(this, "block")
+    block = find_parent_with_attr_worth(this, "block")
     block.delete_lines(block.lines.length)
     block.add_line()
     block.add_param("buttons ambiguous xpath")
@@ -351,7 +351,7 @@ function turn_to_pagination_step(){
 //---------------- block menu methods ------------------------------
 
 function hide_show_params(){
-    block = find_parent_of_type(this, "block")
+    block = find_parent_with_attr_worth(this, "block")
     if (block.params_visibility){
         block.params_visibility = false
         for(var i = 1; i < block.lines.length; i++){
@@ -368,15 +368,15 @@ function hide_show_params(){
 }
 
 function add_block_bellow(){
-    step_board = find_parent_of_type(this, "step_board")
-    block = find_parent_of_type(this, "block")
+    step_board = find_parent_with_attr_worth(this, "step_board")
+    block = find_parent_with_attr_worth(this, "block")
     i=0
     while(block != step_board.children[i]){i++}
     step_board.add_block(step_list, i+1)
 }
 
 function unindent_step(){
-    block = find_parent_of_type(this, "block")
+    block = find_parent_with_attr_worth(this, "block")
     if(block.depth > 1){
         block.depth-=1
         block.parentElement.current_depth -= 1
@@ -385,14 +385,14 @@ function unindent_step(){
 }
 
 function indent_step(){
-    block = find_parent_of_type(this, "block")
+    block = find_parent_with_attr_worth(this, "block")
     block.depth+=1
     block.parentElement.current_depth += 1
     block.style.left = (block.depth*2-2) +"em"
 }
 
 function move_up(){
-    block = find_parent_of_type(this, "block")
+    block = find_parent_with_attr_worth(this, "block")
     index = get_index_in_parent(block)
     parent = block.parentElement
     if(index>0){
@@ -401,7 +401,7 @@ function move_up(){
 }
 
 function move_down(){
-    block = find_parent_of_type(this, "block")
+    block = find_parent_with_attr_worth(this, "block")
     index = get_index_in_parent(block)
     parent = block.parentElement
     if(index<parent.children.length-1){
@@ -410,7 +410,7 @@ function move_down(){
 }
 
 function delete_step(){
-    find_parent_of_type(this, "block").remove()
+    find_parent_with_attr_worth(this, "block").remove()
 }
 
 

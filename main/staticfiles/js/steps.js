@@ -1,22 +1,17 @@
-
-
 function load_steps(outside_element, output_element, json_path="/static/json/step_signatures.json"){
     var xmlhttp = new XMLHttpRequest();
     
     xmlhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
-        step_list = JSON.parse(this.responseText)
-        step_list = step_list.concat(JSON.parse('{"name":"for_each", "mandatory_params":[], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name":"for_each_page_in", "mandatory_params":[], "optional_params":{}}'))
-        for(step of step_list){
-            step.name = step.name.replace(/_/g, " ")
-            for(var param of step.mandatory_params){
-                param = param.replace(/_/g, " ")
+        step_list = JSON.parse(this.response, function (key, value){
+            if (typeof value == "string"){
+                return value.replace(/_/g, " ")
             }
-            for(var param in Object.keys(step.optional_params)) {
-                step.optional_params[param] = param.replace(/_/g, " ")
-            }
-        }
+            return value;
+        })
+        step_list = step_list.concat(JSON.parse('{"name":"object", "mandatory params":["ex: [1,2,3]"], "optional params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name":"for each", "mandatory params":[], "optional params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name":"for each page in", "mandatory params":[], "optional params":{}}'))
         init_steps_creation_interface(outside_element, output_element, step_list)
       }
     };
@@ -82,7 +77,7 @@ function init_step_board(step_list){
     step_board.style.marginTop = "1em"
     step_board.style.marginBottom = "1em"
     step_board.add_block = function(step_list, index = -1){
-        steps_creation_interface = find_parent_of_type(this, "steps_creation_interface")
+        steps_creation_interface = find_parent_with_attr_worth(this, "steps_creation_interface")
         step_board = steps_creation_interface.step_board
         step_block = init_block(step_list, step_board.get_last_depth())
         if(index != -1){
@@ -96,8 +91,8 @@ function init_step_board(step_list){
 
 
 function get_last_depth(){
-    if(find_parent_of_type(this, "step_board")){
-        step_board = find_parent_of_type(this, "step_board")
+    if(find_parent_with_attr_worth(this, "step_board")){
+        step_board = find_parent_with_attr_worth(this, "step_board")
         if(step_board.children.length>0){
             last_step = step_board.children[step_board.children.length-1]
             if(last_step.step.name == "for each" || last_step.step.name == "for each page in"){
@@ -121,7 +116,6 @@ function build_json(step_board, output_element){
     }
 
     stack = [root_step]
-
     for(step_element of step_board.children){
         indent = step_element.depth - stack[stack.length-1].depth
 
@@ -156,18 +150,13 @@ function get_step_json_format(block){
     if(param_name == "for each"){
         step_dict.iterator = block.iterator_input.value
         step_dict.children = []
-        if(block.iterable_select.value == "objeto"){
-            step_dict.iterable = {objeto:{}}
-            step_dict.iterable.objeto = block.params[0].children[0].value
-        }else{
-            step_dict.iterable = {call:{}}
-            step_dict.iterable.call = {
-                step: block.iterable_select.value,
-                arguments:{}
-            }
-            for(param of block.params){
-                step_dict.iterable.call.arguments[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
-            }
+        step_dict.iterable = {call:{}}
+        step_dict.iterable.call = {
+            step: block.iterable_select.value,
+            arguments:{}
+        }
+        for(param of block.params){
+            step_dict.iterable.call.arguments[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
         }
     }else if(param_name == "for each page in"){
         step_dict.children = []
@@ -185,6 +174,30 @@ function get_step_json_format(block){
 
 //-------------- util -------------------------------
 
+
+function get_params_element_list(step_name, step_list){
+    if(step_name == "objeto"){
+        object_div = document.createElement("DIV")
+        object_div.className = "col-sm"
+        object_div.innerHTML = `<input placeholder="objeto, ex: [1,2,3]" class="row form-control">`
+        
+        object_div
+    }else{
+        var step = get_step_info(step_name, step_list)
+        var param_element_list = []
+
+        for(param of step.mandatory_params){
+            var parameter = document.createElement("DIV")
+            parameter.className = "col-sm"
+            parameter.innerHTML = `<input placeholder="` + String(param) + `" class="row form-control">`
+            parameter.children[0].placeholder = param
+            param_element_list.push(parameter)
+        }
+        return param_element_list
+    }
+}
+
+
 function get_this_texts_inside_each_tag(string_list, tag){
     html_step_options=""
     for (var i = 0; i < string_list.length; i++) {
@@ -199,30 +212,6 @@ function get_step_names(step_list){
         step_names.push(step.name)
     }
     return step_names
-}
-
-function get_params_element_list(step_name, step_list){
-    if(step_name == "objeto"){
-        object_div = document.createElement("DIV")
-        object_div.className = "col-sm"
-        object_div.innerHTML = `<input placeholder="objeto, ex: [1,2,3]" class="row form-control">`
-        
-        return [object_div]
-    }else{
-        'use strict'
-        var step = get_step_info(step_name, step_list)
-        var param_element_list = []
-        //alert(step.mandatory_params)
-
-        for(param of step.mandatory_params){
-            var parameter = document.createElement("DIV")
-            parameter.className = "col-sm"
-            parameter.innerHTML = `<input placeholder="` + String(param) + `" class="row form-control">`
-            parameter.children[0].placeholder = param
-            param_element_list.push(parameter)
-        }
-        return param_element_list
-    }
 }
 
 function get_index_in_parent(element){
@@ -251,7 +240,7 @@ function show(element){
     element.style.display = "block";
 }
 
-function find_parent_of_type(element, value, attr = "type"){
+function find_parent_with_attr_worth(element, value, attr = "type"){
     if(element[attr] && element[attr] == value){
         return element
     }else {
@@ -259,7 +248,7 @@ function find_parent_of_type(element, value, attr = "type"){
             console.log("This element isn't inside an element with attribute \""+ attr + "\" storing the value " + value)
             return false
         }else{
-            return find_parent_of_type(element.parentElement, value)
+            return find_parent_with_attr_worth(element.parentElement, value)
         }
     }
 }

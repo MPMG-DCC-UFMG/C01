@@ -245,6 +245,7 @@ function detailCrawlerType() {
     if(crawler_type == "form_page"){
         outside_element = document.getElementById("form_page");
         if(outside_element.type != "root" ){
+            
             steps_output_element = outside_element.children[0].children[1].children[0]
             load_steps(outside_element, steps_output_element);
         }
