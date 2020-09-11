@@ -37,7 +37,6 @@ function init_steps_creation_interface(outside_element, output_element, step_lis
     <input type="text" id="path_input_container">*/
     steps_creation_interface = document.createElement("div")
     steps_creation_interface.type= "steps_creation_interface"
-    steps_creation_interface.id = "steps_creation_interface"
     
     step_controler = document.createElement("div")
     step_controler.type = "step_controler"

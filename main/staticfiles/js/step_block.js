@@ -29,18 +29,44 @@ function init_block(step_list, depth){
     block.controler_box = block.children[1]
     block.controler = block.controler_box.children[0]
 
+    //Show parameter button
+    block.params_visibility = true
+    block.show_params_button_box = document.createElement("div")
+    block.show_params_button = document.createElement("img")
+    block.show_params_button_box.onclick = hide_show_params
+    block.show_params_button_box.style.cursor = "pointer";
+    block.show_params_button_box.style.padding = ".2em"
+    block.show_params_button.src = "/static/icons/expand-down.png"
+    block.show_params_button.style.display = "block";
+    block.show_params_button.style.margin = "auto";
+    block.appendChild(block.show_params_button_box)
+    block.show_params_button_box.appendChild(block.show_params_button)
+    block.show_params_button_box.onmouseover = function(){this.style.backgroundColor = "rgba(0,0,0,0.05)"}
+    block.show_params_button_box.onmouseout = function(){this.style.backgroundColor = ""}
+    block.hide_show_params = hide_show_params
+    block.hide_show_params()
+
+
+
     //Setting the estrutural steps builders
     block.turn_to_for_step = turn_to_for_step
     block.turn_to_pagination_step = turn_to_pagination_step
 
     //Setting the border functions
-    block.onmouseout = function(){hide(this.controler_box); this.style.borderColor = ""}
-    block.onmouseover = function(){show(this.controler_box); this.style.borderColor = "rgba(0,143,255,.5)"}
+    block.onmouseout = function(){
+        hide(this.controler_box); 
+        this.style.borderColor = "";
+        this.show_params_button_box.style.height = "0em";
+        this.show_params_button.hidden = true
+    }
+    block.onmouseover = function(){
+        show(this.controler_box); 
+        this.style.borderColor = "rgba(0,143,255,.5)"; 
+        this.show_params_button_box.style.height = "2em";
+        this.show_params_button.hidden = false
+    }
     block.onmouseout()
 
-
-
-    
     //seting other block methods
     block.get_line = get_line
     block.delete_lines =  delete_lines 
@@ -102,7 +128,7 @@ function init_optional_params_button(step){
 
     new_parameter_button_image.src = "/static/icons/white-plus-icon.svg"
     new_parameter_button_image.style.width = "1em"
-    new_parameter_button_image.style.heigth = "1em"
+    new_parameter_button_image.style.height = "1em"
 
     dropdown_menu.className = "dropdown-menu"
 
@@ -179,9 +205,9 @@ function add_param(param_name, optional_param = false){
     block.lines[last_line].row.appendChild(param_element)
     block.params.push(param_element)
 
-    number_max_of_params=3
+    number_max_of_params=1
     if(last_line == 0){
-        number_max_of_params=2
+        number_max_of_params=1
     }
     if(block.lines[last_line].row.children.length == number_max_of_params){
         block.lines[last_line].row.full = true
@@ -324,6 +350,23 @@ function turn_to_pagination_step(){
 
 //---------------- block menu methods ------------------------------
 
+function hide_show_params(){
+    block = find_parent_of_type(this, "block")
+    if (block.params_visibility){
+        block.params_visibility = false
+        for(var i = 1; i < block.lines.length; i++){
+            block.lines[i].hidden = false
+        }
+        block.show_params_button.style.transform = 'rotate(180deg)';
+    }else{
+        block.params_visibility = true
+        for(var i = 1; i < block.lines.length; i++){
+            block.lines[i].hidden = true
+        }
+        block.show_params_button.style.transform = 'rotate(0deg)';
+    }
+}
+
 function add_block_bellow(){
     step_board = find_parent_of_type(this, "step_board")
     block = find_parent_of_type(this, "block")
@@ -394,7 +437,7 @@ function init_block_element(step_list){
                                 <img class="block-controler-button" src="/static/icons/arrow-down-black.svg">
                             </div>
                             <div class="col-sm">
-                                <img class="block-controler-button" src="/static/icons/x.svg">
+                                <img class="block-controler-button" src="/static/icons/black-x.svg">
                             </div>
                         </div>
                     <div>`

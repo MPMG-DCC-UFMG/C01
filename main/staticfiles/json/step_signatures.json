@@ -2,7 +2,10 @@
     {
         "name": "options_of_the_select",
         "mandatory_params": [
-            "xpath"
+            "xpath",
+            "a",
+            "b",
+            "c"
         ],
         "optional_params": {
             "except": "None"
