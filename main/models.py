@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.core.validators import RegexValidator
 
 
 class TimeStamped(models.Model):
@@ -19,7 +20,7 @@ class TimeStamped(models.Model):
 
 class CrawlRequest(TimeStamped):
 
-    # BASIC INFO ####################################################################
+    # BASIC INFO ##############################################################
     source_name = models.CharField(max_length=200)
     base_url = models.CharField(max_length=200)
     obey_robots = models.BooleanField(blank=True, null=True)
@@ -32,7 +33,12 @@ class CrawlRequest(TimeStamped):
                                     choices=REQUEST_TYPES,
                                     default='GET')
 
-    # ANTIBLOCK #####################################################################
+    pathValid = RegexValidator(r'^[0-9a-zA-Z\/\\-_]*$',
+                               'This is not a valid path.')
+    output_path = models.CharField(max_length=2000, blank=True, null=True,
+                                   validators=[pathValid])
+
+    # ANTIBLOCK ###############################################################
     # Options for Delay
     antiblock_download_delay = models.IntegerField(blank=True, null=True)
     antiblock_autothrottle_enabled = models.BooleanField(blank=True, null=True)
@@ -128,6 +134,10 @@ class CrawlRequest(TimeStamped):
         config['parameter_handlers'] = parameter_handlers
         return config
 
+    # PARSING #########################################################################
+    save_csv = models.BooleanField(blank=True, null=True)
+
+
     @property
     def running(self):
         return self.instances.filter(running=True).exists()
@@ -138,6 +148,7 @@ class CrawlRequest(TimeStamped):
         if inst_query.exists():
             return inst_query.get()
         return None
+
 
     def __str__(self):
         return self.source_name

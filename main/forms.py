@@ -1,6 +1,6 @@
 from django import forms
 from .models import CrawlRequest, ParameterHandler, ResponseHandler
-
+from django.core.validators import RegexValidator
 
 
 class CrawlRequestForm(forms.ModelForm):
@@ -10,6 +10,9 @@ class CrawlRequestForm(forms.ModelForm):
         labels = {
             'request_type': 'Request method',
         }
+
+        output_filename = forms.CharField(required=False)
+        save_csv = forms.BooleanField(required=False)
 
         fields = [
             'source_name',
@@ -41,12 +44,13 @@ class CrawlRequestForm(forms.ModelForm):
             'link_extractor_max_depth',
             'link_extractor_allow',
             'link_extractor_allow_extensions',
+            'save_csv',
+            'output_path',
         ]
 
 
 class RawCrawlRequestForm(CrawlRequestForm):
     # BASIC INFO ##############################################################
-
     source_name = forms.CharField(label="Source Name", max_length=200,
         widget=forms.TextInput(attrs={'placeholder': 'Example'})
     )
@@ -58,8 +62,13 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
     obey_robots = forms.BooleanField(required=False, label="Obey robots.txt")
 
-    # ANTIBLOCK ###############################################################
+    output_path = forms.CharField(
+        required=False, max_length=2000, label="Path to save the files",
+        widget=forms.TextInput(attrs={'placeholder': '/home/user/Documents'}),
+        validators=[CrawlRequest.pathValid]
+    )
 
+    # ANTIBLOCK ###############################################################
     # Options for Delay
     antiblock_download_delay = forms.IntegerField(
         required=False,
@@ -207,6 +216,9 @@ class RawCrawlRequestForm(CrawlRequestForm):
     # Crawler Type - Single file
     # Crawler Type - Bundle file
 
+    # PARSING #################################################################
+    save_csv = forms.BooleanField(required=False, label="Save a CSV file")
+
 
 class ResponseHandlerForm(forms.ModelForm):
     """
@@ -266,5 +278,5 @@ ResponseHandlerFormSet = forms.inlineformset_factory(CrawlRequest,
 
 # Formset for ParameterHandler forms
 ParameterHandlerFormSet = forms.inlineformset_factory(CrawlRequest,
-    ParameterHandler, form=ParameterHandlerForm, exclude=[], extra=1, min_num=0,
-    can_delete=True)
+    ParameterHandler, form=ParameterHandlerForm, exclude=[], extra=1,
+    min_num=0, can_delete=True)

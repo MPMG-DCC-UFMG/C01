@@ -3,11 +3,14 @@ This module extracts contents from binary files.
 
 """
 
+from tika import parser
+from .texts_processor import columns_to_dataframe
 from pathlib import Path
 import abc
 
-from tika import parser
-from .texts_processor import columns_to_dataframe
+import tika
+tika.initVM()
+
 
 class BinaryExtractor():
     """
@@ -39,14 +42,14 @@ class BinaryExtractor():
         # create directory for outputs
         pure = Path(self.path)
         self.name = pure.stem
-        self.directory = pure.parent.joinpath(self.name)
+        self.directory = pure.parents[1].joinpath('csv/' + self.name)
         Path.mkdir(self.directory, exist_ok=True)
 
         # file parsing
         try:
             self.open = parser.from_file(self.path)
         except:
-            raise TypeError('O arquivo não pôde ser extraído.')
+            raise TypeError('The file content could not be extracted.')
 
     @abc.abstractmethod
     def read(self):
