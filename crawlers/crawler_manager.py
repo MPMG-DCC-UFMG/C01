@@ -55,7 +55,7 @@ def get_crawler_base_settings(config):
     autothrottle = "antiblock_autothrottle_"
     return {
         "BOT_NAME": "crawlers",
-        "ROBOTSTXT_OBEY": True,
+        "ROBOTSTXT_OBEY": config['obey_robots'],
         "DOWNLOAD_DELAY": 1,
         # "SELENIUM_DRIVER_NAME": "chrome",
         # "SELENIUM_DRIVER_EXECUTABLE_PATH": shutil.which(
