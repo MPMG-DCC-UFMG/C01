@@ -18,6 +18,7 @@ function tail_logs(instance_id){
     xhr.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
             var response = JSON.parse(this.responseText);
+            console.log(response);
 
             if(response["out"].lenght != 0)
                 document.getElementById("stdout_tail").innerText = response["out"]
@@ -33,7 +34,7 @@ function tail_logs(instance_id){
             document.getElementById("stderr_tail_update").innerText = "last update: " + response["time"]
         }
     };
-    xhr.open("GET", "/tail_log_file/" + instance_id, true);
+    xhr.open("GET", "/tail_log_file/"+instance_id, true);
     xhr.send();
 }
 

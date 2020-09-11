@@ -11,6 +11,8 @@ from .forms import CrawlRequestForm, RawCrawlRequestForm
 from .models import CrawlRequest, CrawlerInstance
 from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer
 
+from crawlers.constants import *
+
 import subprocess
 from datetime import datetime
 import time
@@ -35,6 +37,15 @@ def process_run_crawl(crawler_id):
 
         del data['creation_date']
         del data['last_modified']
+        
+        if data["output_path"] is None:
+            data["output_path"] = CURR_FOLDER_FROM_ROOT
+        else:
+            if data["output_path"][-1] == "/":
+                data["output_path"] = data["output_path"][:-1]
+            else:
+                data["output_path"] = data["output_path"]
+
         instance_id = crawler_manager.start_crawler(data)
 
         instance = create_instance(data['id'], instance_id)
@@ -44,14 +55,16 @@ def process_run_crawl(crawler_id):
 
 def process_stop_crawl(crawler_id):
     instance = CrawlRequest.objects.filter(id=crawler_id).get().running_instance
+    # instance = CrawlerInstance.objects.get(instance_id=instance_id)
 
     # No instance running
     if instance is None:
         raise ValueError("No instance running")
 
     instance_id = instance.instance_id
+    config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
 
-    crawler_manager.stop_crawler(instance_id)
+    crawler_manager.stop_crawler(instance_id, config)
     instance = None
     with transaction.atomic():
         # Execute DB commands atomically
@@ -92,6 +105,7 @@ def create_crawler(request):
         my_form = RawCrawlRequestForm()
     context['form'] = my_form
     return render(request, "main/create_crawler.html", context)
+
 
 
 def edit_crawler(request, id):
@@ -148,9 +162,18 @@ def run_crawl(request, crawler_id):
     return redirect(detail_crawler, id=crawler_id)
 
 
+
+
 def tail_log_file(request, instance_id):
-    out = subprocess.run(["tail", f"crawlers/log/{instance_id}.out", "-n", "10"], stdout=subprocess.PIPE).stdout
-    err = subprocess.run(["tail", f"crawlers/log/{instance_id}.err", "-n", "10"], stdout=subprocess.PIPE).stdout
+
+
+    crawler_id = CrawlerInstance.objects.filter(instance_id=instance_id).values()[0]["crawler_id_id"]
+
+    config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
+    output_path = config["output_path"]
+
+    out = subprocess.run(["tail", f"{output_path}/log/{instance_id}.out", "-n", "10"], stdout=subprocess.PIPE).stdout
+    err = subprocess.run(["tail", f"{output_path}/log/{instance_id}.err", "-n", "10"], stdout=subprocess.PIPE).stdout
     return JsonResponse({
         "out": out.decode('utf-8'),
         "err": err.decode('utf-8'),

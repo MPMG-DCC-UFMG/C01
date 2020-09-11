@@ -34,14 +34,15 @@ import requests
 # antiblock_persist_cookies
 
 
-def create_folders():
+def create_folders(output_path):
     """Create essential folders for crawlers if they do not exists"""
     files = [
-        f"{CURR_FOLDER_FROM_ROOT}/config",
-        f"{CURR_FOLDER_FROM_ROOT}/data",
-        f"{CURR_FOLDER_FROM_ROOT}/flags",
-        f"{CURR_FOLDER_FROM_ROOT}/log",
-        f"{CURR_FOLDER_FROM_ROOT}/webdriver",
+        f"{output_path}",
+        f"{output_path}/config",
+        f"{output_path}/data",
+        f"{output_path}/flags",
+        f"{output_path}/log",
+        f"{output_path}/webdriver",
     ]
     for f in files:
         try:
@@ -73,10 +74,12 @@ def get_crawler_base_settings(config):
 
 def crawler_process(crawler_id, config):
     """Starts crawling."""
+
+    output_path = config["output_path"]
+
     # Redirects process logs to files
-    base_address = f"{CURR_FOLDER_FROM_ROOT}/log/"
-    sys.stdout = open(f"{base_address}{crawler_id}.out", "a", buffering=1)
-    sys.stderr = open(f"{base_address}{crawler_id}.err", "a", buffering=1)
+    sys.stdout = open(f"{output_path}/log/{crawler_id}.out", "a", buffering=1)
+    sys.stderr = open(f"{output_path}/log/{crawler_id}.err", "a", buffering=1)
 
     process = CrawlerProcess(settings=get_crawler_base_settings(config))
 
@@ -90,7 +93,7 @@ def crawler_process(crawler_id, config):
         # process.crawl(StaticPageSpider, crawler_id=crawler_id)
         raise NotImplementedError
     elif config["crawler_type"] == "static_page":
-        process.crawl(StaticPageSpider, crawler_id=crawler_id)
+        process.crawl(StaticPageSpider, crawler_id=crawler_id, output_path=output_path)
 
     def update_database():
         # TODO: get port as variable
@@ -109,18 +112,20 @@ def gen_key():
     return str(int(time.time() * 100)) + str((int(random.random() * 1000)))
 
 
-
 def start_crawler(config):
     """Create and starts a crawler as a new process."""
-    create_folders()
+
+    output_path = config["output_path"]
+    create_folders(output_path=output_path)
 
     crawler_id = gen_key()
     print(os.getcwd())
 
-    with open(f"{CURR_FOLDER_FROM_ROOT}/config/{crawler_id}.json", "w+") as f:
+
+    with open(f"{output_path}/config/{crawler_id}.json", "w+") as f:
         f.write(json.dumps(config, indent=2))
 
-    with open(f"{CURR_FOLDER_FROM_ROOT}/flags/{crawler_id}.json", "w+") as f:
+    with open(f"{output_path}/flags/{crawler_id}.json", "w+") as f:
         f.write(json.dumps({"stop": False}))
 
     # starts new process
@@ -130,9 +135,11 @@ def start_crawler(config):
     return crawler_id
 
 
-def stop_crawler(crawler_id):
+
+def stop_crawler(crawler_id, config):
     """Sets the flags of a crawler to stop."""
-    with open(f"{CURR_FOLDER_FROM_ROOT}/flags/{crawler_id}.json", "w+") as f:
+    output_path = config["output_path"]
+    with open(f"{output_path}/flags/{crawler_id}.json", "w+") as f:
         f.write(json.dumps({"stop": True}))
 
 
@@ -170,3 +177,4 @@ def remove_crawler(crawler_id, are_you_sure=False):
             shutil.rmtree(f)
         except OSError as e:
             print("Error: %s : %s" % (f, e.strerror))
+

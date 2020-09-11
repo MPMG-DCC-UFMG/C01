@@ -98,12 +98,12 @@ class StaticPageSpider(BaseSpider):
         response_type = response.headers['Content-type']
         print(f"Parsing {response.url}, type: {response_type}")
 
+
         if self.stop():
             return
 
         if b'text/html' in response_type:
-            self.store_html(response)
-
+            self.store_html(response, self.config["save_csv"])
             if "explore_links" in self.config and self.config["explore_links"]:
                 this_url = response.url
                 for url in self.extract_links(response):

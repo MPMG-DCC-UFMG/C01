@@ -21,12 +21,12 @@ def extract_div(html_file):
     # Returns a list of list, with all the content
     return csv_list_all
 
+
 def write_file(list_content, output_name, to_csv):
     """
     Receives a list of content and the name of the output file, saves the file
     """
     if to_csv:
-        output_name += '.csv'
         with open(output_name, "a", newline="") as f:
             writer = csv.writer(f)
             writer.writerow(list_content)
@@ -35,7 +35,7 @@ def write_file(list_content, output_name, to_csv):
             json.dump(list_content, f)
 
 
-def div_to_file(html_file_path, output_file='output', to_csv=True):
+def div_to_file(html_file_path, output_file='output', to_csv=False):
     """
     Receives an html file path, converts the html to csv and saves the file on
     disk.
