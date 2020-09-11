@@ -229,9 +229,9 @@ class ProbingRequestTest(unittest.TestCase):
         Tests invalid HTTP requests
         """
 
-        # URL misses schema (http://)
-        probe = HTTPProbingRequest("nonexistenturl/", "GET")
-        self.assertRaises(requests.exceptions.MissingSchema, probe.process)
+        # Unsupported HTTP method
+        self.assertRaises(ValueError, HTTPProbingRequest, "nonexistenturl/",
+                          "OPTIONS")
 
         # Invalid request body
         self.assertRaises(TypeError, HTTPProbingRequest,
