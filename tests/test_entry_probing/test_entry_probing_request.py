@@ -1,6 +1,7 @@
 """
 This module tests the classes which abstract the entry probing requests
 """
+import asyncio
 import unittest
 from unittest import mock
 
@@ -54,11 +55,27 @@ def create_mock_pyp_page(content_type: str = None,
 
 
 # Tests
-class ProbingRequestTest(unittest.IsolatedAsyncioTestCase):
+class ProbingRequestTest(unittest.TestCase):
     """
-    Testing routines for the entry probing request (uses
-    IsolatedAsyncioTestCase to be compatible with Pyppeteer)
+    Testing routines for the entry probing request. An event loop is created to
+    run the async routines in a synchronous context.
     """
+
+
+    def setUp(self):
+        """
+        Sets up the testing environment, creating an event loop to run the
+        async code
+        """
+        self.loop = asyncio.new_event_loop()
+
+
+    def tearDown(self):
+        """
+        Closes the event loop created during setup
+        """
+        self.loop.close()
+
 
     def test_succesful_req_http(self):
         """
@@ -170,7 +187,7 @@ class ProbingRequestTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(list(post_mock.call_args), expected)
 
 
-    async def test_succesful_req_pyp(self):
+    def test_succesful_req_pyp(self):
         """
         Tests valid requests with Pyppeteer
         """
@@ -181,13 +198,13 @@ class ProbingRequestTest(unittest.IsolatedAsyncioTestCase):
         # in a real scenario this is where we would request the URL in
         # pyp_handler, e.g.:
         # await pyp_handler.goto('https://www.example.com')
-        result = await probe.process()
+        result = self.loop.run_until_complete(probe.process())
 
         # check if the response event was setup correctly (we need to use name
         # mangling to access the private method for this specific purpose)
-        expected = ['response',
-                    probe._PyppeteerProbingRequest__intercept_response]
-        self.assertEqual(list(pyp_handler.on.call_args.args), expected)
+        expected = [('response',
+                    probe._PyppeteerProbingRequest__intercept_response), {}]
+        self.assertEqual(list(pyp_handler.on.call_args), expected)
 
         self.assertEqual(result.headers, {'content-type': 'text/html'})
         self.assertEqual(result.status_code, 200)
@@ -196,11 +213,11 @@ class ProbingRequestTest(unittest.IsolatedAsyncioTestCase):
         # Another test with a different response
         pyp_handler = create_mock_pyp_page("text/json", 404, "")
         probe = PyppeteerProbingRequest(pyp_handler)
-        result = await probe.process()
+        result = self.loop.run_until_complete(probe.process())
 
-        expected = ['response',
-                    probe._PyppeteerProbingRequest__intercept_response]
-        self.assertEqual(list(pyp_handler.on.call_args.args), expected)
+        expected = [('response',
+                    probe._PyppeteerProbingRequest__intercept_response), {}]
+        self.assertEqual(list(pyp_handler.on.call_args), expected)
 
         self.assertEqual(result.headers, {'content-type': 'text/json'})
         self.assertEqual(result.status_code, 404)
@@ -221,7 +238,7 @@ class ProbingRequestTest(unittest.IsolatedAsyncioTestCase):
                           "http://nonexistenturl/", "POST", [])
 
 
-    async def test_invalid_req_pyp(self):
+    def test_invalid_req_pyp(self):
         """
         Tests invalid requests with Pyppeteer
         """
@@ -239,7 +256,7 @@ class ProbingRequestTest(unittest.IsolatedAsyncioTestCase):
 
         with self.assertRaises(ValueError):
             # process() should raise a ValueError
-            result = await probe.process()
+            result = self.loop.run_until_complete(probe.process())
 
 
 if __name__ == '__main__':
