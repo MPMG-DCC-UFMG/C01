@@ -38,13 +38,12 @@ class BaseSpider(scrapy.Spider):
 
 
         self.data_folder = f"{output_path}/data/{crawler_id}"
-        cofig_file_path = f"{output_path}/config/{crawler_id}.json"
+        config_file_path = f"{output_path}/config/{crawler_id}.json"
         self.flag_folder = f"{output_path}/flags/"
 
-        with open(cofig_file_path, "r") as f:
+        with open(config_file_path, "r") as f:
             self.config = json.loads(f.read())
 
-        print('config output: ', self.config["output_path"])
 
         folders = [
             f"{self.data_folder}",
