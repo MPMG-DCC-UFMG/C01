@@ -223,7 +223,7 @@ class BaseSpider(scrapy.Spider):
         """
 
         file_format = self.get_format(response.headers['Content-type'])
-        hsh = crawling_utils.hash(response.url.encode() + response.body)
+        hsh = self.hash_response(response)
 
         success = False
 
@@ -292,9 +292,7 @@ class BaseSpider(scrapy.Spider):
             body = cleaner.clean_html(
                 response.body.decode('utf-8', errors='ignore'))
 
-        # POST requests may access the same URL with different parameters, so
-        # we hash the URL with the response body
-        hsh = crawling_utils.hash(response.url.encode() + response.body)
+        hsh = self.hash_response(response)
 
         folder = f"{self.data_folder}/{save_at}"
 
@@ -343,3 +341,17 @@ class BaseSpider(scrapy.Spider):
         elif failure.check(TimeoutError):
             request = failure.request
             self.logger.error('TimeoutError on %s', request.url)
+
+
+    def hash_response(self, response):
+        """
+        Turns a response into a hashed value to be used as a file name
+
+        :param response: response obtained from crawling
+
+        :returns: hash of the response's URL and body
+        """
+
+        # POST requests may access the same URL with different parameters, so
+        # we hash the URL with the response body
+        return crawling_utils.hash(response.url.encode() + response.body)
