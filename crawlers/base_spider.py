@@ -40,8 +40,6 @@ class BaseSpider(scrapy.Spider):
         self.crawler_id = crawler_id
         self.stop_flag = False
 
-
-
         self.data_folder = f"{output_path}/data/{crawler_id}"
         config_file_path = f"{output_path}/config/{crawler_id}.json"
         self.flag_folder = f"{output_path}/flags/"

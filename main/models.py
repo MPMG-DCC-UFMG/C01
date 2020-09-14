@@ -116,6 +116,14 @@ class CrawlRequest(TimeStamped):
         del config['creation_date']
         del config['last_modified']
 
+        if config["output_path"] is None:
+            config["output_path"] = CURR_FOLDER_FROM_ROOT
+        else:
+            if config["output_path"][-1] == "/":
+                config["output_path"] = config["output_path"][:-1]
+            else:
+                config["output_path"] = config["output_path"]
+
         # Include information on parameter handling
         parameter_handlers = []
         for param in crawler.parameter_handlers.values():

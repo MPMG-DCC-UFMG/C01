@@ -36,16 +36,7 @@ def process_run_crawl(crawler_id):
             raise ValueError("An instance is already running for this crawler "
                              f"({instance_id})")
 
-        del data['creation_date']
-        del data['last_modified']
-        
-        if data["output_path"] is None:
-            data["output_path"] = CURR_FOLDER_FROM_ROOT
-        else:
-            if data["output_path"][-1] == "/":
-                data["output_path"] = data["output_path"][:-1]
-            else:
-                data["output_path"] = data["output_path"]
+        data = CrawlRequest.process_config_data(crawler_entry.get(), data)
 
         instance_id = crawler_manager.start_crawler(data)
 
