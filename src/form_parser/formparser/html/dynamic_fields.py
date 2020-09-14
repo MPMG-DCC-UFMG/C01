@@ -7,41 +7,88 @@ Find dynamic fields in form
 import logging
 import time
 
+from syncer import sync
 from formparser import utils
 from collections import defaultdict
-from selenium.webdriver.support.ui import Select
-from selenium.common import exceptions
-from formparser import html
+from pyppeteer import launch
 
 
 class DynamicFields:
     """Identify dynamic fields in web forms"""
 
-    def __init__(self, url, form):
+    def __init__(self, url: str, form):
         """Constructor for DynamicFields
 
         Args:
             url (`str`): target url.
             form (`lxml.etree._Element`): target form.
         """
-        self.driver = utils.open_driver(url)
+        self.url = url
         self.form_xpath = utils.get_xpath(form)
-        self.form_text = self.get_text(self.form_xpath)
+
+        self.page = self.get_page()
+
+        self.form_text = self.get_text(xpath=self.form_xpath)
         self.dynamic_fields = defaultdict(list)
 
-    def __del__(self):
-        try:
-            self.driver.quit()
-        except Exception:
-            pass
+    @sync
+    async def get_page(self):
+        """Returns loaded page"""
+        browser = await launch(headless=True)
+        page = await browser.newPage()
+        await page.goto(self.url)
+        await page.waitForXPath(self.form_xpath)
+        return page
 
-    def get_text(self, xpath) -> str:
+    @sync
+    async def get_text(self, xpath: str) -> str:
         """Returns the text within a web element
 
         Args:
             xpath: xpath of the element
         """
-        return self.driver.find_element_by_xpath(xpath).text
+        element = await self.page.xpath(xpath)
+
+        if isinstance(element, list):
+            element = element[0]
+
+        return await self.page.evaluate('''element => element.textContent''',
+                                        element)
+
+    @sync
+    async def is_enabled(self, element) -> bool:
+        """Returns whether the element is enabled or not
+
+        Args:
+            element: pyppeteer webelement
+        """
+        return await self.page.evaluate(
+            """element => {
+                return element.disabled;
+            }""",
+            element
+        )
+
+    @sync
+    async def is_displayed(self, xpath: str, timeout=30) -> bool:
+        """Returns whether the element is displayed or not
+
+        Args:
+            xpath: element xpath
+            timeout: (int|float) time to wait in miliseconds
+        """
+        try:
+            await self.page.waitForXpath(xpath,
+                                         options={'visible': True,
+                                                  'timeout': timeout})
+            return True
+        except TimeoutError:
+            return False
+
+    @sync
+    async def get_current_url(self):
+        """Returns current url"""
+        return await self.page.url
 
     def get_dynamic_fields(self, fields_dict):
         """Calls check_fields for each field type to be checked
@@ -53,7 +100,7 @@ class DynamicFields:
         for field_type in field_types:
             self.check_fields(fields_dict[field_type], field_type)
 
-    def check_fields(self, field_list, field_type, sleep_time=0.5):
+    def check_fields(self, field_list: list, field_type: str, sleep_time=0.5):
         """Triggers field changes and detect dynamic fields
 
         Args:
@@ -63,58 +110,94 @@ class DynamicFields:
         """
         for field in field_list:
             xpath = utils.get_xpath(field)
-            element = self.driver.find_element_by_xpath(xpath)
-            if not element.is_displayed():
+            element = self.element_from_xpath(xpath)
+            if not self.is_displayed(xpath):
                 continue
-            status_before_change = self.get_status(field_list)
-            text_before_change = self.get_text(self.form_xpath)
+            status_before_change = self.get_status(field_list=field_list)
+            text_before_change = self.get_text(xpath=self.form_xpath)
             if field_type == 'select':
                 self.change_select_field(element)
             else:
-                element.click()
+                self.click(element)
+
             time.sleep(sleep_time)
-            status_after_change = self.get_status(field_list)
+            status_after_change = self.get_status(field_list=field_list)
             changed_fields = self.dictionary_diff(status_before_change,
                                                   status_after_change)
-            if len(changed_fields) > 0:
-                for changed_field in changed_fields:
-                    self.dynamic_fields[xpath].append(changed_field)
-            elif self.check_text_change(text_before_change):
-                self.dynamic_fields[xpath].append('')
-            self.driver.refresh()
+            self.check_changed_fields(changed_fields, xpath,
+                                      text_before_change)
+            self.page_reload()
 
-    @staticmethod
-    def change_select_field(element):
-        """Selects second option in a select field by index
+    @sync
+    async def element_from_xpath(self, xpath):
+        """Find element in page using xpath
 
         Args:
-            element: Select element
+            xpath: target xpath
         """
-        select = Select(element)
-        select.select_by_index(1)
+        element = await self.page.xpath(xpath)
+        if isinstance(element, list):
+            return element[0]
+        else:
+            return element
 
-    def check_text_change(self, text_before_action) -> bool:
+    @sync
+    async def click(self, element):
+        """Click on element
+
+        Args:
+            element: pyppeteer element
+        """
+        await element.click()
+
+    @sync
+    async def change_select_field(self, element, wait_for=30):
+        """Selects first option from select field
+
+        Args:
+            element: pyppeteer element
+            wait_for: time to wait while element loads
+        """
+        await element.click()
+        await self.page.waitFor(wait_for)
+        await self.page.keyboard.press('ArrowDown')
+        await self.page.keyboard.press('Enter')
+
+    @sync
+    async def page_reload(self):
+        """Reloads current webpage"""
+        await self.page.reload()
+
+    def check_changed_fields(self, changed_fields: list, xpath: str,
+                             text_before_change: str):
+        """Check which fields changed after modifying a form field
+
+        Args:
+            changed_fields: list of fields that were changed
+            xpath: xpath of element that triggered change
+            text_before_change: string containing target text before change
+        """
+        if len(changed_fields) > 0:
+            for changed_field in changed_fields:
+                self.dynamic_fields[xpath].append(changed_field)
+        elif self.check_text_change(text_before_change):
+            self.dynamic_fields[xpath].append('')
+
+    def check_text_change(self, text_before_action: str) -> bool:
         """Detects if text changed after action and fills dict with fields
 
         Args:
-            text_before_action: url of webpage where the form is (if not
-                                provided when constructing the object
-                                HTMLParser)
-            field: 'lxml.etree._Element'
-            field_type: str
+            text_before_action: text extracted from page before performing
+                                an action
 
         Returns
             True, if text changes.
         """
-        try:
-            return text_before_action != self.get_text(self.form_xpath)
+        return text_before_action != self.get_text(xpath=self.form_xpath)
 
-        except exceptions.StaleElementReferenceException:
-            form = html.HTMLParser(url=self.driver.current_url)
-            self.form_xpath = utils.get_xpath(form)
-            return text_before_action != self.get_text(self.form_xpath)
-
-    def get_status(self, field_list, attribute='is_displayed') -> dict:
+    @sync
+    async def get_status(self, field_list: list,
+                         attribute='is_displayed') -> dict:
         """Checks status of a web element
 
         Args:
@@ -128,11 +211,11 @@ class DynamicFields:
         status = {}
         for field in field_list:
             xpath = utils.get_xpath(field)
-            element = self.driver.find_element_by_xpath(xpath)
+            element = await self.page.xpath(xpath)
             if attribute == 'is_displayed':
-                status[xpath] = element.is_displayed()
+                status[xpath] = self.is_displayed(xpath)
             elif attribute == 'is_enabled':
-                status[xpath] = element.is_enabled()
+                status[xpath] = self.is_enabled(element)
             else:
                 logging.error('[ERROR] InvalidAttribute: method not '
                               'implemented.')

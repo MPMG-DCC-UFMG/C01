@@ -5,11 +5,13 @@ rubia-rg@github
 Parse form parameters from HTML
 """
 from collections import defaultdict
-from formparser.html.extractor import HTMLExtractor
+from formparser.html.extractor import Extractor as HTMLExtractor
 from formparser.html.dynamic_fields import DynamicFields
+from formparser.html.required_fields import RequiredFields
+from formparser import utils
 
 
-class HTMLParser:
+class Parser:
     """Parse HTML forms"""
 
     def __init__(self, url=None, form=None):
@@ -18,6 +20,7 @@ class HTMLParser:
         Args:
             form (`lxml.etree._Element`): target form.
         """
+        self.url = None
         if form is not None:
             self.form = form
         elif url is not None:
@@ -26,7 +29,7 @@ class HTMLParser:
         # TODO: throw exception when form == None and url == None
 
     @staticmethod
-    def fetch_form(url, form_index=-1):
+    def fetch_form(url: str, form_index=-1):
         """Gets form from url
 
         Args:
@@ -93,9 +96,47 @@ class HTMLParser:
         """
         return [label.text for label in self.form.xpath("//label")]
 
-    def required_fields(self) -> list:
-        """Returns required fields as [`lxml.etree._Element`]"""
-        return self.form.xpath("//input[@required]")
+    def required_fields(self, probing_element, submit_button_xpath=None,
+                        form_url=None, fillers=None, include_hidden=False,
+                        only_html_tagged=False) -> list:
+        """Returns list of required form fields.
+
+        Args:
+            include_hidden: if True, also processes fields that are not
+            displayed.
+            submit_button_xpath: xpath of submit button
+            probing_element: element to look for after form submission to
+            check if form submission was successful. Check entry_probing
+            module for options
+            form_url: url of webpage where the form is (if not provided when
+                          constructing the object HTMLParser)
+            fillers: dictionary of field types and filling values
+            include_hidden: if true, processes fields that are not displayed
+            only_html_tagged: if true, only look for required tags in html
+                              code (faster but less robust)
+
+        Returns:
+            Returns required fields as a list of xpaths [`str`]
+        """
+        tagged_fields = self.form.xpath("//input[@required]")
+
+        if only_html_tagged:
+            return utils.to_xpath(tagged_fields)
+        else:
+            if self.url is not None:
+                form_url = self.url
+
+            if fillers is None:
+                fillers = utils.FILLERS
+
+            if submit_button_xpath is None:
+                submit_button_xpath = utils.get_xpath(self.submit_button()[-1])
+
+            rf = RequiredFields(form_url, fillers)
+            rf.get_required_fields(self.list_fields(), submit_button_xpath,
+                                   probing_element, tagged_fields,
+                                   include_hidden)
+            return rf.required_fields
 
     def select_fields(self) -> list:
         """Returns select fields as [`lxml.etree._Element`]"""

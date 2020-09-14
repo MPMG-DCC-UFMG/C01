@@ -6,12 +6,11 @@ Utils for formparser module
 """
 import random
 import logging
-import time
 import collections
-import crawling_utils.crawling_utils as crawling_utils
+import entry_probing
+import asyncio
 
-from selenium.webdriver import FirefoxOptions
-from selenium import webdriver
+from syncer import sync
 
 USER_AGENT_LIST = [
     'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, '
@@ -55,35 +54,6 @@ def request_headers():
     return {'User-Agent': user_agent}
 
 
-def get_firefox_arguments():
-    """
-    Returns list of arguments to initialize a firefox webdriver.
-
-    Returns:
-        list of strings
-    """
-    return [
-        "--headless",
-        "--window-size=1920x1080",
-        "--disable-notifications",
-        '--no-sandbox',
-        '--verbose',
-        '--disable-gpu',
-        '--disable-software-rasterizer',
-    ]
-
-
-def open_driver(url, driver_arguments=get_firefox_arguments(), sleep_time=5):
-    """Opens a webdriver and loads url"""
-    driver = crawling_utils.init_webdriver(
-        "firefox", arguments=driver_arguments
-    )
-    driver.get(url)
-
-    time.sleep(sleep_time)
-    return driver
-
-
 def set_logging():
     """Set logging options"""
     logging.basicConfig(level=logging.INFO)
@@ -101,32 +71,23 @@ def get_xpath(element) -> str:
     return element.getroottree().getpath(element)
 
 
-def get_xpath_safe(element) -> str:
-    """Returns an element's xpath, returns the same element in case the
-    xpath cannot be obtained
-
-    Args:
-        element: 'lxml.etree._Element'
-
-    Returns:
-        element's xpath
-    """
-    try:
-        return element.getroottree().getpath(element)
-    except AttributeError:
-        logging.error('AttributeError: returning unchanged element')
-        return element
-
-
-def probing(browser, element="Não há resultado para a pesquisa.") -> bool:
+def probing(page, probing_element="Não há resultado para a pesquisa.") -> \
+        bool:
     """Webpage probing to check for a particular element
-    TODO: Replace by probing module
 
     Returns:
         True, if element is found. False, otherwise.
     """
-    return element.lower() in str(browser.find_element_by_tag_name('body')
-                                  .text).lower()
+    if isinstance(probing_element, str):
+        return probing_element.lower() in str(get_page_text(page)).lower()
+    elif isinstance(probing_element, entry_probing.EntryProbing):
+        probing_element.check_entry()
+        return probing_element.response
+
+
+@sync
+async def get_page_text(page) -> str:
+    return await page.plainText()
 
 
 def to_xpath(data_structure):
@@ -179,3 +140,31 @@ def dict_to_xpath(element_dict: dict):
     for value in element_dict.values():
         values_xpath.append(list_to_xpath(list(value)))
     return dict(zip(keys_xpath, values_xpath))
+
+
+def get_xpath_safe(element) -> str:
+    """Returns an element's xpath, returns the same element in case the
+    xpath cannot be obtained
+
+    Args:
+        element: 'lxml.etree._Element'
+
+    Returns:
+        element's xpath
+    """
+    try:
+        return element.getroottree().getpath(element)
+    except AttributeError:
+        logging.error('AttributeError: returning unchanged element')
+        return element
+
+
+@sync
+async def check_for_alert(page):
+    def close_dialog(dialog):
+        await dialog.dismiss()
+
+    await page.on(
+        'dialog',
+        lambda dialog: asyncio.ensure_future(close_dialog(dialog))
+    )
