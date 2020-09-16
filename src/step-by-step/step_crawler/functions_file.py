@@ -120,7 +120,7 @@ async def break_image_captcha(page, xpath_input, xpath_output, preprocessing=Non
     """
 
     element = (await page.xpath(xpath_input))[0]
-    image_data = await element.screenshot(path="image.jpg")
+    image_data = await element.screenshot(type='jpeg')
     image = Image.open(io.BytesIO(image_data))
     if preprocessing:
         module = RuntimeModule.from_string("preprocessing", preprocessing)

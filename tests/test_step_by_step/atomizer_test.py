@@ -1,11 +1,8 @@
-import functions_file_example as ffe
+import examples.functions_file_example as ffe
 import json
 from step_crawler import atomizer as atom
 import unittest
 import sys
-sys.path.append("../")
-sys.path.append("examples")
-
 
 
 class TestExtractInfo(unittest.TestCase):
