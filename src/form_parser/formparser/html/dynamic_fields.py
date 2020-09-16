@@ -11,6 +11,7 @@ from syncer import sync
 from formparser import utils
 from collections import defaultdict
 from pyppeteer import launch
+from pyppeteer import errors
 
 
 class DynamicFields:
@@ -78,11 +79,11 @@ class DynamicFields:
             timeout: (int|float) time to wait in miliseconds
         """
         try:
-            await self.page.waitForXpath(xpath,
+            await self.page.waitForXPath(xpath,
                                          options={'visible': True,
                                                   'timeout': timeout})
             return True
-        except TimeoutError:
+        except errors.TimeoutError:
             return False
 
     @sync

@@ -96,7 +96,7 @@ class Parser:
         """
         return [label.text for label in self.form.xpath("//label")]
 
-    def required_fields(self, probing_element, submit_button_xpath=None,
+    def required_fields(self, probing_element=None, submit_button_xpath=None,
                         form_url=None, fillers=None, include_hidden=False,
                         only_html_tagged=False) -> list:
         """Returns list of required form fields.
@@ -107,7 +107,8 @@ class Parser:
             submit_button_xpath: xpath of submit button
             probing_element: element to look for after form submission to
             check if form submission was successful. Check entry_probing
-            module for options
+            module for options. probing_element is set as the prefix
+            'encont' in case nothing is else is passed.
             form_url: url of webpage where the form is (if not provided when
                           constructing the object HTMLParser)
             fillers: dictionary of field types and filling values
@@ -119,6 +120,9 @@ class Parser:
             Returns required fields as a list of xpaths [`str`]
         """
         tagged_fields = self.form.xpath("//input[@required]")
+
+        if probing_element is None:
+            probing_element = 'encont'
 
         if only_html_tagged:
             return utils.to_xpath(tagged_fields)

@@ -81,7 +81,7 @@ def probing(page, probing_element="Não há resultado para a pesquisa.") -> \
     if isinstance(probing_element, str):
         return probing_element.lower() in str(get_page_text(page)).lower()
     elif isinstance(probing_element, entry_probing.EntryProbing):
-        probing_element.check_entry()
+        probing_element.async_check_entry()
         return probing_element.response
 
 
@@ -161,7 +161,7 @@ def get_xpath_safe(element) -> str:
 
 @sync
 async def check_for_alert(page):
-    def close_dialog(dialog):
+    async def close_dialog(dialog):
         await dialog.dismiss()
 
     await page.on(
