@@ -25,7 +25,7 @@ from twisted.internet.error import TimeoutError
 class BaseSpider(scrapy.Spider):
     name = 'base_spider'
 
-    def __init__(self, crawler_id, output_path, *a, **kw):
+    def __init__(self, crawler_id, instance_id, data_path, *a, **kw):
         """
         Spider init operations.
         Create folders to store files and some config and log files.
@@ -33,17 +33,15 @@ class BaseSpider(scrapy.Spider):
 
         print("At BaseSpider.init")
         self.crawler_id = crawler_id
+        self.instance_id = instance_id
         self.stop_flag = False
 
-
-
-        self.data_folder = f"{output_path}/data/{crawler_id}"
-        config_file_path = f"{output_path}/config/{crawler_id}.json"
-        self.flag_folder = f"{output_path}/flags/"
+        self.data_folder = f"{data_path}/data/"
+        config_file_path = f"{data_path}/config/{instance_id}.json"
+        self.flag_folder = f"{data_path}/flags/"
 
         with open(config_file_path, "r") as f:
             self.config = json.loads(f.read())
-
 
         folders = [
             f"{self.data_folder}",
@@ -86,7 +84,7 @@ class BaseSpider(scrapy.Spider):
         Should be called at the begining of every parse operation.
         """
 
-        flag_file = f"{self.flag_folder}/{self.crawler_id}.json"
+        flag_file = f"{self.flag_folder}/{self.instance_id}.json"
 
         with open(flag_file) as f:
             flags = json.loads(f.read())
@@ -182,6 +180,7 @@ class BaseSpider(scrapy.Spider):
             "file_name": f"{hsh}.{file_format}",
             "url": response.url,
             "crawler_id": self.crawler_id,
+            "instance_id": self.instance_id,
             "type": str(response.headers['Content-type']),
             "crawled_at_date": str(datetime.datetime.today()),
             "referer": response.meta["referer"]

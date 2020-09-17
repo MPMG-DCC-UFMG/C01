@@ -34,21 +34,26 @@ import requests
 # antiblock_persist_cookies
 
 
-def create_folders(output_path):
+def create_folders(data_path):
     """Create essential folders for crawlers if they do not exists"""
     files = [
-        f"{output_path}",
-        f"{output_path}/config",
-        f"{output_path}/data",
-        f"{output_path}/flags",
-        f"{output_path}/log",
-        f"{output_path}/webdriver",
+        f"{data_path}",
+        f"{data_path}/config",
+        f"{data_path}/data",
+        f"{data_path}/flags",
+        f"{data_path}/log",
+        f"{data_path}/webdriver",
     ]
     for f in files:
         try:
             os.mkdir(f)
         except FileExistsError:
             pass
+        
+
+def create_instances_file(data_path):
+    """Create a json file for storing crawler instances"""
+    file = open(f"{data_path}/instances.txt", "a", buffering=1)
 
 
 def get_crawler_base_settings(config):
@@ -72,14 +77,14 @@ def get_crawler_base_settings(config):
     }
 
 
-def crawler_process(crawler_id, config):
+def crawler_process(crawler_id, instance_id, config):
     """Starts crawling."""
 
-    output_path = config["output_path"]
+    data_path = config["data_path"]
 
     # Redirects process logs to files
-    sys.stdout = open(f"{output_path}/log/{crawler_id}.out", "a", buffering=1)
-    sys.stderr = open(f"{output_path}/log/{crawler_id}.err", "a", buffering=1)
+    sys.stdout = open(f"{data_path}/log/{instance_id}.out", "a", buffering=1)
+    sys.stderr = open(f"{data_path}/log/{instance_id}.err", "a", buffering=1)
 
     process = CrawlerProcess(settings=get_crawler_base_settings(config))
 
@@ -93,7 +98,10 @@ def crawler_process(crawler_id, config):
         # process.crawl(StaticPageSpider, crawler_id=crawler_id)
         raise NotImplementedError
     elif config["crawler_type"] == "static_page":
-        process.crawl(StaticPageSpider, crawler_id=crawler_id, output_path=output_path)
+        process.crawl(StaticPageSpider,
+                      crawler_id=crawler_id,
+                      instance_id=instance_id,
+                      data_path=data_path)
 
     def update_database():
         # TODO: get port as variable
@@ -115,53 +123,57 @@ def gen_key():
 def start_crawler(config):
     """Create and starts a crawler as a new process."""
 
-    output_path = config["output_path"]
-    create_folders(output_path=output_path)
+    crawler_id = config["id"]
 
-    crawler_id = gen_key()
+    data_path = config["data_path"]
+    create_folders(data_path=data_path)
+    create_instances_file(data_path=data_path)
+
+    instance_id = gen_key()
     print(os.getcwd())
+    
+    with open(f"{data_path}/instances.txt", "a", buffering=1) as f:
+        f.write(instance_id + '\n')
 
-
-    with open(f"{output_path}/config/{crawler_id}.json", "w+") as f:
+    with open(f"{data_path}/config/{instance_id}.json", "w+") as f:
         f.write(json.dumps(config, indent=2))
 
-    with open(f"{output_path}/flags/{crawler_id}.json", "w+") as f:
+    with open(f"{data_path}/flags/{instance_id}.json", "w+") as f:
         f.write(json.dumps({"stop": False}))
 
     # starts new process
-    p = Process(target=crawler_process, args=(crawler_id, config))
+    p = Process(target=crawler_process, args=(crawler_id, instance_id, config))
     p.start()
 
-    return crawler_id
+    return instance_id
 
 
-
-def stop_crawler(crawler_id, config):
+def stop_crawler(instance_id, config):
     """Sets the flags of a crawler to stop."""
-    output_path = config["output_path"]
-    with open(f"{output_path}/flags/{crawler_id}.json", "w+") as f:
+    data_path = config["data_path"]
+    with open(f"{data_path}/flags/{instance_id}.json", "w+") as f:
         f.write(json.dumps({"stop": True}))
 
 
-def remove_crawler(crawler_id, are_you_sure=False):
+def remove_crawler(instance_id, are_you_sure=False):
     """
     CAUTION: Delete ALL files and folders created by a crawler run.
     This includes all data stored under
-    {CURR_FOLDER_FROM_ROOT}/data/{crawler_id}.
+    {CURR_FOLDER_FROM_ROOT}/data/.
     Save data before deleting.
     """
 
     if are_you_sure is False:
         msg = "ERROR: Delete ALL files and folders created by a crawler run." \
             f" This includes all data stored under {CURR_FOLDER_FROM_ROOT}/" \
-            "data/{crawler_id}. Save data before deleting. "
+            "data/. Save data before deleting. "
         raise Exception(msg)
 
     files = [
-        f"{CURR_FOLDER_FROM_ROOT}/config/{crawler_id}.json",
-        f"{CURR_FOLDER_FROM_ROOT}/flags/{crawler_id}.json",
-        f"{CURR_FOLDER_FROM_ROOT}/log/{crawler_id}.out",
-        f"{CURR_FOLDER_FROM_ROOT}/log/{crawler_id}.err",
+        f"{CURR_FOLDER_FROM_ROOT}/config/{instance_id}.json",
+        f"{CURR_FOLDER_FROM_ROOT}/flags/{instance_id}.json",
+        f"{CURR_FOLDER_FROM_ROOT}/log/{instance_id}.out",
+        f"{CURR_FOLDER_FROM_ROOT}/log/{instance_id}.err",
     ]
     for f in files:
         try:
@@ -170,7 +182,7 @@ def remove_crawler(crawler_id, are_you_sure=False):
             pass
 
     folders = [
-        f"{CURR_FOLDER_FROM_ROOT}/data/{crawler_id}",
+        f"{CURR_FOLDER_FROM_ROOT}/data/",
     ]
     for f in folders:
         try:
