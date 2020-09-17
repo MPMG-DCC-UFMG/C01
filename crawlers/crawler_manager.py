@@ -34,15 +34,15 @@ import requests
 # antiblock_persist_cookies
 
 
-def create_folders(output_path):
+def create_folders(data_path):
     """Create essential folders for crawlers if they do not exists"""
     files = [
-        f"{output_path}",
-        f"{output_path}/config",
-        f"{output_path}/data",
-        f"{output_path}/flags",
-        f"{output_path}/log",
-        f"{output_path}/webdriver",
+        f"{data_path}",
+        f"{data_path}/config",
+        f"{data_path}/data",
+        f"{data_path}/flags",
+        f"{data_path}/log",
+        f"{data_path}/webdriver",
     ]
     for f in files:
         try:
@@ -74,11 +74,11 @@ def get_crawler_base_settings(config):
 def crawler_process(crawler_id, instance_id, config):
     """Starts crawling."""
 
-    output_path = config["output_path"]
+    data_path = config["data_path"]
 
     # Redirects process logs to files
-    sys.stdout = open(f"{output_path}/log/{instance_id}.out", "a", buffering=1)
-    sys.stderr = open(f"{output_path}/log/{instance_id}.err", "a", buffering=1)
+    sys.stdout = open(f"{data_path}/log/{instance_id}.out", "a", buffering=1)
+    sys.stderr = open(f"{data_path}/log/{instance_id}.err", "a", buffering=1)
 
     process = CrawlerProcess(settings=get_crawler_base_settings(config))
 
@@ -95,7 +95,7 @@ def crawler_process(crawler_id, instance_id, config):
         process.crawl(StaticPageSpider,
                       crawler_id=crawler_id,
                       instance_id=instance_id,
-                      output_path=output_path)
+                      data_path=data_path)
 
     def update_database():
         # TODO: get port as variable
@@ -119,16 +119,16 @@ def start_crawler(config):
 
     crawler_id = config["id"]
 
-    output_path = config["output_path"]
-    create_folders(output_path=output_path)
+    data_path = config["data_path"]
+    create_folders(data_path=data_path)
 
     instance_id = gen_key()
     print(os.getcwd())
 
-    with open(f"{output_path}/config/{instance_id}.json", "w+") as f:
+    with open(f"{data_path}/config/{instance_id}.json", "w+") as f:
         f.write(json.dumps(config, indent=2))
 
-    with open(f"{output_path}/flags/{instance_id}.json", "w+") as f:
+    with open(f"{data_path}/flags/{instance_id}.json", "w+") as f:
         f.write(json.dumps({"stop": False}))
 
     # starts new process
@@ -140,8 +140,8 @@ def start_crawler(config):
 
 def stop_crawler(instance_id, config):
     """Sets the flags of a crawler to stop."""
-    output_path = config["output_path"]
-    with open(f"{output_path}/flags/{instance_id}.json", "w+") as f:
+    data_path = config["data_path"]
+    with open(f"{data_path}/flags/{instance_id}.json", "w+") as f:
         f.write(json.dumps({"stop": True}))
 
 

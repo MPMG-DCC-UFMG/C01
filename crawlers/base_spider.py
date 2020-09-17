@@ -25,7 +25,7 @@ from twisted.internet.error import TimeoutError
 class BaseSpider(scrapy.Spider):
     name = 'base_spider'
 
-    def __init__(self, crawler_id, instance_id, output_path, *a, **kw):
+    def __init__(self, crawler_id, instance_id, data_path, *a, **kw):
         """
         Spider init operations.
         Create folders to store files and some config and log files.
@@ -36,9 +36,9 @@ class BaseSpider(scrapy.Spider):
         self.instance_id = instance_id
         self.stop_flag = False
 
-        self.data_folder = f"{output_path}/data/"
-        config_file_path = f"{output_path}/config/{instance_id}.json"
-        self.flag_folder = f"{output_path}/flags/"
+        self.data_folder = f"{data_path}/data/"
+        config_file_path = f"{data_path}/config/{instance_id}.json"
+        self.flag_folder = f"{data_path}/flags/"
 
         with open(config_file_path, "r") as f:
             self.config = json.loads(f.read())
