@@ -5,7 +5,7 @@
             "depth": 0,
             "children": [
                 {
-                    "step": "for",
+                    "step": "para_cada",
                     "iterator": "h",
                     "iterable": {
                         "object": [1,2,3]
@@ -14,7 +14,7 @@
                     "depth": 1,
                     "children": [
                         {
-                            "step": "for",
+                            "step": "para_cada",
                             "iterator": "i",
                             "iterable": {
                                 "call":{
@@ -35,7 +35,7 @@
                                     "depth": 3
                                 },
                                 {
-                                    "step": "for",
+                                    "step": "para_cada",
                                     "iterator": "j",
                                     "iterable": {
                                         "call":{
@@ -49,7 +49,7 @@
                                     "depth": 3,
                                     "children": [
                                         {
-                                            "step": "for",
+                                            "step": "para_cada",
                                             "iterator": "k",
                                             "iterable": {
                                                 "call":{
@@ -63,7 +63,7 @@
                                             "depth": 4,
                                             "children": [
                                                 {
-                                                    "step": "for",
+                                                    "step": "para_cada",
                                                     "iterator": "l",
                                                     "iterable": {
                                                         "call":{
@@ -117,7 +117,7 @@
                     "depth": 1
                 },
                 {
-                    "step": "for",
+                    "step": "para_cada",
                     "iterator": "i",
                     "iterable": {
                         "call":{
@@ -149,7 +149,7 @@
             "depth": 0,
             "children": [
                 {
-                    "step": "for",
+                    "step": "para_cada",
                     "iterator": "i",
                     "iterable": {
                         "call":{
@@ -163,7 +163,7 @@
                     "depth": 1,
                     "children": [
                         {
-                            "step": "for",
+                            "step": "para_cada",
                             "iterator": "j",
                             "iterable": {
                                 "call":{
@@ -204,7 +204,7 @@
             "depth": 0,
             "children": [
                 {
-                    "step": "for",
+                    "step": "para_cada",
                     "iterator": "i",
                     "iterable": {
                         "object": [1,2,3]
@@ -213,7 +213,7 @@
                     "depth": 1,
                     "children": [
                         {
-                            "step": "for",
+                            "step": "para_cada",
                             "iterator": "j",
                             "iterable": {
                                 "call":{
@@ -227,7 +227,7 @@
                             "depth": 2,
                             "children": [
                                 {
-                                    "step": "for",
+                                    "step": "para_cada",
                                     "iterator": "k",
                                     "iterable": {
                                         "call":{
@@ -263,7 +263,7 @@
             "depth": 0,
             "children": [
                 {
-                    "step": "for",
+                    "step": "para_cada",
                     "iterator": "i",
                     "iterable": {
                         "call":{

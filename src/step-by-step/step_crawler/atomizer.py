@@ -25,7 +25,7 @@ def track_parallelizable_fors(recipe, list_of_iterables=None, code=0):
     if list_of_iterables is None:
         list_of_iterables = []
     for child, i in zip(recipe["children"], range(len(recipe["children"]))):
-        if child['step'] == "for":
+        if child['step'] == "para_cada":
             if len(recipe["children"]) - 1 == i:
                 if child['breakable']:
                     list_of_iterables.append({
@@ -121,7 +121,7 @@ def for_to_attribution(recipe, target, source):
             or 'children' not in recipe:
         raise TypeError("This recipe is in the wrong format")
 
-    if recipe['step'] != 'for':
+    if recipe['step'] != 'para_cada':
         raise TypeError("This step is not a for")
 
     new_recipe = []
@@ -155,7 +155,7 @@ def replace_fors_by_attributions(recipe, combination, list_of_iterables,
         needed done.
     """
     if steps_to_consider is None:
-        steps_to_consider = ['root', 'for']
+        steps_to_consider = ['root', 'para_cada']
     if recipe['step'] in steps_to_consider:
         for i in range(len(recipe['children'])):
             replace_fors_by_attributions(

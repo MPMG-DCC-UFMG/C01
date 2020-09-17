@@ -12,7 +12,7 @@ sys.path.append("../")
 
 class TestExtractInfo(unittest.TestCase):
     def test_generate_for(self):
-        with open("examples/recipe_examples.json") as file:
+        with open("tests/test_step_by_step/examples/recipe_examples.json") as file:
             recipe_examples = json.load(file)
 
 
@@ -21,7 +21,7 @@ class TestExtractInfo(unittest.TestCase):
         expected_result += "            for k in range_(stop = 2):\n"
         expected_result += "                print_(word = \"teste\")\n"
 
-        result = sg.generate_for(recipe_examples['unbreakable_between_breakable']['recipe']['children'][0], ff)
+        result = sg.generate_para_cada(recipe_examples['unbreakable_between_breakable']['recipe']['children'][0], ff)
 
         self.assertEqual(expected_result, result)
 
