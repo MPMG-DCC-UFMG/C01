@@ -70,6 +70,7 @@ def get_crawler_base_settings(config):
         "AUTOTHROTTLE_MAX_DELAY": config[f"{autothrottle}max_delay"],
     }
 
+
 def crawler_process(crawler_id, instance_id, config):
     """Starts crawling."""
 
@@ -91,9 +92,9 @@ def crawler_process(crawler_id, instance_id, config):
         # process.crawl(StaticPageSpider, crawler_id=crawler_id)
         raise NotImplementedError
     elif config["crawler_type"] == "static_page":
-        process.crawl(StaticPageSpider, 
-        crawler_id=crawler_id, 
-        instance_id=instance_id, 
+        process.crawl(StaticPageSpider,
+        crawler_id=crawler_id,
+        instance_id=instance_id,
         output_path=output_path)
 
     def update_database():
@@ -135,6 +136,7 @@ def start_crawler(config):
     p.start()
 
     return instance_id
+
 
 def stop_crawler(instance_id, config):
     """Sets the flags of a crawler to stop."""
