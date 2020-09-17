@@ -49,7 +49,7 @@ def create_folders(data_path):
             os.mkdir(f)
         except FileExistsError:
             pass
-        
+
 
 def create_instances_file(data_path):
     """Create a json file for storing crawler instances"""
@@ -131,7 +131,7 @@ def start_crawler(config):
 
     instance_id = gen_key()
     print(os.getcwd())
-    
+
     with open(f"{data_path}/instances.txt", "a", buffering=1) as f:
         f.write(instance_id + '\n')
 

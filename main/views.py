@@ -166,14 +166,15 @@ def run_crawl(request, crawler_id):
 
 def tail_log_file(request, instance_id):
 
-
     crawler_id = CrawlerInstance.objects.filter(instance_id=instance_id).values()[0]["crawler_id_id"]
 
     config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
     data_path = config["data_path"]
 
-    out = subprocess.run(["tail", f"{data_path}/log/{instance_id}.out", "-n", "10"], stdout=subprocess.PIPE).stdout
-    err = subprocess.run(["tail", f"{data_path}/log/{instance_id}.err", "-n", "10"], stdout=subprocess.PIPE).stdout
+    out = subprocess.run(["tail", f"{data_path}/log/{instance_id}.out", "-n", "10"],
+                         stdout=subprocess.PIPE).stdout
+    err = subprocess.run(["tail", f"{data_path}/log/{instance_id}.err", "-n", "10"],
+                         stdout=subprocess.PIPE).stdout
     return JsonResponse({
         "out": out.decode('utf-8'),
         "err": err.decode('utf-8'),
