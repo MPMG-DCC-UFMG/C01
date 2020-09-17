@@ -156,7 +156,7 @@ def remove_crawler(instance_id, are_you_sure=False):
     if are_you_sure is False:
         msg = "ERROR: Delete ALL files and folders created by a crawler run." \
             f" This includes all data stored under {CURR_FOLDER_FROM_ROOT}/" \
-            "data/{instance_id}. Save data before deleting. "
+            "data/. Save data before deleting. "
         raise Exception(msg)
 
     files = [
