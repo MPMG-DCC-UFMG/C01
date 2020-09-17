@@ -92,10 +92,10 @@ def crawler_process(crawler_id, instance_id, config):
         # process.crawl(StaticPageSpider, crawler_id=crawler_id)
         raise NotImplementedError
     elif config["crawler_type"] == "static_page":
-            process.crawl(StaticPageSpider,
-            crawler_id=crawler_id,
-            instance_id=instance_id,
-            output_path=output_path)
+        process.crawl(StaticPageSpider,
+                      crawler_id=crawler_id,
+                      instance_id=instance_id,
+                      output_path=output_path)
 
     def update_database():
         # TODO: get port as variable
