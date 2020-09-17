@@ -50,7 +50,6 @@ def create_folders(output_path):
         except FileExistsError:
             pass
 
-
 def get_crawler_base_settings(config):
     """Returns scrapy base configurations."""
     autothrottle = "antiblock_autothrottle_"
@@ -70,7 +69,6 @@ def get_crawler_base_settings(config):
         "AUTOTHROTTLE_START_DELAY": config[f"{autothrottle}start_delay"],
         "AUTOTHROTTLE_MAX_DELAY": config[f"{autothrottle}max_delay"],
     }
-
 
 def crawler_process(crawler_id, instance_id, config):
     """Starts crawling."""
@@ -93,7 +91,10 @@ def crawler_process(crawler_id, instance_id, config):
         # process.crawl(StaticPageSpider, crawler_id=crawler_id)
         raise NotImplementedError
     elif config["crawler_type"] == "static_page":
-        process.crawl(StaticPageSpider, crawler_id=crawler_id, instance_id=instance_id, output_path=output_path)
+        process.crawl(StaticPageSpider, 
+        crawler_id=crawler_id, 
+        instance_id=instance_id, 
+        output_path=output_path)
 
     def update_database():
         # TODO: get port as variable
@@ -123,7 +124,6 @@ def start_crawler(config):
     instance_id = gen_key()
     print(os.getcwd())
 
-
     with open(f"{output_path}/config/{instance_id}.json", "w+") as f:
         f.write(json.dumps(config, indent=2))
 
@@ -135,8 +135,6 @@ def start_crawler(config):
     p.start()
 
     return instance_id
-
-
 
 def stop_crawler(instance_id, config):
     """Sets the flags of a crawler to stop."""
