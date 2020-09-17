@@ -49,6 +49,12 @@ def create_folders(data_path):
             os.mkdir(f)
         except FileExistsError:
             pass
+        
+
+def create_instances_file(data_path):
+    """Create a json file for storing crawler instances"""
+    file = open(f"{data_path}/instances.txt", "a", buffering=1)
+
 
 def get_crawler_base_settings(config):
     """Returns scrapy base configurations."""
@@ -121,9 +127,13 @@ def start_crawler(config):
 
     data_path = config["data_path"]
     create_folders(data_path=data_path)
+    create_instances_file(data_path=data_path)
 
     instance_id = gen_key()
     print(os.getcwd())
+    
+    with open(f"{data_path}/instances.txt", "a", buffering=1) as f:
+        f.write(instance_id + '\n')
 
     with open(f"{data_path}/config/{instance_id}.json", "w+") as f:
         f.write(json.dumps(config, indent=2))
