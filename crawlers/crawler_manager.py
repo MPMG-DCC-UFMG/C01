@@ -149,7 +149,7 @@ def remove_crawler(instance_id, are_you_sure=False):
     """
     CAUTION: Delete ALL files and folders created by a crawler run.
     This includes all data stored under
-    {CURR_FOLDER_FROM_ROOT}/data/{instance_id}.
+    {CURR_FOLDER_FROM_ROOT}/data/.
     Save data before deleting.
     """
 
@@ -172,7 +172,7 @@ def remove_crawler(instance_id, are_you_sure=False):
             pass
 
     folders = [
-        f"{CURR_FOLDER_FROM_ROOT}/data/{instance_id}",
+        f"{CURR_FOLDER_FROM_ROOT}/data/",
     ]
     for f in folders:
         try:
