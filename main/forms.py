@@ -277,4 +277,5 @@ class RawCrawlRequestForm(CrawlRequestForm):
     invert_text_match = forms.BooleanField(required=False, label="Opposite")
 
     # PARSING #############################################################################
-    save_csv = forms.BooleanField(required=False, label="Save a CSV file")
+    save_csv = forms.BooleanField(required=False, label="Save a CSV file",
+                                  widget=forms.CheckboxInput(attrs={'checked': True}))
