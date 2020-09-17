@@ -107,7 +107,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     output_path = forms.CharField(
         required=False, max_length=2000, label="Path to save the files",
-        widget=forms.TextInput(attrs={'placeholder': '/home/user/Documents'}),
+        widget=forms.TextInput(attrs={'placeholder': '/home/user/Documents/<crawler_name>'}),
         validators=[CrawlRequest.pathValid]
     )
     
