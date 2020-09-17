@@ -90,7 +90,7 @@ class CrawlRequestForm(forms.ModelForm):
             'text_match_response',
             'invert_text_match',
             'save_csv',
-            'output_path',
+            'data_path',
         ]
 
 
@@ -105,7 +105,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
                                )
     obey_robots = forms.BooleanField(required=False, label="Obey robots.txt")
 
-    output_path = forms.CharField(
+    data_path = forms.CharField(
         required=False, max_length=2000, label="Path to save the files",
         widget=forms.TextInput(attrs={'placeholder': '/home/user/Documents/<crawler_name>'}),
         validators=[CrawlRequest.pathValid]
