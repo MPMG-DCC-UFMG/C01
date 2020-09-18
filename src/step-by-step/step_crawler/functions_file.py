@@ -1,7 +1,11 @@
+import io
 import asyncio
 import time
 import uuid
 from cssify import cssify
+from PIL import Image
+from captcha_solver.image_solver import ImageSolver
+from pyext import RuntimeModule
 
 
 def range_(stop):
@@ -102,3 +106,28 @@ async def nesse_elemento_esta_escrito(page, xpath, texto):
         return True
     else:
         return False
+
+
+async def break_image_captcha(page, xpath_input, xpath_output, preprocessing=None):
+    """This step downloads the captcha image then solves it and fills its respective form field
+
+        :param page : a pyppeteer page
+        :param xpath_input : XPATH of the captcha image element
+        :param xpath_output : XPATH of the form field for captcha text.
+        :param preprocessing (optional): The preprocessing function, to be applied
+                                         before character recognition. Defaults to None.
+        :returns text: the string representing the captcha characters
+    """
+
+    element = (await page.xpath(xpath_input))[0]
+    image_data = await element.screenshot(type='jpeg')
+    image = Image.open(io.BytesIO(image_data))
+    if preprocessing:
+        module = RuntimeModule.from_string("preprocessing", preprocessing)
+        solver = ImageSolver(preprocessing=module.preprocessing)
+    else:
+        solver = ImageSolver()
+    text = solver.solve(image=image)
+    type_function = f"(text) => {{ (document.querySelector('{cssify(xpath_output)}')).value = text; }}"
+    await page.evaluate(type_function, text)
+    return text
