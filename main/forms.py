@@ -3,7 +3,6 @@ from .models import CrawlRequest
 from django.core.validators import RegexValidator
 
 
-
 class CrawlRequestForm(forms.ModelForm):
     class Meta:
         model = CrawlRequest
@@ -96,14 +95,16 @@ class CrawlRequestForm(forms.ModelForm):
 
 class RawCrawlRequestForm(CrawlRequestForm):
 
-    # BASIC INFO #########################################################################
-    source_name = forms.CharField(label="Nome do coletor", max_length=200,
+    # BASIC INFO ##############################################################
+    source_name = forms.CharField(
+        label="Nome do coletor", max_length=200,
         widget=forms.TextInput(
             attrs={'placeholder': 'Diario oficial do Municipio'})
     )
-    base_url = forms.CharField(label="URL Base", max_length=200,
-        widget=forms.TextInput(
-            attrs={'placeholder': 'www.example.com/data/'}))
+    base_url = forms.CharField(
+        label="URL Base", max_length=200,
+        widget=forms.TextInput(attrs={'placeholder': 'www.example.com/data/'})
+    )
     obey_robots = forms.BooleanField(
         required=False, label="Obedecer robots.txt")
 
@@ -112,8 +113,8 @@ class RawCrawlRequestForm(CrawlRequestForm):
         widget=forms.TextInput(attrs={'placeholder': '/home/user/Documents'}),
         validators=[CrawlRequest.pathValid]
     )
-    
-    # ANTIBLOCK ##########################################################################
+
+    # ANTIBLOCK ###############################################################
     # Options for Delay
     antiblock_download_delay = forms.IntegerField(
         required=False,
@@ -217,7 +218,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     antiblock_persist_cookies = forms.BooleanField(
         required=False, label="Manter cookies entre requisições")
 
-    # CAPTCHA ############################################################################
+    # CAPTCHA #################################################################
     captcha = forms.ChoiceField(
         choices=(
             ('none', 'Nenhum'),
@@ -246,7 +247,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
         widget=forms.TextInput(attrs={'placeholder': '//div/...'})
     )
 
-    # CRAWLER TYPE ########################################################################
+    # CRAWLER TYPE ############################################################
     crawler_type = forms.ChoiceField(
         required=False, choices=(
             ('static_page', 'Página estática'),
@@ -281,7 +282,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     # Crawler Type - Single file
     # Crawler Type - Bundle file
 
-    # TEMPLATED URL ########################################################################
+    # TEMPLATED URL ###########################################################
     templated_url_type = forms.ChoiceField(
         required=False, choices=(
             ('none', 'Nenhum'),
@@ -308,7 +309,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
             attrs={'placeholder': '{\'name1\': value1; \'name2\': value2}'})
     )
 
-    # PROBING ##############################################################################
+    # PROBING #################################################################
     http_status_response = forms.CharField(
         required=False, max_length=2000,
         label="Status de resposta permitidos HTTP",
@@ -317,9 +318,10 @@ class RawCrawlRequestForm(CrawlRequestForm):
     invert_http_status = forms.BooleanField(required=False, label="Inverter")
     text_match_response = forms.CharField(
         required=False, max_length=2000, label="Resposta que contenha texto:",
-        widget=forms.TextInput(attrs={'placeholder': 'Processo não encontrado'})
+        widget=forms.TextInput(
+            attrs={'placeholder': 'Processo não encontrado'})
     )
     invert_text_match = forms.BooleanField(required=False, label="Inverter")
 
-    # PARSING #############################################################################
+    # PARSING #################################################################
     save_csv = forms.BooleanField(required=False, label="Salvar arquivo csv")
