@@ -96,7 +96,6 @@ class BaseSpider(scrapy.Spider):
 
         return self.stop_flag
 
-
     def extract_and_store_csv(self, response, content):
         """
         Try to extract a json/csv from response data.
