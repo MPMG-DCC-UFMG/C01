@@ -81,9 +81,9 @@ class StaticPageSpider(BaseSpider):
         if pattern != "":
             def allow(url):
                 if re.search(pattern, url) is not None:
-                    print(f"ADDING link {url}")
+                    print(f"ADDING link (passed regex filter) - {url}")
                     return True
-                print(f"IGNORING link {url}")
+                print(f"DISCARDING link (filtered by regex) - {url}")
                 return False
 
             urls_filtered = set(filter(allow, urls_found))
