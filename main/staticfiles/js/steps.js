@@ -1,10 +1,10 @@
 /**
  * Loads the json with the steps information and init the steps creations interface
- * @param  {object} outside_element [The element that will be the root of the entire interface]
- * @param  {object} output_element [The element where the steps json are going to be placed]
- * @param  {string} json_path [The path of the json with the steps information]
+ * @param  {Node} interface_root_element [The element that will be the root of the entire interface]
+ * @param  {Node} output_element [The element where the steps json are going to be placed]
+ * @param  {String} json_path [The path of the json with the steps information]
  */
-function load_steps(outside_element, output_element, json_path="/static/json/step_signatures.json"){
+function load_steps(interface_root_element, output_element, json_path="/static/json/step_signatures.json"){
     var xmlhttp = new XMLHttpRequest();
     
     xmlhttp.onreadystatechange = function() {
@@ -15,10 +15,10 @@ function load_steps(outside_element, output_element, json_path="/static/json/ste
             }
             return value;
         })
-        step_list = step_list.concat(JSON.parse('{"name":"object", "mandatory params":["ex: [1,2,3]"], "optional params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name":"for each", "mandatory params":[], "optional params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name":"for each page in", "mandatory params":[], "optional params":{}}'))
-        init_steps_creation_interface(outside_element, output_element, step_list)
+        step_list = step_list.concat(JSON.parse('{"name":"object", "mandatory_params":["ex: [1,2,3]"], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name":"for each", "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name":"for each page in", "mandatory_params":[], "optional_params":{}}'))
+        init_steps_creation_interface(interface_root_element, output_element, step_list)
       }
     };
 
@@ -32,13 +32,13 @@ function load_steps(outside_element, output_element, json_path="/static/json/ste
 
 
 /**
- * Init the steps creation interface, that is, the save button, the add step button and the step board
- * @param  {object} outside_element [The element that will be the root of the entire interface]
- * @param  {object} output_element [The element where the steps json are going to be placed]
- * @param  {object} step_list [A list with the steps information]
+ * Init the steps creation interface, that is, the save button, the add step button and the step board.
+ * @param  {Node} interface_root_element The element that will be the root of the entire interface.
+ * @param  {Node} output_element The element where the steps json are going to be placed.
+ * @param  {List} step_list A list with the steps information.
  */
 
-function init_steps_creation_interface(outside_element, output_element, step_list){
+function init_steps_creation_interface(interface_root_element, output_element, step_list){
     steps_creation_interface = document.createElement("div")
     steps_creation_interface.type= "steps_creation_interface"
     
@@ -58,8 +58,8 @@ function init_steps_creation_interface(outside_element, output_element, step_lis
     save_button.innerText = "Save steps"
     save_button.className="btn btn-primary step-controler-buttons"
     save_button.style.color = "white"
-    outside_element.save_button = save_button
-    outside_element.save_button.onclick = function(){build_json(step_board, output_element)}
+    interface_root_element.save_button = save_button
+    interface_root_element.save_button.onclick = function(){build_json(step_board, output_element)}
 
     step_controler.appendChild(add_block_button)
     step_controler.appendChild(save_button)
@@ -69,10 +69,10 @@ function init_steps_creation_interface(outside_element, output_element, step_lis
     steps_creation_interface.step_board = step_board
     steps_creation_interface.step_board.type
 
-    outside_element.insertBefore(steps_creation_interface, outside_element.children[0])
-    outside_element.type = "root"
-    outside_element.steps_creation_interface = steps_creation_interface
-    outside_element.step_json_input = output_element
+    interface_root_element.insertBefore(steps_creation_interface, interface_root_element.children[0])
+    interface_root_element.type = "root"
+    interface_root_element.steps_creation_interface = steps_creation_interface
+    interface_root_element.step_json_input = output_element
 
 }
 
@@ -80,8 +80,8 @@ function init_steps_creation_interface(outside_element, output_element, step_lis
 
 /**
  * Init the step_board, the element that will store the steps created by the user.
- * @param  {object} step_list [A list with the steps information]
- * @return {object} step_board [The step_board html element already initialized]
+ * @param  {List} step_list [A list with the steps information]
+ * @return {Node} step_board [The step_board html element already initialized]
  */
 function init_step_board(step_list){
     step_board = document.createElement('DIV')
@@ -107,7 +107,7 @@ function init_step_board(step_list){
  * Function that will be setted to be a method of the step_board
  * This function analyses the last step in the step_board to answer what 
  * should be the depth of the next step to be added.
- * @return {number} The last depth or in case of the last step be a 
+ * @return {Number} The last depth or in case of the last step be a 
  *                  loop step, the last depth + 1
  */
 function get_last_depth(){
@@ -131,8 +131,8 @@ function get_last_depth(){
 /**
  * This function gets the steps added by user in the step_board and builds the
  * steps json, that describes the steps to be performed on the page to be crawled. 
- * @param {object} step_board The html element with all the steps setted by user.
- * @param {object} output_element The html element that is going to receive the steps json in its value.
+ * @param {Node} step_board The html element with all the steps setted by user.
+ * @param {Node} output_element The html element that is going to receive the steps json in its value.
  */
 function build_json(step_board, output_element){
     var root_step = {
@@ -169,8 +169,8 @@ function build_json(step_board, output_element){
 
 /**
  * This function gets a block and extract its information to build the json step represtation with this.
- * @param {object} block The html element that represents a step and was parameterized by the user.
- * @return {dict} the step that was parameterized in the block, but now in the json steps represtation.
+ * @param {Node} block The html element that represents a step and was parameterized by the user.
+ * @return {Dict} the step that was parameterized in the block, but now in the json steps represtation.
  */
 function get_step_json_format(block){
     param_name = block.step.name.replace(/ /g, "_")
@@ -207,9 +207,9 @@ function get_step_json_format(block){
 
 /**
  * This function get all the mandatory parameters of a step, and return them but in input format in a list.
- * @param {string} step_name The name of the step to get the inputs representing the parameters.
- * @param {list} step_list The list of steps that conteing the step named with the step_name value.
- * @retuns {list} A list with the inputs represting the mandatory parameters of the step.
+ * @param {String} step_name The name of the step to get the inputs representing the parameters.
+ * @param {List} step_list The list of steps that conteing the step named with the step_name value.
+ * @retuns {List} A list with the inputs represting the mandatory parameters of the step.
  */
 function get_params_element_list(step_name, step_list){
     if(step_name == "objeto"){
@@ -235,9 +235,9 @@ function get_params_element_list(step_name, step_list){
 
 /**
  * This function puts one by one the strings of a list inside a tag.
- * @param {list} string_list A list of strings
- * @param {string} tag A tag
- * @retuns {string} All the tags with the string inside concatenated.
+ * @param {List} string_list A list of strings
+ * @param {String} tag A tag
+ * @retuns {String} All the tags with the string inside concatenated.
  */
 function get_this_texts_inside_each_tag(string_list, tag){
     html_tags=""
@@ -249,8 +249,8 @@ function get_this_texts_inside_each_tag(string_list, tag){
 
 /**
  * This function get the steps name inside a list of steps.
- * @param {list} step_list The list of steps on json steps format.
- * @retuns {list} A list with the names of all the steps inside the step_list.
+ * @param {List} step_list The list of steps on json steps format.
+ * @retuns {List} A list with the names of all the steps inside the step_list.
  */
 function get_step_names(step_list){
     step_names = []
@@ -263,13 +263,13 @@ function get_step_names(step_list){
 
 /**
  * This function gets the index of an element in its parent childrens.
- * @param {object} element 
- * @retuns {number} The index of the elemente in its parent children
+ * @param {Node} element The element by which the index will be found.
+ * @retuns {Number} The index of the elemente in its parent children.
  */
 function get_index_in_parent(element){
     parent = element.parentElement
     for(var i=0; i<parent.children.length; i++){
-        if(parent.children[i].id == element.id){
+        if(parent.children[i] == element){
             return i
         }
     }
@@ -277,9 +277,9 @@ function get_index_in_parent(element){
 
 /**
  * This function gets the information of an step inside a step_list by its name.
- * @param {string} step_name The name of the step.
- * @param {list} step_list The list of steps that conteing the step named with the step_name value.
- * @retuns {object} A dictionary with the information of the step.
+ * @param {String} step_name The name of the step.
+ * @param {List} step_list The list of steps that conteing the step named with the step_name value.
+ * @retuns {Dict} A dictionary with the information of the step.
  */
 function get_step_info(step_name, step_list){
     for(step of step_list){
@@ -291,8 +291,8 @@ function get_step_info(step_name, step_list){
 }
 
 /**
- * This function hides an element
- * @param {object} element Element to be hided
+ * This function hides an element.
+ * @param {Node} element Element to be hided.
  */
 function hide(element){
     element.style.display = "none";
@@ -300,20 +300,19 @@ function hide(element){
 
 /**
  * This function shows an hided element.
- * @param {object} element Element to be showed.
+ * @param {Node} element Element to be showed.
  */
 function show(element){
     element.style.display = "block";
 }
 
-
-//-------
-
 /**
- * This function is very important, it finds 
- * @param {string} step_name The name of the step.
- * @param {list} step_list The list of steps that conteing the step named with the step_name value.
- * @retuns {object} A dictionary with the information of the step.
+ * This function is very important, it finds in the ancestors of an element,
+ * that with an attribute setted with an value.
+ * @param {Node} element Starting element.
+ * @param {Any} value The value to be verificated in the attr of each ancestor.
+ * @param {String} attr The attribute that should be with the value.
+ * @retuns {Node} The ancestor element that have the value property with the value passed by parameter.
  */
 function find_parent_with_attr_worth(element, value, attr = "type"){
     if(element[attr] && element[attr] == value){
@@ -328,13 +327,3 @@ function find_parent_with_attr_worth(element, value, attr = "type"){
     }
 }
 
-
-function genId(length=8) {
-    var result = '';
-    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-    var charactersLength = characters.length;
-    for (var i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-    return result;
-}

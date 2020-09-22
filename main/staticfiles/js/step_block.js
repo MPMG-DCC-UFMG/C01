@@ -1,16 +1,23 @@
+
+/**
+ * Init a block. A block is an element that allows the user choose a step and then
+ * parametrize it.
+ * @param  {List} step_list A list with the steps information.
+ * @param {Number} depth The depth is the level of indentention of this step.
+ * @return {Node} The block initalized.
+ */
 function init_block(step_list, depth){
     //instanciating and initializing the block element
     var block = init_block_element(step_list)
 
     //Adding some attributes
-    block.id = genId()
     block.type = "block"
     block.step_list = step_list
     block.depth = depth
     block.style.left = (block.depth*2-2) +"em"
 
     //setting the select step
-    block.select_box=document.createElement("div")
+    block.select_box = document.createElement("div")
     block.select_box.className = "step-config-select"
     block.select = document.createElement("select")
     block.select.className = "row form-control select-step"
@@ -68,7 +75,6 @@ function init_block(step_list, depth){
     block.onmouseout()
 
     //seting other block methods
-    block.get_line = get_line
     block.delete_lines =  delete_lines 
 
 
@@ -105,6 +111,12 @@ function init_block(step_list, depth){
 
 //---------------- parameters manager methods --------------------------
 
+
+/**
+ * Init the optional parameters button. This button allows the user add optional parameters to the block.
+ * This function is a method of the blocks.
+ * @param {Dict} step A step in the json steps format
+ */
 function init_optional_params_button(step){
     
     block = find_parent_with_attr_worth(this, "block")
@@ -150,6 +162,15 @@ function init_optional_params_button(step){
     block.lines[last_line].appendChild(block.new_parameter_button_box) 
 }
 
+
+/**
+ * This function adds a parameter to a block, that is, 
+ * an input element to obtain the value to be setted 
+ * for this parameter. This function is a method of block.
+ * @param {String} param_name The name of the param to be added.
+ * @param {Bool} optional_param A boolean that says whether or 
+ *               not the parameter is optional
+ */
 function add_param(param_name, optional_param = false){
     block = find_parent_with_attr_worth(this, "block")
     last_line = block.lines.length-1
@@ -216,6 +237,14 @@ function add_param(param_name, optional_param = false){
 
 //---------------- lines manager methods ------------------------------
 
+/**
+ * This function is method of block. It adds a line to this block.
+ * A line is a conteiner that stores the parameters input and sometime,
+ * other things.
+ * @param {String} param_name The name of the param to be added.
+ * @param {Bool} optional_param A boolean that says whether or 
+ *               not the parameter is optional
+ */
 function add_line(){
     block = find_parent_with_attr_worth(this, "block")
     new_line = document.createElement("DIV")
@@ -235,14 +264,14 @@ function add_line(){
     block.lines_box.appendChild(new_line)
 }
 
-function get_line(i){
-    if(i==0){
-        return block.lines_box.children[0].children[1].children[0]
-    }else{
-        return block.lines_box.children[i].children[0].children[0]
-    }
-}
-
+/**
+ * This function is method of block. It deletes a range of lines.
+ * @param {Number} m If n wasn't passed, so m is the top limit
+ *                 of the range and 0 is the bottom limit. Else
+ *                 m is the bottom limit                    
+ * @param {Number} n The superior limit of the range.
+ *
+ */
 function delete_lines(m, n=null){
     if(n===null){
         n=m
@@ -255,6 +284,10 @@ function delete_lines(m, n=null){
 
 //---------------- refresh methods -----------------------------------
 
+/**
+ * Refreshes the parameter inputs of an iterable when it is changed.
+ * This function is a method of the iterable select element.
+ */
 function refresh_iterable(){
     block = find_parent_with_attr_worth(this, "block")
     block.iterable_step = get_step_info(this.value, block.step_list)
@@ -270,9 +303,12 @@ function refresh_iterable(){
     if(optional_params.length!=0){
         block.init_optional_params_button(block.iterable_step)
     }
-    
 }
 
+/**
+ * Refreshes the parameter inputs of an iterable when it is changed.
+ * This function is a method of the select element of the block.
+ */
 function refresh_step(){
     block = find_parent_with_attr_worth(this, "block")
     block.step = get_step_info(this.value, block.step_list)
@@ -300,6 +336,10 @@ function refresh_step(){
 
 //---------------- "turn to" methods ---------------------------------
 
+/**
+ * Sets the block to the for each step.
+ * This function is a method of the block.
+ */
 function turn_to_for_step(){
     block = find_parent_with_attr_worth(this, "block")
     block.delete_lines(block.lines.length)
@@ -338,6 +378,10 @@ function turn_to_for_step(){
     iterable_select.onchange()
 }
 
+/**
+ * Sets the block to the pagination step.
+ * This function is a method of the block.
+ */
 function turn_to_pagination_step(){
     block = find_parent_with_attr_worth(this, "block")
     block.delete_lines(block.lines.length)
@@ -350,6 +394,10 @@ function turn_to_pagination_step(){
 
 //---------------- block menu methods ------------------------------
 
+/**
+ * Hides the parameters inputs of a block.
+ * This function is a method of the block
+ */
 function hide_show_params(){
     block = find_parent_with_attr_worth(this, "block")
     if (block.params_visibility){
@@ -367,6 +415,10 @@ function hide_show_params(){
     }
 }
 
+/**
+ * Adds a block bellow the block that called this method.
+ * This function is a method of the block
+ */
 function add_block_bellow(){
     step_board = find_parent_with_attr_worth(this, "step_board")
     block = find_parent_with_attr_worth(this, "block")
@@ -375,6 +427,10 @@ function add_block_bellow(){
     step_board.add_block(step_list, i+1)
 }
 
+/**
+ * Decrease the indent of the block that called this method.
+ * This function is a method of the block
+ */
 function unindent_step(){
     block = find_parent_with_attr_worth(this, "block")
     if(block.depth > 1){
@@ -384,6 +440,10 @@ function unindent_step(){
     block.style.left = (block.depth*2-2) +"em"
 }
 
+/**
+ * Increase the indent of the block that called this method.
+ * This function is a method of the block
+ */
 function indent_step(){
     block = find_parent_with_attr_worth(this, "block")
     block.depth+=1
@@ -391,6 +451,10 @@ function indent_step(){
     block.style.left = (block.depth*2-2) +"em"
 }
 
+/**
+ * Moves the block that called this method up.
+ * This function is a method of the block
+ */
 function move_up(){
     block = find_parent_with_attr_worth(this, "block")
     index = get_index_in_parent(block)
@@ -400,6 +464,10 @@ function move_up(){
     }
 }
 
+/**
+ * Moves the block that called this method down.
+ * This function is a method of the block
+ */
 function move_down(){
     block = find_parent_with_attr_worth(this, "block")
     index = get_index_in_parent(block)
@@ -409,6 +477,10 @@ function move_down(){
     }
 }
 
+/**
+ * Delete the block that called this method.
+ * This function is a method of the block
+ */
 function delete_step(){
     find_parent_with_attr_worth(this, "block").remove()
 }
@@ -416,8 +488,14 @@ function delete_step(){
 
 //------------------ others ------------------------
 
+/**
+ * Init a block element. This function is called by the function init_block.
+ * It just initialize the base of the block element.
+ * @param  {List} step_list A list with the steps information.
+ * @return {Node} The block initalized.
+ */
 function init_block_element(step_list){
-    var step_html = `<div class="col-sm">
+    var block_html_base = `<div class="col-sm">
                     </div>
                     <div class="conteiner block-controler">
                         <div class="row block-controler-interface">
@@ -441,8 +519,8 @@ function init_block_element(step_list){
                             </div>
                         </div>
                     <div>`
-    var new_step = document.createElement("DIV")
-    new_step.innerHTML = step_html
-    new_step.className = "conteiner card step-block"
-    return new_step
+    var new_block = document.createElement("DIV")
+    new_block.innerHTML = block_html_base
+    new_block.className = "conteiner card step-block"
+    return new_block
 }
