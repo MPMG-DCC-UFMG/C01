@@ -129,6 +129,16 @@ class CrawlRequest(TimeStamped):
         for param in crawler.parameter_handlers.values():
             del param['id']
             del param['config_id']
+
+            # Convert Date parameters into iso string for serialization into
+            # JSON
+            if param['end_date_date_param'] is not None:
+                iso_str = param['start_date_date_param'].isoformat()
+                param['start_date_date_param'] = iso_str
+            if param['end_date_date_param'] is not None:
+                iso_str = param['end_date_date_param'].isoformat()
+                param['end_date_date_param'] = iso_str
+
             parameter_handlers.append(param)
 
         # Include information on response handling for Templated URLs
@@ -171,9 +181,7 @@ class ParameterHandler(models.Model):
     config = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE,
                                 related_name="parameter_handlers")
 
-    # Information on where to insert the parameter (index for URLs, key for
-    # request contents)
-    parameter_index = models.PositiveIntegerField(null=True, blank=True)
+    # Parameter key for request contents
     parameter_key = models.CharField(max_length=1000, blank=True)
 
     # Parameter configuration

@@ -13,10 +13,11 @@ import requests
 import time
 
 from crawlers.constants import *
-from param_injector import ParamInjector
 from entry_probing import BinaryFormatProbingResponse, HTTPProbingRequest,\
                           HTTPStatusProbingResponse, TextMatchProbingResponse,\
                           EntryProbing
+from param_injector import ParamInjector
+from range_inference import RangeInference
 import parsing_html
 import binary
 
@@ -95,43 +96,6 @@ class BaseSpider(scrapy.Spider):
 
         has_placeholder = "{}" in base_url
         if has_placeholder:
-            # Instantiate the parameter injectors for the URL
-            url_injectors = []
-            for param in self.config['parameter_handlers']:
-                param_type = param['parameter_type']
-                param_gen = None
-                if param_type == "formatted_str":
-                    # Formatted string generator
-                    #TODO
-                    pass
-                elif param_type == "number_seq":
-                    # Number sequence generator
-                    param_gen = ParamInjector.generate_num_sequence(
-                        first=param['first_num_param'],
-                        last=param['last_num_param'],
-                        step=param['step_num_param'],
-                        leading=param['leading_num_param'],
-                    )
-                elif param_type == 'date_seq':
-                    # Date sequence generator
-                    param_gen = ParamInjector.generate_daterange(
-                        date_format=param['date_format_date_param'],
-                        start_date=param['start_date_date_param'],
-                        end_date=param['end_date_date_param'],
-                        frequency=param['frequency_date_param'],
-                    )
-                elif param_type == 'alpha_seq':
-                    # Alphabetic search parameter generator
-                    param_gen = ParamInjector.generate_alpha(
-                        length=param['length_alpha_param'],
-                        num_words=param['num_words_alpha_param'],
-                        no_upper=param['no_upper_alpha_param'],
-                    )
-                else:
-                    raise ValueError(f"Invalid parameter type: {param_type}")
-
-                url_injectors.append(param_gen)
-
             # Request body (TODO)
             req_body = {}
             """
@@ -171,6 +135,50 @@ class BaseSpider(scrapy.Spider):
                     raise AssertionError
 
                 probe.add_response_handler(resp_handler)
+
+            # Instantiate the parameter injectors for the URL
+            url_injectors = []
+            for param in self.config['parameter_handlers']:
+                param_type = param['parameter_type']
+                param_gen = None
+                if param_type == "formatted_str":
+                    # Formatted string generator
+                    #TODO
+                    pass
+                elif param_type == "number_seq":
+                    # Number sequence generator
+                    param_gen = ParamInjector.generate_num_sequence(
+                        first=param['first_num_param'],
+                        last=param['last_num_param'],
+                        step=param['step_num_param'],
+                        leading=param['leading_num_param'],
+                    )
+                elif param_type == 'date_seq':
+                    # Date sequence generator
+                    begin = datetime.date.fromisoformat(
+                        param['start_date_date_param']
+                    )
+                    end = datetime.date.fromisoformat(
+                        param['end_date_date_param']
+                    )
+
+                    param_gen = ParamInjector.generate_daterange(
+                        date_format=param['date_format_date_param'],
+                        start_date=begin,
+                        end_date=end,
+                        frequency=param['frequency_date_param'],
+                    )
+                elif param_type == 'alpha_seq':
+                    # Alphabetic search parameter generator
+                    param_gen = ParamInjector.generate_alpha(
+                        length=param['length_alpha_param'],
+                        num_words=param['num_words_alpha_param'],
+                        no_upper=param['no_upper_alpha_param'],
+                    )
+                else:
+                    raise ValueError(f"Invalid parameter type: {param_type}")
+
+                url_injectors.append(param_gen)
 
             # Generate the requests
             param_generator = itertools.product(*url_injectors)

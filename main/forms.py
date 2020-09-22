@@ -250,10 +250,10 @@ class ParameterHandlerForm(forms.ModelForm):
             'first_num_param': 'First value to generate:',
             'last_num_param': 'Last value to generate:',
             'step_num_param': 'Step size:',
-            'leading_num_param': 'Leading zeros?',
+            'leading_num_param': 'Leading zeros',
             'length_alpha_param': 'Word length:',
             'num_words_alpha_param': 'Number of words:',
-            'no_upper_alpha_param': 'Lowercase only?',
+            'no_upper_alpha_param': 'Lowercase only',
             'date_format_date_param': 'Date format to use:',
             'start_date_date_param': 'Starting date:',
             'end_date_date_param': 'End date:',
@@ -267,6 +267,8 @@ class ParameterHandlerForm(forms.ModelForm):
             'date_format_date_param': forms.TextInput(attrs={
                 'placeholder': '%m/%d/%Y'
             }),
+            'start_date_date_param': forms.DateInput(attrs={'type': 'date'}),
+            'end_date_date_param': forms.DateInput(attrs={'type': 'date'})
         }
 
 
