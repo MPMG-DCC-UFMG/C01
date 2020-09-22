@@ -25,7 +25,7 @@ SECRET_KEY = '(8*f@fsa&8s1d4jnqp-v7_nbxj50nhghh$ij8g@u28&@2+2zjg'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'main.apps.MainConfig',
     'crispy_forms',
+    'rest_framework',
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -134,4 +135,18 @@ STATICFILES_DIRS = (
     'main/staticfiles',
 )
 STATIC_URL = '/static/'
-STATIC_ROOT = '/home/lorena/Django/interface/main'
+
+# API status messages
+API_ERROR = 'error'
+API_SUCCESS = 'success'
+
+# The Django REST Framework library supplies a good visualization for endpoints,
+# but it might be good to disable it in production. To disable it just uncomment
+# the lines below
+"""
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    )
+}
+"""
