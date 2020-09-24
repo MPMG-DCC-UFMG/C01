@@ -14,16 +14,17 @@ Crawler "{{ crawler.source_name }}"
             <h3>{{ crawler.source_name }}</h3>
             <h4>Details</h4>
             <ul>
+
                 <li>Nome do coletor: <strong>{{ crawler.source_name }}</strong></li>
                 <li>ID do coletor: <strong>{{ crawler.id }}</strong></li>
                 <li>URL base: <strong>{{ crawler.base_url }}</strong></li>
                 <li>Data de criação: <strong>{{ crawler.creation_date }}</strong></li>
-                
+                <li id="crawler_ status">Status: 
                 {% if crawler.running == True %}
-                <li>Status: <span class="badge badge-success">Rodando</span></li>
+                  <span class="badge badge-success">Rodando</span>
                 {% elif crawler.running == False %}
-                <li>Status: <span class="badge badge-warning">Parado</span></li>
-                {% endif %}
+                  <span class="badge badge-warning">Parado</span>
+                </li>
                 
                 <!-- <li id="status_badge">Status: <img src="{% static 'gif/loading-png-gif.gif' %}" style="height: 15px"></li> -->
             </ul>
@@ -88,12 +89,17 @@ Crawler "{{ crawler.source_name }}"
     <div class="row">
         <div class="col">
             {% if crawler.running == True %}
-            <a class="btn btn-success disabled">Começar</a>
-            <a class="btn btn-danger"
+
+            <a id="runBtn" class="btn btn-success disabled"
+                dataref="{% url 'run_crawl' crawler.id %}" >Começar</a>
+            <a id="stopBtn" class="btn btn-danger"
                 href="{% url 'stop_crawl' crawler.id %}">Parar</a>
             {% elif crawler.running == False %}
-            <a class="btn btn-success" href="{% url 'run_crawl' crawler.id %}">Começar</a>
-            <a class="btn btn-danger disabled">Parar</a>
+            <a id="runBtn" class="btn btn-success" 
+                href="{% url 'run_crawl' crawler.id %}">Começar</a>
+            <a id="stopBtn" class="btn btn-danger disabled" 
+                dataref="{% url 'stop_crawl' crawler.id %}">Parar</a>
+
             {% endif %}
             <!-- <a class="btn btn-success" id="run_button">
                 <img src="{% static 'gif/loading-png-gif.gif' %}" style="height: 25px">

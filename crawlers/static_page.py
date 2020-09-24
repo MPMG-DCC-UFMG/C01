@@ -80,7 +80,12 @@ class StaticPageSpider(BaseSpider):
         pattern = self.config["link_extractor_allow"]
         if pattern != "":
             def allow(url):
-                return re.search(pattern, url) is not None
+                if re.search(pattern, url) is not None:
+                    print(f"ADDING link (passed regex filter) - {url}")
+                    return True
+                print(f"DISCARDING link (filtered by regex) - {url}")
+                return False
+
             urls_filtered = set(filter(allow, urls_found))
 
             for url in urls_found:
@@ -103,7 +108,7 @@ class StaticPageSpider(BaseSpider):
             return
 
         if b'text/html' in response_type:
-            self.store_html(response, self.config["save_csv"])
+            self.store_html(response)
             if "explore_links" in self.config and self.config["explore_links"]:
                 this_url = response.url
                 for url in self.extract_links(response):
