@@ -91,7 +91,10 @@ class CrawlRequestForm(forms.ModelForm):
             'invert_text_match',
             'save_csv',
             'output_path',
+            'table_attrs',
         ]
+
+        widgets ={'table_attrs': forms.HiddenInput()}
 
 
 class RawCrawlRequestForm(CrawlRequestForm):
@@ -278,3 +281,8 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     # PARSING #############################################################################
     save_csv = forms.BooleanField(required=False, label="Save a CSV file")
+    table_attrs = forms.CharField(
+        required=False, max_length=2000, label="Motor de extração",
+        widget = forms.HiddenInput(attrs={'id':'table_attrs_hidden'})
+    )
+    

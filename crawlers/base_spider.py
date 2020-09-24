@@ -112,12 +112,41 @@ class BaseSpider(scrapy.Spider):
 
         if b'text/html' in response.headers['Content-type']:
             try:
-                parsing_html.content.html_detect_content(
-                    f"{self.data_folder}/raw_pages/{hsh}.{file_format}",
-                    is_string=False,
-                    output_file=output_filename,
-                    to_csv=self.config["save_csv"]
-                )
+                if self.config["table_attrs"] is None:
+                    parsing_html.content.html_detect_content(
+                        f"{self.data_folder}/raw_pages/{hsh}.{file_format}",
+                        is_string=False,
+                        output_file=output_filename,
+                        to_csv=self.config["save_csv"]
+                    )
+                else:
+                    extra_config = json.loads(self.config["table_attrs"]) 
+                    for key in extra_config:
+                        if extra_config[key] == "":
+                            extra_config[key] = None
+                    if extra_config['table_match'] is None:
+                        extra_config['table_match'] = '.+'
+                    if extra_config['parse_dates'] is None:
+                        extra_config['parse_dates'] = False
+                    if extra_config['keep_default_na'] is None:
+                        extra_config['keep_default_na'] = True
+                    if extra_config['displayed_only'] is None:
+                        extra_config['displayed_only'] = True
+                    if extra_config['table_thousands'] is None:
+                        extra_config['table_thousands'] = '.'
+                    if extra_config['table_decimal'] is None:
+                        extra_config['table_decimal'] = ', '
+                    parsing_html.content.html_detect_content(
+                        f"{self.data_folder}/raw_pages/{hsh}.{file_format}",
+                        is_string=False, output_file=output_filename,
+                        match=extra_config['table_match'], flavor=extra_config['table_flavor'],
+                        header=extra_config['table_header'], index_col=extra_config['table_index_col'],
+                        skiprows=extra_config['table_skiprows'], attrs=extra_config['table_attributes'],
+                        parse_dates=extra_config['table_parse_dates'], thousands=extra_config['table_thousands'],
+                        encoding=extra_config['table_encoding'], decimal=extra_config['table_decimal'],
+                        na_values=extra_config['table_na_values'], keep_default_na=extra_config['table_default_na'],
+                        displayed_only=extra_config['table_displayed_only'],to_csv=self.config["save_csv"]
+                    )
                 success = True
 
             except Exception as e:

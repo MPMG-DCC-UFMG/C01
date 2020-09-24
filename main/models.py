@@ -114,6 +114,8 @@ class CrawlRequest(TimeStamped):
 
     # PARSING #########################################################################
     save_csv = models.BooleanField(blank=True, null=True)
+    table_attrs = models.CharField(max_length=20000,blank=True, null=True)
+
 
 
     @property
