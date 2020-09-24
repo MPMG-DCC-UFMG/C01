@@ -61,7 +61,7 @@ function status_instance(instance_id){
             var stopBtn = document.getElementById("stopBtn")
             var runBtn = document.getElementById("runBtn")
             if(response["running"] == true){
-                document.getElementById("crawler_ status").innerHTML = '<span class="badge badge-success">Running</span>'
+                document.getElementById("crawler_ status").innerHTML = '<span class="badge badge-success">Rodando</span>'
                 stopBtn.classList.remove("disabled")
                 if (stopBtn.hasAttribute("dataref")){
                     stopBtn.setAttribute("href", stopBtn.getAttribute("dataref"))
@@ -74,7 +74,7 @@ function status_instance(instance_id){
                 }
             }else{
                 clearInterval(statusInterval)
-                document.getElementById("crawler_ status").innerHTML = '<span class="badge badge-warning">Not running</span>'
+                document.getElementById("crawler_ status").innerHTML = '<span class="badge badge-warning">Parado</span>'
                 stopBtn.classList.add("disabled")
                 if (stopBtn.hasAttribute("href")){
                     stopBtn.setAttribute("dataref", stopBtn.getAttribute("href"))
