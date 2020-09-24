@@ -99,7 +99,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     source_name = forms.CharField(
         label="Nome do coletor", max_length=200,
         widget=forms.TextInput(
-            attrs={'placeholder': 'Diario oficial do Municipio'})
+            attrs={'placeholder': 'Diário oficial do Município'})
     )
     base_url = forms.CharField(
         label="URL Base", max_length=200,
@@ -304,7 +304,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     # templated url - POST
     post_dictionary = forms.CharField(
         required=False, max_length=2000,
-        label="Dicionário de parêmtros post (formato: {'name':value;})",
+        label="Dicionário de parâmetros post (formato: {'name':value;})",
         widget=forms.TextInput(
             attrs={'placeholder': '{\'name1\': value1; \'name2\': value2}'})
     )
