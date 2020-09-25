@@ -46,13 +46,7 @@ class CrawlRequestForm(forms.ModelForm):
 
         output_filename = forms.CharField(required=False)
         save_csv = forms.BooleanField(required=False)
-
-        # Crawler type - Page with form
-
-
-
-
-
+        
         fields = [
 
 
