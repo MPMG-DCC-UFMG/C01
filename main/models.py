@@ -26,8 +26,9 @@ class CrawlRequest(TimeStamped):
     obey_robots = models.BooleanField(blank=True, null=True)
     pathValid = RegexValidator(
         r'^[0-9a-zA-Z\/\\-_]*$', 'This is not a valid path.')
-    output_path = models.CharField(
-        max_length=2000, blank=True, null=True, validators=[pathValid])
+    data_path = models.CharField(max_length=2000,
+                                 blank=True, null=True,
+                                 validators=[pathValid])
 
     # ANTIBLOCK #######################################################
     # Options for Delay
