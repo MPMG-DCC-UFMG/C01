@@ -89,7 +89,7 @@ class CrawlRequestForm(forms.ModelForm):
             'text_match_response',
             'invert_text_match',
             'save_csv',
-            'output_path',
+            'data_path',
         ]
 
 
@@ -110,7 +110,8 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     output_path = forms.CharField(
         required=False, max_length=2000, label="Caminho para salvar arquivos",
-        widget=forms.TextInput(attrs={'placeholder': '/home/user/Documents'}),
+        widget=forms.TextInput(
+            attrs={'placeholder': '/home/user/Documents/<crawler_name>'}),
         validators=[CrawlRequest.pathValid]
     )
 
@@ -323,5 +324,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
     invert_text_match = forms.BooleanField(required=False, label="Inverter")
 
-    # PARSING #################################################################
-    save_csv = forms.BooleanField(required=False, label="Salvar arquivo csv")
+    save_csv = forms.BooleanField(
+      required=False, label="Salvar arquivo csv",
+      widget=forms.CheckboxInput(attrs={'checked': True})
+    )
