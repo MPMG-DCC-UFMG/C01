@@ -22,6 +22,7 @@ from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError
 from twisted.internet.error import TimeoutError
 
+
 class BaseSpider(scrapy.Spider):
     name = 'base_spider'
 
@@ -120,7 +121,7 @@ class BaseSpider(scrapy.Spider):
                         to_csv=self.config["save_csv"]
                     )
                 else:
-                    extra_config = json.loads(self.config["table_attrs"]) 
+                    extra_config = json.loads(self.config["table_attrs"])
                     for key in extra_config:
                         if extra_config[key] == "":
                             extra_config[key] = None
@@ -145,7 +146,7 @@ class BaseSpider(scrapy.Spider):
                         parse_dates=extra_config['table_parse_dates'], thousands=extra_config['table_thousands'],
                         encoding=extra_config['table_encoding'], decimal=extra_config['table_decimal'],
                         na_values=extra_config['table_na_values'], keep_default_na=extra_config['table_default_na'],
-                        displayed_only=extra_config['table_displayed_only'],to_csv=self.config["save_csv"]
+                        displayed_only=extra_config['table_displayed_only'], to_csv=self.config["save_csv"]
                     )
                 success = True
 
@@ -229,7 +230,7 @@ class BaseSpider(scrapy.Spider):
         """Stores html and adds its description to file_description file."""
         self.store_raw(
             response, file_format="html", binary=False, save_at="raw_pages")
-        
+
 
     def errback_httpbin(self, failure):
         # log all errback failures,

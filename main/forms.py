@@ -94,7 +94,7 @@ class CrawlRequestForm(forms.ModelForm):
             'table_attrs',
         ]
 
-        widgets ={'table_attrs': forms.HiddenInput()}
+        widgets = {'table_attrs': forms.HiddenInput()}
 
 
 class RawCrawlRequestForm(CrawlRequestForm):
@@ -113,7 +113,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
         widget=forms.TextInput(attrs={'placeholder': '/home/user/Documents'}),
         validators=[CrawlRequest.pathValid]
     )
-    
+
     # ANTIBLOCK ##########################################################################
     # Options for Delay
     antiblock_download_delay = forms.IntegerField(
@@ -283,6 +283,5 @@ class RawCrawlRequestForm(CrawlRequestForm):
     save_csv = forms.BooleanField(required=False, label="Save a CSV file")
     table_attrs = forms.CharField(
         required=False, max_length=2000, label="Motor de extração",
-        widget = forms.HiddenInput(attrs={'id':'table_attrs_hidden'})
+        widget=forms.HiddenInput(attrs={'id': 'table_attrs_hidden'})
     )
-    
