@@ -48,7 +48,7 @@ class StaticPageSpider(BaseSpider):
     def extract_links(self, response):
         """Filter and return a set with links found in this response."""
         pfx = "link_extractor_"
-        
+
         config = response.meta['config']
 
         # function to get other keys from dictionary
