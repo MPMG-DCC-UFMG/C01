@@ -3,7 +3,6 @@ from .models import CrawlRequest
 from django.core.validators import RegexValidator
 
 
-
 class CrawlRequestForm(forms.ModelForm):
     class Meta:
         model = CrawlRequest
@@ -96,32 +95,39 @@ class CrawlRequestForm(forms.ModelForm):
 
 class RawCrawlRequestForm(CrawlRequestForm):
 
-    # BASIC INFO #########################################################################
-    source_name = forms.CharField(label="Source Name", max_length=200,
-        widget=forms.TextInput(attrs={'placeholder': 'Example'})
+    # BASIC INFO ##############################################################
+    source_name = forms.CharField(
+        label="Nome do coletor", max_length=200,
+        widget=forms.TextInput(
+            attrs={'placeholder': 'Diário oficial do Município'})
     )
-    base_url = forms.CharField(label="Base URL", max_length=200,
+    base_url = forms.CharField(
+        label="URL Base", max_length=200,
         widget=forms.TextInput(attrs={'placeholder': 'www.example.com/data/'})
-                               )
-    obey_robots = forms.BooleanField(required=False, label="Obey robots.txt")
+    )
+    obey_robots = forms.BooleanField(
+        required=False, label="Obedecer robots.txt")
 
-    data_path = forms.CharField(
-        required=False, max_length=2000, label="Path to save the files",
+    output_path = forms.CharField(
+        required=False, max_length=2000, label="Caminho para salvar arquivos",
         widget=forms.TextInput(
             attrs={'placeholder': '/home/user/Documents/<crawler_name>'}),
         validators=[CrawlRequest.pathValid]
     )
-    
-    # ANTIBLOCK ##########################################################################
+
+    # ANTIBLOCK ###############################################################
     # Options for Delay
     antiblock_download_delay = forms.IntegerField(
         required=False,
-        label="Average delay in Seconds (or min delay if autothrottle is on).",
+        label=(
+            "Intervalo médio em segundos (ou intervalo mínimo se "
+            "auto ajuste está ligado)."
+        ),
         initial=2,
     )
     antiblock_autothrottle_enabled = forms.BooleanField(
         required=False,
-        label="Enable autothrottle",
+        label="Habilitar auto ajuste de intervalo",
 
         widget=forms.CheckboxInput(
             attrs={
@@ -131,12 +137,12 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
     antiblock_autothrottle_start_delay = forms.IntegerField(
         required=False,
-        label="Starting delay",
+        label="Intervalo inicial",
         initial=2,
     )
     antiblock_autothrottle_max_delay = forms.IntegerField(
         required=False,
-        label="Max delay",
+        label="Intervalo máximo",
         initial=10,
     )
 
@@ -144,10 +150,10 @@ class RawCrawlRequestForm(CrawlRequestForm):
     antiblock_mask_type = forms.ChoiceField(
         required=False, choices=(
             ('none', 'None'),
-            # ('ip', 'IP rotation'),
-            # ('user_agent', 'User-agent rotation'),
-            # ('delay', 'Delays'),
-            # ('cookies', 'Use cookies'),
+            # ('ip', 'Rotação de IP'),
+            # ('user_agent', 'Rotação de user-agent'),
+            # ('delay', 'Intervalos entre requisições'),
+            # ('cookies', 'Usar cookies'),
         ),
         widget=forms.Select(attrs={'onchange': 'detailAntiblock();'})
     )
@@ -162,121 +168,163 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
     antiblock_proxy_list = forms.CharField(
         required=False, max_length=2000, label="Proxy List",
-        widget=forms.TextInput(attrs={'placeholder': 'Paste here the content of your proxy list file'})
+        widget=forms.TextInput(
+            attrs={
+                'placeholder': (
+                    "Cole aqui o conteúdo do seu arquivo de lista"
+                    " de proxyes"
+                )
+            }
+        )
     )
     antiblock_max_reqs_per_ip = forms.IntegerField(
         required=False,
-        label="Max Requisitions per IP",
+        label="Máximo de requisições por IP",
         initial=10,
     )
     antiblock_max_reuse_rounds = forms.IntegerField(
         required=False,
-        label="Max Reuse Rounds",
+        label="Máximo de vezes que um IP pode ser reusado",
         initial=10,
     )
 
     # Options for User Agent rotation
-    antiblock_reqs_per_user_agent = forms.IntegerField(required=False, label="Requests per User Agent")
+    antiblock_reqs_per_user_agent = forms.IntegerField(
+        required=False, label="Requisições por user-agents"
+    )
     antiblock_user_agents_file = forms.CharField(
-        required=False, max_length=2000, label="User Agents File",
-        widget=forms.TextInput(attrs={'placeholder': 'Paste here the content of your user agents file'})
+        required=False, max_length=2000, label="Arquivo de User-Agents",
+        widget=forms.TextInput(
+            attrs={
+                'placeholder': (
+                    'Cole aqui o conteúdo do seu arquivo'
+                    ' de user-agents'
+                )
+            }
+        )
     )
 
     # Options for Cookies
     antiblock_cookies_file = forms.CharField(
-        required=False, max_length=2000, label="Cookies File",
-        widget=forms.TextInput(attrs={'placeholder': 'Paste here the content of your cookies file'})
+        required=False, max_length=2000, label="Arquivo de cookies",
+        widget=forms.TextInput(
+            attrs={
+                'placeholder': (
+                    'Cole aqui o conteúdo do seu arquivo'
+                    ' de cookies'
+                )
+            }
+        )
     )
-    antiblock_persist_cookies = forms.BooleanField(required=False, label="Persist Cookies")
+    antiblock_persist_cookies = forms.BooleanField(
+        required=False, label="Manter cookies entre requisições")
 
-    # CAPTCHA ############################################################################
+    # CAPTCHA #################################################################
     captcha = forms.ChoiceField(
         choices=(
-            ('none', 'None'),
-            ('image', 'Image'),
-            ('sound', 'Sound'),
+            ('none', 'Nenhum'),
+            ('image', 'Imagem'),
+            ('sound', 'Áudio'),
         ),
         widget=forms.Select(attrs={'onchange': 'detailCaptcha();'})
     )
     # Options for Captcha
     has_webdriver = forms.BooleanField(
-        required=False, label="Use webdriver",
-        widget=forms.CheckboxInput(attrs={'onchange': 'detailWebdriverType(); defineValid("captcha")'})
+        required=False, label="Usar webdriver",
+        widget=forms.CheckboxInput(
+            attrs={'onchange': 'detailWebdriverType(); defineValid("captcha")'}
+        )
     )
     webdriver_path = forms.CharField(
-        required=False, max_length=2000, label="Download directory",
-        widget=forms.TextInput(attrs={'placeholder': 'Download directory path'}))
+        required=False, max_length=2000, label="Endereço para baixar",
+        widget=forms.TextInput(
+            attrs={'placeholder': 'Caminho para o diretório de donwload'}))
     img_xpath = forms.CharField(
-        required=False, label="Image Xpath", max_length=100,
-        widget=forms.TextInput(attrs={'placeholder': 'Image Xpath'})
+        required=False, label="Xpath da imagem", max_length=100,
+        widget=forms.TextInput(attrs={'placeholder': '//div/...'})
     )
     sound_xpath = forms.CharField(
-        required=False, label="Sound Xpath", max_length=100,
-        widget=forms.TextInput(attrs={'placeholder': 'Sound Xpath'})
+        required=False, label="Xpath do áudio", max_length=100,
+        widget=forms.TextInput(attrs={'placeholder': '//div/...'})
     )
 
-    # CRAWLER TYPE ########################################################################
+    # CRAWLER TYPE ############################################################
     crawler_type = forms.ChoiceField(
         required=False, choices=(
-            ('static_page', 'Static Page'),
-            # ('form_page', 'Page with Form'),
-            # ('single_file', 'Single File'),
-            # ('bundle_file', 'Bundle File'),
+            ('static_page', 'Página estática'),
+            # ('form_page', 'Páginas com formulário'),
+            # ('single_file', 'Arquivo único'),
+            # ('bundle_file', 'Conjunto de arquivos'),
         ),
         widget=forms.Select(attrs={'onchange': 'detailCrawlerType();'})
     )
-    explore_links = forms.BooleanField(required=False, label="Explore links")
+    explore_links = forms.BooleanField(required=False, label="Explorar links")
 
     # Crawler Type - Static
     link_extractor_max_depth = forms.IntegerField(
-        required=False, label="Link extractor max depth (blank to not limit):"
+        required=False,
+        label="Profundidade máxima do link (deixe em branco para não limitar):"
     )
     link_extractor_allow = forms.CharField(
-        required=False, max_length=2000, label="Allow urls that match with the regex (blank to not filter):",
-        widget=forms.TextInput(attrs={'placeholder': 'Regex for allowing urls'})
+        required=False, max_length=2000,
+        label=(
+            "Permitir urls que casem com o regex"
+            " (deixe em branco para não filtrar):"
+        ),
+        widget=forms.TextInput(
+            attrs={'placeholder': 'Regex para permitir urls'})
     )
     link_extractor_allow_extensions = forms.CharField(
-        required=False, max_length=2000, label="List of allowed extensions (comma separed):",
+        required=False, max_length=2000,
+        label="Extensões de arquivo permitidas (separado por vírgula):",
         widget=forms.TextInput(attrs={'placeholder': 'pdf,xml'})
     )
     # Crawler Type - Page with form
     # Crawler Type - Single file
     # Crawler Type - Bundle file
 
-    # TEMPLATED URL ########################################################################
+    # TEMPLATED URL ###########################################################
     templated_url_type = forms.ChoiceField(
         required=False, choices=(
-            ('none', 'None'),
+            ('none', 'Nenhum'),
             ('get', 'GET'),
             ('post', 'POST'),
         ),
-        widget=forms.Select(attrs={'onchange': 'detailTemplatedUrlRequestType();'})
+        widget=forms.Select(
+            attrs={'onchange': 'detailTemplatedUrlRequestType();'})
     )
     # templated url - GET
     formatable_url = forms.CharField(
-        required=False, max_length=2000, label="Formatable URL (format: example.com/param={})",
-        widget=forms.TextInput(attrs={'placeholder': 'https://obraspublicas.com/IDOBRA={}'})
+        required=False, max_length=2000,
+        label="URL parametrizada (formato: example.com/param={})",
+        widget=forms.TextInput(
+            attrs={'placeholder': 'https://obraspublicas.com/IDOBRA={}'})
     )
     # param
 
     # templated url - POST
     post_dictionary = forms.CharField(
-        required=False, max_length=2000, label="Dictionary of post params (format: {'name':value;})",
-        widget=forms.TextInput(attrs={'placeholder': '{\'name1\': value1; \'name2\': value2}'})
+        required=False, max_length=2000,
+        label="Dicionário de parâmetros post (formato: {'name':value;})",
+        widget=forms.TextInput(
+            attrs={'placeholder': '{\'name1\': value1; \'name2\': value2}'})
     )
 
-    # PROBING ##############################################################################
+    # PROBING #################################################################
     http_status_response = forms.CharField(
-        required=False, max_length=2000, label="HTTP status response",
+        required=False, max_length=2000,
+        label="Status de resposta permitidos HTTP",
         widget=forms.TextInput(attrs={'placeholder': '200'})
     )
-    invert_http_status = forms.BooleanField(required=False, label="Opposite")
+    invert_http_status = forms.BooleanField(required=False, label="Inverter")
     text_match_response = forms.CharField(
-        required=False, max_length=2000, label="Text match response",
-        widget=forms.TextInput(attrs={'placeholder': 'Processo não encontrado'})
+        required=False, max_length=2000, label="Resposta que contenha texto:",
+        widget=forms.TextInput(
+            attrs={'placeholder': 'Processo não encontrado'})
     )
-    invert_text_match = forms.BooleanField(required=False, label="Opposite")
+    invert_text_match = forms.BooleanField(required=False, label="Inverter")
 
-    # PARSING #############################################################################
-    save_csv = forms.BooleanField(required=False, label="Save a CSV file",
-                                  widget=forms.CheckboxInput(attrs={'checked': True}))
+    save_csv = forms.BooleanField(
+      required=False, label="Salvar arquivo csv",
+      widget=forms.CheckboxInput(attrs={'checked': True})
+    )

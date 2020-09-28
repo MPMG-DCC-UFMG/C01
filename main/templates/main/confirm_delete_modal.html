@@ -1,11 +1,11 @@
 {% extends 'main/base.html' %}  
 {% block content %}
 <div class="confimation-div">
-  <h1>Confirm delete</h1>
+  <h1>Confirmar exclusão</h1>
   <form method="POST" action="."> {% csrf_token %}
-    <p>Are you sure you want to delete "{{crawler.source_name}}"?</p>
-    <input type="submit" value="Confirm" class="btn btn-warning">
-    <a href="{% url 'list_crawlers' %}" class="btn btn-secondary">Cancel</a>
+    <p>Tem certeza que deseja excluir "{{crawler.source_name}}"?</p>
+    <input type="submit" value="Confirmar" class="btn btn-warning">
+    <a href="{% url 'list_crawlers' %}" class="btn btn-secondary">Cancelar</a>
 
   </form>
 </div>
