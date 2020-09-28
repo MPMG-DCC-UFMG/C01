@@ -171,9 +171,15 @@ def tail_log_file(request, instance_id):
     config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
     data_path = config["data_path"]
 
-    out = subprocess.run(["tail", f"{data_path}/log/{instance_id}.out", "-n", "10"],
+    out = subprocess.run(["tail",
+                          f"{data_path}/log/{instance_id}.out",
+                          "-n",
+                          "10"],
                          stdout=subprocess.PIPE).stdout
-    err = subprocess.run(["tail", f"{data_path}/log/{instance_id}.err", "-n", "10"],
+    err = subprocess.run(["tail",
+                          f"{data_path}/log/{instance_id}.err",
+                          "-n",
+                          "10"],
                          stdout=subprocess.PIPE).stdout
     return JsonResponse({
         "out": out.decode('utf-8'),

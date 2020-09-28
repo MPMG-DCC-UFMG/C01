@@ -96,8 +96,7 @@ class BaseSpider(scrapy.Spider):
 
         return self.stop_flag
 
-
-    def extract_and_store_csv(self, response, content, save_csv):
+    def extract_and_store_csv(self, response, content):
         """
         Try to extract a json/csv from response data.
         """
@@ -108,7 +107,7 @@ class BaseSpider(scrapy.Spider):
         success = False
 
         output_filename = f"{self.data_folder}/csv/{hsh}"
-        if save_csv and (".csv" not in output_filename):
+        if self.config["save_csv"] and ".csv" not in output_filename:
             output_filename += ".csv"
 
         if b'text/html' in response.headers['Content-type']:
@@ -117,7 +116,7 @@ class BaseSpider(scrapy.Spider):
                     f"{self.data_folder}/raw_pages/{hsh}.{file_format}",
                     is_string=False,
                     output_file=output_filename,
-                    to_csv=save_csv
+                    to_csv=self.config["save_csv"]
                 )
                 success = True
 
@@ -150,7 +149,7 @@ class BaseSpider(scrapy.Spider):
 
 
     def store_raw(
-            self, response, to_csv, file_format=None, binary=True, save_at="files"):
+            self, response, file_format=None, binary=True, save_at="files"):
         """Save response content."""
 
         if file_format is None:
@@ -195,12 +194,12 @@ class BaseSpider(scrapy.Spider):
         ) as f:
             f.write(body)
 
-        self.extract_and_store_csv(response, content, to_csv)
+        self.extract_and_store_csv(response, content)
 
-    def store_html(self, response, to_csv=False):
+    def store_html(self, response):
         """Stores html and adds its description to file_description file."""
         self.store_raw(
-            response, to_csv, file_format="html", binary=False, save_at="raw_pages")
+            response, file_format="html", binary=False, save_at="raw_pages")
         
 
     def errback_httpbin(self, failure):
