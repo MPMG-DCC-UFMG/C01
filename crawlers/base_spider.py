@@ -101,13 +101,15 @@ class BaseSpider(scrapy.Spider):
         Try to extract a json/csv from response data.
         """
 
+        config = response.meta['config']
+
         file_format = self.get_format(response.headers['Content-type'])
         hsh = crawling_utils.hash(response.url)
 
         success = False
 
         output_filename = f"{self.data_folder}/csv/{hsh}"
-        if self.config["save_csv"] and ".csv" not in output_filename:
+        if config["save_csv"] and ".csv" not in output_filename:
             output_filename += ".csv"
 
         if b'text/html' in response.headers['Content-type']:
@@ -116,7 +118,7 @@ class BaseSpider(scrapy.Spider):
                     f"{self.data_folder}/raw_pages/{hsh}.{file_format}",
                     is_string=False,
                     output_file=output_filename,
-                    to_csv=self.config["save_csv"]
+                    to_csv=config["save_csv"]
                 )
                 success = True
 
