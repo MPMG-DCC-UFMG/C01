@@ -19,6 +19,7 @@ SETTINGS = {
     'KAFKA_INCOMING_TOPIC': 'demo.incoming'
 }
 
+
 class SchedulerPlugin:
     def __init__(self, time_delta: float = 1):
         self.scheduled = set()
@@ -258,9 +259,9 @@ class SchedulerPlugin:
         if next_crawl_time:
             timestamp = next_crawl_time.strftime("%Y-%m-%d %H:%M")
             return self.schedule_crawl(timestamp, req)
-        
+
         else:
-            False 
+            False
 
     def daemon(self) -> None:
         while True:
