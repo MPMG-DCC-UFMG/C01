@@ -9,6 +9,7 @@ import time
 from datetime import datetime, timedelta
 from kafka import KafkaProducer
 
+
 class SchedulerPlugin(BaseHandler):
     schema = "scheduler_schema.json"
     scheduled = set()
@@ -43,14 +44,14 @@ class SchedulerPlugin(BaseHandler):
 
         Args:
             dict: a valid dictionary object
-        
+
         Returns:
             None
-        
+
         '''
 
         self.schedule(dict)
-    
+
         dict['parsed'] = True
         dict['valid'] = True
 
@@ -166,7 +167,7 @@ class SchedulerPlugin(BaseHandler):
             at_minute: If greater than or equal to 0, the minute the crawl must be processed.
             from_weekday: If greater than or equal to 0 and `to_weekday` also, the minimum day of the week that the crawl must be processed. Where Monday = 0.. Sunday = 6
             to_weekday: If greater than or equal to 0 and `from_weekday` also, the maximum day of the week that the crawl should be processed. Where Monday = 0.. Sunday = 6
-    
+
         Returns:
             Returns the next crawl time.
 
@@ -205,7 +206,7 @@ class SchedulerPlugin(BaseHandler):
             at_weekday: If greater than or equal to 0, day of the week that the scheduled crawl should be processed. Where Monday = 0 ... Sunday = 6
             at_hour: If greater than or equal to 0, time that the scheduled crawl must be processed.
             at_minute: If greater than or equal to 0, minute that the scheduled crawl should be processed.
-    
+
         Returns:
             Returns the time of the next collection.
 
@@ -237,7 +238,7 @@ class SchedulerPlugin(BaseHandler):
             key: Key to a value in `conf` that will be validated.
             min_val: Minimum value that the value of the key in `conf` is valid.
             max_val: Maximum value that the value of the key in `conf` is valid.
-    
+
         Returns:
             The value of `key` in` conf` or -1 if the restrictions have not been satisfied.
 
@@ -263,10 +264,10 @@ class SchedulerPlugin(BaseHandler):
 
         Args:
             conf: Crawl settings per hour.
-        
+
         Returns:
             Returns the values of hourly crawl settings.
-        
+
         '''
 
         at_minute = self.validate_field(conf, 'at_minute', 0, 59)
@@ -308,7 +309,7 @@ class SchedulerPlugin(BaseHandler):
 
         Args:
             conf: Configuration of crawl per week.
-    
+
         Returns:
             Returns standardized values for weekly crawl schedule settings.
 
@@ -326,10 +327,10 @@ class SchedulerPlugin(BaseHandler):
         Args:
             now: Current time.
             conf: Configuration of crawl schedule..
-        
+
         Returns:
             Returns the time of the next crawl or None, if it has been configured incorrectly.
-        
+
         '''
 
         try:
@@ -371,7 +372,7 @@ class SchedulerPlugin(BaseHandler):
 
             else:
                 return None
-        
+
         except Exception as e:
             self.logger.error(str(e))
             return None
@@ -401,7 +402,7 @@ class SchedulerPlugin(BaseHandler):
 
         Args:
             timestamp: Timestamp of scheduled crawls.
-        
+
         Returns:
             Returns the set of crawls scheduled for a specific time.
 
@@ -416,10 +417,10 @@ class SchedulerPlugin(BaseHandler):
 
     def send_crawl(self, crawl: dict) -> None:
         '''Sends a crawl to be processed by the Scrapy Cluster.
-        
+
         Args:
             crawl: Dictionary containing information about the visit to be performed..
-        
+
         Returns:
             None.
 
@@ -436,7 +437,7 @@ class SchedulerPlugin(BaseHandler):
 
         Args:
             req: Request for crawl schedule.
-        
+
         Returns:
             Returns True if the scheduling was successful, False, otherwise.
 
@@ -444,10 +445,10 @@ class SchedulerPlugin(BaseHandler):
 
         # removes metadata from the SC, as well as null default values assigned by it.
         req = dict((key, req[key]) for key in req if req[key])
-        
+
         if 'scheduler' not in req:
-            return False 
-        
+            return False
+
         crawl_req = req['scheduler']
         now = datetime.now()
         next_crawl_time = self.get_next_crawl_time(now, crawl_req)
@@ -457,7 +458,7 @@ class SchedulerPlugin(BaseHandler):
             if self.schedule_crawl(timestamp, req):
                 self.logger.info(
                     f'Crawl scheduled for {timestamp} sucessfully')
-                return 
+                return
 
         self.logger.info("Failed to schedule crawl")
 
@@ -467,7 +468,7 @@ class SchedulerPlugin(BaseHandler):
 
         while True:
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-            
+
             if timestamp in self.scheduled:
                 scheduled_crawls = self.get_scheduled_crawls(timestamp)
 
