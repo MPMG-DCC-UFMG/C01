@@ -6,7 +6,6 @@
  */
 function load_steps(interface_root_element, output_element, json_path="/static/json/step_signatures.json"){
     var xmlhttp = new XMLHttpRequest();
-    
     xmlhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
         step_list = JSON.parse(this.response, function (key, value){
@@ -21,7 +20,6 @@ function load_steps(interface_root_element, output_element, json_path="/static/j
         init_steps_creation_interface(interface_root_element, output_element, step_list)
       }
     };
-
     xmlhttp.open("GET", json_path, true);
     xmlhttp.send();
 }
