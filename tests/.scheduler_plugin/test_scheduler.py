@@ -19,6 +19,7 @@ SETTINGS = {
     'KAFKA_INCOMING_TOPIC': 'demo.incoming'
 }
 
+
 class TestScheduler(unittest.TestCase):
     def setUp(self):
         self.crawls_timestamp_received = None
@@ -29,7 +30,7 @@ class TestScheduler(unittest.TestCase):
     def test_weekday_shift(self):
         '''Verifica se o cálculo de intervalos entre dias está correto.
         '''
-        
+
         scheduler = SchedulerPlugin()
 
         for from_weekday in range(7):
@@ -42,7 +43,7 @@ class TestScheduler(unittest.TestCase):
                     if curr_weekday == 7:
                         curr_weekday = 0
                     num_days += 1
-                
+
                 self.assertTrue(num_days == scheduler.calculate_weekday_shift(from_weekday, to_weekday))
 
     def test_hour_shift(self):
@@ -67,10 +68,10 @@ class TestScheduler(unittest.TestCase):
     def test_get_next_crawl_by_time(self):
         '''Verifica se é possível agendar um horário específico para que uma coleta seja realizada ou comece.
         '''
-        
+
         scheduler = SchedulerPlugin()
 
-        # Tenta criar timestamp para uma coleta no passado 
+        # Tenta criar timestamp para uma coleta no passado
         now = datetime.now()
         conf = {'start_at': '2020-07-12 23:59'}
 
@@ -98,15 +99,15 @@ class TestScheduler(unittest.TestCase):
     def test_get_next_crawl_by_minutes(self):
         '''Verifica agendamentos por minutos.
         '''
-        
+
         scheduler = SchedulerPlugin()
-        
+
         now = datetime.now()
         curr_minute = now.minute
 
         for delta_minute in range(1, 61):
             crawl_minute = (curr_minute + delta_minute) % 60
-            conf = {'repeat': {'every': delta_minute,'interval': 'minutes'}}
+            conf = {'repeat': {'every': delta_minute, 'interval': 'minutes'}}
             next_crawl = scheduler.get_next_crawl_time(now, conf)
             self.assertTrue(crawl_minute == next_crawl.minute)
 
@@ -135,14 +136,14 @@ class TestScheduler(unittest.TestCase):
                         }
 
                         crawl_hour = (curr_hour + delta_hour) % 24
-                        
+
                         if from_hour > to_hour:
                             if crawl_hour > to_hour and crawl_hour < from_hour:
                                 crawl_hour = from_hour
-                    
+
                         elif crawl_hour < from_hour or crawl_hour > to_hour:
                             crawl_hour = from_hour
-                            
+
                         next_crawl = scheduler.get_next_crawl_time(now, conf)
 
                         self.assertTrue(next_crawl.hour == crawl_hour)
@@ -161,7 +162,7 @@ class TestScheduler(unittest.TestCase):
     def test_get_next_crawl_by_days(self):
         '''Verifica todos parâmetros para agendamentos por dias.
         '''
-        
+
         scheduler = SchedulerPlugin()
         max_days = 8
 
@@ -189,13 +190,13 @@ class TestScheduler(unittest.TestCase):
                             if from_weekday > to_weekday:
                                 if crawl_weekday > to_weekday and crawl_weekday < from_weekday:
                                     crawl_weekday = from_weekday
-                            
+
                             elif crawl_weekday < from_weekday or crawl_weekday > to_weekday:
                                 crawl_weekday = from_weekday
-                            
+
                             next_crawl = scheduler.get_next_crawl_time(now, conf)
-                            
-                            self.assertTrue(next_crawl.weekday() == crawl_weekday)  
+
+                            self.assertTrue(next_crawl.weekday() == crawl_weekday)
                             self.assertTrue(next_crawl.hour == at_hour)
                             self.assertTrue(next_crawl.minute == at_minute)
 
@@ -212,7 +213,7 @@ class TestScheduler(unittest.TestCase):
     def test_get_next_crawl_by_weeks(self):
         '''Verifica todos parâmetros para agendamentos por semanas.
         '''
-        
+
         scheduler = SchedulerPlugin()
         max_weeks = 52
 
@@ -238,19 +239,19 @@ class TestScheduler(unittest.TestCase):
                         self.assertTrue(new_crawl.minute == at_minute)
 
         # testa período de recoleta inválido
-        conf = {'repeat': {'every': 0,'interval': 'weeks'}}
+        conf = {'repeat': {'every': 0, 'interval': 'weeks'}}
         new_crawl = scheduler.get_next_crawl_time(now, conf)
         self.assertTrue(new_crawl == None)
 
         # testa período inválido de recoleta
-        conf = {'repeat': {'every': -1,'interval': 'weeks',}}
+        conf = {'repeat': {'every': -1, 'interval': 'weeks', }}
         new_crawl = scheduler.get_next_crawl_time(now, conf)
         self.assertTrue(new_crawl == None)
 
     def _income_listener(self):
         '''Método com consumidor kafka que recebe mensagens do tópico de entrada do Scrapy Cluster.
         '''
-        
+
         self.crawls_timestamp_received = list()
         for message in self.kafka_consumer:
             timestamp = ujson.loads(message.value)['ts']
@@ -276,7 +277,7 @@ class TestScheduler(unittest.TestCase):
                 },
             }
         }
-        
+
         thread = threading.Thread(target=self._income_listener, daemon=True)
         thread.start()
 
@@ -285,6 +286,5 @@ class TestScheduler(unittest.TestCase):
         self.keep_running = False
 
         # Como recoletas ocorrem no intervalo de um minuto e o tempo esta passando virtualmente 60 segundos por segundo real,
-        # é esperado que haja, pelo menos, 60 requisições de coletas enviadas ao tópico de entrada do SC 
+        # é esperado que haja, pelo menos, 60 requisições de coletas enviadas ao tópico de entrada do SC
         self.assertTrue(len(self.crawls_timestamp_received) >= 60)
-        
