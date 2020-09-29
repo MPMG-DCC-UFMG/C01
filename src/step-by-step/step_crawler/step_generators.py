@@ -36,7 +36,7 @@ def generate_if(child, module):
     elif 'comparison' in child['condition']:
         code += child['condition']['comparison'] + ':\n'
     else:
-        raise TypeError('This iterable is in the wrong format')
+        raise TypeError('This condition is in the wrong format')
 
     code += cg.generate_body(child, module)
 
@@ -44,17 +44,33 @@ def generate_if(child, module):
 
 
 def generate_while(child, module):
-    condition_call_name = getattr(module, child['condition']['step'])
-    is_coroutine = inspect.iscoroutinefunction(condition_call_name)
-    call = cg.generate_call(child['condition']['step'],
-                         child['condition']['arguments'],
-                         is_coroutine)
+    code = ''
+    if 'limit' in child['condition']:
+        code += child['depth'] * '    ' + 'limit = 0\n'
+    code += child['depth'] * '    ' + 'while '
 
-    code += child['depth'] * '    '
-    code += 'while ' + call + ':' + '\n'
+    if child['negation']:
+        code += 'not '
+
+    if 'call' in child['condition']:
+        call = child['condition']['call']
+        function = getattr(module, call['step'])
+        is_coroutine = inspect.iscoroutinefunction(function)
+        code += cg.generate_call(call['step'], call['arguments'], is_coroutine)
+    elif 'comparison' in child['condition']:
+        code += child['condition']['comparison']
+    else:
+        raise TypeError('This condition is in the wrong format')
+
+    if 'limit' in child['condition']:
+        code += ' and limit < ' + str(child['condition']['limit'])
+        code += ':\n'
+        code += (child['depth'] + 1) * '    ' + 'limit += 1\n'
+    else:
+        code += ':\n'
+
     code += cg.generate_body(child, module)
     return code
-
 
 def generate_attribution(child, module):
     code = ""
