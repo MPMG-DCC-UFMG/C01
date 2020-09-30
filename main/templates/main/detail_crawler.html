@@ -14,16 +14,17 @@ Crawler "{{ crawler.source_name }}"
             <h3>{{ crawler.source_name }}</h3>
             <h4>Details</h4>
             <ul>
-                <li>Source name: <strong>{{ crawler.source_name }}</strong></li>
-                <li>Crawler ID: <strong>{{ crawler.id }}</strong></li>
-                <li>Base URL: <strong>{{ crawler.base_url }}</strong></li>
-                <li>Creation date: <strong>{{ crawler.creation_date }}</strong></li>
-                
+
+                <li>Nome do coletor: <strong>{{ crawler.source_name }}</strong></li>
+                <li>ID do coletor: <strong>{{ crawler.id }}</strong></li>
+                <li>URL base: <strong>{{ crawler.base_url }}</strong></li>
+                <li>Data de criação: <strong>{{ crawler.creation_date }}</strong></li>
+                <li id="crawler_ status">Status: 
                 {% if crawler.running == True %}
-                <li>Status: <span class="badge badge-success">Running</span></li>
+                  <span class="badge badge-success">Rodando</span>
                 {% elif crawler.running == False %}
-                <li>Status: <span class="badge badge-warning">Not running</span></li>
-                {% endif %}
+                  <span class="badge badge-warning">Parado</span>
+                </li>
                 
                 <!-- <li id="status_badge">Status: <img src="{% static 'gif/loading-png-gif.gif' %}" style="height: 15px"></li> -->
             </ul>
@@ -39,7 +40,7 @@ Crawler "{{ crawler.source_name }}"
             {% if last_instance is not None %}
                 {{last_instance.instance_id}}
             {% else %}
-                None
+                Nenhum
             {% endif %}
         </div>
         <div class="col" id="instance_running">
@@ -56,10 +57,10 @@ Crawler "{{ crawler.source_name }}"
                 <thead>
                     <tr>
                         <th scope="col">ID</th>
-                        <th scope="col">Started at</th>
-                        <th scope="col">Last updated at</th>
-                        <th scope="col">Config file</th>
-                        <th scope="col">Data folder</th>
+                        <th scope="col">Iniciado em</th>
+                        <th scope="col">Última atualização</th>
+                        <th scope="col">Arquivo de configurações</th>
+                        <th scope="col">Arquivo de dados</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -68,8 +69,8 @@ Crawler "{{ crawler.source_name }}"
                         <td>{{instance.instance_id}}</td>
                         <td>{{instance.creation_date}}</td>
                         <td>{{instance.last_modified}}</td>
-                        <td><button type="button" class="btn btn-primary">Open config file</button></td>
-                        <td><button type="button" class="btn btn-primary">Open data folder</button></td>
+                        <td><button type="button" class="btn btn-primary">Abrir</button></td>
+                        <td><button type="button" class="btn btn-primary">Abrir</button></td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -79,7 +80,7 @@ Crawler "{{ crawler.source_name }}"
     {% else %}
     <div class="row">
         <div class="col">
-            <h5>No instance created.</h5>
+            <h5>Nenhuma instância criada.</h5>
         </div>
     </div>
     {% endif %}
@@ -88,12 +89,17 @@ Crawler "{{ crawler.source_name }}"
     <div class="row">
         <div class="col">
             {% if crawler.running == True %}
-            <a class="btn btn-success disabled">Run</a>
-            <a class="btn btn-danger"
-                href="{% url 'stop_crawl' crawler.id %}">Stop</a>
+
+            <a id="runBtn" class="btn btn-success disabled"
+                dataref="{% url 'run_crawl' crawler.id %}" >Começar</a>
+            <a id="stopBtn" class="btn btn-danger"
+                href="{% url 'stop_crawl' crawler.id %}">Parar</a>
             {% elif crawler.running == False %}
-            <a class="btn btn-success" href="{% url 'run_crawl' crawler.id %}">Run</a>
-            <a class="btn btn-danger disabled">Stop</a>
+            <a id="runBtn" class="btn btn-success" 
+                href="{% url 'run_crawl' crawler.id %}">Começar</a>
+            <a id="stopBtn" class="btn btn-danger disabled" 
+                dataref="{% url 'stop_crawl' crawler.id %}">Parar</a>
+
             {% endif %}
             <!-- <a class="btn btn-success" id="run_button">
                 <img src="{% static 'gif/loading-png-gif.gif' %}" style="height: 25px">
@@ -101,8 +107,8 @@ Crawler "{{ crawler.source_name }}"
             <a class="btn btn-danger" id="stop_button">
                 <img src="{% static 'gif/loading-png-gif.gif' %}" style="height: 25px">
             </a> -->
-            <a class="btn btn-info" href="{% url 'edit_crawler' crawler.id %}" class="btn btn-primary">Edit</a>
-            <a class="btn btn-secondary" href="{% url 'delete_crawler' crawler.id %}">Delete</a>
+            <a class="btn btn-info" href="{% url 'edit_crawler' crawler.id %}" class="btn btn-primary">Editar</a>
+            <a class="btn btn-secondary" href="{% url 'delete_crawler' crawler.id %}">Excluir</a>
         </div>
     </div>
 
@@ -110,14 +116,14 @@ Crawler "{{ crawler.source_name }}"
     <!-- Log header -->
     <div class="row" style="margin-top: 15px;">
         <div class="col">
-            <h4>Last instance logs</h4>
+            <h4>Logs da última instância</h4>
         </div>
     </div>
 
     <!-- Tail stdout -->
     <div class="row">
         <div class="col">
-            <div class="row"><div class="col"><h5>Stdout tail</h5></div></div>
+            <div class="row"><div class="col"><h5>Últimas linhas do stdout</h5></div></div>
             <div class="row">
                 <div class="col" style="border: 1px solid gray" id="stdout_tail">
                     2020-06-19 14:24:24 [scrapy.utils.log] INFO: Scrapy 2.1.0 started (bot: crawlers) <br>
@@ -135,14 +141,14 @@ Crawler "{{ crawler.source_name }}"
                     'scrapy.extensions.logstats.LogStats'] <br>
                 </div>
             </div>          
-            <div class="row"><div class="col"><i id="stdout_tail_update">last update: 07/06/2020 11:09</i></div></div>
+            <div class="row"><div class="col"><i id="stdout_tail_update">Última atualização: 07/06/2020 11:09</i></div></div>
         </div>
     </div>
 
     <!-- Tail stderr -->
     <div class="row">
         <div class="col">
-            <div class="row"><div class="col"><h5>Stderr tail</h5></div></div>
+            <div class="row"><div class="col"><h5>Últimas linhas do stderr</h5></div></div>
             <div class="row">
                 <div class="col" style="border: 1px solid gray" id="stderr_tail">
                     2020-06-19 14:24:24 [scrapy.utils.log] INFO: Scrapy 2.1.0 started (bot: crawlers) <br>
@@ -160,7 +166,7 @@ Crawler "{{ crawler.source_name }}"
                     'scrapy.extensions.logstats.LogStats'] <br>
                 </div>
             </div>
-            <div class="row"><div class="col"><i id="stderr_tail_update">last update: 07/06/2020 11:09</i></div></div> 
+            <div class="row"><div class="col"><i id="stderr_tail_update">Última atualização: 07/06/2020 11:09</i></div></div> 
         </div>
     </div>
     {% endif %}

@@ -24,6 +24,11 @@ class CrawlRequest(TimeStamped):
     source_name = models.CharField(max_length=200)
     base_url = models.CharField(max_length=200)
     obey_robots = models.BooleanField(blank=True, null=True)
+    pathValid = RegexValidator(r'^[0-9a-zA-Z\/\\-_]*$',
+                               'This is not a valid path.')
+    data_path = models.CharField(max_length=2000,
+                                 blank=True, null=True,
+                                 validators=[pathValid])
 
     REQUEST_TYPES = [
         ('GET', 'GET'),
@@ -32,11 +37,6 @@ class CrawlRequest(TimeStamped):
     request_type = models.CharField(max_length=15,
                                     choices=REQUEST_TYPES,
                                     default='GET')
-
-    pathValid = RegexValidator(r'^[0-9a-zA-Z\/\\-_]*$',
-                               'This is not a valid path.')
-    output_path = models.CharField(max_length=2000, blank=True, null=True,
-                                   validators=[pathValid])
 
     # ANTIBLOCK ###############################################################
     # Options for Delay
@@ -116,13 +116,13 @@ class CrawlRequest(TimeStamped):
         del config['creation_date']
         del config['last_modified']
 
-        if config["output_path"] is None:
-            config["output_path"] = CURR_FOLDER_FROM_ROOT
+        if config["data_path"] is None:
+            config["data_path"] = CURR_FOLDER_FROM_ROOT
         else:
-            if config["output_path"][-1] == "/":
-                config["output_path"] = config["output_path"][:-1]
+            if config["data_path"][-1] == "/":
+                config["data_path"] = config["data_path"][:-1]
             else:
-                config["output_path"] = config["output_path"]
+                config["data_path"] = config["data_path"]
 
         # Include information on parameter handling
         parameter_handlers = []

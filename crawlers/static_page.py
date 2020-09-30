@@ -27,7 +27,10 @@ class StaticPageSpider(BaseSpider):
                 method=req['method'],
                 body=json.dumps(req['body']),
                 callback=self.parse,
-                meta={"referer": "start_requests"},
+                meta={
+                    "referer": "start_requests",
+                    "config": self.config
+                },
                 errback=self.errback_httpbin)
 
     def convert_allow_extesions(self):
@@ -48,11 +51,13 @@ class StaticPageSpider(BaseSpider):
         """Filter and return a set with links found in this response."""
         pfx = "link_extractor_"
 
+        config = response.meta['config']
+
         # function to get other keys from dictionary
         def get_link_config(key, default):
             key = pfx + key
-            if key in self.config:
-                return self.config[key]
+            if key in config:
+                return config[key]
             return default
 
         links_extractor = LinkExtractor(
@@ -77,10 +82,15 @@ class StaticPageSpider(BaseSpider):
 
         urls_found = {i.url for i in links_extractor.extract_links(response)}
 
-        pattern = self.config["link_extractor_allow"]
+        pattern = config["link_extractor_allow"]
         if pattern != "":
             def allow(url):
-                return re.search(pattern, url) is not None
+                if re.search(pattern, url) is not None:
+                    print(f"ADDING link (passed regex filter) - {url}")
+                    return True
+                print(f"DISCARDING link (filtered by regex) - {url}")
+                return False
+
             urls_filtered = set(filter(allow, urls_found))
 
             for url in urls_found:
@@ -98,18 +108,20 @@ class StaticPageSpider(BaseSpider):
         response_type = response.headers['Content-type']
         print(f"Parsing {response.url}, type: {response_type}")
 
+        config = response.meta['config']
 
         if self.stop():
             return
 
         if b'text/html' in response_type:
-            self.store_html(response, self.config["save_csv"])
-            if "explore_links" in self.config and self.config["explore_links"]:
+            self.store_html(response)
+            if "explore_links" in config and config["explore_links"]:
                 this_url = response.url
                 for url in self.extract_links(response):
                     yield scrapy.Request(
                         url=url, callback=self.parse,
-                        meta={"referer": response.url},
+                        meta={"referer": response.url,
+                              "config": config},
                         errback=self.errback_httpbin
                     )
         else:
