@@ -1,17 +1,14 @@
+# Scrapy and Twister libs
 import scrapy
-from scrapy.crawler import CrawlerProcess
 from scrapy.linkextractors import LinkExtractor
 
-from crawlers.base_spider import BaseSpider
-
-import requests
+# Other external libs
 import logging
-import os
 import re
-import json
-import random
-import datetime
-import hashlib
+import requests
+
+# Project libs
+from crawlers.base_spider import BaseSpider
 
 
 class StaticPageSpider(BaseSpider):
@@ -32,7 +29,7 @@ class StaticPageSpider(BaseSpider):
 
     def convert_allow_extesions(self):
         """Converts 'allow_extesions' configuration into 'deny_extesions'."""
-        allow_extension = f"link_extractor_allow_extensions"
+        allow_extension = f"download_files_allow_extensions"
         if (
             allow_extension in self.config and
             self.config[allow_extension] is not None and
@@ -40,58 +37,59 @@ class StaticPageSpider(BaseSpider):
         ):
             allowed_extensions = set(self.config[allow_extension].split(","))
             extensions = [i for i in scrapy.linkextractors.IGNORED_EXTENSIONS]
-            self.config[f"link_extractor_deny_extensions"] = [
+            self.config[f"donwload_files_deny_extensions"] = [
                 i for i in extensions if i not in allowed_extensions
             ]
 
+    def filter_list_of_urls(self, url_list, pattern):
+        """Filter a list of urls according to a regex pattern."""
+        def allow(url):
+            if re.search(pattern, url) is not None:
+                print(f"ADDING link (passed regex filter) - {url}")
+                return True
+            print(f"DISCARDING link (filtered by regex) - {url}")
+            return False
+
+        urls_filtered = set(filter(allow, url_list))
+
+        return urls_filtered
+
     def extract_links(self, response):
         """Filter and return a set with links found in this response."""
-        pfx = "link_extractor_"
-
-        # function to get other keys from dictionary
-        def get_link_config(key, default):
-            key = pfx + key
-            if key in self.config:
-                return self.config[key]
-            return default
-
-        links_extractor = LinkExtractor(
-            # TODO: cant make regex tested on https://regexr.com/ work
-            # here for some reason
-            # allow=get_link_config("allow", ())
-            deny=get_link_config("deny", ()),
-            allow_domains=get_link_config("allow_domains", ()),
-            deny_domains=get_link_config("deny_domains", ()),
-            # Note here: changed the default value. It would ignore all
-            # links with extensions
-            deny_extensions=get_link_config("deny_extensions", []),
-            restrict_xpaths=get_link_config("restrict_xpaths", ()),
-            restrict_css=get_link_config("restrict_css", ()),
-            tags=get_link_config("tags", 'a'),
-            attrs=get_link_config("attrs", 'href'),
-            canonicalize=get_link_config("canonicalize", False),
-            unique=get_link_config("unique", True),
-            process_value=get_link_config("process_value", None),
-            strip=get_link_config("strip", True)
-        )
+    
+        # TODO: cant make regex tested on https://regexr.com/ work
+        # here for some reason
+        links_extractor = LinkExtractor()
+        #    allow=self.config["link_extractor_allow_url"])
 
         urls_found = {i.url for i in links_extractor.extract_links(response)}
 
-        pattern = self.config["link_extractor_allow"]
+        pattern = self.config["link_extractor_allow_url"]
         if pattern != "":
-            def allow(url):
-                if re.search(pattern, url) is not None:
-                    print(f"ADDING link (passed regex filter) - {url}")
-                    return True
-                print(f"DISCARDING link (filtered by regex) - {url}")
-                return False
+            urls_found = self.filter_list_of_urls(urls_found, pattern)
 
-            urls_filtered = set(filter(allow, urls_found))
+        return urls_found
 
-            for url in urls_found:
-                this_url = response.url
+    def extract_files(self, response):
+        """Filter and return a set with links found in this response."""
+    
+        # TODO: cant make regex tested on https://regexr.com/ work
+        # here for some reason
+        links_extractor = LinkExtractor(
+            deny_extensions = self.config["donwload_files_deny_extensions"]
+        #    allow = self.config["download_files_allow_url"], ())
+        )
+        urls_found = {i.url for i in links_extractor.extract_links(response)}
 
-            urls_found = urls_filtered
+        pattern = self.config["download_files_allow_url"]
+        if pattern != "":
+            urls_found = self.filter_list_of_urls(urls_found, pattern)
+
+        # removing non-file urls 
+        # (ends with '.' + 3 or 4 chars and does not ends with ".html" or
+        # ".php")
+        urls_found = self.filter_list_of_urls(
+            urls_found, r"(.*\.[a-z]{3,4}$)(.*(?<!\.html)$)(.*(?<!\.php)$)")
 
         return urls_found
 
@@ -117,5 +115,9 @@ class StaticPageSpider(BaseSpider):
                         meta={"referer": response.url},
                         errback=self.errback_httpbin
                     )
+
+            if self.config["download_files"]:
+                for file in self.extract_files(response):
+                    self.feed_file_downloader(file, response)
         else:
             self.store_raw(response)

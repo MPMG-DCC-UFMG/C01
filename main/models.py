@@ -91,8 +91,11 @@ class CrawlRequest(TimeStamped):
     crawler_type = models.CharField(max_length=15, choices=CRAWLER_TYPE, default='static_page')
     explore_links = models.BooleanField(blank=True, null=True)
     link_extractor_max_depth = models.IntegerField(blank=True, null=True)
-    link_extractor_allow = models.CharField(max_length=1000, blank=True, null=True)
-    link_extractor_allow_extensions = models.CharField(blank=True, null=True, max_length=2000)
+    link_extractor_allow_url = models.CharField(max_length=1000, blank=True, null=True)
+
+    download_files = models.BooleanField(blank=True, null=True)
+    download_files_allow_url = models.CharField(max_length=1000, blank=True, null=True)
+    download_files_allow_extensions = models.CharField(blank=True, null=True, max_length=2000)
 
     # TEMPLATED URL ###################################################################
     TEMPLATED_URL_TYPE = [
