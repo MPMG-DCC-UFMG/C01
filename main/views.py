@@ -46,7 +46,7 @@ def process_run_crawl(crawler_id):
             else:
                 data["data_path"] = data["data_path"]
 
-        instance_id = crawler_manager.start_crawler(data)
+        instance_id = crawler_manager.start_crawler(data.copy())
 
         instance = create_instance(data['id'], instance_id)
 
