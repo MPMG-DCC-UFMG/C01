@@ -276,17 +276,17 @@ class ParameterHandlerForm(forms.ModelForm):
         model = ParameterHandler
         fields = '__all__'
         labels = {
-            'first_num_param': 'First value to generate:',
-            'last_num_param': 'Last value to generate:',
-            'step_num_param': 'Step size:',
-            'leading_num_param': 'Leading zeros',
-            'length_alpha_param': 'Word length:',
-            'num_words_alpha_param': 'Number of words:',
-            'no_upper_alpha_param': 'Lowercase only',
-            'date_format_date_param': 'Date format to use:',
-            'start_date_date_param': 'Starting date:',
-            'end_date_date_param': 'End date:',
-            'frequency_date_param': 'Frequency to generate',
+            'first_num_param': 'Primeiro valor a gerar:',
+            'last_num_param': 'Último valor a gerar:',
+            'step_num_param': 'Tamanho do passo:',
+            'leading_num_param': 'Zeros à esquerda',
+            'length_alpha_param': 'Tamanho da palavra:',
+            'num_words_alpha_param': 'Número de palavras:',
+            'no_upper_alpha_param': 'Apenas letras minúsculas',
+            'date_format_date_param': 'Formato de data a usar:',
+            'start_date_date_param': 'Data inicial:',
+            'end_date_date_param': 'Data final:',
+            'frequency_date_param': 'Frequência a gerar',
         }
 
         widgets = {

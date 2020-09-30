@@ -186,10 +186,10 @@ class ParameterHandler(models.Model):
 
     # Parameter configuration
     PARAM_TYPES = [
-        ('formatted_str', 'Formatted code'),
-        ('number_seq', 'Number sequence'),
-        ('date_seq', 'Date sequence'),
-        ('alpha_seq', 'Alphabetic sequence'),
+        ('formatted_str', 'Código formatado'),
+        ('number_seq', 'Sequência numérica'),
+        ('date_seq', 'Sequência de datas'),
+        ('alpha_seq', 'Sequência alfabética'),
     ]
 
     parameter_type = models.CharField(max_length=15,
@@ -209,9 +209,9 @@ class ParameterHandler(models.Model):
 
     # Date param
     DATE_FREQ = [
-        ('Y', 'Yearly'),
-        ('M', 'Monthly'),
-        ('D', 'Daily'),
+        ('Y', 'Anual'),
+        ('M', 'Mensal'),
+        ('D', 'Diária'),
     ]
     date_format_date_param = models.CharField(max_length=1000, blank=True)
     start_date_date_param = models.DateField(null=True, blank=True)
@@ -231,9 +231,9 @@ class ResponseHandler(models.Model):
                                 related_name="response_handlers")
 
     HANDLER_TYPES = [
-        ('text', 'Text match'),
-        ('http_status', 'HTTP status code'),
-        ('binary', 'Binary file type'),
+        ('text', 'Texto na página'),
+        ('http_status', 'Código de status HTTP'),
+        ('binary', 'Arquivo de tipo binário'),
     ]
     handler_type = models.CharField(max_length=15, choices=HANDLER_TYPES)
     text_match_value = models.CharField(max_length=1000, blank=True)
