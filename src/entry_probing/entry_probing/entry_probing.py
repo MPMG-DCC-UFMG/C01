@@ -60,17 +60,22 @@ class EntryProbing():
         return self
 
 
-    def check_entry(self, entry: Optional[Any] = None) -> bool:
+    def check_entry(self,
+                    url_entries: List[Any] = [],
+                    req_entries: Dict[Any] = {}) -> bool:
         """
         Uses the request and response handlers to check for an entry's
         existence
 
-        :param entry: entry parameter to be used by the request, if necessary
+        :param url_entries: entry parameters to be inserted in the URL in the
+                            request
+        :param req_entries: entry parameters to be inserted in the request body
 
         :returns: True if entry is valid, False otherwise
         """
 
-        response = self.__req_handler.process(entry)
+        response = self.__req_handler.process(url_entries = url_entries,
+                                              req_entries = req_entries)
         self.__response_obj = response
         return all([h.process(response) for h in self.__resp_handlers])
 

@@ -159,16 +159,16 @@ class ParamInjector():
     def generate_num_sequence(first: int,
                               last: int,
                               step: int = 1,
-                              pad: bool = True
+                              leading: bool = True
                               ) -> Generator[str, None, None]:
         """
         Generates a sequence of strings in numerical sequence
 
-        :param first: first number in the sequence
-        :param last:  last number in the sequence
-        :param step:  how much to "step" between one number and the next
-        :param pad:   if true, the numbers will be padded with zeroes to have
-                      the same number of digits
+        :param first:   first number in the sequence
+        :param last:    last number in the sequence
+        :param step:    how much to "step" between one number and the next
+        :param leading: if true, leading zeros will be added to the numbers so
+                        that they all have the same number of digits
 
         :yields: the sequence numbers as strings
         """
@@ -179,7 +179,7 @@ class ParamInjector():
 
         for i in range(first, upper_lim, step):
             i_str = str(i)
-            if pad:
+            if leading:
                 i_str = i_str.zfill(fill_size)
             yield i_str
 

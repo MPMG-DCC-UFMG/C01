@@ -24,6 +24,7 @@ Crawler "{{ crawler.source_name }}"
                   <span class="badge badge-success">Rodando</span>
                 {% elif crawler.running == False %}
                   <span class="badge badge-warning">Parado</span>
+                {% endif %}
                 </li>
                 
                 <!-- <li id="status_badge">Status: <img src="{% static 'gif/loading-png-gif.gif' %}" style="height: 15px"></li> -->

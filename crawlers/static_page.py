@@ -19,17 +19,19 @@ class StaticPageSpider(BaseSpider):
 
     def start_requests(self):
         print("At StaticPageSpider.start_requests")
-        urls = [self.config["base_url"]]
 
         self.convert_allow_extesions()
 
-        for url in urls:
-            yield scrapy.Request(
-                url=url, callback=self.parse,
-                meta={"referer": "start_requests",
-                      "config": self.config},
-                errback=self.errback_httpbin
-            )
+        for req in self.generate_initial_requests():
+            yield scrapy.Request(url=req['url'],
+                method=req['method'],
+                body=json.dumps(req['body']),
+                callback=self.parse,
+                meta={
+                    "referer": "start_requests",
+                    "config": self.config
+                },
+                errback=self.errback_httpbin)
 
     def convert_allow_extesions(self):
         """Converts 'allow_extesions' configuration into 'deny_extesions'."""
@@ -101,7 +103,7 @@ class StaticPageSpider(BaseSpider):
     def parse(self, response):
         """
         Parse responses of static pages.
-        Will try to follow links if config["explor_links"] is set.
+        Will try to follow links if config["explore_links"] is set.
         """
         response_type = response.headers['Content-type']
         print(f"Parsing {response.url}, type: {response_type}")

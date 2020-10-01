@@ -4,9 +4,9 @@ import time
 import hashlib
 
 
-def hash(string):
-    """Returns the md5 hash of a function."""
-    return hashlib.md5(string.encode()).hexdigest()
+def hash(byte_content):
+    """Returns the md5 hash of a bytestring."""
+    return hashlib.md5(byte_content).hexdigest()
 
 
 # leave as 'chromedriver' if driver is on path

@@ -147,3 +147,13 @@ table.dataTable thead .sorting_desc_disabled:after,
 table.dataTable thead .sorting_desc_disabled:before {
     bottom: .5em;
 }
+
+a.close {
+    margin-right: 0;
+    margin-top: -2rem;
+}
+
+.bordered-bottom-option {
+    border-bottom: 1px solid #DCDCDC;
+    padding-top: 0.75rem;
+}

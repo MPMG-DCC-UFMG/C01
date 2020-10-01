@@ -30,7 +30,7 @@ module and this range inference should be used in conjunction:
 ```
 # Creates a probe which visits a website and checks for a 200 HTTP status, a
 # text response, and the text "entry found" in the response's content
-probe = EntryProbing(GETProbingRequest("http://test.com/{}"))
+probe = EntryProbing(HTTPProbingRequest("http://test.com/{}", "GET"))
 probe.add_response_handler(HTTPStatusProbingResponse(200))\
      .add_response_handler(BinaryFormatProbingResponse(opposite=True))\
      .add_response_handler(TextMatchProbingResponse("entry found"))
