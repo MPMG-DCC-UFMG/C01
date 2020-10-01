@@ -1,14 +1,15 @@
 from __future__ import absolute_import
-from .base_handler import BaseHandler
+
+import sys
+import threading
+import time
+from datetime import datetime, timedelta
 
 import redis
 import ujson
-import threading
-import time
-
-from datetime import datetime, timedelta
 from kafka import KafkaProducer
 
+from .base_handler import BaseHandler
 
 class SchedulerPlugin(BaseHandler):
     schema = "scheduler_schema.json"
@@ -162,8 +163,8 @@ class SchedulerPlugin(BaseHandler):
         Args:
             now: Current time.
             delta: Step in days for the next crawl.
-            at_hour: If not None, the time the crawl should be processed. Else, the current hour will be used. (default None)
-            at_minute: If not None, the minute the crawl must be processed. Else, the current minute will be used. (default None)
+            at_hour: If not None, the time the crawl should be processed. Else, the current hour will be used.
+            at_minute: If not None, the minute the crawl must be processed. Else, the current minute will be used.
             from_weekday: If not None and `to_weekday` also, the minimum day of the week that the crawl must be processed. Where Monday = 0.. Sunday = 6
             to_weekday: If not None and `from_weekday` also, the maximum day of the week that the crawl should be processed. Where Monday = 0.. Sunday = 6
     
@@ -244,7 +245,9 @@ class SchedulerPlugin(BaseHandler):
         Raises:
             TypeError: If the value of field key in conf is not an integer.
             ValueError: If the value of field key in conf is not between min_val and max_val.
+        
         '''
+
         if key not in conf:
             return None 
 
@@ -339,6 +342,7 @@ class SchedulerPlugin(BaseHandler):
             TypeError: If the value of field 'every' in conf is not an integer.
             ValueError: If the value of field 'every' in conf is less than or equal to 0, if the crawl
                 interval is not between minutes, hours, days and weeks, or if no scheduling settings are in conf.
+        
         '''
 
         if conf.get('start_at'):
