@@ -20,14 +20,14 @@ class ImageProcessor:
             img: target image
             kernel_size: size of kernel
         """
-        if not img:
+        if img is None:
             img = self.img
 
         return cv2.medianBlur(src=img, ksize=kernel_size)
 
     def blur_filter(self,
                     img=None,
-                    kernel_size=3,
+                    kernel_size=(3, 3),
                     gaussian=True,
                     sigma_x=0) -> np.ndarray:
         """Apply blur filter (smoothing)
@@ -38,8 +38,11 @@ class ImageProcessor:
             gaussian: flag to use Gaussian blur
             sigma_x: Gaussian kernel standard deviation in X direction
         """
-        if not img:
+        if img is None:
             img = self.img
+
+        if isinstance(kernel_size, int):
+            kernel_size = (kernel_size, kernel_size)
 
         if gaussian:
             return cv2.GaussianBlur(src=img, ksize=kernel_size,
@@ -55,7 +58,7 @@ class ImageProcessor:
             kernel_size: size of kernel
             niter: number of open-close iterations
         """
-        if not img:
+        if img is None:
             img = self.img
 
         kernel = np.ones((kernel_size, kernel_size), np.uint8)
@@ -74,7 +77,7 @@ class ImageProcessor:
             kernel_size: size of kernel
             img: target image
         """
-        if not img:
+        if img is None:
             img = self.img
 
         kernel = np.ones((kernel_size, kernel_size), np.uint8)
@@ -87,7 +90,7 @@ class ImageProcessor:
             img: target image
             kernel_size: size of kernel
         """
-        if not img:
+        if img is None:
             img = self.img
 
         kernel = np.ones((kernel_size, kernel_size), np.uint8)
@@ -111,7 +114,7 @@ class ImageProcessor:
             threshold_type: type of threshold, default to
             cv2.THRESH_BINARY+cv2.THRESH_OTSU
         """
-        if not img:
+        if img is None:
             img = self.img
 
         _, thr = cv2.threshold(src=img, thresh=threshold_value,
@@ -142,7 +145,7 @@ class ImageProcessor:
             c: constant to be subtracted from the mean (usually, a positive
             int)
         """
-        if not img:
+        if img is None:
             img = self.img
 
         if len(img.shape) > 2:
@@ -166,7 +169,7 @@ class ImageProcessor:
             img: target image
             color_code: must be one of 'cv2.COLOR_'
         """
-        if not img:
+        if img is None:
             img = self.img
 
         return cv2.cvtColor(img, color_code)
@@ -183,7 +186,7 @@ class ImageProcessor:
             width: desired width
             height: desired height
         """
-        if not img:
+        if img is None:
             img = self.img
 
         return cv2.resize(img, (width, height))
@@ -209,7 +212,7 @@ class ImageProcessor:
             canny_threshold_low: lower Canny threshold value
             canny_threshold_up: upper Canny threshold value
         """
-        if not img:
+        if img is None:
             img = self.img
 
         if preprocess:
@@ -266,7 +269,7 @@ class ImageProcessor:
             y: y coordinate of top left corner of bounding box
             x: x coordinate of top left corner of bounding box
         """
-        if not img:
+        if img is None:
             img = self.img
 
         if len(img.shape) > 2:
@@ -295,7 +298,7 @@ class ImageProcessor:
             threshold: if True, performs adaptive threshold with
             default settings
         """
-        if not img:
+        if img is None:
             img = self.img
 
         if open_close:
