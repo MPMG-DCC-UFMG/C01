@@ -4,11 +4,11 @@ function ShowIframe() {
     
     if (iframe_element.style.display === "none"){
         iframe_element.style.display = "block";
-        document.getElementById("myButton").innerText = "Hide Website";
+        document.getElementById("myButton").innerText = "Esconder Website";
     }
     else{
         iframe_element.style.display = "none";
-        document.getElementById("myButton").innerText = "Show Website";
+        document.getElementById("myButton").innerText = "Mostrar Website";
     }
 }
 

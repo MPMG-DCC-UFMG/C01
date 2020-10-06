@@ -16,5 +16,5 @@ setuptools.setup(
     classifiers=[
         "Programming Language :: Python :: 3"
     ],
-    install_requires=['requests'],
+    install_requires=['requests', 'pyppeteer'],
 )

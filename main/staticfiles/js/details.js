@@ -29,15 +29,15 @@ function tail_logs(instance_id){
             if(response["out"].lenght != 0)
                 document.getElementById("stdout_tail").innerText = response["out"]
             else
-                document.getElementById("stdout_tail").innerText = "Empty file."
+                document.getElementById("stdout_tail").innerText = "Arquivo em branco."
 
             if (response["out"].lenght != 0)
                 document.getElementById("stderr_tail").innerText = response["err"]
             else
-                document.getElementById("stderr_tail").innerText = "Empty file."
+                document.getElementById("stderr_tail").innerText = "Arquivo em branco."
 
-            document.getElementById("stdout_tail_update").innerText = "last update: " + response["time"]
-            document.getElementById("stderr_tail_update").innerText = "last update: " + response["time"]
+            document.getElementById("stdout_tail_update").innerText = "Última atualização: " + response["time"]
+            document.getElementById("stderr_tail_update").innerText = "Última atualização: " + response["time"]
         }
     };
     xhr.open("GET", "/tail_log_file/"+instance_id, true);
@@ -61,7 +61,7 @@ function status_instance(instance_id){
             var stopBtn = document.getElementById("stopBtn")
             var runBtn = document.getElementById("runBtn")
             if(response["running"] == true){
-                document.getElementById("crawler_ status").innerHTML = '<span class="badge badge-success">Running</span>'
+                document.getElementById("crawler_ status").innerHTML = '<span class="badge badge-success">Rodando</span>'
                 stopBtn.classList.remove("disabled")
                 if (stopBtn.hasAttribute("dataref")){
                     stopBtn.setAttribute("href", stopBtn.getAttribute("dataref"))
@@ -74,7 +74,7 @@ function status_instance(instance_id){
                 }
             }else{
                 clearInterval(statusInterval)
-                document.getElementById("crawler_ status").innerHTML = '<span class="badge badge-warning">Not running</span>'
+                document.getElementById("crawler_ status").innerHTML = '<span class="badge badge-warning">Parado</span>'
                 stopBtn.classList.add("disabled")
                 if (stopBtn.hasAttribute("href")){
                     stopBtn.setAttribute("dataref", stopBtn.getAttribute("href"))

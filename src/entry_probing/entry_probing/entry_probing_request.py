@@ -3,7 +3,8 @@ This module contains the classes which describe the requesting procedure for
 the entry probing process
 """
 
-from typing import Any, Hashable, Optional
+from enum import Enum
+from typing import Any, Dict, Hashable, List, Optional
 
 import asyncio
 import abc
@@ -23,90 +24,80 @@ class ProbingRequest():
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def process(self, entry: Optional[Any] = None) -> ResponseData:
+    def process(self,
+                url_entries: List[Any] = [],
+                req_entries: Dict[Hashable, Any] = {}) -> ResponseData:
         """
         Abstract method: sends a request to the desired URL and returns the
         response
 
-        :param entry: entry parameter to be used by the request, if necessary
+        :param url_entries: list of parameters to be inserted in the URL
+        :param req_entries: dictionary of parameters to be inserted in the
+                            request body
         """
         pass
 
 
-class GETProbingRequest(ProbingRequest):
+class HTTPProbingRequest(ProbingRequest):
     """
-    Description of a GET request with possible placeholders for data in the URL
+    Description of an HTTP request with possible placeholders for data in the
+    URL and in the request body
     """
 
-    def __init__(self, url: str):
+    REQUEST_METHODS = {
+        "GET": requests.get,
+        "POST": requests.post
+    }
+
+    def __init__(self, url: str, method: str, req_data: dict = None):
         """
-        Constructor for the GET request.
+        Constructor for the HTTP request handler.
 
-        :param url: URL to be requested, with possible placeholders for entry
-                    parameters
+        :param url:      URL to be requested, with possible placeholders for
+                         entry parameters
+        :param method:   HTTP method to use for the request
+        :param req_data: dictionary of extra data to be sent in the request
+                         body, if necessary
         """
         super().__init__()
-        self.__url = url
+        self.__url    = url
+        self.__method = method.upper()
+        self.__req_data = req_data if req_data is not None else {}
 
-    def process(self, entry: Optional[Any] = None) -> ResponseData:
+        if req_data is not None and not isinstance(req_data, dict):
+            raise TypeError("Request data to be sent must be a dictionary")
+
+        if self.__method not in self.REQUEST_METHODS:
+            raise ValueError(f"HTTP method not supported: {method}")
+
+    def process(self,
+                url_entries: List[Any] = [],
+                req_entries: Dict[Hashable, Any] = {}) -> ResponseData:
         """
-        Sends a GET request to the desired URL, inserting the entry information
-        if the entry parameter is not None. Returns the response to this
-        request.
+        Sends an HTTP request to the desired URL, formmated according to the
+        url_entries parameter. The entries in req_entries are included in the
+        request body. Returns the response to this request.
 
-        :param entry: entry parameter to be inserted in the URL, if necessary
+        :param url_entries: list of parameters to be inserted in the URL
+        :param req_entries: dictionary of parameters to be inserted in the
+                            request body
 
-        :returns: Response obtained from GET request
-        """
-        resp = None
-        if entry is None:
-            resp = requests.get(self.__url)
-        else:
-            resp = requests.get(self.__url.format(entry))
-        return ResponseData.create_from_requests(resp)
-
-
-class POSTProbingRequest(ProbingRequest):
-    """
-    Description of a POST request with entry data sent in the request body
-    """
-
-    def __init__(self,
-                 url: str,
-                 property_name: Hashable = None,
-                 data: dict = None):
-        """
-        Constructor for the POST request.
-
-        :param url:           URL to be requested
-        :param property_name: name of property in which to store the entry's
-                              data within the request body
-        :param data:          dictionary of extra data to be sent in the
-                              request body, if necessary
-        """
-        super().__init__()
-        self.__url = url
-        self.__data = data if data is not None else {}
-        self.__property_name = property_name
-
-        if data is not None and not isinstance(data, dict):
-            raise TypeError("POST data must be a dictionary")
-
-    def process(self, entry: Optional[Any] = None) -> ResponseData:
-        """
-        Sends a POST request to the desired URL, inserting the entry
-        information in the request body, along with any other data supplied.
-        Returns the response to this request.
-
-        :param entry: entry's identifier to be sent
-
-        :returns: Response obtained from POST request
+        :returns: Response obtained from the HTTP request
         """
 
-        if self.__property_name is not None:
-            self.__data[self.__property_name] = entry
+        # Formats the URL with the url_entries list
+        formatted_url = self.__url
+        if url_entries is not None and len(url_entries) > 0:
+            formatted_url = self.__url.format(*url_entries)
 
-        resp = requests.post(self.__url, data=self.__data)
+        # Inserts required values in the request body
+        for key in req_entries:
+            self.__req_data[key] = req_entries[key]
+
+        # Does the request with the supplied method
+        resp = self.REQUEST_METHODS[self.__method](formatted_url,
+                                                   data=self.__req_data)
+
         return ResponseData.create_from_requests(resp)
 
 
