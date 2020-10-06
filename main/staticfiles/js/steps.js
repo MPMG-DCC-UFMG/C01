@@ -20,6 +20,7 @@ function load_steps(interface_root_element, output_element, json_path="/static/j
         init_steps_creation_interface(interface_root_element, output_element, step_list)
       }
     };
+
     xmlhttp.open("GET", json_path, true);
     xmlhttp.send();
 }
