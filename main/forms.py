@@ -203,7 +203,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
         widget=forms.TextInput(
             attrs={'placeholder': 'Caminho para o diretório de donwload'})
     )
->>>>>>> master
+
     img_xpath = forms.CharField(
         required=False, label="Xpath da imagem", max_length=100,
         widget=forms.TextInput(attrs={'placeholder': '//div/...'})
