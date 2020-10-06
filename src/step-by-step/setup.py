@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name='step_cralwer',
+    name='step_crawler',
     version='1.0',
     description='Module creating step by step crawlers',
     long_description=long_description,
