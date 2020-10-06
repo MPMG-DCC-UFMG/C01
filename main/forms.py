@@ -7,6 +7,7 @@ class CrawlRequestForm(forms.ModelForm):
     class Meta:
         model = CrawlRequest
 
+
         labels = {
             'request_type': 'Request method',
         }
@@ -15,6 +16,8 @@ class CrawlRequestForm(forms.ModelForm):
         save_csv = forms.BooleanField(required=False)
 
         fields = [
+
+
             'source_name',
             'base_url',
             'request_type',
@@ -46,12 +49,14 @@ class CrawlRequestForm(forms.ModelForm):
             'download_files',
             'download_files_allow_url',
             'download_files_allow_extensions',
+            'steps',
             'save_csv',
             'data_path',
         ]
 
 
 class RawCrawlRequestForm(CrawlRequestForm):
+
     # BASIC INFO ##############################################################
     source_name = forms.CharField(
         label="Nome do coletor", max_length=200,
@@ -213,7 +218,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     crawler_type = forms.ChoiceField(
         required=False, choices=(
             ('static_page', 'Página estática'),
-            # ('form_page', 'Páginas com formulário'),
+            ('form_page', 'Páginas com formulário'),
             # ('single_file', 'Arquivo único'),
             # ('bundle_file', 'Conjunto de arquivos'),
         ),
@@ -253,6 +258,11 @@ class RawCrawlRequestForm(CrawlRequestForm):
         widget=forms.TextInput(attrs={'placeholder': 'pdf,xml'})
     )
     # Crawler Type - Page with form
+    steps = forms.CharField(label="Steps JSON", max_length=9999999,
+                            widget=forms.TextInput(
+                                attrs={'placeholder': '{'+'}'})
+                            )
+
     # Crawler Type - Single file
     # Crawler Type - Bundle file
 

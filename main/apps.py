@@ -1,5 +1,9 @@
 from django.apps import AppConfig
 from django.db.utils import OperationalError
+from step_crawler import parameter_extractor
+from step_crawler import functions_file
+import json
+
 
 from crawlers.crawler_manager import start_consumers_and_producers
 
@@ -9,6 +13,10 @@ class MainConfig(AppConfig):
     server_running = False
 
     def runOnce(self):
+        steps_signature = parameter_extractor.get_module_functions_info(functions_file)
+        with open('main/staticfiles/json/steps_signature.json', 'w+') as file:
+            json.dump(steps_signature, file)
+
         if self.server_running:
             return
         self.server_running = True
