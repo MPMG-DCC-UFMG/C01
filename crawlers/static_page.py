@@ -16,16 +16,19 @@ class StaticPageSpider(BaseSpider):
 
     def start_requests(self):
         print("At StaticPageSpider.start_requests")
-        urls = [self.config["base_url"]]
 
         self.convert_allow_extesions()
 
-        for url in urls:
-            yield scrapy.Request(
-                url=url, callback=self.parse,
-                meta={"referer": "start_requests"},
-                errback=self.errback_httpbin
-            )
+        for req in self.generate_initial_requests():
+            yield scrapy.Request(url=req['url'],
+                method=req['method'],
+                body=json.dumps(req['body']),
+                callback=self.parse,
+                meta={
+                    "referer": "start_requests",
+                    "config": self.config
+                },
+                errback=self.errback_httpbin)
 
     def convert_allow_extesions(self):
         """Converts 'allow_extesions' configuration into 'deny_extesions'."""
@@ -56,7 +59,8 @@ class StaticPageSpider(BaseSpider):
 
     def extract_links(self, response):
         """Filter and return a set with links found in this response."""
-    
+
+        config = response.meta['config']
         # TODO: cant make regex tested on https://regexr.com/ work
         # here for some reason
         links_extractor = LinkExtractor()
@@ -64,7 +68,7 @@ class StaticPageSpider(BaseSpider):
 
         urls_found = {i.url for i in links_extractor.extract_links(response)}
 
-        pattern = self.config["link_extractor_allow_url"]
+        pattern = config["link_extractor_allow_url"]
         if pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
@@ -72,7 +76,7 @@ class StaticPageSpider(BaseSpider):
 
     def extract_files(self, response):
         """Filter and return a set with links found in this response."""
-    
+        config = response.meta['config']
         # TODO: cant make regex tested on https://regexr.com/ work
         # here for some reason
         links_extractor = LinkExtractor(
@@ -81,7 +85,8 @@ class StaticPageSpider(BaseSpider):
         )
         urls_found = {i.url for i in links_extractor.extract_links(response)}
 
-        pattern = self.config["download_files_allow_url"]
+        pattern = config["download_files_allow_url"]
+
         if pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
@@ -96,23 +101,25 @@ class StaticPageSpider(BaseSpider):
     def parse(self, response):
         """
         Parse responses of static pages.
-        Will try to follow links if config["explor_links"] is set.
+        Will try to follow links if config["explore_links"] is set.
         """
         response_type = response.headers['Content-type']
         print(f"Parsing {response.url}, type: {response_type}")
 
+        config = response.meta['config']
 
         if self.stop():
             return
 
         if b'text/html' in response_type:
             self.store_html(response)
-            if "explore_links" in self.config and self.config["explore_links"]:
+            if "explore_links" in config and config["explore_links"]:
                 this_url = response.url
                 for url in self.extract_links(response):
                     yield scrapy.Request(
                         url=url, callback=self.parse,
-                        meta={"referer": response.url},
+                        meta={"referer": response.url,
+                              "config": config},
                         errback=self.errback_httpbin
                     )
 

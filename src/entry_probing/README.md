@@ -1,7 +1,7 @@
 # Entry probing module
 Entry probing module to check for an entry's existence in the website to be
-crawled. There are three main components: the Probing Request, Probing Response,
-and the Entry Probing which encapsulates both parts.
+crawled. There are three main components: the Probing Request, Probing
+Response, and the Entry Probing which encapsulates both parts.
 
 ## Building
 
@@ -28,39 +28,32 @@ The request classes define how the request to the desired URL should be made.
 They all inherit from the abstract `ProbingRequest` class, and should implement
 the `process` method, which returns a `ResponseData` object obtained from the
 URL with the specified parameters. The parameters are provided to the class
-through its constructor, and the entry identifier is provided as an argument
-to the `process` method.
+through its constructor, and the entry identifiers are provided as arguments to
+the `process` method.
 
 #### ProbingRequest
 Abstract class, defines the interface for a probing request through the
-`process` abstract method.
+`process` abstract method. This method receives the `url_entries` parameter,
+which is a list of entries to be inserted in the Templated URL; and the
+`req_entries` parameter which should be a dict of entries to be inserted in
+the request body, as the same key-value pairs.
 
-#### GETProbingRequest
-Implements a GET request handler. Receives an URL to request with possible
-placeholders. The `process` method receives an optional entry identifier to be
-inserted in the URL, generates the target URL and uses the `requests.get`
-method to get a response, which is returned as a `ResponseData` entry.
+#### HTTPProbingRequest
+Implements an HTTP request handler. Receives an URL to request with possible
+placeholders, as well as the name of the method to be used ("GET" or "POST").
+It also receives an optional parameter with extra data to be included in the
+request body. The `process` method receives the `url_entries` and `req_entries`
+parameters, which contain the values to be inserted in the URL and in the
+request body, respectively. It then generates the target URL and uses
+`requests.get` or `requests.post` - depending on the chosen method - to get a
+response, which is returned as a `ResponseData` entry.
 
 ```
-req = GETProbingRequest("http://test.com/{}")
-req.process(10)
+req = HTTPProbingRequest("http://test.com/{}", "GET")
+req.process([10], {'test_prop': 100})
 # creates a request handler which sends a GET request to http://test.com/10
-# when the process method is called
-```
-
-#### POSTProbingRequest
-Implements a POST request handler. Receives an URL to request, as well as the
-name of the parameter to be inserted in the request body. It optionally
-receives extra data to be included. The `process` method receives the entry
-identifier to insert in the request body and uses the `requests.post` method to
-send the data and get a response, which is returned as a `ResponseData` entry.
-
-```
-req = POSTProbingRequest("http://test.com/", "test_prop")
-req.process(100)
-# creates a request handler which will send a POST request to http://test.com/
-# and a dictionary with the key-value pair {"test_prop": 100} in the request
-# body when the process method is called
+# when the process method is called, sending a dictionary with the key-value
+# pair {"test_prop": 100} in the request body
 ```
 
 #### PyppeteerProbingRequest
@@ -90,12 +83,12 @@ req.process()
 ```
 
 ### Probing response
-The response classes define which responses obtained should be considered valid.
-They all inherit from the abstract `ProbingResponse` class, and should implement
-the `_validate_resp` method, which gets a `ResponseData` object and returns a
-boolean indicating if it is valid or not. The parameters are provided to the
-class through its constructor. The `process` method is defined in the main
-`ProbingResponse` class, and returns the validation result using the
+The response classes define which responses obtained should be considered
+valid. They all inherit from the abstract `ProbingResponse` class, and should
+implement the `_validate_resp` method, which gets a `ResponseData` object and
+returns a boolean indicating if it is valid or not. The parameters are provided
+to the class through its constructor. The `process` method is defined in the
+main `ProbingResponse` class, and returns the validation result using the
 `_validate_resp` method and the `opposite` attribute.
 
 #### ResponseData
@@ -108,14 +101,14 @@ response is detected to have a binary type, the text content is set to an empty
 string.
 
 #### ProbingResponse
-Abstract class, defines the interface for a probing response handler through the
-`_validate_resp` abstract method. It also defines the `process` method, which
-calls `_validate_resp` and inverts the output depending on the value of the
-`opposite` attribute.
+Abstract class, defines the interface for a probing response handler through
+the `_validate_resp` abstract method. It also defines the `process` method,
+which calls `_validate_resp` and inverts the output depending on the value of
+the `opposite` attribute.
 
 #### HTTPStatusProbingResponse
-Implements a response handler which validates responses with a given HTTP status
-code.
+Implements a response handler which validates responses with a given HTTP
+status code.
 
 ```
 resp_handler = HTTPStatusProbingResponse(200)
@@ -125,8 +118,8 @@ resp_handler = HTTPStatusProbingResponse(404, opposite=True)
 ```
 
 #### TextMatchProbingResponse
-Implements a response handler which validates responses with a given text within
-their body. (case sensitive)
+Implements a response handler which validates responses with a given text
+within their body. (case sensitive)
 
 ```
 resp_handler = TextMatchProbingResponse("Page found")

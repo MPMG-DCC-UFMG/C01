@@ -153,7 +153,8 @@ class ParamInjectorTest(unittest.TestCase):
 
     def test_number_generator_simple(self):
         """
-        Tests generation of simple linear sequence of numbers without padding
+        Tests generation of simple linear sequence of numbers without leading
+        zeros
         """
         # stringified numbers from 0 to 9
         expected_output = list(map(str, range(10)))
@@ -171,9 +172,10 @@ class ParamInjectorTest(unittest.TestCase):
         self.assertEqual(expected_output, list(num_gen))
 
 
-    def test_number_generator_padding(self):
+    def test_number_generator_leading(self):
         """
-        Tests generation of simple linear sequences of numbers with padding
+        Tests generation of simple linear sequences of numbers with leading
+        zeros
         """
         # stringified numbers from 0 to 9
         expected_output = list(map(str, range(10)))

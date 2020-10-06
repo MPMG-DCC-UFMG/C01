@@ -112,7 +112,7 @@ class RangeInference():
             # check the required number of entries before declaring a miss
             all_miss = True
             for i in range_gen(mid, curr_begin, curr_end):
-                if entry_probe.check_entry(i):
+                if entry_probe.check_entry([i]):
                     all_miss = False
                     last_hit = i
 

@@ -8,6 +8,7 @@ from twisted.internet.error import TimeoutError
 # Other external libs
 import datetime
 import json
+import itertools
 import logging
 import os
 import re
@@ -15,12 +16,17 @@ import time
 from lxml.html.clean import Cleaner
 
 # Project libs
+import binary
 import crawling_utils
+from crawlers.constants import *
 from crawlers.file_descriptor import FileDescriptor
 from crawlers.file_downloader import FileDownloader
+from entry_probing import BinaryFormatProbingResponse, HTTPProbingRequest,\
+                          HTTPStatusProbingResponse, TextMatchProbingResponse,\
+                          EntryProbing
+from param_injector import ParamInjector
+from range_inference import RangeInference
 import parsing_html
-import binary
-from crawlers.constants import *
 
 
 class BaseSpider(scrapy.Spider):
@@ -75,6 +81,128 @@ class BaseSpider(scrapy.Spider):
         """
         raise NotImplementedError
 
+    def generate_initial_requests(self):
+        """
+        Generates the initial requests to be done from the templated requests
+        configuration. Yields the base URL if no template is used. Should be
+        called by start_requests.
+        """
+
+        base_url = self.config['base_url']
+        req_type = self.config['request_type']
+
+        has_placeholder = "{}" in base_url
+        if has_placeholder:
+            # Request body (TODO)
+            req_body = {}
+            """
+            param_key = None
+            if req_type == 'POST':
+                if len(templated_url_config['post_dictionary']) > 0:
+                    req_body = json.loads(templated_url_config['post_dictionary'])
+
+                param_key = templated_url_config['post_key']"""
+
+            # Configure the probing process
+
+            # Probing request
+            probe = EntryProbing(HTTPProbingRequest(base_url, method=req_type,
+                                                    req_data=req_body))
+
+            # Probing response
+            for handler_data in self.config['templated_url_response_handlers']:
+                resp_handler = None
+
+                handler_type = handler_data['handler_type']
+                if handler_type == 'text':
+                    resp_handler = TextMatchProbingResponse(
+                        text_match=handler_data['text_match_value'],
+                        opposite = handler_data['opposite']
+                    )
+                elif handler_type == 'http_status':
+                    resp_handler = HTTPStatusProbingResponse(
+                        status_code=handler_data['http_status'],
+                        opposite = handler_data['opposite']
+                    )
+                elif handler_type == 'binary':
+                    resp_handler = BinaryFormatProbingResponse(
+                        opposite = handler_data['opposite']
+                    )
+                else:
+                    raise AssertionError
+
+                probe.add_response_handler(resp_handler)
+
+            # Instantiate the parameter injectors for the URL
+            url_injectors = []
+            for param in self.config['parameter_handlers']:
+                param_type = param['parameter_type']
+                param_gen = None
+                if param_type == "formatted_str":
+                    # Formatted string generator
+                    #TODO
+                    pass
+                elif param_type == "number_seq":
+                    # Number sequence generator
+                    param_gen = ParamInjector.generate_num_sequence(
+                        first=param['first_num_param'],
+                        last=param['last_num_param'],
+                        step=param['step_num_param'],
+                        leading=param['leading_num_param'],
+                    )
+                elif param_type == 'date_seq':
+                    # Date sequence generator
+                    begin = datetime.date.fromisoformat(
+                        param['start_date_date_param']
+                    )
+                    end = datetime.date.fromisoformat(
+                        param['end_date_date_param']
+                    )
+
+                    param_gen = ParamInjector.generate_daterange(
+                        date_format=param['date_format_date_param'],
+                        start_date=begin,
+                        end_date=end,
+                        frequency=param['frequency_date_param'],
+                    )
+                elif param_type == 'alpha_seq':
+                    # Alphabetic search parameter generator
+                    param_gen = ParamInjector.generate_alpha(
+                        length=param['length_alpha_param'],
+                        num_words=param['num_words_alpha_param'],
+                        no_upper=param['no_upper_alpha_param'],
+                    )
+                else:
+                    raise ValueError(f"Invalid parameter type: {param_type}")
+
+                url_injectors.append(param_gen)
+
+            # Generate the requests
+            param_generator = itertools.product(*url_injectors)
+            for param_combination in param_generator:
+                # Check if this entry hits a valid page
+                if probe.check_entry(param_combination):
+                    curr_url = base_url
+
+                    # Insert parameter into URL
+                    curr_url = base_url.format(*param_combination)
+                    req_body = {}
+
+                    yield {
+                        'url': curr_url,
+                        'method': req_type,
+                        'body': req_body
+                    }
+
+        else:
+            # By default does a request to the base_url
+            yield {
+                'url': base_url,
+                'method': req_type,
+                'body': {}
+            }
+
+
     def stop(self):
         """
         Checks if the crawler was signaled to stop.
@@ -93,18 +221,22 @@ class BaseSpider(scrapy.Spider):
 
         return self.stop_flag
 
+
     def extract_and_store_csv(self, response, description):
         """Try to extract a json/csv from page html."""
-        hsh = crawling_utils.hash(response.url)
+
+        config = response.meta['config']
+
+        hsh = self.hash_response(response)
 
         output_filename = f"{self.data_folder}/csv/{hsh}"
-        if self.config["save_csv"] and ".csv" not in output_filename:
+        if config["save_csv"] and ".csv" not in output_filename:
             output_filename += ".csv"
 
         success = False
         try:
             parsing_html.content.html_detect_content(
-                f"{self.data_folder}/raw_pages/{hsh}.{file_format}",
+                f"{self.data_folder}/raw_pages/{hsh}.html",
                 is_string=False,
                 output_file=output_filename,
                 to_csv=self.config["save_csv"]
@@ -132,7 +264,7 @@ class BaseSpider(scrapy.Spider):
         body = cleaner.clean_html(
             response.body.decode('utf-8', errors='ignore'))
 
-        hsh = crawling_utils.hash(response.url)
+        hsh = self.hash_response(response)
 
         with open(
             file=f"{self.data_folder}/raw_pages/{hsh}.html",
@@ -153,7 +285,7 @@ class BaseSpider(scrapy.Spider):
         self.feed_file_description(self.data_folder + "/raw_pages", description)
 
         self.extract_and_store_csv(response, description)
-        
+
     def errback_httpbin(self, failure):
         # log all errback failures,
         # in case you want to do something special for some errors,
@@ -186,3 +318,17 @@ class BaseSpider(scrapy.Spider):
 
     def feed_file_description(self, destination, content):
         FileDescriptor.feed_description(destination, content)
+
+    def hash_response(self, response):
+        """
+        Turns a response into a hashed value to be used as a file name
+
+        :param response: response obtained from crawling
+
+        :returns: hash of the response's URL and body
+        """
+
+        # POST requests may access the same URL with different parameters, so
+        # we hash the URL with the response body
+        return crawling_utils.hash(response.url.encode() + response.body)
+

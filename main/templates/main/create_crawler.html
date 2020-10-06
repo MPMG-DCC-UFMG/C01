@@ -161,9 +161,10 @@ New Crawler
                             <div class="col md-6">
                                 {{ form.source_name | as_crispy_field}}
                                 {{ form.base_url | as_crispy_field}}
+                                {{ form.request_type | as_crispy_field}}
                                 {{ form.obey_robots | as_crispy_field}}
                                 {{ form.data_path | as_crispy_field}}
-                                <p>* This path must be unique for each crawler</p>
+                                <p>* Esse caminho deve ser único para cada coletor</p>
                             </div>
                         </div>
                     </div>
@@ -258,45 +259,13 @@ New Crawler
                             </div>
                         </div>
                     </div>
-
                     <div id="templated-url-item-block" class="block" hidden>
-                        <div class="row" style="padding:20px;">
-                            <div class="col md-6">
-                                {{ form.templated_url_type | as_crispy_field}}
-                                <div class="templated-url-content-div" id="none" hidden></div>
-                                <div class="templated-url-content-div" id="get" hidden>
-                                    {{ form.formatable_url | as_crispy_field}}
-                                </div>
-                                <div class="templated-url-content-div" id="post" hidden>
-                                    {{ form.post_dictionary | as_crispy_field}}
-                                </div>
+                        <div class="row">
+                            <div class="col md-6" id="templated-url-config">
+                                {% include "main/request_config.html" with parameter_formset=parameter_formset response_formset=response_formset %}
                             </div>
                         </div>
                     </div>
-
-                    <div id="probing-item-block" class="block" hidden>
-                        <div class="row" style="padding:20px;">
-                            <div class="col md-6">
-                                <div class="form-row">
-                                    <div class="form-group col-md-6 mb-0">
-                                        {{ form.http_status_response | as_crispy_field}}
-                                    </div>
-                                    <div class="form-group col-md-6 mb-0">
-                                        {{ form.invert_http_status | as_crispy_field}}
-                                    </div>
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group col-md-6 mb-0">
-                                        {{ form.text_match_response | as_crispy_field}}
-                                    </div>
-                                    <div class="form-group col-md-6 mb-0">
-                                        {{ form.invert_text_match | as_crispy_field}}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <div id="parsing-item-block" class="block" hidden>
                         <div class="row" style="padding:20px;">
                             <div class="col md-6">
@@ -308,15 +277,33 @@ New Crawler
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
     </div>
 </form>
-    
+
 {% endblock %}
 
 {% block js %}
+<script>
+    // initialize formsets
+    $('.templated-url-param-step').formset({
+        prefix: '{{ parameter_formset.prefix }}',
+        addText: '',
+        addCssClass: 'add-form-button',
+        deleteText: '',
+        deleteCssClass: 'close',
+        formCssClass: 'templated-url-param-step',
+    });
+    $('.templated-url-response-handling-step').formset({
+        prefix: '{{ response_formset.prefix }}',
+        addText: 'add validation',
+        addCssClass: 'add-form-button',
+        deleteText: '&times;',
+        deleteCssClass: 'close',
+        formCssClass: 'templated-url-response-handling-step',
+    });
+</script>
 <script src="{% static 'js/create_crawler.js' %}"></script>
 {% endblock %}

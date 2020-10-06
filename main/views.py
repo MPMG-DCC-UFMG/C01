@@ -7,7 +7,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from rest_framework import viewsets
 from rest_framework.decorators import action
 
-from .forms import CrawlRequestForm, RawCrawlRequestForm
+from .forms import CrawlRequestForm, RawCrawlRequestForm,\
+                   ResponseHandlerFormSet, ParameterHandlerFormSet
 from .models import CrawlRequest, CrawlerInstance
 from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer
 
@@ -35,16 +36,7 @@ def process_run_crawl(crawler_id):
             raise ValueError("An instance is already running for this crawler "
                              f"({instance_id})")
 
-        del data['creation_date']
-        del data['last_modified']
-        
-        if data["data_path"] is None:
-            data["data_path"] = CURR_FOLDER_FROM_ROOT
-        else:
-            if data["data_path"][-1] == "/":
-                data["data_path"] = data["data_path"][:-1]
-            else:
-                data["data_path"] = data["data_path"]
+        data = CrawlRequest.process_config_data(crawler_entry.get(), data)
 
         instance_id = crawler_manager.start_crawler(data.copy())
 
@@ -84,8 +76,8 @@ def create_instance(crawler_id, instance_id):
     obj = CrawlerInstance.objects.create(crawler_id=mother[0], instance_id=instance_id, running=True)
     return obj
 
-# Views
 
+# Views
 
 def list_crawlers(request):
     context = {'allcrawlers': getAllData()}
@@ -96,14 +88,29 @@ def create_crawler(request):
     context = {}
     if request.method == "POST":
         my_form = RawCrawlRequestForm(request.POST)
-        if my_form.is_valid():
+        parameter_formset = ParameterHandlerFormSet(request.POST,
+            prefix='params')
+        response_formset = ResponseHandlerFormSet(request.POST,
+            prefix='responses')
+        if my_form.is_valid() and parameter_formset.is_valid() and \
+           response_formset.is_valid():
             new_crawl = CrawlRequestForm(my_form.cleaned_data)
-            new_crawl.save()
+            instance = new_crawl.save()
+
+            # save sub-forms and attribute to this crawler instance
+            parameter_formset.instance = instance
+            parameter_formset.save()
+            response_formset.instance = instance
+            response_formset.save()
 
             return redirect('list_crawlers')
     else:
         my_form = RawCrawlRequestForm()
+        parameter_formset = ParameterHandlerFormSet(prefix='params')
+        response_formset = ResponseHandlerFormSet(prefix='responses')
     context['form'] = my_form
+    context['response_formset'] = response_formset
+    context['parameter_formset'] = parameter_formset
     return render(request, "main/create_crawler.html", context)
 
 
@@ -111,13 +118,29 @@ def create_crawler(request):
 def edit_crawler(request, id):
     crawler = get_object_or_404(CrawlRequest, pk=id)
     form = RawCrawlRequestForm(request.POST or None, instance=crawler)
+    parameter_formset = ParameterHandlerFormSet(request.POST or None,
+        instance=crawler, prefix='params')
+    response_formset = ResponseHandlerFormSet(request.POST or None,
+        instance=crawler, prefix='responses')
 
-    if(request.method == 'POST'):
-        if(form.is_valid()):
+    if (len(parameter_formset) > 1):
+        # we have at least one parameter to use as a base, no need to add an
+        # empty one
+        parameter_formset.extra=0
+
+    if request.method == 'POST' and form.is_valid() and \
+       parameter_formset.is_valid() and response_formset.is_valid():
             form.save()
+            parameter_formset.save()
+            response_formset.save()
             return redirect('list_crawlers')
     else:
-        return render(request, 'main/create_crawler.html', {'form': form, 'crawler': crawler})
+        return render(request, 'main/create_crawler.html', {
+            'form': form,
+            'response_formset': response_formset,
+            'parameter_formset': parameter_formset,
+            'crawler' : crawler
+        })
 
 
 def delete_crawler(request, id):
