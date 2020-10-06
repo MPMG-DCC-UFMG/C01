@@ -31,7 +31,7 @@ list(gen) # ['1996-6', '1997-7', '1998-8', '1999-9', '2000-0']
 ```
 
 ### Number sequence generator
-Generates a sequence of numbers between two values with a given step size. Pads the values to have the same number of digits by default.
+Generates a sequence of numbers between two values with a given step size. By default adds leading zeros to the values so that they have the same number of digits.
 
 ```
 gen = ParamInjector.generate_num_sequence(0, 10)

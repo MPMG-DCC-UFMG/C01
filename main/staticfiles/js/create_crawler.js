@@ -131,8 +131,20 @@ function checkCaptcha() {
 function checkCrawlerType() {
 }
 
+function runValidations() {
+    /*
+    Run required validators (needed when editing a filled form)
+    */
+    detailBaseUrl(false);
+
+    // Manually trigger onchange events
+    $(".templated-url-response-handling-step > .form-group select").change();
+    $(".templated-url-param-step > .form-group select").change();
+}
+
 $(document).ready(function () {
     setNavigation();
+    runValidations();
 
     $('input').on('blur keyup', function () {
         var input_name = $(this).attr('name');
@@ -180,6 +192,49 @@ function showBlock(clicked_id) {
     document.getElementById(clicked_id).classList.add('active');
 }
 
+function setNumParamForms(num) {
+    /*
+    Adjusts the parameter configuration formset to have the supplied number
+    of forms
+
+    :param num: number of forms to be displayed
+    */
+
+    // count number of parameter forms (subtract one to account for the
+    // template form supplied)
+    let num_forms = parseInt($('#id_params-TOTAL_FORMS').val()),
+        add_btn = $('#templated-url-param .add-form-button');
+
+    while(num_forms--) {
+        let param_forms = $('.templated-url-param-step')
+        $(param_forms[param_forms.length-1]).find('.close')
+                                            .click()
+    }
+
+    while(num--) {
+        add_btn.click()
+    }
+}
+
+function detailBaseUrl(update_param_list=true) {
+    const base_url = $("#id_base_url").val();
+
+    // Check if a Templated URL is being used (if there is at least one
+    // occurrence of the substring "{}")
+    if (base_url.includes("{}")){
+        $("#templated-url-item").removeClass("disabled");
+        // count number of placeholders
+        let num_placeholders = (base_url.match(/\{\}/g) || []).length;
+        if (update_param_list) setNumParamForms(num_placeholders)
+    } else {
+        $("#templated-url-item").addClass("disabled");
+
+        // remove all parameter forms
+        if (update_param_list) setNumParamForms(0)
+    }
+}
+
+
 function detailWebdriverType() {
     setHiddenState("webdriver_path_div", !getCheckboxState("id_has_webdriver"));
 }
@@ -198,14 +253,28 @@ function detailCaptcha() {
     checkCaptcha();
 }
 
-function detailTemplatedUrlRequestType() {
-    var mainSelect = document.getElementById("id_templated_url_type");
-    const request_type = mainSelect.options[mainSelect.selectedIndex].value;
+function hideUnselectedSiblings(input, parentPath, siblingPath) {
+    const parentDiv = $(input).closest(parentPath);
+    const selectedVal = input.options[input.selectedIndex].value;
 
-    var contents = document.getElementsByClassName("templated-url-content-div");
-    for (const i in contents)
-        contents[i].hidden = true;
-    setHiddenState(request_type, false);
+    parentDiv.find(siblingPath).each(function() {
+        this.hidden = true;
+    });
+
+    if (selectedVal != "") {
+        parentDiv.find("[data-option-type=" + selectedVal + "]")
+                 .attr('hidden', false);
+    }
+}
+
+function detailTemplatedUrlResponseParams(e) {
+    hideUnselectedSiblings(e.target, '.templated-url-response-handling-step',
+        '.templated-url-response-params');
+}
+
+function detailTemplatedUrlParamType(e) {
+    hideUnselectedSiblings(e.target, '.templated-url-param-step',
+        '.templated-url-param-config');
 }
 
 function detailIpRotationType() {
@@ -258,5 +327,5 @@ function autothrottleEnabled() {
     setHiddenState("autothrottle-options-div", !getCheckboxState("id_antiblock_autothrottle_enabled"));
 }
 
-// Create steps
-// TODO add new fields to validation 
+
+// TODO add new fields to validation

@@ -1,6 +1,6 @@
 <!doctype html>
 <html>
-<head>   
+<head>
     <meta charset="utf-8">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -19,21 +19,26 @@
         <div class="collapse navbar-collapse" id="navbarNavDropdown">
             <ul class="navbar-nav">
                 <!-- <li class="nav-item"><a class="nav-link" href="#">Monitor <span class="sr-only">(current)</span></a></li> -->
-                <li class="nav-item"><a class="nav-link" href="/crawlers">Crawlers</a></li>
-                <li class="nav-item"><a class="nav-link" href="/new">Create Crawler</a></li>
+                <li class="nav-item"><a class="nav-link" href="/crawlers">Coletores</a></li>
+                <li class="nav-item"><a class="nav-link" href="/new">Criar coletor</a></li>
             </ul>
         </div>
     </nav>
     <!-- NavBar END -->
-        
+
     {% block content %}
     {% endblock %}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
     <script src="{% static 'js/steps.js' %}"></script>
     <script src="{% static 'js/navmenu.js' %}"></script>
+    <!-- We no longer use the CDN for jquery.formset.js, since this version is
+         outdated, and also we had to apply manual changes to the code. More
+         information can be found in the jquery.formset.js file itself, in the
+         comment beginning with [EDITED] -->
+    <script src="{% static 'js/jquery.formset.js' %}"></script>
     <script src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.11.1/jquery.validate.min.js"></script>
-    
+
     {% block js %}
     {% endblock %}
 </body>

@@ -33,8 +33,8 @@ class RangeInferenceTest(unittest.TestCase):
                   interval, and False otherwise
         """
 
-        def check(x): return begin <= x <= end
-        probe = mock.MagicMock(spec=EntryProbing, check_entry=check)
+        def check(x): return begin <= x[0] <= end
+        probe = mock.Mock(spec=EntryProbing, check_entry=check)
 
         return probe
 
@@ -64,13 +64,13 @@ class RangeInferenceTest(unittest.TestCase):
         # Case where our module is unable to work: there is a gap in the
         # sequence, and it is larger than the cons_misses parameter
         # Create two interval checks
-        def check_25_48(x): return 25 <= x <= 48
-        def check_90_95(x): return 90 <= x <= 95
+        def check_25_48(x): return 25 <= x[0] <= 48
+        def check_90_95(x): return 90 <= x[0] <= 95
         # Test against both intervals and returns True if it belongs to any of
         # them
         def check_all(x): return (check_25_48(x) or check_90_95(x))
         # Create a specific mock of EntryProbing for this
-        entry_probe = mock.MagicMock(spec=EntryProbing, check_entry=check_all)
+        entry_probe = mock.Mock(spec=EntryProbing, check_entry=check_all)
         last_entry = RangeInference.filter_numeric_range(0, 200, entry_probe,
                                                          10)
         self.assertEqual(last_entry, 48)

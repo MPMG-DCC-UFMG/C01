@@ -7,6 +7,7 @@
 function load_steps(interface_root_element, output_element, json_path="/static/json/step_signatures.json"){
     var xmlhttp = new XMLHttpRequest();
     
+<<<<<<< HEAD
     xmlhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
         step_list = JSON.parse(this.response, function (key, value){
@@ -21,6 +22,17 @@ function load_steps(interface_root_element, output_element, json_path="/static/j
         init_steps_creation_interface(interface_root_element, output_element, step_list)
       }
     };
+=======
+    if (iframe_element.style.display === "none"){
+        iframe_element.style.display = "block";
+        document.getElementById("myButton").innerText = "Esconder Website";
+    }
+    else{
+        iframe_element.style.display = "none";
+        document.getElementById("myButton").innerText = "Mostrar Website";
+    }
+}
+>>>>>>> 8af382f4b42ca97559998a27872ae886b25e305a
 
     xmlhttp.open("GET", json_path, true);
     xmlhttp.send();
