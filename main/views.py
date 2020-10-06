@@ -37,7 +37,7 @@ def process_run_crawl(crawler_id):
 
         del data['creation_date']
         del data['last_modified']
-        
+
         if data["data_path"] is None:
             data["data_path"] = CURR_FOLDER_FROM_ROOT
         else:
@@ -47,14 +47,14 @@ def process_run_crawl(crawler_id):
                 data["data_path"] = data["data_path"]
 
         instance_id = crawler_manager.start_crawler(data)
-
         instance = create_instance(data['id'], instance_id)
 
     return instance
 
 
 def process_stop_crawl(crawler_id):
-    instance = CrawlRequest.objects.filter(id=crawler_id).get().running_instance
+    instance = CrawlRequest.objects.filter(
+        id=crawler_id).get().running_instance
     # instance = CrawlerInstance.objects.get(instance_id=instance_id)
 
     # No instance running
@@ -81,7 +81,8 @@ def getAllData():
 
 def create_instance(crawler_id, instance_id):
     mother = CrawlRequest.objects.filter(id=crawler_id)
-    obj = CrawlerInstance.objects.create(crawler_id=mother[0], instance_id=instance_id, running=True)
+    obj = CrawlerInstance.objects.create(
+        crawler_id=mother[0], instance_id=instance_id, running=True)
     return obj
 
 # Views
@@ -107,7 +108,6 @@ def create_crawler(request):
     return render(request, "main/create_crawler.html", context)
 
 
-
 def edit_crawler(request, id):
     crawler = get_object_or_404(CrawlRequest, pk=id)
     form = RawCrawlRequestForm(request.POST or None, instance=crawler)
@@ -117,7 +117,11 @@ def edit_crawler(request, id):
             form.save()
             return redirect('list_crawlers')
     else:
-        return render(request, 'main/create_crawler.html', {'form': form, 'crawler': crawler})
+        return render(
+            request,
+            'main/create_crawler.html',
+            {'form': form, 'crawler': crawler}
+        )
 
 
 def delete_crawler(request, id):
@@ -127,13 +131,18 @@ def delete_crawler(request, id):
         crawler.delete()
         return redirect('list_crawlers')
 
-    return render(request, 'main/confirm_delete_modal.html', {'crawler': crawler})
+    return render(
+        request,
+        'main/confirm_delete_modal.html',
+        {'crawler': crawler}
+    )
 
 
 def detail_crawler(request, id):
     crawler = CrawlRequest.objects.get(id=id)
     # order_by("-atribute") orders descending
-    instances = CrawlerInstance.objects.filter(crawler_id=id).order_by("-last_modified")
+    instances = CrawlerInstance.objects.filter(
+        crawler_id=id).order_by("-last_modified")
 
     context = {
         'crawler': crawler,
@@ -162,11 +171,11 @@ def run_crawl(request, crawler_id):
     return redirect(detail_crawler, id=crawler_id)
 
 
-
-
 def tail_log_file(request, instance_id):
 
-    crawler_id = CrawlerInstance.objects.filter(instance_id=instance_id).values()[0]["crawler_id_id"]
+    crawler_id = CrawlerInstance.objects.filter(
+                    instance_id=instance_id
+                ).values()[0]["crawler_id_id"]
 
     config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
     data_path = config["data_path"]
@@ -193,11 +202,8 @@ def tail_log_file(request, instance_id):
 
 """
 API endpoints:
-
 METHOD    ENDPOINT                  DESCRIPTION
-
 GET       /api/                     API description
-
 GET       /api/crawlers             crawler list
 POST      /api/crawlers             create crawler
 GET       /api/crawlers/<id>        crawler detail
@@ -206,7 +212,6 @@ PATCH     /api/crawlers/<id>        partially update crawler data
 DELETE    /api/crawlers/<id>        delete crawler
 GET       /api/crawlers/<id>/run    run crawler instance
 GET       /api/crawlers/<id>/stop   stop crawler instance
-
 GET       /api/instances/           list crawler instances
 GET       /api/instances/<id>       crawler instance detail
 """

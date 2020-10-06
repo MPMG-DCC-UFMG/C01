@@ -147,3 +147,60 @@ table.dataTable thead .sorting_desc_disabled:after,
 table.dataTable thead .sorting_desc_disabled:before {
     bottom: .5em;
 }
+
+/* Step styles -----------*/
+
+#step_board{
+
+}
+
+.step-block {
+    margin-top: 0em;
+}
+
+.select-step {
+    
+}
+.step-config-parts {
+    margin: 0px 10px 0px 10px;
+    padding:0px;
+}
+
+.step_param_names{
+}
+
+div.step-config-select{
+    display:inline-block;
+    margin: 0em 1em 0em 2em;
+    width: 12em;
+}
+
+#step_controler {
+    margin-bottom: 1em;
+}
+
+.step-controler-buttons {
+    margin-left: .5em;
+    margin-right: .5em;
+}
+
+
+card .step{
+  color: red;
+}
+
+.block-controler {
+    z-index: 10;
+}
+.block-controler-interface {
+    position: absolute;
+    right:2.5%;
+    top: -12.5px;
+}
+.block-controler-button {
+    cursor: pointer;
+    margin: 0em;
+}
+
+
+/* -----------------------*/

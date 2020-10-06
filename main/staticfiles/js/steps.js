@@ -1,813 +1,329 @@
-function ShowIframe() {
-
-    var iframe_element = document.getElementById("myIframe");
+/**
+ * Loads the json with the steps information and init the steps creations interface
+ * @param  {Node} interface_root_element [The element that will be the root of the entire interface]
+ * @param  {Node} output_element [The element where the steps json are going to be placed]
+ * @param  {String} json_path [The path of the json with the steps information]
+ */
+function load_steps(interface_root_element, output_element, json_path="/static/json/step_signatures.json"){
+    var xmlhttp = new XMLHttpRequest();
     
-    if (iframe_element.style.display === "none"){
-        iframe_element.style.display = "block";
-        document.getElementById("myButton").innerText = "Hide Website";
-    }
-    else{
-        iframe_element.style.display = "none";
-        document.getElementById("myButton").innerText = "Show Website";
-    }
-}
-
-function enableNextButton(){
-    var field_element = document.getElementById("configJson");
-    var next_element = document.getElementById("submit_steps");
-    if (field_element != "")
-        next_element.disabled = false;
-    else
-        next_element.disabled = true;
-}
-
-function enableAddStep(){
-    var select = document.getElementById("stepMenu");
-    var btn = document.getElementById("addStep");
-
-    const step_type = select.options[select.selectedIndex].value;
-
-    if (step_type == "default")
-        btn.disabled = true;
-    else
-        btn.disabled = false;
-}
-
-function addNewStep(){
-    const select = document.getElementById("stepMenu");
-    const btn = document.getElementById("addStep");
-    const new_id = "Step-" + genId() + "-";
-    const step_type = select.value;
-    if (step_type == "default"){
-        return;
-    }
-
-    insertContainer(new_id, step_type);
-    insertStep(new_id, step_type);    
-    btn.disabled = true;
-    select.value = "default";
-}
-
-function insertContainer(new_id, step_type){
-    const [htmlString, new_events] = getStepContainerHtml(new_id, step_type);
-
-    const div = document.createElement('div');
-    div.innerHTML = htmlString.trim();
-
-    const stepsContainer = document.getElementById("stepsContainer");
-    const stepContainer = document.getElementById("stepMenuContainer");
-    stepsContainer.insertBefore(div.firstChild, stepContainer);
-
-    for (var [id, fun, type] of new_events) {
-        addEventListener(id, fun, type);
-    }
-}
-
-function genId(length=8) {
-    var result = '';
-    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-    var charactersLength = characters.length;
-    for (var i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-    return result;
-}
-
-function getStepContainerHtml(new_id, step_type){
-    const new_container_id = new_id + "Container";
-    return [
-        `
-        <div class=\"stepContainer row\" id=\"${new_container_id}\" stepType="${step_type}">
-            <div class=\"col-1 indentContainer\"></div>
-            <div class=\"col\">
-                <div class=\"stepStuff row\">
-                </div>
-                <div class=\"row justify-content-end manageSteps\">
-                    <div class=\"col-2\">Gerenciar Passo:</div>
-                    <div class=\"col-1\">
-                        <span
-                            id=\"dedent${new_container_id}\"
-                            class=\"badge badge-light clickableSpan\"
-                        >
-                            <img src="../staticfiles/icons/arrow-left-black.svg" alt=\"ArrowLeft\"></img>
-                        </span>
-                    </div>
-                    <div class=\"col-1\">
-                        <span
-                            id=\"indent${new_container_id}\"
-                            class=\"badge badge-light clickableSpan\"
-                        >
-                        <img src="../staticfiles/icons/arrow-right-black.svg" alt=\"ArrowRight\"></img>
-                        </span>
-                    </div>
-                    <div class=\"col-1\">
-                        <span
-                            id=\"moveStepUp${new_container_id}\"
-                            class=\"badge badge-light clickableSpan\"
-                        >
-                        <img src="../staticfiles/icons/arrow-up-black.svg" alt=\"ArrowUp\"></img>
-                        </span>
-                    </div>
-                    <div class=\"col-1\">
-                        <span
-                            id=\"moveStepDown${new_container_id}\"
-                            class=\"badge badge-light clickableSpan\"
-                        >
-                        <img src="../staticfiles/icons/arrow-down-black.svg" alt=\"ArrowDown\"></img>
-                        </span>
-                    </div>
-                    <div class=\"col-1\">
-                        <span
-                            id=\"deleteElement${new_container_id}\"
-                            class=\"badge badge-light clickableSpan\"
-                        >
-                        <img src="../staticfiles/icons/x.svg" alt=\"Delete\"></img>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>    
-        `, 
-        [
-            ["dedent"+new_container_id, function(){dedentStep(new_container_id);}, "click"], 
-            ["indent"+new_container_id, function(){indentStep(new_container_id);}, "click"], 
-            ["moveStepUp"+new_container_id, function(){moveStepUp(new_container_id);}, "click"], 
-            ["moveStepDown"+new_container_id, function(){moveStepDown(new_container_id);}, "click"], 
-            ["deleteElement"+new_container_id, function(){deleteElement(new_container_id);}, "click"], 
-
-        ]
-    ];
-}
-
-function insertStep(new_id, step_type) {
-    var inner_elements = ""
-    if (step_type == "default") {
-        console.log("ERROR: Received default option. Should not fall here")
-        return "";
-    } else if (step_type == "click") {
-        [inner_elements, new_events] = getClickStepHtml(new_id);
-    } else if (step_type == "select") {
-        [inner_elements, new_events] = getSelectStepHtml(new_id);
-    } else if (step_type == "table") {
-        [inner_elements, new_events] = getSaveTableHtml(new_id);
-    } else if (step_type == "save") {
-        [inner_elements, new_events] = getSaveInfoHtml(new_id);
-    } else if (step_type == "iframe") {
-        [inner_elements, new_events] = getIFrameStepHtml(new_id);
-    } else if (step_type == "download") {
-        [inner_elements, new_events] = getDownloadHtml(new_id);
-    } else if (step_type == "pages") {
-        [inner_elements, new_events] = getPaginationHtml(new_id);
-    } else if (step_type == "captcha") {
-        [inner_elements, new_events] = getCaptchaHtml(new_id);
-    } else if (step_type == "if") {
-        [inner_elements, new_events] = getIfHtml(new_id);
-    } else {
-        console.log("Invalid option of step. Returning.");
-        return;
-    }
-    document.querySelector("#" + new_id + "Container > div.col > div.stepStuff").innerHTML = inner_elements.trim();
-
-    for (var [id, fun, type] of new_events) {
-        addEventListener(id, fun, type);
-    }
-}
-
-function getClickStepHtml(new_id){
-    const [xpath_html, xpath_events] = getXpathHtml("", new_id, "");
-
-    // envent target, function, event type
-    var events = [].concat(xpath_events);
-
-    console
-
-    var html = `
-        <div class=\"col\">
-            <div class=\"row\">
-                <div class=\"col\">
-                    <strong>Clique em um elemento</strong>
-                </div>
-                <div class=\"col-3\">
-                    id: ${new_id}
-                </div>
-            </div>
-    ` + xpath_html + `
-        </div>    
-    `;
-
-    return [html, events];
-}
-
-function getSelectStepHtml(new_id){
-    var is_filled_dynamically = new_id + "IsFilledDynamically";
-    var filled_after_step = new_id + "FilledAfterStep";
-    var options_to_ignore = new_id + "OptionToIgnore";
-
-    const [xpath_html, xpath_events] = getXpathHtml("", new_id, "");
-
-    // envent target, function, event type
-    var events = [
-        [is_filled_dynamically, function () {toggleElement(filled_after_step);}, "change"],
-    ].concat(xpath_events);
-
-    var html = `
-        <div class=\"col\">
-            <div class=\"row\">
-                <div class=\"col\">
-                    <strong>Selecione opção</strong>
-                </div>
-                <div class=\"col-3\">
-                    id: ${new_id}
-                </div>
-            </div>
-            ` + xpath_html + `
-            <div class=\"row\">
-                <div class=\"col\">
-                    <div class=\"custom-control custom-switch\">
-                        <input type=\"checkbox\" class=\"custom-control-input\" id=\"${is_filled_dynamically}\">
-                        <label class=\"custom-control-label\" for=\"${is_filled_dynamically}\">Preenchido dinamicamente?</label>
-                    </div>
-                </div>
-            </div>
-            <div class=\"row\" id=\"${filled_after_step}\" style=\"display: none;\">
-                <label class=\"col-4\">
-                    <img src=\"..\/icons\/corner-down-right.svg\" alt=\"\"> Preenchido depois do passo:
-                </label>
-                <input type=\"text\" class=\"col-4\" placeholder=\"Step-...-\" id=\"${new_id}FilledAfterStep\">
-            </div>
-            <div class=\"row\">
-                <label class=\"col-3\">
-                    <img src="../staticfiles/icons/corner-down-right-black.svg" alt=\"\">
-                    Ignorar opções:
-                </label>
-                <input type=\"text\" class=\"col\" placeholder=\"cidade 1;cidade 2;(...)\" id=\"${options_to_ignore}\">
-                <div class="col-1">
-                    <span class=\"badge badge-light clickableSpan\">
-                        <img src="../staticfiles/icons/help-circle.svg" alt=\"Como usar\">
-                    </span>
-                </div>
-            </div>
-        </div>   
-    `;
-
-    return [html, events];
-}
-
-function getSaveTableHtml(new_id){
-    var xpath_id = new_id + "XpathInput";
-    var save_content_table = new_id + "SaveContentTable";
-    var file_name = new_id + "FileName";
-    var overwrite_file = new_id + "OverwriteFile";
-    var append_to_file = new_id + "AppendToFile";
-    
-    const [xpath_html, xpath_events] = getXpathHtml(xpath_id, "", "Xpath para tabela");
-
-    // envent target, function, event type
-    var events = [
-        [xpath_id, function () { askTable(save_content_table, xpath_id); }, "input"],
-    ].concat(xpath_events);
-
-    var html = `
-        <div class=\"col\">
-            <div class=\"row\">
-                <div class=\"col\">
-                    <strong>Salve a tabela</strong>
-                </div>
-                <div class=\"col-3\">
-                    id: ${new_id}
-                </div>
-            </div>
-            ` + xpath_html + `
-            <div class=\"row\">
-                <div class=\"col\">
-                    Selecione a tabela (tag table no html). As linhas serão casadas usando xpath + "/tbody[1]/tr[1, 2, ...]".
-                </div>
-            </div>
-
-            <div class=\"row\">
-                <div class=\"col\">
-                    Preview:
-                </div>
-            </div>
-            <div class=\"row\">
-                <div class=\"col\">
-                    <div class=\"tableWrapperScrollY my-custom-scrollbar\">
-                        <table class=\"table\" id=\"${save_content_table}\">
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div class=\"row\">
-                <div class=\"col\">
-                    <label>Nome do arquivo</label>
-                    <input type=\"text\" class=\"form-control\" placeholder=\"./(...)\" id=\"${file_name}\">
-                </div>
-            </div>
-
-            <div class=\"row\">
-                <div class=\"col\">
-                    <form>
-                        <div class=\"custom-control custom-radio\">
-                            <input type=\"radio\" id=\"${overwrite_file}\" name=\"customRadio\" class=\"custom-control-input\" checked>
-                            <label class=\"custom-control-label\" for=\"${overwrite_file}\">Sobrescrever arquivo se ja
-                                existe</label>
-                        </div>
-                        <div class=\"custom-control custom-radio\">
-                            <input type=\"radio\" id=\"${append_to_file}\" name=\"customRadio\" class=\"custom-control-input\">
-                            <label class=\"custom-control-label\" for=\"${append_to_file}\">Adicionar dados ao final do arquivo
-                                (se já existir)</label>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    return [html, events];
-}
-
-function getIFrameStepHtml(new_id){
-    const [xpath_html, xpath_events] = getXpathHtml("", new_id, "");
-
-    // envent target, function, event type
-    var events = [].concat(xpath_events);
-
-    var html = `
-        <div class=\"col\">
-            <div class=\"row\">
-                <div class=\"col\"><strong>Mude para o iframe</strong></div>
-            </div>
-            <div class=\"col-3\">
-                id: ${new_id}
-            </div>
-            ` + xpath_html + `
-        </div>    
-    `;
-
-    return [html, events];
-}
-
-function getDownloadHtml(new_id){
-    var folder_address = new_id = "FolderAddress";
-
-    const [xpath_html, xpath_events] = getXpathHtml("", new_id, "");
-
-    // envent target, function, event type
-    var events = [].concat(xpath_events);
-
-    var html = `
-        <div class=\"col\">
-            <div class=\"row\">
-                <div class=\"col\">
-                    <strong>Baixe o arquivo</strong>
-                </div>
-                <div class=\"col-3\">
-                    id: ${new_id}
-                </div>
-            </div>
-            ` + xpath_html + `
-            <div class=\"row\">
-                <div class=\"col\">
-                    <label>Salvar na pasta</label>
-                    <input type=\"text\" class=\"form-control\" placeholder=\"./(...)\" id=\"${folder_address}\">
-                </div>
-            </div>
-        </div>        
-    `;
-
-    return [html, events];
-}
-
-function getPaginationHtml(new_id){
-    const [xpath_htmlNextPageBtn, xpath_eventsNextPageBtn] = getXpathHtml(
-        new_id + "NextPageBtn", "", "Xpath para botão de próxima página")
-    const [xpath_htmlMaxPagesInfo, xpath_eventsMaxPagesInfo] = getXpathHtml(
-        new_id + "MaxPagesInfo", "", "Xpath para número máximo de páginas")
-
-    // envent target, function, event type
-    var events = [].concat(xpath_eventsNextPageBtn).concat(xpath_eventsMaxPagesInfo);
-
-    var html = `
-        <div class=\"col\">
-            <!--  -->
-            <div class=\"row\">
-                <div class=\"col\">
-                    <strong>Para cada página</strong>
-                </div>
-                <div class=\"col-3\">
-                    id: ${new_id}
-                </div>
-            </div>
-            ` + xpath_htmlNextPageBtn + `
-            ` + xpath_htmlMaxPagesInfo + `
-        </div>
-    `;
-
-    return [html, events];
-}
-
-function getCaptchaHtml(new_id) {
-    const [xpath_html, xpath_events] = getXpathHtml("", new_id, "");
-
-    // envent target, function, event type
-    var events = [].concat(xpath_events);
-
-    var html = `
-        <div class=\"col\">
-            <div class=\"row\">
-                <div class=\"col\">
-                    <strong>Quebre o captcha</strong>
-                </div>
-
-                <div class=\"col-3\">
-                    id: ${new_id}
-                </div>
-            </div>
-            ` + xpath_html + `
-        </div>
-    `;
-
-    return [html, events];
-}
-
-function getIfHtml(new_id){
-    const [xpath_html, xpath_events] = getXpathHtml("", new_id, "");
-    var if_detect = new_id + "IfDetect";
-    // envent target, function, event type
-    var events = [].concat(xpath_events);
-
-    var html = `
-        <div class=\"col\">
-            <div class=\"row\">
-                <div class=\"col\">
-                    <strong>Se detectar elemento</strong>
-                </div>
-
-                <div class=\"col-3\">
-                    id: ${new_id}
-                </div>
-            </div>
-
-            <div class=\"row\">
-                <div class=\"col\">
-                    <div class=\"custom-control custom-switch\">
-                        <input type=\"checkbox\" class=\"custom-control-input\" id=\"${if_detect}\">
-                        <label class=\"custom-control-label\" for=\"${if_detect}\">
-                            Se marcado, funcionará como 'se detectar'. Se não marcado, 'se não detectar'
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            ` + xpath_html + ` 
-        </div>
-    `;
-
-    return [html, events];
-}
-
-function getSaveInfoHtml(new_id) {
-    var events = [
-        [`${new_id}AddInfoBtn`, function () { // Adds info to be collected
-            console.log("AddInfoBtn clicked")
-            const select = document.getElementById(`${new_id}AddInfoSelect`);
-            const info_type = select.options[select.selectedIndex].value;
-            console.log("calling add Info with:", new_id, info_type);
-            addInfo(new_id, info_type);
-            select.value = "default";
-            var btn = document.getElementById(`${new_id}AddInfoBtn`);
-            btn.disabled = true;
-        }, "click"],
-        [`${new_id}AddInfoSelect`, function(){
-            // disables 'AddInfoBtn' if value select is the default
-            // enables otherwise
-            var select = document.getElementById(`${new_id}AddInfoSelect`);
-            var btn = document.getElementById(`${new_id}AddInfoBtn`);
-
-            if (select.options[select.selectedIndex].value == "default")
-                btn.disabled = true;
-            else
-                btn.disabled = false;
-        }, "change"]
-    ];
-
-    var html = `
-        <div class=\"col\">
-            <div class=\"row\">
-                <div class=\"col\">
-                    <strong>Salve informações</strong>
-                </div>
-                <div class=\"col-3\">
-                    id: ${new_id}
-                </div>
-            </div>
-
-            <div class=\"row\">
-                <div class=\"col\">
-                    <label>Nome do arquivo</label>
-                    <input type=\"text\" class=\"form-control\" placeholder=\"./(...)\" id=\"${new_id}FileName\">
-                </div>
-            </div>
-
-            <div class=\"row\">
-                <div class=\"col\">
-                    <form>
-                        <div class=\"custom-control custom-radio\">
-                            <input type=\"radio\" id=\"${new_id}OverwriteFile\" name=\"customRadio\" class=\"custom-control-input\" checked>
-                            <label class=\"custom-control-label\" for=\"${new_id}OverwriteFile\">Sobrescrever arquivo se ja
-                                existe</label>
-                        </div>
-                        <div class=\"custom-control custom-radio\">
-                            <input type=\"radio\" id=\"${new_id}AppendToFile\" name=\"customRadio\" class=\"custom-control-input\">
-                            <label class=\"custom-control-label\" for=\"${new_id}AppendToFile\">Adicionar dados ao final do arquivo
-                                (se já existir)</label>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class=\"row\">
-                <div class=\"col\" id=\"${new_id}InfoContainer\">
-                    <div class="row" id="${new_id}Dummy"></div>
-                </div>
-            </div>
-
-            <div class=\"row\" style=\"border-top: 1px dotted gray\">
-                <div class=\"col\">
-                    Adicionar informação:
-                </div>
-            </div>
-            <div class=\"row\">
-                <div class=\"col\">
-                    <select class=\"custom-select\" id=\"${new_id}AddInfoSelect\">
-                        <option selected value=\"default\">Selecione o tipo de informação</option>
-                        <option value=\"href\">href</option>
-                        <option value=\"attr\">atributos do elemento</option>
-                        <option value=\"txt\">texto do elemento</option>
-                    </select>
-                </div>
-            </div>
-            <div class=\"row\">
-                <div class=\"col\">
-                    <button class=\"btn btn-primary\" type=\"button\" id=\"${new_id}AddInfoBtn\" disabled>Adicionar</button>
-                </div>
-            </div>
-        </div>
-    `;
-
-    return [html, events];
-}
-
-function getXpathHtml(xpath_id="", new_id="", label=""){
-    if(xpath_id == "" && new_id == "")
-        throw new InvalidOperationException(errors.InvalidArgumentException );
-    else if(xpath_id == "")
-        xpath_id = new_id + "XpathInput";
-
-    console.log("getXpathHtml: xpath_id: " + xpath_id);
-
-    if(label == "")
-        label = "xpath";
-
-    var events = [
-        [xpath_id + "SelectSpanDefault", function () {
-            selectXpathSpan(xpath_id + "SelectSpan");
-            readXpath(xpath_id); 
-        }, "click"],
-        [xpath_id + "CopySpan", function () { copyInputText(xpath_id); }, "click"],
-    ]
-
-    var html = `
-        <!-- begin xpath -->
-        <div class=\"row\">
-            <div class=\"col\"><label>${label}:</label></div>
-        </div>
-        <form>
-            <div class=\"input-group\">
-                <div>
-                    <span class=\"badge badge-light clickableSpan\" id=\"${xpath_id}SelectSpan\">
-                        <img src=\"../staticfiles/icons/mouse-pointer-gray.svg\" alt=\"Selecionar\" 
-                            style=\"display: block; padding: 5px; margin: 0px auto;\"
-                            id=\"${xpath_id}SelectSpanDefault\">
-                        <img src=\"../staticfiles/icons/mouse-pointer-white.svg\" alt=\"Selecionar\" 
-                            style=\"display: none; padding: 5px; margin: 0px auto;\" 
-                            id=\"${xpath_id}SelectSpanSelected\">
-                    </span>
-                </div>
-                <input type=\"text\" class=\"form-control\" placeholder=\"xpath para elemento\" id=\"${xpath_id}\">
-                <div class=\"\">
-                    <button class=\"btn btn-primary\" type=\"button\" id=\"${xpath_id}CopySpan\">Copiar</button>
-                </div>
-                <div class=\"input-group-prepend\">
-                    <span class=\"btn btn-light clickableSpan\">
-                        <img src=\"../staticfiles/icons/help-circle.svg\" alt=\"Como usar\">
-                    </span>
-                </div>
-            </div>
-        </form>
-        <!-- end xpath -->
-    `;
-
-    return [html, events]
-}
-
-function generateJson() {
-    var steps_container = document.getElementById("stepsContainer");
-    var steps = steps_container.children;
-
-    var root_step = {
-        type: "root",
-        depth: 0,
-        children: [],
-        name: document.getElementById("collectorName").value,
-        max_requests_per_seconds: document.getElementById("maxRequestsPerSecond").value,
-        rotate_address: document.getElementById("rotateAddress").checked,
-        max_requests_per_ip: document.getElementById("maxResquestsPerAddress").value
+    xmlhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        step_list = JSON.parse(this.response, function (key, value){
+            if (typeof value == "string"){
+                return value.replace(/_/g, " ")
+            }
+            return value;
+        })
+        step_list = step_list.concat(JSON.parse('{"name":"object", "mandatory_params":["ex: [1,2,3]"], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name":"for each", "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name":"for each page in", "mandatory_params":[], "optional_params":{}}'))
+        init_steps_creation_interface(interface_root_element, output_element, step_list)
+      }
     };
-    var depth_stack = [root_step];
-    var stack_top = depth_stack[depth_stack.length - 1];
-    for (var step of steps) {
-        var step_container_id = step.getAttribute("id");
-        if(step_container_id == "stepMenuContainer"){
-            continue;
-        }
-        var depth = getIndentationLevel(step_container_id);
-        if (depth > stack_top['depth'] + 1) {
-            document.getElementById("configJson").value = "Identação incorreta!!";
-            return;
-        }
-        else while (stack_top.depth >= depth) {
-            depth_stack.pop();
-            stack_top = depth_stack[depth_stack.length - 1];
-        }
 
-        var new_step = getStepConfig(step_container_id);
-        new_step["depth"] = depth;
-        new_step["id"] = document.querySelector("#" + step_container_id + 
-            "> div.col > div.stepStuff.row > div > div:nth-child(1) >" + 
-            "div.col-3").textContent.replace("id:", "").trim();
-        new_step["children"] = [];
+    xmlhttp.open("GET", json_path, true);
+    xmlhttp.send();
+}
 
-        stack_top.children.push(new_step);
-        depth_stack.push(new_step);
-        stack_top = depth_stack[depth_stack.length - 1];
+
+
+//-------------- creation_interface ------------------------------
+
+
+/**
+ * Init the steps creation interface, that is, the save button, the add step button and the step board.
+ * @param  {Node} interface_root_element The element that will be the root of the entire interface.
+ * @param  {Node} output_element The element where the steps json are going to be placed.
+ * @param  {List} step_list A list with the steps information.
+ */
+
+function init_steps_creation_interface(interface_root_element, output_element, step_list){
+    steps_creation_interface = document.createElement("div")
+    steps_creation_interface.type= "steps_creation_interface"
+    
+    step_controler = document.createElement("div")
+    step_controler.type = "step_controler"
+    step_board = init_step_board(step_list)
+
+
+    add_block_button = document.createElement("a")
+    add_block_button.className="btn btn-primary step-controler-buttons"
+    add_block_button.style.color = "white"
+    add_block_button.onclick = function(){step_board.add_block(step_list)}
+    add_block_button.innerText = "Add step"
+
+
+    save_button = document.createElement("button")
+    save_button.innerText = "Save steps"
+    save_button.className="btn btn-primary step-controler-buttons"
+    save_button.style.color = "white"
+    interface_root_element.save_button = save_button
+    interface_root_element.save_button.onclick = function(){build_json(step_board, output_element)}
+
+    step_controler.appendChild(add_block_button)
+    step_controler.appendChild(save_button)
+    steps_creation_interface.appendChild(step_controler)
+    steps_creation_interface.appendChild(step_board)
+    steps_creation_interface.step_controler = step_controler
+    steps_creation_interface.step_board = step_board
+    steps_creation_interface.step_board.type
+
+    interface_root_element.insertBefore(steps_creation_interface, interface_root_element.children[0])
+    interface_root_element.type = "root"
+    interface_root_element.steps_creation_interface = steps_creation_interface
+    interface_root_element.step_json_input = output_element
+
+}
+
+//------------------- step board ------------------------------
+
+/**
+ * Init the step_board, the element that will store the steps created by the user.
+ * @param  {List} step_list [A list with the steps information]
+ * @return {Node} step_board [The step_board html element already initialized]
+ */
+function init_step_board(step_list){
+    step_board = document.createElement('DIV')
+    step_board.type = "step_board"
+    step_board.current_depth = 1
+    step_board.get_last_depth = get_last_depth
+    step_board.style.marginTop = "1em"
+    step_board.style.marginBottom = "1em"
+    step_board.add_block = function(step_list, index = -1){
+        steps_creation_interface = find_parent_with_attr_worth(this, "steps_creation_interface")
+        step_board = steps_creation_interface.step_board
+        step_block = init_block(step_list, step_board.get_last_depth())
+        if(index != -1){
+            step_board.insertBefore(step_block, step_board.children[index])
+        }else{
+            step_board.appendChild(step_block)
+        }
+    }    
+    return step_board
+}    
+
+/**
+ * Function that will be setted to be a method of the step_board
+ * This function analyses the last step in the step_board to answer what 
+ * should be the depth of the next step to be added.
+ * @return {Number} The last depth or in case of the last step be a 
+ *                  loop step, the last depth + 1
+ */
+function get_last_depth(){
+    if(find_parent_with_attr_worth(this, "step_board")){
+        step_board = find_parent_with_attr_worth(this, "step_board")
+        if(step_board.children.length>0){
+            last_step = step_board.children[step_board.children.length-1]
+            if(last_step.step.name == "for each" || last_step.step.name == "for each page in"){
+                return last_step.depth + 1
+            }else{
+                return last_step.depth
+            }
+        }else{
+            return 1
+        }
     }
-    document.getElementById("configJson").value = JSON.stringify(root_step);
 }
 
-function copyInputText(){
-    // console.log("copying input from " + input_id);
-    const el = document.getElementById("configJson");
-    el.select();
-    document.execCommand('copy');
-}
+//--------------------- json build functions ---------------------------------
 
-function getIndentationLevel(step_id) {
-    var el = document.querySelector("#" + step_id + " > div.col-1.indentContainer");
-    console.log(":::getIndentationLevel #" + step_id + " > div.col-1.indentContainer");
-    var depth = el.children.length + 1;
-    // if (el.children.lenght) depth = el.children.length + 1;
-    // else depth = 1;
-    console.log("Indentation:", depth);
-    return depth;
-}
-
-function getStepConfig(step_container_id){
-    var step_container = document.getElementById(step_container_id);
-
-    var id_parts = step_container_id.split("-");
-    
-    console.log(step_container.getAttribute("steptype"));
-    
-    var step_type = step_container.getAttribute("steptype");
-    
-    var config = {}
-
-    var step_id = [id_parts[0], id_parts[1], ""].join("-");
-
-    if (step_type == "click") {
-        config = getClickStepConfig(step_id);
-    } else if (step_type == "select") {
-        config = getSelectStepConfig(step_id);
-    } else if (step_type == "table") {
-        config = getSaveTableConfig(step_id);
-    } else if (step_type == "save") {
-        config = getSaveInfoConfig(step_id);
-    } else if (step_type == "iframe") {
-        config = getIFrameStepConfig(step_id);
-    } else if (step_type == "download") {
-        config = getDownloadConfig(step_id);
-    } else if (step_type == "pages") {
-        config = getPaginationConfig(step_id);
-    } else if (step_type == "captcha") {
-        config = getCaptchaConfig(step_id);
-    } else if (step_type == "if") {
-        config = getIfConfig(step_id);
-    } else {
-        console.log("Invalid option of step. Returning.");
-        return;
-    }
-
-    config["type"] = step_type;
-    return config;
-}
-
-function getClickStepConfig(step_id) {
-    var config = {};
-    var xpath_input = document.querySelector(`#${step_id}XpathInput`);
-
-    console.log(`#${step_id}XpathInput`);
-
-    config["element_to_click_xpath"] = xpath_input.value;
-    return config;
-}
-
-function getSelectStepConfig(step_id) {
-    var config = {};
-
-    config["select_xpath"] = document.querySelector(`#${step_id}XpathInput`).value;
-    config["filled_dynamically"] = document.querySelector(`#${step_id}IsFilledDynamically`).checked;
-
-    
-    config["ignore_options"] = document.querySelector(`#${step_id}OptionToIgnore`).value.split(";");
-
-    if (config["filled_dynamically"])
-        config["filled_after_step"] = document.querySelector(`#${step_id}FilledAfterStep`).value;
-    else
-        config["filled_after_step"] = "";
-
-    return config;
-}
-
-function getSaveTableConfig(step_id) {
-    var config = {};
-
-    config["table_xpath"] = document.querySelector(`#${step_id}XpathInput`).value;
-    config["save_to_file"] = document.querySelector(`#${step_id}FileName`).value;
-    config["append_to_file"] = document.querySelector(`#${step_id}AppendToFile`).checked;
-
-    return config;
-}
-
-function getSaveInfoConfig(step_id) {
-    var config = {};
-
-    config["save_to_file"] = document.getElementById(`${step_id}FileName`).value;
-    config["appent_to_file"] = document.getElementById(`${step_id}AppendToFile`).checked;
-    
-    var infos = document.getElementById(`${step_id}InfoContainer`).children;
-    config["info"] = []
-    for (var info of infos) {
-        var info_id = info.getAttribute("id");
-        if(info_id == `${step_id}Dummy`)
-            continue;
-        var type = info.getAttribute("type");
-        var xpath_to_element = document.getElementById(`${info_id}-XpathInput`).value;
-
-        config["info"] = config["info"].concat([{
-            "type": type, "xpath": xpath_to_element
-        }]);
+/**
+ * This function gets the steps added by user in the step_board and builds the
+ * steps json, that describes the steps to be performed on the page to be crawled. 
+ * @param {Node} step_board The html element with all the steps setted by user.
+ * @param {Node} output_element The html element that is going to receive the steps json in its value.
+ */
+function build_json(step_board, output_element){
+    var root_step = {
+        step: "root",
+        depth: 0,
+        children: []
     }
 
-    return config;
+    stack = [root_step]
+    for(step_element of step_board.children){
+        indent = step_element.depth - stack[stack.length-1].depth
+
+        step_dict = get_step_json_format(step_element)
+
+        if(indent == 1){
+            stack[stack.length-1].children.push(step_dict)
+            stack.push(step_dict)
+        }else if(indent == 0){
+            stack.pop()
+            stack[stack.length-1].children.push(step_dict)
+            stack.push(step_dict)
+        }else if(indent < 0){
+            for(var i = 0; i < -indent; i++){
+                stack.pop()
+            }
+        }else if(indent>1){
+            console.log("Indentation ERROR")
+        }
+
+    }
+    output_element.value = JSON.stringify(root_step)
+    
 }
 
-function getIFrameStepConfig(step_id) {
-    var config = {};
-    config["iframe_xpath"] = document.querySelector(`#${step_id}XpathInput`).value;
-    return config;
+/**
+ * This function gets a block and extract its information to build the json step represtation with this.
+ * @param {Node} block The html element that represents a step and was parameterized by the user.
+ * @return {Dict} the step that was parameterized in the block, but now in the json steps represtation.
+ */
+function get_step_json_format(block){
+    param_name = block.step.name.replace(/ /g, "_")
+    step_dict={
+        step : param_name,
+        depth : block.depth,
+    }
+    if(param_name == "for each"){
+        step_dict.iterator = block.iterator_input.value
+        step_dict.children = []
+        step_dict.iterable = {call:{}}
+        step_dict.iterable.call = {
+            step: block.iterable_select.value,
+            arguments:{}
+        }
+        for(param of block.params){
+            step_dict.iterable.call.arguments[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
+        }
+    }else if(param_name == "for each page in"){
+        step_dict.children = []
+        for(param of block.params){
+            step_dict[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
+        }
+    }else {
+        step_dict.arguments = {}
+        for(param of block.params){
+            step_dict.arguments[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
+        }
+    }
+    return step_dict
 }
 
-function getDownloadConfig(step_id) {
-    var config = {};
+//-------------- util -------------------------------
 
-    config["file_xpath"] = document.querySelector(`#${step_id}XpathInput`).value;
-    config["save_in_folder"] = document.querySelector(`#${step_id}FolderAddress`).value;
+/**
+ * This function get all the mandatory parameters of a step, and return them but in input format in a list.
+ * @param {String} step_name The name of the step to get the inputs representing the parameters.
+ * @param {List} step_list The list of steps that conteing the step named with the step_name value.
+ * @retuns {List} A list with the inputs represting the mandatory parameters of the step.
+ */
+function get_params_element_list(step_name, step_list){
+    if(step_name == "objeto"){
+        object_div = document.createElement("DIV")
+        object_div.className = "col-sm"
+        object_div.innerHTML = `<input placeholder="objeto, ex: [1,2,3]" class="row form-control">`
+        return [object_div.children[0]]
+    }else{
+        var step = get_step_info(step_name, step_list)
+        var param_element_list = []
 
-    return config;
+        for(param of step.mandatory_params){
+            var parameter = document.createElement("DIV")
+            parameter.className = "col-sm"
+            parameter.innerHTML = `<input placeholder="` + String(param) + `" class="row form-control">`
+            parameter.children[0].placeholder = param
+            param_element_list.push(parameter)
+        }
+        return param_element_list
+    }
 }
 
-function getPaginationConfig(step_id) { 
-    var config = {};
 
-    config["next_btn_xpath"] = document.querySelector(
-        `#${step_id}NextPageBtn`).value;
-    config["max_pages_info_xpath"] = document.querySelector(
-        `#${step_id}MaxPagesInfo`).value;
-
-    return config;
+/**
+ * This function puts one by one the strings of a list inside a tag.
+ * @param {List} string_list A list of strings
+ * @param {String} tag A tag
+ * @retuns {String} All the tags with the string inside concatenated.
+ */
+function get_this_texts_inside_each_tag(string_list, tag){
+    html_tags=""
+    for (var i = 0; i < string_list.length; i++) {
+        html_tags = html_tags + tag + string_list[i] + tag.split(" ")[0].replace('<', '</')+">\n"
+    }
+    return html_tags
 }
 
-function getCaptchaConfig(step_id) {
-    var config = {};
-    config["captcha_xpath"] = document.querySelector(`#${step_id}XpathInput`).value;
-    return config;
+/**
+ * This function get the steps name inside a list of steps.
+ * @param {List} step_list The list of steps on json steps format.
+ * @retuns {List} A list with the names of all the steps inside the step_list.
+ */
+function get_step_names(step_list){
+    step_names = []
+    for(step of step_list){
+        step_names.push(step.name)
+    }
+    return step_names
 }
 
-function getIfConfig(step_id) {
-    var config = {};
-    config["element_xpath"] = document.querySelector(`#${step_id}XpathInput`).value;
-    config["if_detect"] = document.querySelector(`#${step_id}IfDetect`).value;
-    return config;
+
+/**
+ * This function gets the index of an element in its parent childrens.
+ * @param {Node} element The element by which the index will be found.
+ * @retuns {Number} The index of the elemente in its parent children.
+ */
+function get_index_in_parent(element){
+    parent = element.parentElement
+    for(var i=0; i<parent.children.length; i++){
+        if(parent.children[i] == element){
+            return i
+        }
+    }
 }
+
+/**
+ * This function gets the information of an step inside a step_list by its name.
+ * @param {String} step_name The name of the step.
+ * @param {List} step_list The list of steps that conteing the step named with the step_name value.
+ * @retuns {Dict} A dictionary with the information of the step.
+ */
+function get_step_info(step_name, step_list){
+    for(step of step_list){
+        if(step.name == step_name){
+            return step
+        }
+    }
+    console.log(step_name + " não está entre os passos do json passado no init.")
+}
+
+/**
+ * This function hides an element.
+ * @param {Node} element Element to be hided.
+ */
+function hide(element){
+    element.style.display = "none";
+}
+
+/**
+ * This function shows an hided element.
+ * @param {Node} element Element to be showed.
+ */
+function show(element){
+    element.style.display = "block";
+}
+
+/**
+ * This function is very important, it finds in the ancestors of an element,
+ * that with an attribute setted with an value.
+ * @param {Node} element Starting element.
+ * @param {Any} value The value to be verificated in the attr of each ancestor.
+ * @param {String} attr The attribute that should be with the value.
+ * @retuns {Node} The ancestor element that have the value property with the value passed by parameter.
+ */
+function find_parent_with_attr_worth(element, value, attr = "type"){
+    if(element[attr] && element[attr] == value){
+        return element
+    }else {
+        if(!element.parentElement){
+            console.log("This element isn't inside an element with attribute \""+ attr + "\" storing the value " + value)
+            return false
+        }else{
+            return find_parent_with_attr_worth(element.parentElement, value)
+        }
+    }
+}
+
