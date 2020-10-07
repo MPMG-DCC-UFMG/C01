@@ -35,7 +35,7 @@ class DynamicFields:
     @sync
     async def get_page(self):
         """Returns loaded page"""
-        browser = await launch(headless=True)
+        browser = await launch(headless=True, dumpio=True)
         page = await browser.newPage()
         await page.goto(self.url)
         await page.waitForXPath(self.form_xpath)
@@ -50,8 +50,10 @@ class DynamicFields:
         """
         element = await self.page.xpath(xpath)
 
-        if isinstance(element, list):
+        try:
             element = element[0]
+        except IndexError:
+            pass
 
         return await self.page.evaluate('''element => element.textContent''',
                                         element)
@@ -137,9 +139,10 @@ class DynamicFields:
             xpath: target xpath
         """
         element = await self.page.xpath(xpath)
-        if isinstance(element, list):
+
+        try:
             return element[0]
-        else:
+        except IndexError:
             return element
 
     @sync

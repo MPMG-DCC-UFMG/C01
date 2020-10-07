@@ -257,9 +257,9 @@ class RequiredFields:
     async def element_from_xpath(self, page, xpath: str):
         """Wrapper for async get element from xpath"""
         element = await page.xpath(xpath)
-        if isinstance(element, list):
+        try:
             return element[0]
-        else:
+        except IndexError:
             return element
 
     @sync
