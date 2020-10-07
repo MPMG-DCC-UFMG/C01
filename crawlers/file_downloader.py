@@ -65,22 +65,26 @@ class FileDownloader(BaseMessenger):
         - destination: str, address of the folder that will containt the file
         - description: dict, dictionary of item descriptions
         """
-        item["description"]["file_name"] = f"{url_hash}.{csv}"
+
+        url_hash = crawling_utils.hash(item["url"])
+        old_file_name = item["description"]["file_name"]
+        item["description"]["file_name"] = f"{url_hash}.csv"
         item["description"]["type"] = "csv"
         url_hash = crawling_utils.hash(item["url"])
 
         success = False
 
-        new_file = f"{item['destination']}/csv/{url_hash}.{csv}"
-        try:
-            out = binary.extractor.Extractor(new_file)
-            out.extractor()
-            success = True
-        except Exception as e:
-            print(
-                f"Could not extract csv files from {hsh}.{file_format} -",
-                f"message: {str(type(e))}-{e}"
-            )
+        # # Not sure how binary extractor should work. Needs to check
+        # new_file = f"{item['destination']}/csv/{url_hash}.csv"
+        # try:
+        #     out = binary.extractor.Extractor(new_file)
+        #     out.extractor()
+        #     success = True
+        # except Exception as e:
+        #     print(
+        #         f"Could not extract csv files from {hsh}.{file_format} -",
+        #         f"message: {str(type(e))}-{e}"
+        #     )
 
         if success:
             FileDescriptor.feed_description(

@@ -5,6 +5,7 @@ from scrapy.linkextractors import LinkExtractor
 # Other external libs
 import logging
 import re
+import json
 import requests
 
 # Project libs
