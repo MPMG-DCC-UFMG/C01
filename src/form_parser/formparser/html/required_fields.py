@@ -30,7 +30,7 @@ class RequiredFields:
     @sync
     async def get_page(self):
         """Wrapper for async get page"""
-        browser = await launch(headless=True)
+        browser = await launch(headless=True, dumpio=True)
         page = await browser.newPage()
         await page.goto(self.url)
         return page
