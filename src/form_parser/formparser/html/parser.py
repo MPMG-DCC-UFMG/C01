@@ -134,7 +134,17 @@ class Parser:
                 fillers = utils.FILLERS
 
             if submit_button_xpath is None:
-                submit_button_xpath = utils.get_xpath(self.submit_button()[-1])
+                try:
+                    submit_button_xpath = utils.get_xpath(
+                        self.submit_button()[-1]
+                    )
+                except IndexError:
+                    # gets first button in the page
+                    page_buttons = utils.get_xpath(
+                        self.page_buttons()
+                    )
+                    if page_buttons:
+                        submit_button_xpath = page_buttons[-1]
 
             rf = RequiredFields(form_url, fillers)
             rf.get_required_fields(self.list_fields(), submit_button_xpath,
@@ -165,6 +175,10 @@ class Parser:
     def submit_button(self) -> list:
         """Returns submit button"""
         return self.form.xpath("//input[@type='submit']")
+
+    def page_buttons(self) -> list:
+        """Returns a list of buttons"""
+        return self.form.xpath("//input[@class='button']")
 
     def dynamic_fields(self, form_url=None, dynamic_types=None) -> dict:
         """Returns dict of dynamic form fields. The keys show the
