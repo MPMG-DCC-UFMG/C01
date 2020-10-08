@@ -1,4 +1,4 @@
-import os 
+import os
 
 # Redis settings
 REDIS_HOST = "localhost"
