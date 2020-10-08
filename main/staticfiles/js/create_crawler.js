@@ -67,7 +67,10 @@ function setHiddenState(element_id, hidden) {
 }
 
 function checkBasicInfo() {
-    var valid = validateTextInput('id_source_name') && validateTextInput('id_base_url');
+    var valid =
+      validateTextInput("id_source_name") &&
+      validateTextInput("id_base_url") &&
+      validateTextInput("id_data_path");
     defineIcon("basic-info", valid);
 }
 
@@ -156,6 +159,7 @@ $(document).ready(function () {
         switch (input_name) {
             case 'source_name':
             case 'base_url':
+            case 'data_path':
                 checkBasicInfo();
                 break;
             case 'has_webdriver':
