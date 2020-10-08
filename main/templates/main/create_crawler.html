@@ -243,10 +243,16 @@ New Crawler
                             <div class="col md-6">
                                 {{ form.crawler_type | as_crispy_field}}
                                 <div class="crawler-type-content-div" id="static_page">
-                                    {{ form.explore_links | as_crispy_field}}
-                                    {{ form.link_extractor_max_depth | as_crispy_field}}
-                                    {{ form.link_extractor_allow | as_crispy_field}}
-                                    {{ form.link_extractor_allow_extensions | as_crispy_field}}
+                                    <div id="explore_links" style="padding:20px; border-top: 1px solid #DCDCDC;">
+                                        {{ form.explore_links | as_crispy_field}}
+                                        {{ form.link_extractor_max_depth | as_crispy_field}}
+                                        {{ form.link_extractor_allow_url | as_crispy_field}}
+                                    </div>
+                                    <div id="download_files" style="padding:20px; border-top: 1px solid #DCDCDC;">
+                                        {{ form.download_files | as_crispy_field}}
+                                        {{ form.download_files_allow_url | as_crispy_field}}
+                                        {{ form.download_files_allow_extensions | as_crispy_field}}
+                                    </div>
                                 </div>
                                 <div class="crawler-type-content-div" id="form_page" hidden>
                                     {{ form.steps |  as_crispy_field }}
