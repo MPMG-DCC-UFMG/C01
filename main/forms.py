@@ -260,7 +260,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     # Crawler Type - Page with form
     steps = forms.CharField(label="Steps JSON", max_length=9999999,
                             widget=forms.TextInput(
-                                attrs={'placeholder': '{'+'}'})
+                                attrs={'placeholder': '{' + '}'})
                             )
 
     # Crawler Type - Single file
@@ -268,8 +268,8 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     # PARSING #################################################################
     save_csv = forms.BooleanField(
-      required=False, label="Salvar arquivo csv",
-      widget=forms.CheckboxInput(attrs={'checked': True})
+        required=False, label="Salvar arquivo csv",
+        widget=forms.CheckboxInput(attrs={'checked': True})
     )
 
 
@@ -282,10 +282,9 @@ class ResponseHandlerForm(forms.ModelForm):
         model = ResponseHandler
         exclude = []
         widgets = {
-            'handler_type': forms.Select(attrs=
-                {
-                    'onchange': 'detailTemplatedUrlResponseParams(event);'
-                }
+            'handler_type': forms.Select(attrs={
+                'onchange': 'detailTemplatedUrlResponseParams(event);'
+            }
             ),
         }
 
