@@ -15,12 +15,13 @@ setup(
     author='Rennan Cordeiro',
     author_email='rennanl@ufmg.br',
     packages=setuptools.find_packages(),
-    install_requires=["certifi", "chardet", "cv2", "cycler", "decorator",
-                      "idna", "imagecodecs", "imageio", "imutils",
-                      "kiwisolver", "lxml", "matplotlib", "networkx",
-                      "numpy", "opencv-python", "Pillow", "pyparsing",
+    install_requires=["certifi", "chardet", "opencv-python", "cycler",
+                      "decorator", "idna", "imagecodecs", "imageio",
+                      "imutils", "kiwisolver", "lxml", "matplotlib",
+                      "networkx", "numpy", "Pillow", "pyparsing",
                       "pytesseract", "python-dateutil", "PyWavelets",
                       "requests", "scikit-image", "scipy", "selenium",
                       "six", "SpeechRecognition", "tifffile", "urllib3",
                       "validators"]
+
 )
