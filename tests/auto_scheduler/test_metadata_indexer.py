@@ -8,6 +8,7 @@ from auto_scheduler import MetadataIndexer
 from auto_scheduler import hashfy
 from auto_scheduler import settings
 
+
 class TestMetadataIndexer(unittest.TestCase):
     def test_persist(self):
         crawl = {
@@ -28,7 +29,7 @@ class TestMetadataIndexer(unittest.TestCase):
 
         crawlid = hashfy(crawl['url'])
         historic_filename = settings.HISTORIC_FOLDER + crawlid
-        
+
         if os.path.exists(historic_filename):
             os.remove(historic_filename)
 
