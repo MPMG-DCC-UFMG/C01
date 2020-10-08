@@ -1,4 +1,4 @@
-import os 
+import os
 import ujson
 from datetime import datetime, timedelta
 
@@ -26,7 +26,7 @@ class MetadataIndexer:
         timestamp = datetime.strptime(
             crawl['timestamp'], '%Y-%m-%dT%H:%M:%S.%f').timestamp()
 
-        soup = BeautifulSoup(body, 'html.parser') 
+        soup = BeautifulSoup(body, 'html.parser')
 
         crawlid = hashfy(url)
         crawl_hash = hashfy(soup.html.text)
@@ -47,8 +47,8 @@ class MetadataIndexer:
 
                 num_visits = len(crawl_historic['visits'][group_visit])
                 if num_visits == settings.NUMBER_VISITS_TO_GENERATE_ESTIMATE:
-                    group_visit += 1 
-        
+                    group_visit += 1
+
         else:
             crawl_historic = {
                 'visits': dict(),
@@ -69,8 +69,9 @@ class MetadataIndexer:
         num_visits += 1
 
         if num_visits == settings.NUMBER_VISITS_TO_GENERATE_ESTIMATE:
-            estimated_frequency_changes = AutoScheduler.update_crawl_frequency(crawlid, crawl_historic['visits'][group_visit])
+            estimated_frequency_changes = AutoScheduler.update_crawl_frequency(
+                crawlid, crawl_historic['visits'][group_visit])
             crawl_historic['estimated_frequency_changes'] = estimated_frequency_changes
-        
+
         with open(historic_filename, 'w') as f:
             f.write(ujson.dumps(crawl_historic, indent=4))
