@@ -245,7 +245,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
         widget=forms.TextInput(attrs={'placeholder': 'pdf,xml'})
     )
     # Crawler Type - Page with form
-    steps = forms.CharField(label="Steps JSON", max_length=9999999,
+    steps = forms.CharField(required=False, label="Steps JSON", max_length=9999999,
                             widget=forms.TextInput(
                                 attrs={'placeholder': '{' + '}'})
                             )

@@ -118,7 +118,7 @@ class CrawlRequest(TimeStamped):
 
     # STEPS ###########################################################
 
-    steps = models.CharField(max_length=9999999, default='{}')
+    steps = models.CharField(blank=True, null=True, max_length=9999999, default='{}')
 
     @staticmethod
     def process_config_data(crawler, config):
