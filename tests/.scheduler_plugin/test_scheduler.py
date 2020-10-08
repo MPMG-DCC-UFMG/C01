@@ -2,6 +2,8 @@ import unittest
 import random
 import ujson
 import time
+import hashlib
+import redis
 import threading
 
 from tests.m_scheduler import SchedulerPlugin
@@ -24,8 +26,18 @@ class TestScheduler(unittest.TestCase):
     def setUp(self):
         self.crawls_timestamp_received = None
         self.keep_running = True
+
         self.kafka_consumer = KafkaConsumer(
             SETTINGS['KAFKA_INCOMING_TOPIC'], bootstrap_servers=SETTINGS['KAFKA_HOSTS'])
+
+        self.redis_conn = redis.Redis(host=SETTINGS['REDIS_HOST'],
+                                      port=SETTINGS['REDIS_PORT'],
+                                      db=SETTINGS.get('REDIS_DB'),
+                                      password=SETTINGS['REDIS_PASSWORD'],
+                                      decode_responses=True,
+                                      socket_timeout=SETTINGS.get(
+                                          'REDIS_SOCKET_TIMEOUT'),
+                                      socket_connect_timeout=SETTINGS.get('REDIS_SOCKET_TIMEOUT'))
 
     def test_weekday_shift(self):
         '''Verifica se o cálculo de intervalos entre dias está correto.
@@ -270,12 +282,15 @@ class TestScheduler(unittest.TestCase):
     def test_schedule(self):
         '''Verifica se é possível definir recoletas e se elas ocorrem corretamente.
         '''
+        self.redis_conn.flushdb()
 
         scheduler = SchedulerPlugin(time_delta=60)
+        content_id = random.randint(0, 1000)
+
         req = {
-            'url': 'https://www.google.com',
+            'url': f'https://www.some_site.com/content={content_id}',
             'appid': 'testapp',
-            'crawlid': 'xyz',
+            'crawlid': f'{content_id}',
             'spiderid': 'test_spider',
             'scheduler': {
                 'repeat': {
@@ -295,3 +310,51 @@ class TestScheduler(unittest.TestCase):
         # Como recoletas ocorrem no intervalo de um minuto e o tempo esta passando virtualmente 60 segundos por segundo real,
         # é esperado que haja, pelo menos, 60 requisições de coletas enviadas ao tópico de entrada do SC
         self.assertTrue(len(self.crawls_timestamp_received) >= 60)
+
+    def test_update_schedule(self):
+        '''Verifica se é possível alterar intervalo de revisitas
+        '''
+
+        self.redis_conn.flushdb()
+
+        scheduler = SchedulerPlugin(30)
+        content_id = random.randint(0, 1000)
+
+        # agenda visitas de minuto em minuto
+        req = {
+            'url': f'https://www.some_another_site.com/content={content_id}',
+            'appid': 'testapp',
+            'crawlid': f'{content_id}',
+            'spiderid': 'test_spider',
+            'scheduler': {
+                'repeat': {
+                    'every': 1,
+                    'interval': 'minutes',
+                },
+            }
+        }
+
+        crawlid = hashlib.md5(req['url'].encode()).hexdigest()
+        scheduling_update = {'interval': 'minutes', 'every': 3}
+
+        self.keep_running = True
+        thread = threading.Thread(target=self._income_listener, daemon=True)
+        thread.start()
+
+        scheduler.handle(req)
+
+        # envia requisição ao redis para atualizar o intervalo de revisitas da coleta
+        key = f'scheduling_updates::{crawlid}'
+        val = ujson.dumps(scheduling_update)
+        self.redis_conn.set(key, val)
+
+        time.sleep(10)
+        self.keep_running = False
+
+        first_crawl_time = self.crawls_timestamp_received[0]
+        crawl_time_after_update_schedule = self.crawls_timestamp_received[1]
+
+        # como o intervalo inicial de recoletas era de um minuto, verifica se o novo intervalo (3 min.)
+        # foi aplicado
+        self.assertTrue(crawl_time_after_update_schedule -
+                        first_crawl_time == 180)

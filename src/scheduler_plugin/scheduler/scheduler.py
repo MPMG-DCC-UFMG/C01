@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import hashlib
 import sys
 import threading
 import time
@@ -10,6 +11,7 @@ import ujson
 from kafka import KafkaProducer
 
 from .base_handler import BaseHandler
+
 
 class SchedulerPlugin(BaseHandler):
     schema = "scheduler_schema.json"
@@ -249,7 +251,7 @@ class SchedulerPlugin(BaseHandler):
         '''
 
         if key not in conf:
-            return None 
+            return None
 
         val = conf[key]
 
@@ -354,9 +356,9 @@ class SchedulerPlugin(BaseHandler):
             conf = conf['repeat']
 
             delta = conf['every']
-            if type(delta) is not int:
+            if type(delta) is not float and type(delta) is not int:
                 raise TypeError(
-                    'The step size between one crawl and another must be an integer.')
+                    f'The step size between one crawl and another must be int or float.')
 
             if delta < 1:
                 raise ValueError(
@@ -465,8 +467,9 @@ class SchedulerPlugin(BaseHandler):
             timestamp = next_crawl_time.strftime("%Y-%m-%d %H:%M")
 
             if self.schedule_crawl(timestamp, req):
-                self.logger.info(f'Crawl scheduled for {timestamp} sucessfully')
-            
+                self.logger.info(
+                    f'Crawl scheduled for {timestamp} sucessfully')
+
             else:
                 self.logger.warning(
                     f'It was not possible to schedule the crawl, check the connection with Redis.')
@@ -474,6 +477,36 @@ class SchedulerPlugin(BaseHandler):
         except Exception as e:
             self.logger.error(e)
             self.logger.info(f'Failed to schedule crawl')
+
+    def update_schedule(self, crawl: dict):
+        '''Checks for updates to the visit intervals, changing the schedule, if applicable
+        
+        Args:
+            crawl: Schedule configuration to be changed  
+
+        '''
+        
+        if 'scheduler' not in crawl:
+            return
+
+        url = crawl['url']
+        crawlid = hashlib.md5(url.encode()).hexdigest()
+
+        key = f'scheduling_updates::{crawlid}'
+        scheduling_update = self.redis_conn.get(key)
+
+        if scheduling_update:
+            schedule_conf = crawl['scheduler']
+
+            scheduling_update = ujson.loads(scheduling_update)
+
+            interval = scheduling_update['interval']
+            every = scheduling_update['every']
+
+            schedule_conf['repeat']['interval'] = interval
+            schedule_conf['repeat']['every'] = every
+
+            self.redis_conn.delete(key)
 
     def daemon(self):
         '''Thread that checks if it is time for a scheduled crawl is in time to be processed by the Scrapy Cluster and to be rescheduled.
@@ -488,12 +521,13 @@ class SchedulerPlugin(BaseHandler):
                 for req in scheduled_crawls:
                     crawl = ujson.loads(req)
 
+                    self.update_schedule(crawl)
                     self.schedule(crawl)
                     self.send_crawl(crawl)
 
                 self.producer.flush()
                 self.scheduled.remove(timestamp)
-            
+
             #Wait for the new crawl interval
             time.sleep(60 - datetime.now().second)
 

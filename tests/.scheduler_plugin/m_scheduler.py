@@ -5,6 +5,7 @@ import ujson
 import threading
 import time
 import sys
+import hashlib
 
 from datetime import datetime, timedelta
 from kafka import KafkaProducer
@@ -18,6 +19,7 @@ SETTINGS = {
     'KAFKA_HOSTS': ['localhost:9092'],
     'KAFKA_INCOMING_TOPIC': 'demo.incoming'
 }
+
 
 class SchedulerPlugin:
     def __init__(self, time_delta: float = 1):
@@ -65,22 +67,17 @@ class SchedulerPlugin:
         return 24 - hour + target_hour
 
     def get_next_crawl_by_time(self, now: datetime, start_at: str) -> datetime:
-        try:
-            next_crawl = datetime.strptime(start_at, '%Y-%m-%d %H:%M')
-            if next_crawl < now:
-                return None
-            return next_crawl
+        next_crawl = datetime.strptime(start_at, '%Y-%m-%d %H:%M')
+        if next_crawl < now:
+            raise ValueError()
+        return next_crawl
 
-        except:
-            return None
-
-    def get_next_crawl_by_minutes(self, now: datetime, delta: int) -> datetime:
+    def get_next_crawl_by_minutes(self, now: datetime, delta: float) -> datetime:
         return now + timedelta(minutes=delta)
 
-    def get_next_crawl_by_hours(self, now: datetime, delta: int, at_minute: int = -1, from_hour: int = -1, to_hour: int = -1) -> datetime:
+    def get_next_crawl_by_hours(self, now: datetime, delta: float, at_minute: int = None, from_hour: int = None, to_hour: int = None) -> datetime:
         next_crawl = now + timedelta(hours=delta)
-
-        if from_hour >= 0 and to_hour >= 0:
+        if from_hour is not None and to_hour is not None:
             crawl_hour = next_crawl.hour
 
             if from_hour > to_hour:
@@ -93,15 +90,15 @@ class SchedulerPlugin:
                 hours_shift = self.calculate_hour_shift(crawl_hour, from_hour)
                 next_crawl += timedelta(hours=hours_shift)
 
-        if at_minute >= 0:
+        if at_minute is not None:
             return next_crawl.replace(minute=at_minute)
 
         return next_crawl
 
-    def get_next_crawl_by_days(self, now: datetime, delta: int, at_hour: int = -1, at_minute: int = -1, from_weekday: int = -1, to_weekday: int = -1) -> datetime:
+    def get_next_crawl_by_days(self, now: datetime, delta: float, at_hour: int = None, at_minute: int = None, from_weekday: int = None, to_weekday: int = None) -> datetime:
         next_crawl = now + timedelta(days=delta)
 
-        if from_weekday >= 0 and to_weekday >= 0:
+        if from_weekday is not None and to_weekday is not None:
             crawl_weekday = next_crawl.weekday()
 
             if from_weekday > to_weekday:
@@ -115,18 +112,18 @@ class SchedulerPlugin:
                     crawl_weekday, from_weekday)
                 next_crawl += timedelta(days=days_shift)
 
-        if at_hour >= 0:
+        if at_hour is not None:
             next_crawl = next_crawl.replace(hour=at_hour)
 
-        if at_minute >= 0:
+        if at_minute is not None:
             next_crawl = next_crawl.replace(minute=at_minute)
 
         return next_crawl
 
-    def get_next_crawl_by_weeks(self, now: datetime, delta: int, at_weekday: int = -1, at_hour: int = -1, at_minute: int = -1) -> datetime:
+    def get_next_crawl_by_weeks(self, now: datetime, delta: float, at_weekday: int = None, at_hour: int = None, at_minute: int = None) -> datetime:
         next_crawl = now + timedelta(weeks=delta)
 
-        if at_weekday >= 0:
+        if at_weekday is not None:
             crawl_weekday = next_crawl.weekday()
 
             if crawl_weekday != at_weekday:
@@ -134,10 +131,10 @@ class SchedulerPlugin:
                     crawl_weekday, at_weekday)
                 next_crawl += timedelta(days=days_shift)
 
-        if at_hour >= 0:
+        if at_hour is not None:
             next_crawl = next_crawl.replace(hour=at_hour)
 
-        if at_minute >= 0:
+        if at_minute is not None:
             next_crawl = next_crawl.replace(minute=at_minute)
 
         return next_crawl
@@ -147,16 +144,16 @@ class SchedulerPlugin:
             val = conf[key]
 
             if type(val) is not int:
-                return -1
+                raise TypeError()
 
             elif val < min_val or val > max_val:
-                return -1
+                raise ValueError()
 
             else:
                 return val
 
         else:
-            return -1
+            return None
 
     def parse_hour_conf(self, conf: dict) -> tuple:
         at_minute = self.validate_field(conf, 'at_minute', 0, 59)
@@ -164,9 +161,9 @@ class SchedulerPlugin:
         from_hour = self.validate_field(conf, 'from', 0, 23)
         to_hour = self.validate_field(conf, 'to', 0, 23)
 
-        if from_hour == -1 or to_hour == -1:
-            from_hour = -1
-            to_hour = -1
+        if from_hour is None or to_hour is None:
+            from_hour = None
+            to_hour = None
 
         return at_minute, from_hour, to_hour
 
@@ -177,9 +174,9 @@ class SchedulerPlugin:
         from_weekday = self.validate_field(conf, 'from', 0, 6)
         to_weekday = self.validate_field(conf, 'to', 0, 6)
 
-        if from_weekday == -1 or to_weekday == -1:
-            from_weekday = -1
-            to_weekday = -1
+        if from_weekday is None or to_weekday is None:
+            from_weekday = None
+            to_weekday = None
 
         return at_hour, at_minute, from_weekday, to_weekday
 
@@ -200,11 +197,12 @@ class SchedulerPlugin:
             conf = conf['repeat']
 
             delta = conf['every']
-            if type(delta) is not int:
-                return None
+            if type(delta) is not float and type(delta) is not int:
+                raise TypeError(
+                    f'The step size between one crawl and another must be int or float.')
 
             if delta < 1:
-                return None
+                raise ValueError()
 
             interval = conf['interval']
 
@@ -225,10 +223,12 @@ class SchedulerPlugin:
                 return self.get_next_crawl_by_weeks(now, delta, at_weekday, at_hour, at_minute)
 
             else:
-                return None
+                raise ValueError(
+                    'Intervals between crawls must be: minutes, hours, days or weeks')
 
         else:
-            return None
+            raise ValueError(
+                'It is necessary to define when a crawl should be made and/or its repetition configuration.')
 
     def schedule_crawl(self, timestamp: str, crawl: dict) -> bool:
         key = f'scheduler::{timestamp}'
@@ -247,8 +247,10 @@ class SchedulerPlugin:
 
         return crawls
 
-    def send_crawl(self, crawl: dict) -> None:
+    def send_crawl(self, crawl: dict):
         del crawl['scheduler']
+        crawl['ts'] = self.now.timestamp()
+
         self.producer.send(self.incoming_topic, crawl)
 
     def schedule(self, req: dict) -> bool:
@@ -258,9 +260,31 @@ class SchedulerPlugin:
         if next_crawl_time:
             timestamp = next_crawl_time.strftime("%Y-%m-%d %H:%M")
             return self.schedule_crawl(timestamp, req)
-        
-        else:
-            False 
+
+        return False
+
+    def update_schedule(self, crawl: dict):
+        if 'scheduler' not in crawl:
+            return
+
+        url = crawl['url']
+        crawlid = hashlib.md5(url.encode()).hexdigest()
+
+        key = f'scheduling_updates::{crawlid}'
+        scheduling_update = self.redis_conn.get(key)
+
+        if scheduling_update:
+            schedule_conf = crawl['scheduler']
+
+            scheduling_update = ujson.loads(scheduling_update)
+
+            interval = scheduling_update['interval']
+            every = scheduling_update['every']
+
+            schedule_conf['repeat']['interval'] = interval
+            schedule_conf['repeat']['every'] = every
+
+            self.redis_conn.delete(key)
 
     def daemon(self) -> None:
         while True:
@@ -270,8 +294,8 @@ class SchedulerPlugin:
 
                 for req in scheduled_crawls:
                     crawl = ujson.loads(req)
-                    crawl['ts'] = self.now.timestamp()
 
+                    self.update_schedule(crawl)
                     self.schedule(crawl)
                     self.send_crawl(crawl)
 
