@@ -81,8 +81,7 @@ def probing(page, probing_element="Não há resultado para a pesquisa.") -> \
     if isinstance(probing_element, str):
         return probing_element.lower() in str(get_page_text(page)).lower()
     elif isinstance(probing_element, entry_probing.EntryProbing):
-        probing_element.async_check_entry()
-        return probing_element.response
+        return probing_element.async_check_entry()
 
 
 @sync
