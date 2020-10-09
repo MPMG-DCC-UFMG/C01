@@ -1,4 +1,22 @@
 Form parser module for web crawling. 
+
+## Building
+
+This module is packaged as a Python Wheel file. To build the .whl file from the
+source code you need to have `setuptools` and `wheel` installed. After both
+packages are installed, run:
+
+```
+python setup.py bdist_wheel
+```
+
+The Wheel file will be created inside the `dist` folder, and the name may vary
+depending on the version. To install it, run the following command in the
+`form_parser` folder, replacing the file name accordingly:
+
+```
+pip install dist/<wheel file name>
+```
  
 ### Features
 - Extracts parameters from URLs using urllib.parse
@@ -38,11 +56,13 @@ for form in form_list:
 ```ParsedForm.fields() # -> dict, {'field_type': [<Element input 1>, <Element input 2>], ...}```
 
 - List required fields
-```ParsedForm.required_fields() # -> list(<Element input>)``` 
+```ParsedForm.required_fields(probing_element) # -> list(element_xpath)``` 
+where `probing_element` identifies what to look for when the form submission
+ is successful. `probing_element` can also be a a constructed object of the
+  class EntryProbing, from the `entry_probing` lib.
 
 - Retrieve dynamic fields
-```ParsedForm.dynamic_fields() # -> dict, {'field1_xpath': ['field2_xpath'
-, 'field3_xpath'], ...}``` 
+```ParsedForm.dynamic_fields() # -> dict, {'field1_xpath': ['field2_xpath', 'field3_xpath'], ...}```
 
 - List select fields
 ```ParsedForm.select_fields() # -> list(<Element select>)```
@@ -63,17 +83,16 @@ for text_field in text_fields:
 ```
 option_fields = ParsedForm.option_fields()  
 for option_field in option_fields:
-    ParsedForm.get_parent_field(option_field) # -> ```<Element select>``` 
+    ParsedForm.get_parent_field(option_field) # -> <Element select> 
 ``` 
-Note: also works for other types of ```<Element>``` objects
+Note: also works for other types of `<Element>` objects
 
 - Retrieve a select field with its respective options:
 ```ParsedForm.select_with_option_fields() # -> dict, {<Element select1>: [<Element option1>, <Element option2>, ...], ...}```
 
 
 ### TODO
-- [x] Identify dynamic form fields
 - [ ] Parse custom format types
 - [ ] Extract and parse non-HTML forms
 - [ ] Find select options to be ignored (e.g. "Selecione")
-- [ ] Increase test coverage 
+- [ ] Increase test coverage
