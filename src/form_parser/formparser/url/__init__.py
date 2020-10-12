@@ -1,1 +1,1 @@
-from formparser.url.parser import URLParser
+from formparser.url.parser import Parser as URLParser

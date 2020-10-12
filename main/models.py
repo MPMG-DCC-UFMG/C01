@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.core.validators import RegexValidator
 
+from crawlers.constants import *
 
 class TimeStamped(models.Model):
     creation_date = models.DateTimeField()
@@ -111,12 +112,13 @@ class CrawlRequest(TimeStamped):
         max_length=15, choices=CRAWLER_TYPE, default='static_page')
     explore_links = models.BooleanField(blank=True, null=True)
     link_extractor_max_depth = models.IntegerField(blank=True, null=True)
-    link_extractor_allow = models.CharField(
-        max_length=1000, blank=True, null=True)
-    link_extractor_allow_extensions = models.CharField(
-        blank=True, null=True, max_length=2000)
+    link_extractor_allow_url = models.CharField(max_length=1000, blank=True, null=True)
 
-    # STEPS ###########################################################
+    download_files = models.BooleanField(blank=True, null=True)
+    download_files_allow_url = models.CharField(
+        max_length=1000, blank=True, null=True)
+    download_files_allow_extensions = models.CharField(
+        blank=True, null=True, max_length=2000)
 
     steps = models.CharField(blank=True, null=True, max_length=9999999, default='{}')
 

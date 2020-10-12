@@ -45,8 +45,10 @@ class CrawlRequestForm(forms.ModelForm):
             'crawler_type',
             'explore_links',
             'link_extractor_max_depth',
-            'link_extractor_allow',
-            'link_extractor_allow_extensions',
+            'link_extractor_allow_url',
+            'download_files',
+            'download_files_allow_url',
+            'download_files_allow_extensions',
             'steps',
             'save_csv',
             'data_path',
@@ -203,7 +205,6 @@ class RawCrawlRequestForm(CrawlRequestForm):
         widget=forms.TextInput(
             attrs={'placeholder': 'Caminho para o diretório de donwload'})
     )
-
     img_xpath = forms.CharField(
         required=False, label="Xpath da imagem", max_length=100,
         widget=forms.TextInput(attrs={'placeholder': '//div/...'})
@@ -228,9 +229,9 @@ class RawCrawlRequestForm(CrawlRequestForm):
     # Crawler Type - Static
     link_extractor_max_depth = forms.IntegerField(
         required=False,
-        label="Profundidade máxima do link (deixe em branco para não limitar):"
+        label="Profundidade máxima do link (deixe em branco para não limitar):",
     )
-    link_extractor_allow = forms.CharField(
+    link_extractor_allow_url = forms.CharField(
         required=False, max_length=2000,
         label=(
             "Permitir urls que casem com o regex"
@@ -239,7 +240,19 @@ class RawCrawlRequestForm(CrawlRequestForm):
         widget=forms.TextInput(
             attrs={'placeholder': 'Regex para permitir urls'})
     )
-    link_extractor_allow_extensions = forms.CharField(
+
+    download_files = forms.BooleanField(
+        required=False, label="Baixar arquivos")
+    download_files_allow_url = forms.CharField(
+        required=False, max_length=2000,
+        label=(
+            "Baixar arquivos de url que casem com o regex"
+            " (deixe em branco para não filtrar):"
+        ),
+        widget=forms.TextInput(
+            attrs={'placeholder': 'Regex para permitir urls'})
+    )
+    download_files_allow_extensions = forms.CharField(
         required=False, max_length=2000,
         label="Extensões de arquivo permitidas (separado por vírgula):",
         widget=forms.TextInput(attrs={'placeholder': 'pdf,xml'})
