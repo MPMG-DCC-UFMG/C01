@@ -120,7 +120,7 @@ class CrawlRequest(TimeStamped):
     download_files_allow_extensions = models.CharField(
         blank=True, null=True, max_length=2000)
 
-    steps = models.CharField(max_length=9999999, default='{}')
+    steps = models.CharField(blank=True, null=True, max_length=9999999, default='{}')
 
     @staticmethod
     def process_config_data(crawler, config):
