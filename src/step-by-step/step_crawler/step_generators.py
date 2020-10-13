@@ -72,6 +72,7 @@ def generate_while(child, module):
     code += cg.generate_body(child, module)
     return code
 
+
 def generate_attribution(child, module):
     code = ""
     code += child['depth'] * '    ' + child['target']

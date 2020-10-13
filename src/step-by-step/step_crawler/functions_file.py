@@ -132,6 +132,7 @@ async def break_image_captcha(page, xpath_input, xpath_output, preprocessing=Non
     await page.evaluate(type_function, text)
     return text
 
+
 async def element_in_page(page, xpath):
     """This step returns True if there's any element given a xpath, otherwise, returns False
 
