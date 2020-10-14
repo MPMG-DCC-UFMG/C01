@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from auto_scheduler import AutoScheduler
 from auto_scheduler import settings
 
+
 class TestAutoScheduler(unittest.TestCase):
     def test_update_crawl_frequency(self):
         '''Verifica se é capaz de gerar estimativas dado um histórico passado corretamente.
@@ -26,11 +27,11 @@ class TestAutoScheduler(unittest.TestCase):
 
             # valores arbitrários, poderia ser qualquer outro intervalo de tempo e valor
             now += timedelta(minutes=time_interval)
-        
+
         estimated_time = AutoScheduler.update_crawl_frequency(
-            'some_url_hash', crawl_historic)        
+            'some_url_hash', crawl_historic)
         time_interval_in_secs = time_interval * 60
-        
+
         # como o hash das coletas não mudam, o tempo estimado de quando elas mudam deve ser maior que o currentemente a visita
         self.assertTrue(estimated_time > time_interval_in_secs)
 
@@ -50,7 +51,7 @@ class TestAutoScheduler(unittest.TestCase):
         estimated_time = AutoScheduler.update_crawl_frequency(
             'some_url_hash', crawl_historic)
         time_interval_in_secs = time_interval * 3600
-        
+
         # como todas visitas há mudanças, então o correto é que se estime que a frequência de visitas
         # deve ser igual ou menor que o correntemente usado
         self.assertTrue(estimated_time <= time_interval_in_secs)
@@ -58,7 +59,7 @@ class TestAutoScheduler(unittest.TestCase):
     def test_send_update(self):
         '''Verifica se é possível enviar a atualização de agendamento
         '''
-        
+
         redis_conn = redis.Redis(host=settings.REDIS_HOST,
                                  port=settings.REDIS_PORT,
                                  db=settings.REDIS_DB,

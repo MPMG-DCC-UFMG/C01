@@ -7,6 +7,7 @@ from kafka import KafkaConsumer
 from auto_scheduler import MetadataIndexer
 from auto_scheduler import settings
 
+
 class CrawledConsumer:
     '''Simple class with a Kafka consumer for crawls made in SC. Upon receiving a crawl, it is persisted by MetadataIndexer.
     '''
