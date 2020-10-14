@@ -8,10 +8,11 @@ from auto_scheduler.auto_scheduler import AutoScheduler
 from auto_scheduler.database_handler import DatabaseHandler
 from auto_scheduler import settings
 
+
 class MetadataIndexer:
     '''Class responsible for persisting crawl metadata and calling the estimator when it has enough data to generate an estimate
     '''
-    db = DatabaseHandler() 
+    db = DatabaseHandler()
 
     @staticmethod
     def persist(crawl: dict):
@@ -26,7 +27,7 @@ class MetadataIndexer:
         timestamp = datetime.strptime(
             crawl['timestamp'], '%Y-%m-%dT%H:%M:%S.%f').timestamp()
 
-        soup = BeautifulSoup(body, 'html.parser') 
+        soup = BeautifulSoup(body, 'html.parser')
 
         crawlid = hashfy(url)
         crawl_hash = hashfy(soup.html.text)
@@ -35,13 +36,13 @@ class MetadataIndexer:
         num_visits = 0
 
         crawl_historic = MetadataIndexer.db.get_crawl_historic(crawlid)
-        
+
         if crawl_historic is None:
             crawl_historic = {
                 'visits': dict(),
                 'estimated_frequency_changes': None
             }
-        
+
         else:
             # turns the visit dictionary keys to integers
             visit_historic = dict((int(item[0]), item[1]) for item in crawl_historic['visits'].items())
@@ -70,14 +71,15 @@ class MetadataIndexer:
         num_visits += 1
 
         if num_visits == settings.NUMBER_VISITS_TO_GENERATE_ESTIMATE:
-            estimated_frequency_changes = AutoScheduler.update_crawl_frequency(crawlid, crawl_historic['visits'][group_visit])
+            estimated_frequency_changes = AutoScheduler.update_crawl_frequency(
+                crawlid, crawl_historic['visits'][group_visit])
             crawl_historic['estimated_frequency_changes'] = estimated_frequency_changes
 
         crawl_historic['last_visit_timestamp'] = timestamp
 
         # criar o registro de coletas
         if group_visit == 0 and num_visits == 1:
-            MetadataIndexer.db.insert_crawl_historic(crawlid, crawl_historic) 
+            MetadataIndexer.db.insert_crawl_historic(crawlid, crawl_historic)
 
         # atualizar um registro de coletas
         else:
