@@ -1,5 +1,5 @@
 import ujson
-import redis 
+import redis
 import sys
 import logging
 
@@ -13,17 +13,18 @@ SECONDS_IN_DAY = 86400
 SECONDS_IN_HOUR = 3600
 SECONDS_IN_MINUTE = 60
 
+
 class AutoScheduler:
     '''Responsible for processing visit history for estimators and sending revisit updates to the scheduler
     '''
-    
-    redis_conn = redis.Redis(host = settings.REDIS_HOST,
-                            port = settings.REDIS_PORT,
-                            db = settings.REDIS_DB,
-                            password = settings.REDIS_PASSWORD,
-                            decode_responses = True,
-                            socket_timeout = settings.REDIS_SOCKET_TIMEOUT,
-                            socket_connect_timeout = settings.REDIS_SOCKET_TIMEOUT)
+
+    redis_conn = redis.Redis(host=settings.REDIS_HOST,
+                            port=settings.REDIS_PORT,
+                            db=settings.REDIS_DB,
+                            password=settings.REDIS_PASSWORD,
+                            decode_responses=True,
+                            socket_timeout=settings.REDIS_SOCKET_TIMEOUT,
+                            socket_connect_timeout=settings.REDIS_SOCKET_TIMEOUT)
 
     try:
         redis_conn.info()
@@ -40,7 +41,7 @@ class AutoScheduler:
             crawlid: Unique crawl identifier (URL md5 hash)
             schedule: Updated visit scheduling setup
         '''
-        
+
         key = f'scheduling_updates::{crawlid}'
         val = ujson.dumps(schedule)
 
@@ -57,7 +58,7 @@ class AutoScheduler:
             Dictionary with visits setup for scheduler
 
         '''
-        
+
         if frequency_changes > SECONDS_IN_WEEK:
             return {'interval': 'weeks', 'every': frequency_changes / SECONDS_IN_WEEK}
 
@@ -73,15 +74,15 @@ class AutoScheduler:
     @staticmethod
     def update_crawl_frequency(crawlid: str, crawl_historic: list) -> float:
         ''' Updates the frequency of crawl visits
-        
+
         Args:
             crawlid: Unique crawl identifier (URL md5 hash)
             crawl_historic: crawlid's crawl history
-        
+
         Returns:
             The estimated frequency of changes
         '''
-        
+
         timestamps = list()
         crawl_hashes = set()
 
@@ -100,11 +101,11 @@ class AutoScheduler:
         elif settings.ESTIMATOR == 'nochanges':
             estimated_frequency_changes = Estimator.estimate_by_nochanges(
                 num_changes, num_visits, crawl_interval)
-        
+
         else:
             raise ValueError(
                 f'"{settings["estimator"]}" is an invalid estimator. Valid ones are "changes" and "nochanges".')
-        
+
         schedule_conf = AutoScheduler.frequency_changes_to_schedule_conf(
             estimated_frequency_changes)
         AutoScheduler.send_schedule_update(crawlid, schedule_conf)
