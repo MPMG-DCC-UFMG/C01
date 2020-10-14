@@ -5,10 +5,8 @@ Mecanismo para atualizar configurações de agendamentos de revisitas, baseado n
 **Recurso**:
 
 - Estima a frequência de mudança de uma coleta baseado em seu histórico, atualizando as recoletas de acordo.
-
-## TODO
-
-- [ ] Salvar os metadados em banco de dados, ao invés de arquivos. 
+- Salva os metadados de coletas feitas pelo Scrapy Cluster.
+    - Para isso, adicione o nome do(s) metadado(s) a serem salvos em `ADDITIONAL_METADATA_TO_SAVE`, em `auto_scheduler/settings.py`. O `timestamp`, `url` e `hash` do conteúdo da página coleta, por padrão, é sempre salvo.
 
 ## Uso
 
@@ -39,4 +37,5 @@ Os estimadores são baseados em [Cho-Thesis](https://oak.cs.ucla.edu/~cho/papers
 
 - `changes`: A estimativa de frequência de mudança é baseado no número médio de alterações detectadas nas visitas. Seus resultados se mostraram melhores que o próximo estimador. É o valor padrão. 
 - `nochanges`: É baseado no número de visitas que não houveram mudanças. A principal vantagem em relação ao primeiro é que ele pode fazer estimativas abaixo do intervalo previamente configurado para gerar estimativa.
+
 

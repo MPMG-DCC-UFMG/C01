@@ -1,8 +1,7 @@
-import hashlib
-import json
-import os
 import unittest
 from datetime import datetime
+
+import psycopg2
 
 from auto_scheduler import MetadataIndexer
 from auto_scheduler import hashfy
@@ -10,8 +9,9 @@ from auto_scheduler import settings
 
 class TestMetadataIndexer(unittest.TestCase):
     def test_persist(self):
+
         crawl = {
-            'url': 'https://www.some_url.com/content/1',
+            'url': 'https://www.some_url.com/content/11',
             'body': '''<!DOCTYPE html>
                 <html lang="en">
                 <head>
@@ -23,15 +23,22 @@ class TestMetadataIndexer(unittest.TestCase):
                     <p>Some content</p>
                 </body>
                 </html>''',
-            'timestamp': str(datetime.now()),
+            'timestamp': datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f'),
         }
 
         crawlid = hashfy(crawl['url'])
-        historic_filename = settings.HISTORIC_FOLDER + crawlid
-        
-        if os.path.exists(historic_filename):
-            os.remove(historic_filename)
-
         MetadataIndexer.persist(crawl)
 
-        self.assertTrue(os.path.exists(historic_filename))
+        conn = psycopg2.connect(dbname=settings.CRAWL_HISTORIC_DB_NAME, user=settings.POSTGRESQL_USER, password=settings.POSTGRESQL_PASSWORD, host=settings.POSTGRESQL_HOST, port=settings.POSTGRESQL_PORT)
+        conn.set_session(autocommit=True)
+
+        cur = conn.cursor()
+        sql_query = f'SELECT CRAWL_HISTORIC FROM {settings.CRAWL_HISTORIC_TABLE_NAME} WHERE CRAWLID = \'{crawlid}\';'
+        cur.execute(sql_query)
+
+        results = cur.fetchall()
+
+        cur.close()
+        conn.close()
+        
+        self.assertTrue(results is not None)

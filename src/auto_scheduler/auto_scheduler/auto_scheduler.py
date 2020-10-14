@@ -87,7 +87,7 @@ class AutoScheduler:
 
         for crawl in crawl_historic:
             timestamps.append(crawl['timestamp'])
-            crawl_hashes.add(crawl['crawl_hash'])
+            crawl_hashes.add(crawl['content_hash'])
 
         crawl_interval = np.mean(np.diff(timestamps))
         num_changes = len(crawl_hashes)

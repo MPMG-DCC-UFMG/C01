@@ -21,7 +21,7 @@ class TestAutoScheduler(unittest.TestCase):
         for _ in range(settings.NUMBER_VISITS_TO_GENERATE_ESTIMATE):
             crawl_historic.append({
                 'timestamp': now.timestamp(),
-                'crawl_hash': 'content that doesn\'t change'
+                'content_hash': 'content that doesn\'t change'
             })
 
             # valores arbitrários, poderia ser qualquer outro intervalo de tempo e valor
@@ -41,7 +41,7 @@ class TestAutoScheduler(unittest.TestCase):
         for idx in range(settings.NUMBER_VISITS_TO_GENERATE_ESTIMATE):
             crawl_historic.append({
                 'timestamp': now.timestamp(),
-                'crawl_hash': f'content that always changes: {idx}'
+                'content_hash': f'content that always changes: {idx}'
             })
 
             # valores arbitrários, poderia ser qualquer outro intervalo de tempo e valor

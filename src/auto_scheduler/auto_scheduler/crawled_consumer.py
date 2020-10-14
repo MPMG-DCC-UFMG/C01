@@ -1,5 +1,5 @@
 '''
-Simple Kafka consumer for the topic of collections made from Scrapy Cluster
+Simple Kafka consumer for the topic of crawls made from Scrapy Cluster
 '''
 import ujson
 from kafka import KafkaConsumer
@@ -8,7 +8,7 @@ from auto_scheduler import MetadataIndexer
 from auto_scheduler import settings
 
 class CrawledConsumer:
-    '''Simple class with a Kafka consumer for crawls made in SC. Upon receiving a collection, it is persisted by MetadataIndexer.
+    '''Simple class with a Kafka consumer for crawls made in SC. Upon receiving a crawl, it is persisted by MetadataIndexer.
     '''
     @staticmethod
     def run():
