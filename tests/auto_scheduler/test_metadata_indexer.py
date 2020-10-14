@@ -7,6 +7,7 @@ from auto_scheduler import MetadataIndexer
 from auto_scheduler import hashfy
 from auto_scheduler import settings
 
+
 class TestMetadataIndexer(unittest.TestCase):
     def test_persist(self):
 
@@ -29,7 +30,8 @@ class TestMetadataIndexer(unittest.TestCase):
         crawlid = hashfy(crawl['url'])
         MetadataIndexer.persist(crawl)
 
-        conn = psycopg2.connect(dbname=settings.CRAWL_HISTORIC_DB_NAME, user=settings.POSTGRESQL_USER, password=settings.POSTGRESQL_PASSWORD, host=settings.POSTGRESQL_HOST, port=settings.POSTGRESQL_PORT)
+        conn = psycopg2.connect(dbname=settings.CRAWL_HISTORIC_DB_NAME, user=settings.POSTGRESQL_USER,
+                                password=settings.POSTGRESQL_PASSWORD, host=settings.POSTGRESQL_HOST, port=settings.POSTGRESQL_PORT)
         conn.set_session(autocommit=True)
 
         cur = conn.cursor()
@@ -40,5 +42,5 @@ class TestMetadataIndexer(unittest.TestCase):
 
         cur.close()
         conn.close()
-        
+
         self.assertTrue(results is not None)
