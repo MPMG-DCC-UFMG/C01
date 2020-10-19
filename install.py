@@ -1,5 +1,8 @@
 import os
 import subprocess
+import asyncio
+from twisted.internet import asyncioreactor
+asyncioreactor.install(asyncio.get_event_loop())
 
 
 src_folder = "src"

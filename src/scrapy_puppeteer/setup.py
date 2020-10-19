@@ -1,44 +1,20 @@
-"""This module contains the packaging routine for the pybook package"""
-import pathlib
-import pkg_resources
+import setuptools
 
-from setuptools import setup, find_packages
-try:
-    # pip >=20
-    from pip._internal.network.session import PipSession
-    from pip._internal.req import parse_requirements
-except ImportError:
-    try:
-        # 10.0.0 <= pip <= 19.3.1
-        from pip._internal.download import PipSession
-        from pip._internal.req import parse_requirements
-    except ImportError:
-        # pip <= 9.0.3
-        from pip.download import PipSession
-        from pip.req import parse_requirements
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
-
-def get_requirements(source):
-    """Get the requirements from the given ``source``
-
-    Parameters
-    ----------
-    source: str
-        The filename containing the requirements
-
-    """
-    with pathlib.Path(source).open() as requirements_txt:
-        install_requires = [
-            str(requirement)
-            for requirement
-            in pkg_resources.parse_requirements(requirements_txt)
-        ]
-    return install_requires
-
-
-setup(
-    packages=find_packages(),
-    install_requires=get_requirements('requirements/requirements.txt'),
+setuptools.setup(
+    name='scrapy_puppeteer',
+    version='1.0',
+    description='Module that integrates Scrapy and Puppeteer',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    license="MIT",
+    author='Rennan Cordeiro',
+    author_email='rennanl@ufmg.br',
+    packages=setuptools.find_packages(),
+    install_requires=['scrapy>=1.0.0', 'promise', 'pyppeteer2',
+                     'requests'],
     entry_points={
         'console_scripts': [
             'scrapyp = scrapy_puppeteer.cli:__main__',
@@ -46,4 +22,7 @@ setup(
     }
 )
 
-
+    # install_requires=['scrapy>=1.0.0', 'promise', 'pyppeteer2',
+    #                  'requests', 'pytest', 'coverage<4.4',
+    #                  'pytest-cov', 'codeclimate-test-reporter==0.2.3',
+    #                  'attrs==19.1.0', 'asynctest'],
