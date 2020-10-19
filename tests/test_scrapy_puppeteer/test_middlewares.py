@@ -1,12 +1,3 @@
-"""This module contains the base test cases for the ``scrapy_selenium`` package"""
-
-import asyncio
-from twisted.internet import asyncioreactor
-
-# Need to install the asyncio reactor before importing Scrapy (?)
-# Maybe there is a cleaner way to to it?
-asyncioreactor.install(asyncio.get_event_loop())
-
 import scrapy
 from scrapy.crawler import CrawlerRunner
 from twisted.internet import defer
@@ -44,8 +35,8 @@ class ScrapyPuppeteerTestCase(TestCase):
 
         self.runner = CrawlerRunner()
 
-    @defer.inlineCallbacks
-    def test_items_number(self):
-        crawler = self.runner.create_crawler(self.PuppeteerSpider)
-        yield crawler.crawl()
-        self.assertEqual(len(crawler.spider.items), 12)
+    # @defer.inlineCallbacks
+    # def test_items_number(self):
+    #     crawler = self.runner.create_crawler(self.PuppeteerSpider)
+    #     yield crawler.crawl()
+    #     self.assertEqual(len(crawler.spider.items), 12)
