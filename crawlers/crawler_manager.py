@@ -69,11 +69,6 @@ def create_folders(data_path):
         crawling_utils.check_file_path(f)
 
 
-def create_instances_file(data_path):
-    """Create a json file for storing crawler instances"""
-    file = open(f"{data_path}/instances.txt", "a", buffering=1)
-
-
 def get_crawler_base_settings(config):
     """Returns scrapy base configurations."""
     autothrottle = "antiblock_autothrottle_"
@@ -146,10 +141,6 @@ def start_crawler(config):
 
     data_path = config["data_path"]
     create_folders(data_path=data_path)
-    create_instances_file(data_path=data_path)
-
-    with open(f"{data_path}/instances.txt", "a", buffering=1) as f:
-        f.write(config['instance_id'] + '\n')
 
     with open(f"{data_path}/config/{config['instance_id']}.json", "w+") as f:
         f.write(json.dumps(config, indent=2))
