@@ -194,6 +194,15 @@ function showBlock(clicked_id) {
     for (var i = 0; i < buttons.length; i++)
         buttons[i].classList.remove('active');
     document.getElementById(clicked_id).classList.add('active');
+
+
+    //Editar aqui futuramete. É necessário uma estrutura 
+    //mais geral para as funções do tipo detail já que ao 
+    //editar um coletor e navegar pelas abas, o showblock
+    //é chamado mostrando apenas as suas paginas iniciais.
+    if (clicked_id == "crawler-type-item"){
+        detailCrawlerType();        
+    }
 }
 
 function setNumParamForms(num) {
@@ -320,7 +329,7 @@ function detailCrawlerType() {
         if(interface_root_element.type != "root" ){
             
             steps_output_element = interface_root_element.children[0].children[1].children[0]
-            load_steps(interface_root_element, steps_output_element);
+            load_steps_interface(interface_root_element, steps_output_element);
         }
     }
 
