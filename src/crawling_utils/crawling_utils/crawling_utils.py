@@ -27,6 +27,9 @@ def check_file_path(path):
     path = path.split("/")
     for i in range(len(path)):
         try:
+            # treating paths from root like "/home/..."
+            if i == 0 and path[i] == "":
+                continue
             os.mkdir("/".join(path[:i + 1]))
         except FileExistsError:
             pass
