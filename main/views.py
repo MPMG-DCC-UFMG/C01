@@ -310,26 +310,21 @@ class DownloadDetailsViewSet(viewsets.ModelViewSet):
 
     @action(detail=False)
     def queue(self, request):
-        instances =  DownloadDetail.objects.filter(
+        instances = DownloadDetail.objects.filter(
             status="WAITING").order_by('creation_date')
 
-        response = {"queue": [DownloadDetailSerializer(i).data for i in instances]}
+        response = {
+            "queue": [DownloadDetailSerializer(i).data for i in instances]
+        }
 
         return JsonResponse(response)
 
     @action(detail=False)
     def progress(self, request):
-        instances =  DownloadDetail.objects.filter(
+        instances = DownloadDetail.objects.filter(
             status="DOWNLOADING").order_by('-last_modified')
-        
+
         if len(instances):
             return JsonResponse(DownloadDetailSerializer(instances[0]).data)
 
         return JsonResponse({})
-
-
-"""
-TODO
-add api to downloader
-finish screen
-"""

@@ -174,7 +174,7 @@ class FileDownloader(BaseMessenger):
         """"""
         response = requests.put(
             f'http://localhost:8000/api/downloads/{item_id}/',
-            data = {
+            data={
                 "status": "DOWNLOADING" if total != current else "DONE",
                 "size": total,
                 "progress": current
@@ -187,7 +187,7 @@ class FileDownloader(BaseMessenger):
         """"""
         response = requests.post(
             'http://localhost:8000/api/downloads/',
-            data = {
+            data={
                 "status": "WAITING",
                 "description": item,
             }

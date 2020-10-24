@@ -18,10 +18,12 @@ class CrawlRequestSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "creation_date", "last_modified", "running"]
         fields = '__all__'
 
+
 class DownloadDetailSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         many = kwargs.pop('many', True)
-        super(DownloadDetailSerializer, self).__init__(many=many, *args, **kwargs)
+        super(DownloadDetailSerializer, self).__init__(
+            many=many, *args, **kwargs)
 
     class Meta:
         model = DownloadDetail
