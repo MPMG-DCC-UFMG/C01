@@ -2,6 +2,7 @@
 import datetime
 import json
 import wget
+import requests
 
 # Project libs
 import binary
@@ -53,7 +54,8 @@ class FileDownloader(BaseMessenger):
         error occurs during tests. (default False)
         """
         source = BaseMessenger.source(
-            FileDownloader.TEMP_FILES_FOLDER, testing)
+            FileDownloader.TEMP_FILES_FOLDER,
+            testing, FileDownloader.log_item)
         for item in source:
             yield item
         
@@ -111,8 +113,7 @@ class FileDownloader(BaseMessenger):
             f"Starting file downloader at", 
             datetime.datetime.now().isoformat()
         )
-        for item_json in FileDownloader.download_source(testing):
-            item = json.loads(item_json)
+        for item in FileDownloader.download_source(testing):
             if item["destination"][-1] != "/":
                 item["destination"] = item["destination"] + "/"
 
@@ -153,17 +154,44 @@ class FileDownloader(BaseMessenger):
         - destination: str, address of the folder that will containt the file
         - description: dict, dictionary of item descriptions
         """
-        url_hash = crawling_utils.hash(item["url"])
+        url_hash = crawling_utils.hash(item["url"].encode())
         extension = item["url"].split(".")[-1]
         fname = f"{url_hash}.{extension}"
         item["description"]["file_name"] = fname
         item["description"]["type"] = extension
 
+        def log_progress(current, total, widht=None):
+            FileDownloader.log_progress(item["id"], current, total)
 
         full_name = item["destination"] + "files/" + fname
-        print("FILE NAME:", full_name)
-        wget.download(item["url"], full_name)
-        print() # because the line above prints a progress bar without a \n
+        wget.download(item["url"], full_name, bar=log_progress)
         
         FileDescriptor.feed_description(
             item['destination'] + "files/", item['description'])
+
+    @staticmethod
+    def log_progress(item_id, current, total):
+        """"""
+        response = requests.put(
+            f'http://localhost:8000/api/downloads/{item_id}/',
+            data = {
+                "status": "DOWNLOADING" if total != current else "DONE",
+                "size": total,
+                "progress": current
+            }
+        )
+        print()
+
+    @staticmethod
+    def log_item(item):
+        """"""
+        response = requests.post(
+            'http://localhost:8000/api/downloads/',
+            data = {
+                "status": "WAITING",
+                "description": item,
+            }
+        )
+        item = json.loads(item)
+        item["id"] = response.json()["id"]
+        return item

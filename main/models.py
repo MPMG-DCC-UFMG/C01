@@ -265,3 +265,18 @@ class CrawlerInstance(TimeStamped):
                                    related_name='instances')
     instance_id = models.BigIntegerField(primary_key=True)
     running = models.BooleanField()
+
+
+class DownloadDetail(TimeStamped):
+    """
+    Details about file downloads requested by crawlers.
+    """
+    STATUS = [
+        ('DOWNLOADING', 'DOWNLOADING'),
+        ('WAITING', 'WAITING'),
+        ('DONE', 'DONE'),
+    ]
+    status = models.CharField(max_length=20, choices=STATUS, default="WAITING") #, require=True)
+    description = models.CharField(max_length=1000, blank=True)
+    size = models.PositiveIntegerField(null=True, blank=True)
+    progress = models.PositiveIntegerField(null=True, blank=True)
