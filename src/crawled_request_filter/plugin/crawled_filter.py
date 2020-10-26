@@ -10,6 +10,7 @@ from redis.exceptions import ConnectionError
 
 from crawled_request_filter import CrawledRequestFilter
 
+
 class CrawledFilter(BaseHandler):
 
     schema = "crawled_filter_schema.json"
