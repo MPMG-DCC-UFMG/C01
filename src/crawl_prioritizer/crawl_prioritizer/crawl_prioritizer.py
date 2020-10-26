@@ -9,14 +9,15 @@ import ujson
 from crawl_prioritizer import settings
 from crawl_prioritizer.utils import get_url_domain, hashfy
 
+
 class CrawlPriotizer:
     def __init__(self):
         self.priority_equation = settings.PRIORITY_EQUATION
         self.domain_priority = settings.DOMAIN_PRIORITY
-        
+
         # Connection to PostgreSQL, configured in self.setup()
-        self.conn = None 
-        
+        self.conn = None
+
         # Cursor that executes SQL queries in PostgreSQL, configured in self.setup()
         self.cursor = None
 
@@ -26,7 +27,7 @@ class CrawlPriotizer:
         '''Makes the necessary settings for the class.
         '''
 
-        self.conn = psycopg2.connect(dbname=settings.CRAWL_HISTORIC_DB_NAME, 
+        self.conn = psycopg2.connect(dbname=settings.CRAWL_HISTORIC_DB_NAME,
                                     user=settings.POSTGRESQL_USER,
                                     password=settings.POSTGRESQL_PASSWORD,
                                     host=settings.POSTGRESQL_HOST,
@@ -40,12 +41,12 @@ class CrawlPriotizer:
 
         Args:
             crawlid: Unique crawl identifier (MD5 hash of your URL)
-        
+
         Returns:
             Tuple with the timestamp of the last crawl made and the frequency of changes estimated.
 
         '''
-        
+
         curr_timestamp = datetime.now().timestamp()
 
         time_since_last_crawl = None
@@ -76,11 +77,11 @@ class CrawlPriotizer:
             # Calculates the frequency of visits made at the source.
             visits_frequency = np.mean(np.diff(crawl_timestamps))
             change_frequency = visits_frequency
-        
+
         time_since_last_crawl = curr_timestamp - last_visit_timestamp
 
         return time_since_last_crawl, change_frequency
-    
+
     def get_expanded_priority_equation(self, domain_prio: float, time_since_last_crawl: float, change_frequency: float) -> str:
         ''' Put the values of variables domain_prio, time_since_last_crawl and change_frequency in the priority equation.
 
@@ -88,14 +89,14 @@ class CrawlPriotizer:
            domain_prio: The priority of the crawl domain to be performed.
            time_since_last_crawl: Time in seconds since last visit.
            change_frequency: Estimated frequency of changes.
-        
+
         Returns:
             Returns the crawl priority calculation equation with the parameter values entered in it.
 
         '''
-        
+
         expr = self.priority_equation
-    
+
         expr = expr.replace('domain_prio', f'{domain_prio}')
         expr = expr.replace('time_since_last_crawl', f'{time_since_last_crawl}')
         expr = expr.replace('change_frequency', f'{change_frequency}')
@@ -112,7 +113,7 @@ class CrawlPriotizer:
             Returns the crawl priority.
 
         '''
-        
+
         crawlid = hashfy(crawl_req['url'])
         crawl_domain = get_url_domain(crawl_req['url'])
 
@@ -120,19 +121,19 @@ class CrawlPriotizer:
         time_since_last_crawl, change_frequency = self.get_crawl_statistics(crawlid)
 
         if time_since_last_crawl is None:
-            return settings.PRIORITY_NEVER_MADE_CRAWL 
+            return settings.PRIORITY_NEVER_MADE_CRAWL
 
-        expr = self.get_expanded_priority_equation(domain_prio, time_since_last_crawl, change_frequency)        
-        
+        expr = self.get_expanded_priority_equation(domain_prio, time_since_last_crawl, change_frequency)
+
         variables_in_exec_scope = dict()
         exec(expr, globals(), variables_in_exec_scope)
 
         crawl_priority = variables_in_exec_scope.get('crawl_priority')
-        
+
         if crawl_priority > settings.MAX_PRIORITY:
             crawl_priority = settings.MAX_PRIORITY
-        
+
         elif crawl_priority < settings.MIN_PRIORITY:
             crawl_priority = settings.MIN_PRIORITY
-        
+
         return crawl_priority
