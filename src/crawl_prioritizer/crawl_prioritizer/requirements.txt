@@ -1,0 +1,4 @@
+numpy==1.19.2
+psycopg2==2.8.6
+tldextract==2.2.3
+ujson==4.0.1
