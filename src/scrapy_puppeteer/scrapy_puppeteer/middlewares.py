@@ -1,6 +1,8 @@
 """This module contains the ``PuppeteerMiddleware`` scrapy middleware"""
-
 import asyncio
+from twisted.internet import asyncioreactor
+
+asyncioreactor.install(asyncio.get_event_loop())
 import logging
 import requests
 import sys, os, time
