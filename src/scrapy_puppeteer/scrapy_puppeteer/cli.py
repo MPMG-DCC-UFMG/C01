@@ -1,6 +1,8 @@
 import asyncio
-import sys
 from twisted.internet import asyncioreactor
+
+asyncioreactor.install(asyncio.get_event_loop())
+import sys
 from scrapy.cmdline import execute
 
 
