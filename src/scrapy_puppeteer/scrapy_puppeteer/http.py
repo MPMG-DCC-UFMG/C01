@@ -9,8 +9,6 @@ class PuppeteerRequest(Request):
     def __init__(self, url, callback=None, screenshot=False, wait_until=None, wait_for=None, steps=None, *args, **kwargs):
         """Initialize a new Puppeteer request
 
-        Parameters
-        ----------
         wait_until: basestring
             One of "load", "domcontentloaded", "networkidle0", "networkidle2".
             See https://miyakogi.github.io/pyppeteer/reference.html#pyppeteer.page.Page.goto

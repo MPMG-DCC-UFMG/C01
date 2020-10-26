@@ -21,8 +21,3 @@ setuptools.setup(
         ],
     }
 )
-
-    # install_requires=['scrapy>=1.0.0', 'promise', 'pyppeteer2',
-    #                  'requests', 'pytest', 'coverage<4.4',
-    #                  'pytest-cov', 'codeclimate-test-reporter==0.2.3',
-    #                  'attrs==19.1.0', 'asynctest'],

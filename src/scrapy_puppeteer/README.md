@@ -1,14 +1,6 @@
-# Scrapy with Puppeteer
-[![PyPI](https://img.shields.io/pypi/v/scrapy-puppeteer.svg)](https://pypi.python.org/pypi/scrapy-puppeteer) [![Build Status](https://travis-ci.org/clemfromspace/scrapy-puppeteer.svg?branch=master)](https://travis-ci.org/clemfromspace/scrapy-puppeteer) [![Test Coverage](https://api.codeclimate.com/v1/badges/86603b736e684dd4f8c9/test_coverage)](https://codeclimate.com/github/clemfromspace/scrapy-puppeteer/test_coverage) [![Maintainability](https://api.codeclimate.com/v1/badges/86603b736e684dd4f8c9/maintainability)](https://codeclimate.com/github/clemfromspace/scrapy-puppeteer/maintainability)
+**Scrapy and Puppeteer**
 
 Scrapy middleware to handle javascript pages using [puppeteer](https://github.com/GoogleChrome/puppeteer).
-
-## ⚠ IN ACTIVE DEVELOPMENT - READ BEFORE USING ⚠
-
-This is an attempt to make Scrapy and Puppeteer work together to handle Javascript-rendered pages.
-The design is strongly inspired of the Scrapy [Splash plugin](https://github.com/scrapy-plugins/scrapy-splash).
-
-**Scrapy and Puppeteer**
 
 The main issue when running Scrapy and Puppeteer together is that Scrapy is using [Twisted](https://twistedmatrix.com/trac/) and that [Pyppeteeer](https://miyakogi.github.io/pyppeteer/) (the python port of puppeteer we are using) is using [asyncio](https://docs.python.org/3/library/asyncio.html) for async stuff. 
 
@@ -28,7 +20,7 @@ asyncioreactor.install(asyncio.get_event_loop())
 
 ## Installation
 ```
-$ pip install scrapy-puppeteer
+$ python install src/scrapy_puppeteer
 ```
 
 ## Configuration
@@ -56,7 +48,7 @@ The `selector` response attribute work as usual (but contains the html processed
 ```python
 def parse_result(self, response):
     print(response.selector.xpath('//title/@text'))
-``` 
+```
 
 ### Additional arguments
 The `scrapy_puppeteer.PuppeteerRequest` accept 2 additional arguments:
@@ -83,3 +75,5 @@ def parse_result(self, response):
         image_file.write(response.meta['screenshot'])
 ```
 
+#### `steps`
+Will be passed to the code generator. These are the steps the user configured in the interface.
