@@ -3,6 +3,7 @@ import psycopg2
 from crawled_request_filter import settings
 from crawled_request_filter.utils import hashfy
 
+
 class CrawledRequestFilter:
     def __init__(self):
         self.conn = psycopg2.connect(dbname=settings.CRAWL_HISTORIC_DB_NAME,
@@ -19,12 +20,12 @@ class CrawledRequestFilter:
 
         Args:
             crawlid: Unique crawl identifier.
-        
+
         Returns:
             Returns True if the crawl was never done, False, otherwise.
 
         '''
-        
+
         sql_query = f'SELECT {settings.CRAWL_HISTORIC_COLUMN_NAME} FROM {settings.CRAWL_HISTORIC_TABLE_NAME} WHERE CRAWLID = \'{crawlid}\';'
         self.cursor.execute(sql_query)
 
@@ -38,9 +39,9 @@ class CrawledRequestFilter:
 
         Returns:
             Returns True if the crawl is to be filtered, False, in another case.
-            
+
         '''
-        
+
         url = crawl_req['url']
         crawlid = hashfy(url)
 
