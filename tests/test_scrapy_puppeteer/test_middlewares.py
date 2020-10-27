@@ -29,10 +29,10 @@ class ScrapyPuppeteerTestCase(TestCase):
     def setUp(self):
         """Store the Scrapy runner to use in the tests"""
         self.settings = custom_settings = {
-                'DOWNLOADER_MIDDLEWARES': {
-                    'scrapy_puppeteer.PuppeteerMiddleware': 800
-                }
+            'DOWNLOADER_MIDDLEWARES': {
+                'scrapy_puppeteer.PuppeteerMiddleware': 800
             }
+        }
         self.process = CrawlerProcess(settings=self.settings)
 
     def test_items_number(self):
