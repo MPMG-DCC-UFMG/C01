@@ -1,3 +1,4 @@
+from twisted.internet import asyncioreactor
 import os
 import subprocess
 import asyncio
@@ -14,7 +15,6 @@ print(f"Installing other project dependencies...")
 subprocess.run(["pip", "install", "."])
 print()
 
-from twisted.internet import asyncioreactor
 asyncioreactor.install(asyncio.get_event_loop())
 
 
