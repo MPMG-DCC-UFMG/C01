@@ -7,6 +7,7 @@ class CrawlRequestForm(forms.ModelForm):
     class Meta:
         model = CrawlRequest
 
+
         labels = {
             'request_type': 'Request method',
         }
@@ -15,6 +16,8 @@ class CrawlRequestForm(forms.ModelForm):
         save_csv = forms.BooleanField(required=False)
 
         fields = [
+
+
             'source_name',
             'base_url',
             'request_type',
@@ -42,8 +45,11 @@ class CrawlRequestForm(forms.ModelForm):
             'crawler_type',
             'explore_links',
             'link_extractor_max_depth',
-            'link_extractor_allow',
-            'link_extractor_allow_extensions',
+            'link_extractor_allow_url',
+            'download_files',
+            'download_files_allow_url',
+            'download_files_allow_extensions',
+            'steps',
             'save_csv',
             'table_attrs',
             'data_path',
@@ -53,6 +59,7 @@ class CrawlRequestForm(forms.ModelForm):
 
 
 class RawCrawlRequestForm(CrawlRequestForm):
+
     # BASIC INFO ##############################################################
     source_name = forms.CharField(
         label="Nome do coletor", max_length=200,
@@ -214,7 +221,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     crawler_type = forms.ChoiceField(
         required=False, choices=(
             ('static_page', 'Página estática'),
-            # ('form_page', 'Páginas com formulário'),
+            ('form_page', 'Páginas com formulário'),
             # ('single_file', 'Arquivo único'),
             # ('bundle_file', 'Conjunto de arquivos'),
         ),
@@ -225,9 +232,9 @@ class RawCrawlRequestForm(CrawlRequestForm):
     # Crawler Type - Static
     link_extractor_max_depth = forms.IntegerField(
         required=False,
-        label="Profundidade máxima do link (deixe em branco para não limitar):"
+        label="Profundidade máxima do link (deixe em branco para não limitar):",
     )
-    link_extractor_allow = forms.CharField(
+    link_extractor_allow_url = forms.CharField(
         required=False, max_length=2000,
         label=(
             "Permitir urls que casem com o regex"
@@ -236,19 +243,36 @@ class RawCrawlRequestForm(CrawlRequestForm):
         widget=forms.TextInput(
             attrs={'placeholder': 'Regex para permitir urls'})
     )
-    link_extractor_allow_extensions = forms.CharField(
+
+    download_files = forms.BooleanField(
+        required=False, label="Baixar arquivos")
+    download_files_allow_url = forms.CharField(
+        required=False, max_length=2000,
+        label=(
+            "Baixar arquivos de url que casem com o regex"
+            " (deixe em branco para não filtrar):"
+        ),
+        widget=forms.TextInput(
+            attrs={'placeholder': 'Regex para permitir urls'})
+    )
+    download_files_allow_extensions = forms.CharField(
         required=False, max_length=2000,
         label="Extensões de arquivo permitidas (separado por vírgula):",
         widget=forms.TextInput(attrs={'placeholder': 'pdf,xml'})
     )
     # Crawler Type - Page with form
+    steps = forms.CharField(required=False, label="Steps JSON", max_length=9999999,
+                            widget=forms.TextInput(
+                                attrs={'placeholder': '{' + '}'})
+                            )
+
     # Crawler Type - Single file
     # Crawler Type - Bundle file
 
     # PARSING #################################################################
     save_csv = forms.BooleanField(
-      required=False, label="Salvar arquivo csv",
-      widget=forms.CheckboxInput(attrs={'checked': True})
+        required=False, label="Salvar arquivo csv",
+        widget=forms.CheckboxInput(attrs={'checked': True})
     )
     table_attrs = forms.CharField(
         required=False, max_length=2000, label="Motor de extração",
@@ -265,10 +289,9 @@ class ResponseHandlerForm(forms.ModelForm):
         model = ResponseHandler
         exclude = []
         widgets = {
-            'handler_type': forms.Select(attrs=
-                {
-                    'onchange': 'detailTemplatedUrlResponseParams(event);'
-                }
+            'handler_type': forms.Select(attrs={
+                'onchange': 'detailTemplatedUrlResponseParams(event);'
+            }
             ),
         }
 

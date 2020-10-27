@@ -8,6 +8,7 @@
 New Crawler
 {% endblock %}
 
+
 {% block content %}
 
 <form id="myForm" method="POST" action="" class="form-group">{% csrf_token %}
@@ -30,11 +31,16 @@ New Crawler
                     <div class="d-flex w-100 justify-content-start align-items-center">
                         <div class="col-md-10 sidemenu-items">
                             <span class="fa fa-id-card-o fa-fw mr-3"></span>
-                            <span class="menu-collapsed">Informações básicas</span>
+                            <span class="menu-collapsed">Infos básicas</span>
                         </div>
                         <div class="col-md-2">
+                            {% if crawler %}
+                            <span id="basic-info-valid-icon"
+                                class="fa fa-check fa-fw mr-3 basic-info-valid-icon valid-icon"></span>
+                            {% else %}
                             <span id="basic-info-valid-icon"
                                 class="fa fa-warning fa-fw mr-3 basic-info-valid-icon valid-icon"></span>
+                            {% endif %}
                         </div>
                     </div>
                 </a>
@@ -82,9 +88,10 @@ New Crawler
                 <li class="list-group-item sidebar-separator-title text-muted d-flex align-items-center menu-collapsed">
                     <small>CONFIGURAÇÕES DA RESPOSTA</small>
                 </li>
-    
+
                 <!-- /END Separator -->
-                <a onClick="showBlock(this.id)" href="#" class="button-block bg-dark list-group-item list-group-item-action" id="crawler-type-item">
+                <a onClick="showBlock(this.id)" href="#"
+                    class="button-block bg-dark list-group-item list-group-item-action" id="crawler-type-item">
                     <div class="d-flex w-100 justify-content-start align-items-center">
                         <div class="col-md-10 sidemenu-items">
                             <span class="fa fa-gear fa-fw mr-3"></span>
@@ -136,7 +143,7 @@ New Crawler
                 </a>
                 {% if crawler %}
                 <button id="createButton" type="submit"
-                    class="bg-dark list-group-item list-group-item-invalid list-group-item-action"
+                    class="bg-dark list-group-item list-group-item-valid list-group-item-action"
                     style="text-align: center; position: fixed; bottom: 0px; width: 16.725%;">
                     Update
                 </button>
@@ -174,11 +181,13 @@ New Crawler
                             <div class="col md-6">
                                 <div id="antiblock-delay-div">
                                     {{ form.antiblock_download_delay | as_crispy_field}}
-                                    <p>Se auto ajuste está desligado, esse parâmetro vai funcionar como o intervalo base entre chamadas.
+                                    <p>Se auto ajuste está desligado, esse parâmetro vai funcionar como o intervalo base
+                                        entre chamadas.
                                         O intervalo real vai ser um valor entre 0.5*intervalo e 1.5*intervalo.</p>
                                     {{ form.antiblock_autothrottle_enabled | as_crispy_field}}
-                                    <p>Essa opção ajusta automaticamente o intervalo entre as chamadas para se adaptar ao tempo de resposta do servidor
-                                    time.</p>
+                                    <p>Essa opção ajusta automaticamente o intervalo entre as chamadas para se adaptar
+                                        ao tempo de resposta do servidor
+                                        time.</p>
                                     <div id="autothrottle-options-div" hidden=True>
                                         <div>{{form.antiblock_autothrottle_start_delay | as_crispy_field}}</div>
                                         <div>{{form.antiblock_autothrottle_max_delay | as_crispy_field}}</div>
@@ -242,12 +251,20 @@ New Crawler
                             <div class="col md-6">
                                 {{ form.crawler_type | as_crispy_field}}
                                 <div class="crawler-type-content-div" id="static_page">
-                                    {{ form.explore_links | as_crispy_field}}
-                                    {{ form.link_extractor_max_depth | as_crispy_field}}
-                                    {{ form.link_extractor_allow | as_crispy_field}}
-                                    {{ form.link_extractor_allow_extensions | as_crispy_field}}
+                                    <div id="explore_links" style="padding:20px; border-top: 1px solid #DCDCDC;">
+                                        {{ form.explore_links | as_crispy_field}}
+                                        {{ form.link_extractor_max_depth | as_crispy_field}}
+                                        {{ form.link_extractor_allow_url | as_crispy_field}}
+                                    </div>
+                                    <div id="download_files" style="padding:20px; border-top: 1px solid #DCDCDC;">
+                                        {{ form.download_files | as_crispy_field}}
+                                        {{ form.download_files_allow_url | as_crispy_field}}
+                                        {{ form.download_files_allow_extensions | as_crispy_field}}
+                                    </div>
                                 </div>
-                                <div class="crawler-type-content-div" id="form_page" hidden></div>
+                                <div class="crawler-type-content-div" id="form_page" hidden>
+                                    {{ form.steps |  as_crispy_field }}
+                                </div>
                                 <div class="crawler-type-content-div" id="single_file" hidden></div>
                                 <div class="crawler-type-content-div" id="bundle_file" hidden></div>
                             </div>
@@ -313,6 +330,17 @@ New Crawler
 {% endblock %}
 
 {% block js %}
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+    integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+    crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+    integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+    crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js"
+    integrity="sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4"
+    crossorigin="anonymous"></script>
+<script src="{% static 'js/steps.js' %}"></script>
+<script src="{% static 'js/step_block.js' %}"></script>
 <script>
     // initialize formsets
     $('.templated-url-param-step').formset({

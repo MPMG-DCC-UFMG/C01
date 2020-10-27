@@ -1,54 +1,52 @@
+# Scrapy and Twister libs
 import scrapy
 from scrapy.exceptions import CloseSpider
+from scrapy.spidermiddlewares.httperror import HttpError
+from twisted.internet.error import DNSLookupError
+from twisted.internet.error import TimeoutError
 
-import crawling_utils
+# Other external libs
 import datetime
-import itertools
 import json
+import itertools
 import logging
 import os
-import random
 import re
-import requests
 import time
+from lxml.html.clean import Cleaner
 
+# Project libs
+import binary
+import crawling_utils
 from crawlers.constants import *
+from crawlers.file_descriptor import FileDescriptor
+from crawlers.file_downloader import FileDownloader
 from entry_probing import BinaryFormatProbingResponse, HTTPProbingRequest,\
                           HTTPStatusProbingResponse, TextMatchProbingResponse,\
                           EntryProbing
 from param_injector import ParamInjector
 from range_inference import RangeInference
 import parsing_html
-import binary
 
-from lxml.html.clean import Cleaner
-import codecs
-
-from scrapy.spidermiddlewares.httperror import HttpError
-from twisted.internet.error import DNSLookupError
-from twisted.internet.error import TimeoutError
 
 
 class BaseSpider(scrapy.Spider):
     name = 'base_spider'
 
-    def __init__(self, crawler_id, instance_id, data_path, *a, **kw):
+    def __init__(self, config, *a, **kw):
         """
         Spider init operations.
         Create folders to store files and some config and log files.
         """
+        config = json.loads(config)
 
         print("At BaseSpider.init")
-        self.crawler_id = crawler_id
-        self.instance_id = instance_id
         self.stop_flag = False
 
-        self.data_folder = f"{data_path}/data/"
-        config_file_path = f"{data_path}/config/{instance_id}.json"
-        self.flag_folder = f"{data_path}/flags/"
+        self.data_folder = f"{config['data_path']}/data/"
+        self.flag_folder = f"{config['data_path']}/flags/"
 
-        with open(config_file_path, "r") as f:
-            self.config = json.loads(f.read())
+        self.config = config
 
         folders = [
             f"{self.data_folder}",
@@ -69,7 +67,6 @@ class BaseSpider(scrapy.Spider):
             pass
 
         self.get_format = lambda i: str(i).split("/")[1][:-1].split(";")[0]
-
 
     def start_requests(self):
         """
@@ -213,7 +210,7 @@ class BaseSpider(scrapy.Spider):
         Should be called at the begining of every parse operation.
         """
 
-        flag_file = f"{self.flag_folder}/{self.instance_id}.json"
+        flag_file = f"{self.flag_folder}/{self.config['instance_id']}.json"
 
         with open(flag_file) as f:
             flags = json.loads(f.read())
@@ -225,127 +222,85 @@ class BaseSpider(scrapy.Spider):
 
         return self.stop_flag
 
-    def extract_and_store_csv(self, response, content):
-        """
-        Try to extract a json/csv from response data.
-        """
+
+    def extract_and_store_csv(self, response, description):
+        """Try to extract a json/csv from page html."""
 
         config = response.meta['config']
 
-        file_format = self.get_format(response.headers['Content-type'])
         hsh = self.hash_response(response)
-
-        success = False
 
         output_filename = f"{self.data_folder}/csv/{hsh}"
         if config["save_csv"] and ".csv" not in output_filename:
             output_filename += ".csv"
 
-        if b'text/html' in response.headers['Content-type']:
-            try:
-                if self.config["table_attrs"] is None:
-                    parsing_html.content.html_detect_content(
-                        f"{self.data_folder}/raw_pages/{hsh}.{file_format}",
-                        is_string=False,
-                        output_file=output_filename,
-                        to_csv=self.config["save_csv"]
-                    )
-                else:
-                    extra_config = extra_config_parser(self.config["table_attrs"])
-                    parsing_html.content.html_detect_content(
-                        f"{self.data_folder}/raw_pages/{hsh}.{file_format}",
-                        is_string=False, output_file=output_filename,
-                        match=extra_config['table_match'], flavor=extra_config['table_flavor'],
-                        header=extra_config['table_header'], index_col=extra_config['table_index_col'],
-                        skiprows=extra_config['table_skiprows'], attrs=extra_config['table_attributes'],
-                        parse_dates=extra_config['table_parse_dates'], thousands=extra_config['table_thousands'],
-                        encoding=extra_config['table_encoding'], decimal=extra_config['table_decimal'],
-                        na_values=extra_config['table_na_values'], keep_default_na=extra_config['table_default_na'],
-                        displayed_only=extra_config['table_displayed_only'], to_csv=self.config["save_csv"]
-                    )
 
-                success = True
-
-            except Exception as e:
-                print(
-                    f"Could not extract csv from {response.url} -",
-                    f"message: {str(type(e))}-{e}"
+        success = False
+        try:
+            if self.config["table_attrs"] is None:
+                parsing_html.content.html_detect_content(
+                    f"{self.data_folder}/raw_pages/{hsh}.{file_format}",
+                    is_string=False,
+                    output_file=output_filename,
+                    to_csv=self.config["save_csv"]
                 )
-        else:
-            new_file = f"{self.data_folder}/files/{hsh}.{file_format}"
-
-            try:
-                out = binary.extractor.Extractor(new_file)
-                out.extractor()
-                success = True
-
-            except Exception as e:
-                print(
-                    f"Could not extract csv files from {hsh}.{file_format} -",
-                    f"message: {str(type(e))}-{e}"
+            else:
+                extra_config = extra_config_parser(self.config["table_attrs"])
+                parsing_html.content.html_detect_content(
+                    f"{self.data_folder}/raw_pages/{hsh}.{file_format}",
+                    is_string=False, output_file=output_filename,
+                    match=extra_config['table_match'], flavor=extra_config['table_flavor'],
+                    header=extra_config['table_header'], index_col=extra_config['table_index_col'],
+                    skiprows=extra_config['table_skiprows'], attrs=extra_config['table_attributes'],
+                    parse_dates=extra_config['table_parse_dates'], thousands=extra_config['table_thousands'],
+                    encoding=extra_config['table_encoding'], decimal=extra_config['table_decimal'],
+                    na_values=extra_config['table_na_values'], keep_default_na=extra_config['table_default_na'],
+                    displayed_only=extra_config['table_displayed_only'], to_csv=self.config["save_csv"]
                 )
+            success = True
 
-        content["type"] = "csv"
-        file_description_file = f"{self.data_folder}/csv/" \
-            "file_description.jsonl"
-
-        if success:
-            with open(file_description_file, "a+") as f:
-                f.write(json.dumps(content) + '\n')
-
-
-    def store_raw(
-            self, response, file_format=None, binary=True, save_at="files"):
-        """Save response content."""
-
-        if file_format is None:
-            file_format = self.get_format(response.headers['Content-type'])
-
-        print(f'Saving file from {response.url}, file_format: {file_format}')
-
-        if binary:
-            file_mode = "wb"
-            body = response.body
-            encoding = None
-        else:
-            cleaner = Cleaner(
-                style=True, links=False, scripts=True,
-                comments=True, page_structure=False
+        except Exception as e:
+            print(
+                f"Could not extract csv from {response.url} -",
+                f"message: {str(type(e))}-{e}"
             )
 
-            file_mode = "w+"
-            body = cleaner.clean_html(
-                response.body.decode('utf-8', errors='ignore'))
+        description["type"] = "csv"
+        if success:
+            self.feed_file_description(f"{self.data_folder}/csv/", description)
+
+    def store_html(self, response):
+        """Stores html and adds its description to file_description file."""
+        print(f'Saving html page {response.url}')
+        
+        cleaner = Cleaner(
+            style=True, links=False, scripts=True,
+            comments=True, page_structure=False
+        )
+        body = cleaner.clean_html(
+            response.body.decode('utf-8', errors='ignore'))
 
         hsh = self.hash_response(response)
 
-        folder = f"{self.data_folder}/{save_at}"
+        with open(
+            file=f"{self.data_folder}/raw_pages/{hsh}.html",
+            mode="w+", errors='ignore'
+        ) as f:
+            f.write(body)      
 
-        content = {
-            "file_name": f"{hsh}.{file_format}",
+        description = {
+            "file_name": f"{hsh}.html",
             "url": response.url,
-            "crawler_id": self.crawler_id,
-            "instance_id": self.instance_id,
+            "crawler_id": self.config["crawler_id"],
+            "instance_id": self.config["instance_id"],
             "type": str(response.headers['Content-type']),
             "crawled_at_date": str(datetime.datetime.today()),
             "referer": response.meta["referer"]
         }
 
-        with open(f"{folder}/file_description.jsonl", "a+") as f:
-            f.write(json.dumps(content) + '\n')
+        self.feed_file_description(self.data_folder + "/raw_pages", description)
 
-        with open(
-            file=f"{folder}/{hsh}.{file_format}",
-            mode=file_mode,
-        ) as f:
-            f.write(body)
-
-        self.extract_and_store_csv(response, content)
-
-    def store_html(self, response):
-        """Stores html and adds its description to file_description file."""
-        self.store_raw(
-            response, file_format="html", binary=False, save_at="raw_pages")
+        self.extract_and_store_csv(response, description)
 
     def errback_httpbin(self, failure):
         # log all errback failures,
@@ -367,6 +322,18 @@ class BaseSpider(scrapy.Spider):
             request = failure.request
             self.logger.error('TimeoutError on %s', request.url)
 
+    def feed_file_downloader(self, url, response_origin):
+        description = {
+            "url": url,
+            "crawler_id": self.config["crawler_id"],
+            "instance_id": self.config["instance_id"],
+            "crawled_at_date": str(datetime.datetime.today()),
+            "referer": response_origin.url
+        }
+        FileDownloader.feed_downloader(url, self.data_folder, description)
+
+    def feed_file_description(self, destination, content):
+        FileDescriptor.feed_description(destination, content)
 
     def extra_config_parser(self, table_attrs):
         # get the json from extra_config and 
@@ -402,3 +369,4 @@ class BaseSpider(scrapy.Spider):
         # POST requests may access the same URL with different parameters, so
         # we hash the URL with the response body
         return crawling_utils.hash(response.url.encode() + response.body)
+

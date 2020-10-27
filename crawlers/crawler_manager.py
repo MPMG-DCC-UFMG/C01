@@ -1,26 +1,23 @@
-import json
-import time
-import random
-from multiprocessing import Process
-import os
-import sys
-import shutil
-from lxml.html.clean import Cleaner
-import codecs
-
+# Scrapy and Twister libs
 import scrapy
 from scrapy.crawler import CrawlerProcess
 
-from crawlers.constants import *
-
-# from .crawlers.static_page import StaticPageSpider
-# from .crawlers.static_page import StaticPageSpider
-# from .crawlers.static_page import StaticPageSpider
-from crawlers.static_page import StaticPageSpider
-
-import crawling_utils.crawling_utils as crawling_utils
-
+# Other external libs
+import json
+import os
+import random
 import requests
+import shutil
+import sys
+import time
+from multiprocessing import Process
+
+# Project libs
+import crawling_utils.crawling_utils as crawling_utils
+from crawlers.constants import *
+from crawlers.file_descriptor import FileDescriptor
+from crawlers.file_downloader import FileDownloader
+from crawlers.static_page import StaticPageSpider
 
 # TODO: implement following antiblock options
 # antiblock_mask_type
@@ -32,6 +29,30 @@ import requests
 # antiblock_user_agents_file
 # antiblock_cookies_file
 # antiblock_persist_cookies
+
+def file_downloader_process():
+    """Redirects downloader output and starts downloader consumer loop."""
+    crawling_utils.check_file_path("crawlers/log/")
+    sys.stdout = open(f"crawlers/log/file_downloader.out", "a", buffering=1)
+    sys.stderr = open(f"crawlers/log/file_downloader.err", "a", buffering=1)
+    FileDownloader.download_consumer()
+
+
+def file_descriptor_process():
+    """Redirects descriptor output and starts descriptor consumer loop."""
+    crawling_utils.check_file_path("crawlers/log/")
+    sys.stdout = open(f"crawlers/log/file_descriptor.out", "a", buffering=1)
+    sys.stderr = open(f"crawlers/log/file_descriptor.err", "a", buffering=1)
+    FileDescriptor.description_consumer()
+
+
+def start_consumers_and_producers():
+    """Starts file_description and file_downlaoder processes."""
+    downloader = Process(target=file_downloader_process)
+    downloader.start()
+
+    descriptor = Process(target=file_descriptor_process)
+    descriptor.start()
 
 
 def create_folders(data_path):
@@ -45,15 +66,7 @@ def create_folders(data_path):
         f"{data_path}/webdriver",
     ]
     for f in files:
-        try:
-            os.mkdir(f)
-        except FileExistsError:
-            pass
-
-
-def create_instances_file(data_path):
-    """Create a json file for storing crawler instances"""
-    file = open(f"{data_path}/instances.txt", "a", buffering=1)
+        crawling_utils.check_file_path(f)
 
 
 def get_crawler_base_settings(config):
@@ -77,9 +90,10 @@ def get_crawler_base_settings(config):
     }
 
 
-def crawler_process(crawler_id, instance_id, config):
+def crawler_process(config):
     """Starts crawling."""
-
+    crawler_id = config["crawler_id"]
+    instance_id = config["instance_id"]
     data_path = config["data_path"]
 
     # Redirects process logs to files
@@ -98,15 +112,13 @@ def crawler_process(crawler_id, instance_id, config):
         # process.crawl(StaticPageSpider, crawler_id=crawler_id)
         raise NotImplementedError
     elif config["crawler_type"] == "static_page":
-        process.crawl(StaticPageSpider,
-                      crawler_id=crawler_id,
-                      instance_id=instance_id,
-                      data_path=data_path)
+        process.crawl(StaticPageSpider, config=json.dumps(config))
 
     def update_database():
         # TODO: get port as variable
         port = 8000
-        requests.get(f'http://localhost:{port}/detail/stop_crawl/{config["id"]}')
+        requests.get(
+            f'http://localhost:{port}/detail/stop_crawl/{crawler_id}')
 
     for crawler in process.crawlers:
         crawler.signals.connect(
@@ -122,30 +134,25 @@ def gen_key():
 
 def start_crawler(config):
     """Create and starts a crawler as a new process."""
-
-    crawler_id = config["id"]
+    
+    config["crawler_id"] = config["id"]
+    del config["id"]
+    config["instance_id"] = gen_key()
 
     data_path = config["data_path"]
     create_folders(data_path=data_path)
-    create_instances_file(data_path=data_path)
 
-    instance_id = gen_key()
-    print(os.getcwd())
-
-    with open(f"{data_path}/instances.txt", "a", buffering=1) as f:
-        f.write(instance_id + '\n')
-
-    with open(f"{data_path}/config/{instance_id}.json", "w+") as f:
+    with open(f"{data_path}/config/{config['instance_id']}.json", "w+") as f:
         f.write(json.dumps(config, indent=2))
 
-    with open(f"{data_path}/flags/{instance_id}.json", "w+") as f:
+    with open(f"{data_path}/flags/{config['instance_id']}.json", "w+") as f:
         f.write(json.dumps({"stop": False}))
 
     # starts new process
-    p = Process(target=crawler_process, args=(crawler_id, instance_id, config))
+    p = Process(target=crawler_process, args=(config,))
     p.start()
 
-    return instance_id
+    return config["instance_id"]
 
 
 def stop_crawler(instance_id, config):

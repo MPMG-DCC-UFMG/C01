@@ -81,6 +81,14 @@ class TestExtractInfo(unittest.TestCase):
         expected_result += "        print_(word = \"teste\")\n"
         self.assertEqual(expected_result, result)
 
+        result = cg.generate_body(atom.extend(
+            recipe_examples['simple_while']['recipe'])[0], ff)
+        expected_result = "    limit = 0\n"
+        expected_result += "    while True == 1 and limit < 5:\n"
+        expected_result += "        limit += 1\n"
+        expected_result += "        print_(word = \"teste\")\n"
+        self.assertEqual(expected_result, result)
+
     # def test_generate_code(self):
     #     with open("tests/test_step_by_step/examples/recipe_examples.json") as file:
     #         recipe_examples = json.load(file)

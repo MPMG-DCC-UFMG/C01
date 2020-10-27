@@ -2,7 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import time
 import hashlib
-
+import os
 
 def hash(byte_content):
     """Returns the md5 hash of a bytestring."""
@@ -18,6 +18,22 @@ FIREFOX_WEBDRIVER_PATH = 'geckodriver'
 # FIREFOX_WEBDRIVER_PATH = "D:/Users/gabri/Documents/GitHub/C04/src/" \
 #   "crawling_utils/crawling_utils/geckodriver_v0_27_0_win_64.exe"
 
+
+def check_file_path(path):
+    """Makes sure that folders in path exist."""
+    if path[-1] == "/":
+       path = path[:-1]
+ 
+    path = path.split("/")
+    for i in range(len(path)):
+        try:
+            # treating paths from root like "/home/..."
+            if i == 0 and path[i] == "":
+                continue
+            os.mkdir("/".join(path[:i + 1]))
+        except FileExistsError:
+            pass
+ 
 
 def init_webdriver(
     driver_type: str = "chrome",

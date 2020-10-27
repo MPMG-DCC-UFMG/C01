@@ -14,7 +14,7 @@ def extract_info(func, ignore_params=None):
             The function name and parameters.
     """
     if ignore_params is None:
-        ignore_params = ['driver']
+        ignore_params = ['page']
     name = func.__code__.co_name
     optional_params = dict()
     mandatory_params = list()
@@ -59,8 +59,8 @@ def get_module_functions(module):
     return result
 
 
-def get_module_functions_info(module):
+def get_module_functions_info(module, ignore_params=None):
     """
     Returns a set with information of all the module functions
     """
-    return [extract_info(i) for i in get_module_functions(module)]
+    return [extract_info(i, ignore_params) for i in get_module_functions(module)]

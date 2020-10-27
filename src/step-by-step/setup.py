@@ -1,11 +1,11 @@
 from setuptools import setup
 
 
-with open("README.md", "r") as fh:
+with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name='step_cralwer',
+    name='step_crawler',
     version='1.0',
     description='Module creating step by step crawlers',
     long_description=long_description,
@@ -14,5 +14,5 @@ setup(
     author='Tales Panoutsos',
     author_email='TalesPanoutsos@users.noreply.github.com',
     packages=['step_crawler'],
-    install_requires=['cssify', 'selenium', 'asyncio', 'pyppeteer2', 'pyext']
+    install_requires=['cssify', 'selenium', 'asyncio', 'pyppeteer2', 'pyext', 'pillow']
 )

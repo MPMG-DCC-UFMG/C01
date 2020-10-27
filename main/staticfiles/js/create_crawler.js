@@ -67,7 +67,10 @@ function setHiddenState(element_id, hidden) {
 }
 
 function checkBasicInfo() {
-    var valid = validateTextInput('id_source_name') && validateTextInput('id_base_url');
+    var valid =
+      validateTextInput("id_source_name") &&
+      validateTextInput("id_base_url") &&
+      validateTextInput("id_data_path");
     defineIcon("basic-info", valid);
 }
 
@@ -156,6 +159,7 @@ $(document).ready(function () {
         switch (input_name) {
             case 'source_name':
             case 'base_url':
+            case 'data_path':
                 checkBasicInfo();
                 break;
             case 'has_webdriver':
@@ -309,6 +313,16 @@ function detailCrawlerType() {
     for (const i in contents)
         contents[i].hidden = true;
     setHiddenState(crawler_type, false);
+    
+
+    if(crawler_type == "form_page"){
+        interface_root_element = document.getElementById("form_page");
+        if(interface_root_element.type != "root" ){
+            
+            steps_output_element = interface_root_element.children[0].children[1].children[0]
+            load_steps(interface_root_element, steps_output_element);
+        }
+    }
 
     checkCrawlerType();
 }
@@ -316,6 +330,7 @@ function detailCrawlerType() {
 function autothrottleEnabled() {
     setHiddenState("autothrottle-options-div", !getCheckboxState("id_antiblock_autothrottle_enabled"));
 }
+
 
 const table_input = document.querySelectorAll(".dynamic_input_table")
 
@@ -356,5 +371,3 @@ function getExtraParsingConfig(e) {
   var dict_string = JSON.stringify(dict);
   table_attrs_hidden.value = dict_string;
 }
-
-// TODO add new fields to validation 
