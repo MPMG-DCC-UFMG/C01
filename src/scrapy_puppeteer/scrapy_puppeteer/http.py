@@ -9,13 +9,12 @@ class PuppeteerRequest(Request):
     def __init__(self, url, callback=None, screenshot=False, wait_until=None, wait_for=None, steps=None, *args, **kwargs):
         """Initialize a new Puppeteer request
 
-        wait_until: basestring
-            One of "load", "domcontentloaded", "networkidle0", "networkidle2".
+        :wait_until:One of "load", "domcontentloaded", "networkidle0", "networkidle2".
             See https://miyakogi.github.io/pyppeteer/reference.html#pyppeteer.page.Page.goto
-        screenshot: bool
-            If True, a screenshot of the page will be taken and the data of the screenshot
-            will be returned in the response "meta" attribute.
-
+        :screenshot:If True, a screenshot of the page will be taken and the data of the screenshot
+                    will be returned in the response "meta" attribute.
+        :wait_for:  A selector, xpath, or function string, or timeout (milliseconds) to be waited for
+        :setps:     A dict containing the steps to be executed in the page
         """
 
         self.wait_until = wait_until or 'domcontentloaded'
