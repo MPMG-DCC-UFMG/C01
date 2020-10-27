@@ -1,24 +1,26 @@
 """This module contains the ``PuppeteerMiddleware`` scrapy middleware"""
+import time
+import os
+import sys
+from .http import PuppeteerRequest
+from scrapy.exceptions import CloseSpider, IgnoreRequest
+from promise import Promise
+from twisted.internet.defer import Deferred
+from scrapy.http import HtmlResponse
+from scrapy import signals
+from pyppeteer import launch
+from step_crawler import atomizer as atom
+from step_crawler.functions_file import *
+from step_crawler import functions_file
+from step_crawler import code_generator as code_g
+import requests
+import logging
 import asyncio
 from twisted.internet import asyncioreactor
 
 asyncioreactor.install(asyncio.get_event_loop())
-import logging
-import requests
-import sys, os, time
 
-from step_crawler import code_generator as code_g
-from step_crawler import functions_file
-from step_crawler.functions_file import *
-from step_crawler import atomizer as atom
-from pyppeteer import launch
-from scrapy import signals
-from scrapy.http import HtmlResponse
-from twisted.internet.defer import Deferred
-from promise import Promise
-from scrapy.exceptions import CloseSpider, IgnoreRequest
 
-from .http import PuppeteerRequest
 
 
 def as_deferred(f):
@@ -42,7 +44,7 @@ class PuppeteerMiddleware:
         """
 
         middleware = cls()
-        middleware.browser = await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio':True, 'logLevel': crawler.settings.get('LOG_LEVEL')})
+        middleware.browser = await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio': True, 'logLevel': crawler.settings.get('LOG_LEVEL')})
         page = await middleware.browser.newPage()
         crawler.signals.connect(middleware.spider_closed, signals.spider_closed)
 
@@ -72,7 +74,7 @@ class PuppeteerMiddleware:
         try:
             page = await self.browser.newPage()
         except:
-            self.browser = await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio':True})
+            self.browser = await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio': True})
             await self.browser.newPage()
             page = await self.browser.newPage()
 
