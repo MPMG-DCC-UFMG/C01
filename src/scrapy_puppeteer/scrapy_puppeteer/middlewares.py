@@ -28,11 +28,18 @@ def as_deferred(f):
 
 
 class PuppeteerMiddleware:
-    """Downloader middleware handling the requests with Puppeteer"""
+    """Downloader middleware handling the requests with Puppeteer
+
+    More info about middlewares structure:
+    https://docs.scrapy.org/en/latest/topics/spider-middleware.html#writing-your-own-spider-middleware
+    """
 
     @classmethod
     async def _from_crawler(cls, crawler):
-        """Start the browser"""
+        """Start the browser
+
+        :crawler(Crawler object): crawler that uses this middleware
+        """
 
         middleware = cls()
         middleware.browser = await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio':True, 'logLevel': crawler.settings.get('LOG_LEVEL')})
@@ -43,7 +50,10 @@ class PuppeteerMiddleware:
 
     @classmethod
     def from_crawler(cls, crawler):
-        """Initialize the middleware"""
+        """Initialize the middleware
+
+        :crawler(Crawler object): crawler that uses this middleware
+        """
 
         loop = asyncio.get_event_loop()
         middleware = loop.run_until_complete(
@@ -53,7 +63,11 @@ class PuppeteerMiddleware:
         return middleware
 
     async def _process_request(self, request, spider):
-        """Handle the request using Puppeteer"""
+        """Handle the request using Puppeteer
+
+        :request: The PuppeteerRequest object sent by the spider
+        :spider: The spider using this middleware
+        """
 
         try:
             page = await self.browser.newPage()
@@ -124,7 +138,11 @@ class PuppeteerMiddleware:
         )
 
     def process_request(self, request, spider):
-        """Check if the Request should be handled by Puppeteer"""
+        """Check if the Request should be handled by Puppeteer
+
+        :request: The request object sent by the spider
+        :spider: The spider using this middleware
+        """
 
         if not isinstance(request, PuppeteerRequest):
             return None

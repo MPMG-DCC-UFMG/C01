@@ -51,7 +51,7 @@ def parse_result(self, response):
 ```
 
 ### Additional arguments
-The `scrapy_puppeteer.PuppeteerRequest` accept 2 additional arguments:
+The `scrapy_puppeteer.PuppeteerRequest` accept 4 additional arguments:
 
 #### `wait_until`
 
