@@ -277,7 +277,7 @@ class DownloadDetail(TimeStamped):
         ('DONE', 'DONE'),
     ]
     status = models.CharField(
-        max_length=20, choices=STATUS, default="WAITING", require=True)
+        max_length=20, choices=STATUS, default="WAITING")
     description = models.CharField(max_length=1000, blank=True)
     size = models.PositiveIntegerField(null=True, blank=True)
     progress = models.PositiveIntegerField(null=True, blank=True)
