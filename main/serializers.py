@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import CrawlRequest, CrawlerInstance
+from .models import CrawlRequest, CrawlerInstance, DownloadDetail
 
 
 class CrawlerInstanceSerializer(serializers.ModelSerializer):
@@ -17,3 +17,15 @@ class CrawlRequestSerializer(serializers.ModelSerializer):
         model = CrawlRequest
         read_only_fields = ["id", "creation_date", "last_modified", "running"]
         fields = '__all__'
+
+
+class DownloadDetailSerializer(serializers.ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        many = kwargs.pop('many', True)
+        super(DownloadDetailSerializer, self).__init__(
+            many=many, *args, **kwargs)
+
+    class Meta:
+        model = DownloadDetail
+        read_only_fields = ["id", "creation_date", "last_modified"]
+        fields = "__all__"

@@ -13,7 +13,8 @@ class MainConfig(AppConfig):
     server_running = False
 
     def runOnce(self):
-        steps_signature = parameter_extractor.get_module_functions_info(functions_file)
+        steps_signature = parameter_extractor.get_module_functions_info(
+            functions_file)
         with open('main/staticfiles/json/steps_signature.json', 'w+') as file:
             json.dump(steps_signature, file)
 
@@ -33,6 +34,10 @@ class MainConfig(AppConfig):
 
         # starts file descriptor and file downloader processes
         start_consumers_and_producers()
+
+        # cleaning download queue and current download
+        from .models import DownloadDetail
+        DownloadDetail.objects.all().delete()
 
     def ready(self):
         try:

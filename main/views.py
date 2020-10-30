@@ -8,9 +8,10 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm,\
-    ResponseHandlerFormSet, ParameterHandlerFormSet
-from .models import CrawlRequest, CrawlerInstance
-from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer
+                   ResponseHandlerFormSet, ParameterHandlerFormSet
+from .models import CrawlRequest, CrawlerInstance, DownloadDetail
+from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer, \
+                        DownloadDetailSerializer
 
 from crawlers.constants import *
 
@@ -19,6 +20,9 @@ from datetime import datetime
 import time
 
 import crawlers.crawler_manager as crawler_manager
+
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.parsers import JSONParser
 
 # Helper methods
 
@@ -213,6 +217,10 @@ def tail_log_file(request, instance_id):
         "time": str(datetime.fromtimestamp(time.time())),
     })
 
+
+def downloads(request):
+    return render(request, "main/downloads.html")
+
 # API
 ########
 
@@ -231,6 +239,12 @@ GET       /api/crawlers/<id>/run    run crawler instance
 GET       /api/crawlers/<id>/stop   stop crawler instance
 GET       /api/instances/           list crawler instances
 GET       /api/instances/<id>       crawler instance detail
+GET       /api/downloads/<id>       return details about download itens
+GET       /api/downloads/           return list of download itens
+POST      /api/downloads/           create a download item
+PUT       /api/downloads/<id>       update download item
+GET       /api/downloads/queue      return list of items in download queue
+GET       /api/downloads/progress   return info about current download
 """
 
 
@@ -284,3 +298,32 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = CrawlerInstance.objects.all()
     serializer_class = CrawlerInstanceSerializer
+
+
+class DownloadDetailsViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows users to be viewed or edited.
+    """
+    queryset = DownloadDetail.objects.all().order_by('-last_modified')
+    serializer_class = DownloadDetailSerializer
+
+    @action(detail=False)
+    def queue(self, request):
+        instances = DownloadDetail.objects.filter(
+            status="WAITING").order_by('creation_date')
+
+        response = {
+            "queue": [DownloadDetailSerializer(i).data for i in instances]
+        }
+
+        return JsonResponse(response)
+
+    @action(detail=False)
+    def progress(self, request):
+        instances = DownloadDetail.objects.filter(
+            status="DOWNLOADING").order_by('-last_modified')
+
+        if len(instances):
+            return JsonResponse(DownloadDetailSerializer(instances[0]).data)
+
+        return JsonResponse({})

@@ -8,6 +8,7 @@
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}" />
     <title>{% block title %}{% endblock%}</title>
+    {% block style %}{% endblock%}
 </head>
 <body>
     <!-- Bootstrap NavBar -->
@@ -21,6 +22,7 @@
                 <!-- <li class="nav-item"><a class="nav-link" href="#">Monitor <span class="sr-only">(current)</span></a></li> -->
                 <li class="nav-item"><a class="nav-link" href="/crawlers">Coletores</a></li>
                 <li class="nav-item"><a class="nav-link" href="/new">Criar coletor</a></li>
+                <li class="nav-item"><a class="nav-link" href="/downloads">Downloads</a></li>
             </ul>
         </div>
     </nav>
