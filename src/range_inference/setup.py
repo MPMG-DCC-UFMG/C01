@@ -16,5 +16,8 @@ setuptools.setup(
     classifiers=[
         "Programming Language :: Python :: 3"
     ],
-    install_requires=['python-dateutil', 'entry_probing', 'param_injector'],
+    # This module also depends on 'entry_probing' and 'param_injector', but we
+    # omit these entries here to avoid problems when installing from the
+    # install.py script
+    install_requires=['python-dateutil'],
 )
