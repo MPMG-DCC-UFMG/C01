@@ -22,11 +22,12 @@ from crawlers.constants import *
 from crawlers.file_descriptor import FileDescriptor
 from crawlers.file_downloader import FileDownloader
 from entry_probing import BinaryFormatProbingResponse, HTTPProbingRequest,\
-                          HTTPStatusProbingResponse, TextMatchProbingResponse,\
-                          EntryProbing
+    HTTPStatusProbingResponse, TextMatchProbingResponse,\
+    EntryProbing
 from param_injector import ParamInjector
 from range_inference import RangeInference
 import parsing_html
+
 
 class BaseSpider(scrapy.Spider):
     name = 'base_spider'
@@ -159,16 +160,16 @@ class BaseSpider(scrapy.Spider):
             if handler_type == 'text':
                 resp_handler = TextMatchProbingResponse(
                     text_match=handler_data['text_match_value'],
-                    opposite = handler_data['opposite']
+                    opposite=handler_data['opposite']
                 )
             elif handler_type == 'http_status':
                 resp_handler = HTTPStatusProbingResponse(
                     status_code=handler_data['http_status'],
-                    opposite = handler_data['opposite']
+                    opposite=handler_data['opposite']
                 )
             elif handler_type == 'binary':
                 resp_handler = BinaryFormatProbingResponse(
-                    opposite = handler_data['opposite']
+                    opposite=handler_data['opposite']
                 )
             else:
                 raise AssertionError
@@ -188,7 +189,7 @@ class BaseSpider(scrapy.Spider):
         url_injectors = []
         initial_values = []
 
-        for i in [1,2]:
+        for i in [1, 2]:
             # We run this code twice: the first pass will get the initial
             # values for each parameter, which is used in the second pass to
             # filter the ends of the limits as required
@@ -215,16 +216,16 @@ class BaseSpider(scrapy.Spider):
                 if param_type == "process_code":
                     PROCESS_FORMAT = '{:07d}-{:02d}.{:04d}.{}.{:02d}.{:04d}'
 
-                    first_year  = int(param['first_year_proc_param'])
-                    last_year   = int(param['last_year_proc_param'])
+                    first_year = int(param['first_year_proc_param'])
+                    last_year = int(param['last_year_proc_param'])
                     segment_ids = param['segment_ids_proc_param'].split(",")
-                    court_ids   = param['court_ids_proc_param'].split(",")
-                    origin_ids  = param['origin_ids_proc_param'].split(",")
+                    court_ids = param['court_ids_proc_param'].split(",")
+                    origin_ids = param['origin_ids_proc_param'].split(",")
 
                     # turn string lists into integers
                     segment_ids = list(map(int, segment_ids))
-                    court_ids   = list(map(int, court_ids))
-                    origin_ids  = list(map(int, origin_ids))
+                    court_ids = list(map(int, court_ids))
+                    origin_ids = list(map(int, origin_ids))
 
                     max_seq = 9999999
                     if i == 2:
@@ -363,7 +364,7 @@ class BaseSpider(scrapy.Spider):
     def store_html(self, response):
         """Stores html and adds its description to file_description file."""
         print(f'Saving html page {response.url}')
-        
+
         cleaner = Cleaner(
             style=True, links=False, scripts=True,
             comments=True, page_structure=False
@@ -377,7 +378,7 @@ class BaseSpider(scrapy.Spider):
             file=f"{self.data_folder}/raw_pages/{hsh}.html",
             mode="w+", errors='ignore'
         ) as f:
-            f.write(body)      
+            f.write(body)
 
         description = {
             "file_name": f"{hsh}.html",
@@ -438,4 +439,3 @@ class BaseSpider(scrapy.Spider):
         # POST requests may access the same URL with different parameters, so
         # we hash the URL with the response body
         return crawling_utils.hash(response.url.encode() + response.body)
-
