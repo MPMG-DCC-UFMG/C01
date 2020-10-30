@@ -5,6 +5,7 @@ from django.core.validators import RegexValidator
 
 import re
 
+
 class CrawlRequestForm(forms.ModelForm):
     class Meta:
         model = CrawlRequest
@@ -382,9 +383,9 @@ class ParameterHandlerForm(forms.ModelForm):
             'segment_ids_proc_param': ('Identificadores de órgãos a buscar, '
                                        'separados por vírgula'),
             'court_ids_proc_param': ('Identificadores de tribunais a buscar, '
-                                       'separados por vírgula'),
+                                     'separados por vírgula'),
             'origin_ids_proc_param': ('Identificadores de origens a buscar, '
-                                       'separados por vírgula'),
+                                      'separados por vírgula'),
             'filter_range': 'Filtrar limites',
         }
 
@@ -398,7 +399,7 @@ class ParameterHandlerForm(forms.ModelForm):
             'start_date_date_param': forms.DateInput(attrs={'type': 'date'}),
             'end_date_date_param': forms.DateInput(attrs={'type': 'date'}),
             'filter_range': forms.CheckboxInput(
-                attrs={"onclick": "detailTemplatedURLParamFilter(event);",}
+                attrs={"onclick": "detailTemplatedURLParamFilter(event);", }
             ),
 
             # Validate parameters which are lists of numbers (with possible
@@ -423,6 +424,7 @@ class ParameterHandlerForm(forms.ModelForm):
     cons_misses = forms.IntegerField(initial=100, required=False,
         label=('Falhas consecutivas necessárias para considerar um intervalo '
                'do parâmetro inválido'))
+
 
 # Formset for ResponseHandler forms
 ResponseHandlerFormSet = forms.inlineformset_factory(CrawlRequest,

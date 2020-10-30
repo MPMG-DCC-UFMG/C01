@@ -33,7 +33,7 @@ class ParamInjector():
         """
 
         value_str = str(sequential) + str(year) + str(seg_id) + \
-                    str(court_id) + str(origin_id)
+            str(court_id) + str(origin_id)
         verif_val = 98 - ((int(value_str) * 100) % 97)
 
         return verif_val

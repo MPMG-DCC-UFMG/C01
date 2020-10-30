@@ -73,13 +73,13 @@ class RangeInference():
         if range_gen is None:
             raise ValueError("A valid range generator must be supplied.")
 
-        if extra_params is not None and (not isinstance(extra_params, list) \
-           or extra_params.count(None) != 1):
-           raise ValueError("extra_params must either be None or a list with" +
-                            " exactly one of the entries being None")
+        if extra_params is not None and (not isinstance(extra_params, list) or
+           extra_params.count(None) != 1):
+            raise ValueError("extra_params must either be None or a list with" +
+                             " exactly one of the entries being None")
 
         if preprocess is not None and not callable(preprocess):
-            raise ValueError("A valid preprocessing function must be "+
+            raise ValueError("A valid preprocessing function must be " +
                              "supplied.")
 
 
@@ -259,7 +259,7 @@ class RangeInference():
 
         if date_format is not None and not isinstance(date_format, str):
             raise TypeError("The date format parameter must be a string or " +
-                             "None.")
+                            "None.")
 
         time_delta = RangeInference.__daterange_calc_stepsize(detail_level)
 
@@ -430,21 +430,22 @@ class RangeInference():
         PROCESS_FORMAT = '{}-{}.{:04d}.{}.{:02d}.{:04d}'
         SEQ_LIMIT = 9999999
         verif_index = 1
-        year_range = range(first_year, last_year +  1)
+        year_range = range(first_year, last_year + 1)
         max_seq = 0
         # Generate all possible combinations for other parameters
-        for combination in itertools.product(year_range, segment_ids,\
-                                              court_ids, origin_ids):
+        for combination in itertools.product(year_range, segment_ids,
+                                             court_ids, origin_ids):
             year, segment, court, origin = combination
             updated_format = PROCESS_FORMAT.format('{:07d}', '{:02d}', year,
                                segment, court, origin)
+
             def verif(seq):
-                return ParamInjector.process_code_verification(seq, year,\
+                return ParamInjector.process_code_verification(seq, year,
                          segment, court, origin)
 
             curr_seq = RangeInference.filter_formatted_code(updated_format,
                          [(0, SEQ_LIMIT)], [True], entry_probe, verif,
-                         verif_index, extra_params, cons_misses)[0][1]
+                verif_index, extra_params, cons_misses)[0][1]
             if curr_seq is not None and curr_seq > max_seq:
                 max_seq = curr_seq
 

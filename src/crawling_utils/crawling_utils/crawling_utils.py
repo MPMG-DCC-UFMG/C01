@@ -4,6 +4,7 @@ import time
 import hashlib
 import os
 
+
 def hash(byte_content):
     """Returns the md5 hash of a bytestring."""
     return hashlib.md5(byte_content).hexdigest()
@@ -25,6 +26,7 @@ def check_file_path(path):
         os.makedirs(path)
     except FileExistsError:
         pass
+
 
 def init_webdriver(
     driver_type: str = "chrome",

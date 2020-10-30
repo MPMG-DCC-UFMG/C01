@@ -8,7 +8,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm,\
-                   ResponseHandlerFormSet, ParameterHandlerFormSet
+    ResponseHandlerFormSet, ParameterHandlerFormSet
 from .models import CrawlRequest, CrawlerInstance
 from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer
 
@@ -128,16 +128,16 @@ def edit_crawler(request, id):
 
     if request.method == 'POST' and form.is_valid() and \
        parameter_formset.is_valid() and response_formset.is_valid():
-            form.save()
-            parameter_formset.save()
-            response_formset.save()
-            return redirect('list_crawlers')
+        form.save()
+        parameter_formset.save()
+        response_formset.save()
+        return redirect('list_crawlers')
     else:
         return render(request, 'main/create_crawler.html', {
             'form': form,
             'response_formset': response_formset,
             'parameter_formset': parameter_formset,
-            'crawler' : crawler
+            'crawler': crawler
         })
 
 
@@ -191,8 +191,8 @@ def run_crawl(request, crawler_id):
 def tail_log_file(request, instance_id):
 
     crawler_id = CrawlerInstance.objects.filter(
-                    instance_id=instance_id
-                ).values()[0]["crawler_id_id"]
+        instance_id=instance_id
+    ).values()[0]["crawler_id_id"]
 
     config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
     data_path = config["data_path"]
