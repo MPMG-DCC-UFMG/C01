@@ -82,6 +82,7 @@ class RangeInferenceTest(unittest.TestCase):
 
     # NUMERIC RANGE
 
+
     def test_numeric_range_inference(self):
         """
         Tests simple numeric ranges
@@ -223,6 +224,7 @@ class RangeInferenceTest(unittest.TestCase):
 
 
     # DATE RANGE
+
 
     def test_daterange_inference(self):
         """
@@ -460,6 +462,7 @@ class RangeInferenceTest(unittest.TestCase):
 
     # FORMATTED CODE
 
+
     def test_formatted_code_inference(self):
         """
         Tests simple formatted codes
@@ -477,7 +480,7 @@ class RangeInferenceTest(unittest.TestCase):
         result = RangeInference.filter_formatted_code("{:02}-{:02}",
                               [(first_begin, first_end),
                                (second_begin, second_end)], [True, True],
-                              entry_probe)
+            entry_probe)
         final_values = list(map(lambda x: x[-1], result))
         self.assertEqual(final_values, [first_last_entry, second_last_entry])
 
@@ -485,7 +488,7 @@ class RangeInferenceTest(unittest.TestCase):
         result = RangeInference.filter_formatted_code("{:02}-{:02}",
                               [(first_begin, first_end),
                                (second_begin, second_end)], [True, False],
-                              entry_probe)
+            entry_probe)
         final_values = list(map(lambda x: x[-1], result))
         self.assertEqual(final_values, [first_last_entry, second_end])
 
@@ -493,7 +496,7 @@ class RangeInferenceTest(unittest.TestCase):
         result = RangeInference.filter_formatted_code("{:02}-{:02}",
                               [(first_begin, first_end),
                                (second_begin, second_end)], [False, True],
-                              entry_probe)
+            entry_probe)
         final_values = list(map(lambda x: x[-1], result))
         self.assertEqual(final_values, [first_end, second_last_entry])
 
@@ -513,7 +516,7 @@ class RangeInferenceTest(unittest.TestCase):
         result = RangeInference.filter_formatted_code("{:02}-{:02}",
                               [(first_begin, first_end),
                                (second_begin, second_end)], [True, True],
-                              entry_probe)
+            entry_probe)
         final_values = list(map(lambda x: x[-1], result))
         self.assertEqual(final_values, [first_end, second_end])
 
@@ -522,7 +525,7 @@ class RangeInferenceTest(unittest.TestCase):
         result = RangeInference.filter_formatted_code("{:02}-{:02}",
                               [(first_begin, first_end),
                                (second_begin, second_end)], [True, True],
-                              entry_probe)
+            entry_probe)
         final_values = list(map(lambda x: x[-1], result))
         self.assertEqual(final_values, [1, 1])
 
@@ -571,6 +574,7 @@ class RangeInferenceTest(unittest.TestCase):
 
 
     # PROCESS CODE
+
 
     def test_process_code_inference(self):
         """
