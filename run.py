@@ -20,18 +20,22 @@ global_lock = multiprocessing.Lock()
 
 N_FUNCTIONS = 3
 
+
 def run_django():
     # Runs django repassing cli parameters
     subprocess.run(["python", "manage.py", "runserver"] + sys.argv[1:])
     time.sleep(10)
 
+
 def run_file_downloader():
     file_downloader_process()
+
 
 def runn_file_descriptor():
     file_descriptor_process()
 
 # END FUNCTIONS THAT SHOULD BE EXECUTED BY PROCESSES
+
 
 def init_process():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
@@ -108,7 +112,7 @@ def run():
         print("A process failed, terminating processes...")
         pool.terminate()
         pool.join()
-        raise e   
+        raise e
 
     else:
         # stop processes
