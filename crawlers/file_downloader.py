@@ -68,11 +68,11 @@ class FileDownloader(BaseMessenger):
         - description: dict, dictionary of item descriptions
         """
 
-        url_hash = crawling_utils.hash(item["url"])
+        url_hash = crawling_utils.hash(item["url"].encode())
         old_file_name = item["description"]["file_name"]
         item["description"]["file_name"] = f"{url_hash}.csv"
         item["description"]["type"] = "csv"
-        url_hash = crawling_utils.hash(item["url"])
+        url_hash = crawling_utils.hash(item["url"].encode())
 
         success = False
 

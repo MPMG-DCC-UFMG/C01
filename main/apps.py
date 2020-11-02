@@ -5,9 +5,6 @@ from step_crawler import functions_file
 import json
 
 
-from crawlers.crawler_manager import start_consumers_and_producers
-
-
 class MainConfig(AppConfig):
     name = 'main'
     server_running = False
@@ -31,9 +28,6 @@ class MainConfig(AppConfig):
         for instance in instances:
             instance.running = False
             instance.save()
-
-        # starts file descriptor and file downloader processes
-        start_consumers_and_producers()
 
         # cleaning download queue and current download
         from .models import DownloadDetail
