@@ -61,7 +61,6 @@ def run():
         initializer=init_process,
     )
 
-
     # List functions that will be executed by processes
     functions = [
         [run_django, []],
