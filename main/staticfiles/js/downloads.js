@@ -8,10 +8,57 @@ $(document).ready(function () {
         function () {
             get_current_download();
             get_download_list();
+            get_error_list();
         },
         1000
     );
 });
+
+function get_error_list(){
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+            var response = JSON.parse(this.responseText)["error"];
+
+            document.getElementById("file_error").innerHTML = "";
+            for (var i = 0; i < response.length; i++) {
+                var curr = response[i];
+                console.log(JSON.parse(curr["description"]));
+                var url = JSON.parse(curr["description"])["url"];
+
+                var slices = url.split("/")
+                var file_name = slices[slices.length - 1];
+
+                slices = file_name.split(".")
+                var format = slices[slices.length - 1];
+                if (format.length > 4) format = "???";
+
+                var html = `
+                    <div class="row download-item" id="file_${curr["id"]}_on_queue">
+                        <div class="col-1 download-item-ext">${format}</div>
+                        <div class="col download-item-links">
+                            <div class="row">
+                                <div class="col" style="padding: 10px 12px;">
+                                    <p>${file_name}</p>
+                                    <a href="${url}">${url}</a>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col" style="padding: 10px 12px;">
+                                    <p>${curr["error_message"]}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                $('#file_error').append(html);
+            }
+
+        }
+    };
+    xhr.open("GET", "/api/downloads/error/", true);
+    xhr.send();
+}
 
 function get_download_list(){
     var xhr = new XMLHttpRequest();
@@ -30,6 +77,7 @@ function get_download_list(){
 
                 slices = file_name.split(".")
                 var format = slices[slices.length - 1];
+                if (format.length > 4) format = "???";
 
                 var html = `
                     <div class="row download-item" id="file_${curr["id"]}_on_queue">
@@ -72,6 +120,7 @@ function get_current_download() {
 
             slices = file_name.split(".");
             var format = slices[slices.length - 1];
+            if (format.length > 4) format = "???";
 
             if (response["id"] != current_download) {
                 response["id"] == current_download;
