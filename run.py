@@ -24,7 +24,6 @@ N_FUNCTIONS = 3
 def run_django():
     # Runs django repassing cli parameters
     subprocess.run(["python", "manage.py", "runserver"] + sys.argv[1:])
-    time.sleep(10)
 
 
 def run_file_downloader():
@@ -39,13 +38,6 @@ def runn_file_descriptor():
 
 def init_process():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-
-def run_process(i, error_on):
-    time.sleep(i)
-    if i == error_on:
-        raise FileNotFoundError
-    print(i, "seconds - done")
 
 
 def signal_done(r):
@@ -69,16 +61,18 @@ def run():
         initializer=init_process,
     )
 
-    # List functions that will be executed by processes
-    with global_lock:
-        n_processes_running = N_FUNCTIONS
 
-    # N_FUNCTIONS must be equal to len(functions)
+    # List functions that will be executed by processes
     functions = [
         [run_django, []],
         [run_file_downloader, []],
         [runn_file_descriptor, []],
     ]
+
+    # N_FUNCTIONS must be equal to len(functions)
+    with global_lock:
+        n_processes_running = N_FUNCTIONS
+
     for (f, args) in functions:
         pool.apply_async(
             func=f,
