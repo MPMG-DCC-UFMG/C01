@@ -49,6 +49,7 @@ class CrawlRequestForm(forms.ModelForm):
             'download_files',
             'download_files_allow_url',
             'download_files_allow_extensions',
+            'download_imgs',
             'steps',
             'save_csv',
             'data_path',
@@ -243,6 +244,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     download_files = forms.BooleanField(
         required=False, label="Baixar arquivos")
+
     download_files_allow_url = forms.CharField(
         required=False, max_length=2000,
         label=(
@@ -252,11 +254,16 @@ class RawCrawlRequestForm(CrawlRequestForm):
         widget=forms.TextInput(
             attrs={'placeholder': 'Regex para permitir urls'})
     )
+
     download_files_allow_extensions = forms.CharField(
         required=False, max_length=2000,
         label="Extensões de arquivo permitidas (separado por vírgula):",
         widget=forms.TextInput(attrs={'placeholder': 'pdf,xml'})
     )
+
+    download_imgs = forms.BooleanField(
+        required=False, label="Baixar imagens")
+
     # Crawler Type - Page with form
     steps = forms.CharField(required=False, label="Steps JSON", max_length=9999999,
                             widget=forms.TextInput(
