@@ -118,6 +118,7 @@ class FileDownloader(BaseMessenger):
                 item["destination"] = item["destination"] + "/"
 
             success = False
+            error_message = ""
             for attempt in range(1, max_attempts + 1):
                 print(
                     "Trying to download file "
@@ -136,9 +137,17 @@ class FileDownloader(BaseMessenger):
                         f"{attempt}-th attempt to download \"{item['url']}\" "
                         f"failed. Error message: {str(type(e))}-{e}"
                     )
+                    error_message = str(e)
 
             if not success:
                 print("All attempts to download", item["url"], "failed.")
+                response = requests.put(
+                    f'http://localhost:8000/api/downloads/{item["id"]}/',
+                    data={
+                        "status": "ERROR",
+                        "error_message": error_message
+                    }
+                )
 
     @staticmethod
     def download_file(item):
@@ -156,6 +165,12 @@ class FileDownloader(BaseMessenger):
         """
         url_hash = crawling_utils.hash(item["url"].encode())
         extension = item["url"].split(".")[-1]
+
+        if len(extension) > 5:
+            print("Could not identify extension of file:", item["url"])
+            print("Saving it without extension.")
+            extension = ""
+
         fname = f"{url_hash}.{extension}"
         item["description"]["file_name"] = fname
         item["description"]["type"] = extension
