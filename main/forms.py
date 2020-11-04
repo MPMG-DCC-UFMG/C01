@@ -52,8 +52,11 @@ class CrawlRequestForm(forms.ModelForm):
             'download_imgs',
             'steps',
             'save_csv',
+            'table_attrs',
             'data_path',
         ]
+
+        widgets = {'table_attrs': forms.HiddenInput()}
 
 
 class RawCrawlRequestForm(CrawlRequestForm):
@@ -74,7 +77,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     obey_robots = forms.BooleanField(
         required=False, label="Obedecer robots.txt")
 
-    output_path = forms.CharField(
+    data_path = forms.CharField(
         required=False, max_length=2000, label="Caminho para salvar arquivos",
         widget=forms.TextInput(
             attrs={'placeholder': '/home/user/Documents/<crawler_name>'}),
@@ -277,6 +280,10 @@ class RawCrawlRequestForm(CrawlRequestForm):
     save_csv = forms.BooleanField(
         required=False, label="Salvar arquivo csv",
         widget=forms.CheckboxInput(attrs={'checked': True})
+    )
+    table_attrs = forms.CharField(
+        required=False, max_length=2000, label="Motor de extração",
+        widget=forms.HiddenInput(attrs={'id': 'table_attrs_hidden'})
     )
 
 
