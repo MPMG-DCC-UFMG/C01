@@ -152,7 +152,7 @@ class CrawlRequest(TimeStamped):
         parameter_handlers = []
         for param in crawler.parameter_handlers.values():
             del param['id']
-            del param['config_id']
+            del param['crawler_id']
 
             # Convert Date parameters into iso string for serialization into
             # JSON
@@ -169,7 +169,7 @@ class CrawlRequest(TimeStamped):
         response_handlers = []
         for resp in crawler.response_handlers.values():
             del resp['id']
-            del resp['config_id']
+            del resp['crawler_id']
             response_handlers.append(resp)
 
         config['templated_url_response_handlers'] = response_handlers
