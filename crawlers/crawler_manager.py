@@ -46,15 +46,6 @@ def file_descriptor_process():
     FileDescriptor.description_consumer()
 
 
-def start_consumers_and_producers():
-    """Starts file_description and file_downlaoder processes."""
-    downloader = Process(target=file_downloader_process)
-    downloader.start()
-
-    descriptor = Process(target=file_descriptor_process)
-    descriptor.start()
-
-
 def create_folders(data_path):
     """Create essential folders for crawlers if they do not exists"""
     files = [

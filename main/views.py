@@ -245,6 +245,7 @@ POST      /api/downloads/           create a download item
 PUT       /api/downloads/<id>       update download item
 GET       /api/downloads/queue      return list of items in download queue
 GET       /api/downloads/progress   return info about current download
+GET       /api/downloads/error      return info about download errors
 """
 
 
@@ -327,3 +328,14 @@ class DownloadDetailsViewSet(viewsets.ModelViewSet):
             return JsonResponse(DownloadDetailSerializer(instances[0]).data)
 
         return JsonResponse({})
+
+    @action(detail=False)
+    def error(self, request):
+        instances = DownloadDetail.objects.filter(
+            status="ERROR").order_by('-last_modified')
+
+        response = {
+            "error": [DownloadDetailSerializer(i).data for i in instances]
+        }
+
+        return JsonResponse(response)

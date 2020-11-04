@@ -113,8 +113,8 @@ class CrawlRequest(TimeStamped):
         max_length=15, choices=CRAWLER_TYPE, default='static_page')
     explore_links = models.BooleanField(blank=True, null=True)
     link_extractor_max_depth = models.IntegerField(blank=True, null=True)
-    link_extractor_allow_url = models.CharField(max_length=1000, blank=True,
-                                                null=True)
+    link_extractor_allow_url = models.CharField(
+        max_length=1000, blank=True, null=True)
 
     download_files = models.BooleanField(blank=True, null=True)
     download_files_allow_url = models.CharField(
@@ -122,8 +122,10 @@ class CrawlRequest(TimeStamped):
     download_files_allow_extensions = models.CharField(
         blank=True, null=True, max_length=2000)
 
-    steps = models.CharField(blank=True, null=True, max_length=9999999,
-                             default='{}')
+    download_imgs = models.BooleanField(default=False)
+
+    steps = models.CharField(
+        blank=True, null=True, max_length=9999999, default='{}')
 
     @staticmethod
     def process_config_data(crawler, config):
@@ -178,6 +180,8 @@ class CrawlRequest(TimeStamped):
 
     # PARSING #########################################################
     save_csv = models.BooleanField(blank=True, null=True)
+    table_attrs = models.CharField(max_length=20000, blank=True, null=True)
+
 
     @property
     def running(self):
@@ -298,9 +302,11 @@ class DownloadDetail(TimeStamped):
         ('DOWNLOADING', 'DOWNLOADING'),
         ('WAITING', 'WAITING'),
         ('DONE', 'DONE'),
+        ('ERROR', 'ERROR')
     ]
     status = models.CharField(
         max_length=20, choices=STATUS, default="WAITING")
     description = models.CharField(max_length=1000, blank=True)
     size = models.PositiveIntegerField(null=True, blank=True)
     progress = models.PositiveIntegerField(null=True, blank=True)
+    error_message = models.CharField(max_length=1000, null=True, blank=True)

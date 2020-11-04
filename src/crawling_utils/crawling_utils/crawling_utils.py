@@ -3,6 +3,14 @@ from selenium.webdriver.common.keys import Keys
 import time
 import hashlib
 import os
+from urllib.parse import urlparse
+
+
+def get_url_domain(url):
+    parsed_uri = urlparse(url)
+    result = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
+    return result
+
 
 
 def hash(byte_content):
