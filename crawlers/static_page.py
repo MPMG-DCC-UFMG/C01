@@ -45,10 +45,12 @@ class StaticPageSpider(BaseSpider):
                 i for i in extensions if i not in allowed_extensions
             ]
 
-    def filter_list_of_urls(self, url_list, pattern):
+    def filter_list_of_urls(self, url_list, pattern, head):
         """Filter a list of urls according to a regex pattern."""
         def allow(url):
-            if re.search(pattern, url) is not None:
+            # TODO: REQUEST HEAD
+            req_head = request.head(url).headers['Content-Type']
+            if (re.search(pattern, url) is not None) and (head in req_head):
                 print(f"ADDING link (passed regex filter) - {url}")
                 return True
             print(f"DISCARDING link (filtered by regex) - {url}")
@@ -71,7 +73,7 @@ class StaticPageSpider(BaseSpider):
 
         pattern = config["link_extractor_allow_url"]
         if pattern != "":
-            urls_found = self.filter_list_of_urls(urls_found, pattern)
+            urls_found = self.filter_list_of_urls(urls_found, pattern, 'text/html')
 
         return urls_found
 
@@ -89,13 +91,13 @@ class StaticPageSpider(BaseSpider):
         pattern = config["download_files_allow_url"]
 
         if pattern != "":
-            urls_found = self.filter_list_of_urls(urls_found, pattern)
+            urls_found = self.filter_list_of_urls(urls_found, pattern, 'application/download')
 
         # removing non-file urls 
         # (ends with '.' + 3 or 4 chars and does not ends with ".html" or
         # ".php")
-        urls_found = self.filter_list_of_urls(
-            urls_found, r"(.*\.[a-z]{3,4}$)(.*(?<!\.html)$)(.*(?<!\.php)$)")
+        # urls_found = self.filter_list_of_urls(
+        #     urls_found, r"(.*\.[a-z]{3,4}$)(.*(?<!\.html)$)(.*(?<!\.php)$)")
 
         return urls_found
 
