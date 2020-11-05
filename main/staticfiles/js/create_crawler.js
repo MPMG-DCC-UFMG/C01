@@ -327,7 +327,6 @@ function detailCrawlerType() {
     if(crawler_type == "form_page"){
         interface_root_element = document.getElementById("form_page");
         if(interface_root_element.type != "root" ){
-            
             steps_output_element = interface_root_element.children[0].children[1].children[0]
             load_steps_interface(interface_root_element, steps_output_element);
         }

@@ -47,39 +47,24 @@ function init_steps_creation_interface(interface_root_element, output_element, s
 
 
     add_block_button = document.createElement("a")
+    add_block_button.innerText = "Add step"
     add_block_button.className="btn btn-primary step-controler-buttons"
     add_block_button.style.color = "white"
+    add_block_button.type = "button"
     add_block_button.onclick = function(){step_board.add_block(step_list)}
-    add_block_button.innerText = "Add step"
 
 
     save_button = document.createElement("button")
     save_button.innerText = "Save steps"
     save_button.className="btn btn-primary step-controler-buttons"
     save_button.style.color = "white"
+    save_button.type = "button"
     interface_root_element.save_button = save_button
     interface_root_element.save_button.onclick = function(){build_json(step_board, output_element)}
 
-    //load button
-    load_button = document.createElement("button")
-    load_button.innerText = "Load steps"
-    load_button.className="btn btn-primary step-controler-buttons"
-    load_button.style.color = "white"
-    interface_root_element.load_button = load_button
-    interface_root_element.load_steps = load_steps
-
-    interface_root_element.load_button.onclick = function(){
-        var json_steps = prompt("Please enter the steps json", "");
-        if (json_steps == null || json_steps == "")
-            return;
-        json_steps = JSON.parse(json_steps);
-        interface_root_element = find_parent_with_attr_worth(this, "root")
-        interface_root_element.load_steps(json_steps, step_list);
-    }
 
     step_controler.appendChild(add_block_button)
     step_controler.appendChild(save_button)
-    step_controler.appendChild(load_button)
     steps_creation_interface.appendChild(step_controler)
     steps_creation_interface.appendChild(step_board)
     steps_creation_interface.step_controler = step_controler
@@ -91,11 +76,14 @@ function init_steps_creation_interface(interface_root_element, output_element, s
     interface_root_element.steps_creation_interface = steps_creation_interface
     interface_root_element.step_json_input = output_element
 
+    interface_root_element.load_steps = load_steps
+    interface_root_element.load_steps(JSON.parse(output_element.value), step_list)
 }
 
 //------------------- step board ------------------------------
 
 /**
+    interface_root_element.load_steps(output_element.value, step_list)
  * Init the step_board, the element that will store the steps created by the user.
  * @param  {List} step_list [A list with the steps information]
  * @return {Node} step_board [The step_board html element already initialized]
@@ -150,7 +138,6 @@ function get_last_depth(){
 //--------------------- json build functions ---------------------------------
 
 function load_steps(json_steps, step_list){
-    //{"step":"root","depth":0,"children":[{"step":"click_on","depth":1,"arguments":{"xpath":"\"/html/body/div[1]/header/div/nav[1]/ul/li[6]/a\""}}]}
     if(json_steps.step == "root"){
         for(child of json_steps.children)
             this.load_steps(child, step_list);
