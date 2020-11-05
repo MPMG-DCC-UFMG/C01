@@ -67,12 +67,7 @@ def get_crawler_base_settings(config):
         "BOT_NAME": "crawlers",
         "ROBOTSTXT_OBEY": config['obey_robots'],
         "DOWNLOAD_DELAY": 1,
-        # "SELENIUM_DRIVER_NAME": "chrome",
-        # "SELENIUM_DRIVER_EXECUTABLE_PATH": shutil.which(
-        #     crawling_utils.CHROME_WEBDRIVER_PATH
-        # ),
-        # "SELENIUM_DRIVER_ARGUMENTS": ["--headless"],
-        # "DOWNLOADER_MIDDLEWARES": {"scrapy_selenium.SeleniumMiddleware": 0},
+        "DOWNLOADER_MIDDLEWARES": {'scrapy_puppeteer.PuppeteerMiddleware': 800},
         "DOWNLOAD_DELAY": config["antiblock_download_delay"],
         "RANDOMIZE_DOWNLOAD_DELAY": True,
         "AUTOTHROTTLE_ENABLED": config[f"{autothrottle}enabled"],
