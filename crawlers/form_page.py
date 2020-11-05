@@ -1,6 +1,7 @@
 import scrapy
 from scrapy.crawler import CrawlerProcess
 from scrapy.linkextractors import LinkExtractor
+from scrapy_puppeteer import PuppeteerRequest
 
 from crawlers.base_spider import BaseSpider
 
@@ -19,9 +20,10 @@ class FormPageSpider(BaseSpider):
 
     def start_requests(self):
         url = self.config["base_url"]
-        recipe = self.config["recipe"]
+        steps = self.config["steps"]
+        print("form_page.start_requests")
         
-        yield PuppeteerRequest(url=url, callback=self.parse, dont_filter=True, steps=recipe)
+        yield PuppeteerRequest(url=url, callback=self.parse, dont_filter=True, steps=steps)
 
     def parse(self, response):
         print(vars(response))

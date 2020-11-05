@@ -18,6 +18,7 @@ from crawlers.constants import *
 from crawlers.file_descriptor import FileDescriptor
 from crawlers.file_downloader import FileDownloader
 from crawlers.static_page import StaticPageSpider
+from crawlers.form_page import FormPageSpider
 
 # TODO: implement following antiblock options
 # antiblock_mask_type
@@ -108,9 +109,8 @@ def crawler_process(config):
     elif config["crawler_type"] == "file_bundle":
         # process.crawl(StaticPageSpider, crawler_id=crawler_id)
         raise NotImplementedError
-    elif config["crawler_type"] == "deep_crawler":
-        # process.crawl(StaticPageSpider, crawler_id=crawler_id)
-        raise NotImplementedError
+    elif config["crawler_type"] == "form_page":
+        process.crawl(FormPageSpider, config=json.dumps(config))
     elif config["crawler_type"] == "static_page":
         process.crawl(StaticPageSpider, config=json.dumps(config))
 
