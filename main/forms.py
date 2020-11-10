@@ -133,11 +133,12 @@ class RawCrawlRequestForm(CrawlRequestForm):
             ('tor', 'Tor'),
             ('proxy', 'Proxy'),
         ),
+        label="Rotação de IPs",
         widget=forms.Select(attrs={'onchange': 'detailIpRotationType();'})
     )
     antiblock_proxy_list = forms.CharField(
-        required=False, max_length=2000, label="Proxy List",
-        widget=forms.TextInput(
+        required=False, max_length=2000, label="Lista de proxy",
+        widget=forms.Textarea(
             attrs={
                 'placeholder': (
                     "Cole aqui o conteúdo do seu arquivo de lista"
@@ -162,8 +163,8 @@ class RawCrawlRequestForm(CrawlRequestForm):
         required=False, label="Requisições por user-agents"
     )
     antiblock_user_agents_file = forms.CharField(
-        required=False, max_length=2000, label="Arquivo de User-Agents",
-        widget=forms.TextInput(
+        required=False, max_length=2000, label="Lista de User-Agents",
+        widget=forms.Textarea(
             attrs={
                 'placeholder': (
                     'Cole aqui o conteúdo do seu arquivo'
@@ -175,8 +176,8 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     # Options for Cookies
     antiblock_cookies_file = forms.CharField(
-        required=False, max_length=2000, label="Arquivo de cookies",
-        widget=forms.TextInput(
+        required=False, max_length=2000, label="Lista de cookies",
+        widget=forms.Textarea(
             attrs={
                 'placeholder': (
                     'Cole aqui o conteúdo do seu arquivo'
@@ -185,8 +186,19 @@ class RawCrawlRequestForm(CrawlRequestForm):
             }
         )
     )
+
     antiblock_persist_cookies = forms.BooleanField(
-        required=False, label="Manter cookies entre requisições")
+        required=False, 
+        label="Manter cookies entre requisições")
+
+    antiblock_ip_rotation_enabled = forms.BooleanField(
+        required=False, label="Rotacionar IPs")
+
+    antiblock_user_agent_rotation_enabled = forms.BooleanField(
+        required=False, label="Rotacionar User-Agents")
+
+    antiblock_insert_cookies_enabled = forms.BooleanField(
+        required=False, label="Inserir cookies")
 
     # CAPTCHA #################################################################
     captcha = forms.ChoiceField(

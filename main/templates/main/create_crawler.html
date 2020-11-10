@@ -177,17 +177,22 @@ New Crawler
                     </div>
 
                     <div id="antiblock-item-block" class="block" hidden>
-                        <div class="row" style="padding:20px; border-top: 1px solid #DCDCDC;">
+                        <div class="row" style="padding:20px;">
                             <div class="col md-6">
                                 <div id="antiblock-delay-div">
-                                    {{ form.antiblock_download_delay | as_crispy_field}}
-                                    <p>Se auto ajuste está desligado, esse parâmetro vai funcionar como o intervalo base
-                                        entre chamadas.
-                                        O intervalo real vai ser um valor entre 0.5*intervalo e 1.5*intervalo.</p>
-                                    {{ form.antiblock_autothrottle_enabled | as_crispy_field}}
-                                    <p>Essa opção ajusta automaticamente o intervalo entre as chamadas para se adaptar
-                                        ao tempo de resposta do servidor
-                                        time.</p>
+                                    <div class="antiblock-wrapper mb-3">
+                                        {{ form.antiblock_download_delay | as_crispy_field}}
+                                        <small class="text-muted">Se auto ajuste está desligado, esse parâmetro vai funcionar como o intervalo base
+                                            entre chamadas.
+                                            O intervalo real vai ser um valor entre 0.5*intervalo e 1.5*intervalo.</small>
+                                    </div>
+                                    
+                                    <div class="antiblock-wrapper mb-3">
+                                        {{ form.antiblock_autothrottle_enabled | as_crispy_field}}
+                                        <small class="text-muted">Essa opção ajusta automaticamente o intervalo entre as chamadas para se adaptar
+                                            ao tempo de resposta do servidor.</small>
+                                    </div>
+
                                     <div id="autothrottle-options-div" hidden=True>
                                         <div>{{form.antiblock_autothrottle_start_delay | as_crispy_field}}</div>
                                         <div>{{form.antiblock_autothrottle_max_delay | as_crispy_field}}</div>
@@ -197,27 +202,53 @@ New Crawler
                         </div>
                         <div class="row" style="padding:20px; border-top: 1px solid #DCDCDC;">
                             <div class="col md-6">
-                                {{ form.antiblock_mask_type | as_crispy_field}}
+                                <!-- {{ form.antiblock_mask_type | as_crispy_field }} -->
                                 <div id="antiblock-mask-div">
                                     <div class="antiblock-mask-div" id="none" hidden></div>
+                                    
+                                    <div class="antiblock-wrapper mb-3">
+                                        {{ form.antiblock_ip_rotation_enabled | as_crispy_field }}
+                                        <small class="text-muted">Mecanismo antibloqueio mais eficiente. Utiliza Tor ou uma lista de proxies para evitar que o IP seja bloqueado durante coleta. Sua principal desvantagem é tornar as coletas (especialmente usando o Tor) mais lentas.</small>
+                                    </div>
+
                                     <div class="antiblock-mask-div" id="ip" hidden>
+                                    
                                         {{ form.antiblock_ip_rotation_type | as_crispy_field}}
                                         <div id="tor_div">
                                         </div>
-                                        <div id="proxy_div" hidden>
+                                        <div id="proxy_div">
                                             {{ form.antiblock_proxy_list | as_crispy_field}}
                                         </div>
                                         {{ form.antiblock_max_reqs_per_ip | as_crispy_field}}
                                         {{ form.antiblock_max_reuse_rounds | as_crispy_field}}
                                     </div>
+
+                                    <div class="antiblock-wrapper mb-3">
+                                        {{ form.antiblock_user_agent_rotation_enabled | as_crispy_field}}
+                                        <small class="text-muted">Altera o identificador das requisições feitas periodicamente.</small>                                    
+                                    </div>
+
                                     <div class="antiblock-mask-div" id="user_agent" hidden>
                                         {{ form.antiblock_reqs_per_user_agent | as_crispy_field}}
                                         {{ form.antiblock_user_agents_file | as_crispy_field}}
                                     </div>
+                                    
+                                    <div class="antiblock-wrapper mb-3">
+                                        {{ form.antiblock_insert_cookies_enabled | as_crispy_field }}
+                                        <small class="text-muted">Útil se o site a ser coletado possui algum tipo de autenticação para acessar determinado conteúdo. 
+                                            Com esta opção, cookies de acesso são enviados em cada requisição contornando tal restrição.</small>
+                                    </div>
+
+
                                     <div class="antiblock-mask-div" id="cookies" hidden>
                                         {{ form.antiblock_cookies_file | as_crispy_field}}
-                                        {{ form.antiblock_persist_cookies | as_crispy_field}}
                                     </div>
+
+                                    <div class="antiblock-wrapper mb-3">
+                                        {{ form.antiblock_persist_cookies | as_crispy_field}}
+                                        <small class="text-muted">Persiste cookies entre sessões.</small>
+                                    </div>
+                                    
                                 </div>
 
                             </div>

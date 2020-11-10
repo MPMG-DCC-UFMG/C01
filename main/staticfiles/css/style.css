@@ -201,3 +201,11 @@ a.close {
     border-bottom: 1px solid #DCDCDC;
     padding-top: 0.75rem;
 }
+
+.antiblock-wrapper .form-group {
+    margin-bottom: 0;
+}
+
+.antiblock-wrapper .form-group input, .antiblock-wrapper .form-group label{
+    cursor: pointer;
+}
