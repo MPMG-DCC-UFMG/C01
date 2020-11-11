@@ -203,14 +203,14 @@ New Crawler
                         <div class="row pt-0" style="padding:20px;">
                             <div class="col md-6">
                                 <div id="antiblock-mask-div">
-                                    <div class="antiblock-mask-div" id="none" hidden></div>
-                                    
                                     <div class="antiblock-wrapper mb-3">
                                         {{ form.antiblock_ip_rotation_enabled | as_crispy_field }}
                                         <small class="text-muted">Mecanismo antibloqueio mais eficiente. Utiliza Tor ou uma lista de proxies para evitar que o IP seja bloqueado durante coleta. Sua principal desvantagem é tornar as coletas (especialmente usando o Tor) mais lentas.</small>
                                     </div>
 
-                                    <div id="ip-rotation-options-div" hidden=True>
+                                    <div id="ip-rotation-options-div" {% if not form.antiblock_ip_rotation_enabled.value %} hidden {% endif %}>
+                                        {{ form.antiblock_ip_rotation_type | as_crispy_field }}
+                                        
                                         <ul class="nav nav-tabs" id="ip-rotation-tabs" role="tablist">
                                             <li class="nav-item">
                                                 <a class="nav-link active" id="tor" data-toggle="tab" href="#ip-nav" role="tab">Tor</a>
@@ -220,7 +220,7 @@ New Crawler
                                             </li>
                                         </ul>
                                         <div class="tab-content border-bottom my-3">
-                                            <div class="tab-pane  show active" id="ip-nav" role="tabpanel" aria-labelledby="tor">
+                                            <div class="tab-pane show active" id="ip-nav" role="tabpanel" aria-labelledby="tor">
                                                 {{ form.antiblock_max_reqs_per_ip | as_crispy_field}}
                                                 {{ form.antiblock_max_reuse_rounds | as_crispy_field}}
                                                 
@@ -237,7 +237,7 @@ New Crawler
                                         <small class="text-muted">Altera o identificador das requisições feitas periodicamente.</small>                                    
                                     </div>
 
-                                    <div id="user-agent-rotation-options-div" class="border-bottom my-3" hidden=True>
+                                    <div id="user-agent-rotation-options-div" class="border-bottom my-3" {% if not form.antiblock_user_agent_rotation_enabled.value %} hidden {% endif %}>
                                         {{ form.antiblock_reqs_per_user_agent | as_crispy_field}}
                                         {{ form.antiblock_user_agents_list | as_crispy_field}}
                                     </div>
@@ -248,7 +248,7 @@ New Crawler
                                             Com esta opção, cookies de acesso são enviados em cada requisição contornando tal restrição.</small>
                                     </div>
 
-                                    <div id="insert-cookies-options-div" class="border-bottom my-3" hidden=True>
+                                    <div id="insert-cookies-options-div" class="border-bottom my-3" {% if not form.antiblock_insert_cookies_enabled.value %} hidden {% endif %}>
                                         {{ form.antiblock_cookies_list | as_crispy_field}}
                                     </div>
 

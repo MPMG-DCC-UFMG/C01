@@ -1,6 +1,10 @@
 // 
 var selected_proxy = "tor";
 
+function setIpRotationType() {
+    $('#id_antiblock_ip_rotation_type').val(selected_proxy);
+}
+
 function enableCreateButton() {
     var blocks = document.getElementsByClassName('valid-icon');
     var isValid = true;
@@ -144,13 +148,30 @@ function runValidations() {
     $(".templated-url-param-step > .form-group select").change();
 }
 
+function initIpRotationTabs() {
+    if ($('#id_antiblock_ip_rotation_type').val() === 'proxies') {
+        selected_proxy = 'proxies';
+        
+        $('#tor').removeClass('active');
+        $('#ip-nav').removeClass('show active');
+
+        $('#proxies').addClass('active');
+        $('#proxies-nav').addClass('show active');
+
+    } else
+        setIpRotationType();
+}
+
 $(document).ready(function () {
     setNavigation();
     runValidations();
+    initIpRotationTabs();
 
     // Responsible for identifying which IP rotation mechanism to use: Tor or proxy list.
     $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
         selected_proxy = $(e.target).attr('id');
+        
+        setIpRotationType();
         checkAntiblock();
     });
 
@@ -284,18 +305,6 @@ function detailTemplatedUrlResponseParams(e) {
 function detailTemplatedUrlParamType(e) {
     hideUnselectedSiblings(e.target, '.templated-url-param-step',
         '.templated-url-param-config');
-}
-
-function detailIpRotationType() {
-    var ipSelect = document.getElementById("id_ip_type");
-
-    const ip_rotation_type = ipSelect.options[ipSelect.selectedIndex].value;
-
-    setHiddenState("tor_div", true);
-    setHiddenState("proxy_div", true);
-
-    var id = ip_rotation_type + "_div";
-    setHiddenState(id, false);
 }
 
 function detailAntiblock() {

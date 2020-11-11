@@ -133,14 +133,11 @@ class RawCrawlRequestForm(CrawlRequestForm):
     # )
 
     # Options for IP rotation
-    # antiblock_ip_rotation_type = forms.ChoiceField(
-    #     required=False, choices=(
-    #         ('tor', 'Tor'),
-    #         ('proxy', 'Proxy'),
-    #     ),
-    #     label="Rotação de IPs",
-    #     widget=forms.Select(attrs={'onchange': 'detailIpRotationType();'})
-    # )
+    antiblock_ip_rotation_type = forms.CharField(
+        required=False,
+        widget=forms.HiddenInput()
+    )
+
     antiblock_ip_rotation_enabled = forms.BooleanField(
         required=False,
         label="Rotacionar IPs",
@@ -166,7 +163,8 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
 
     antiblock_proxy_list = forms.CharField(
-        required=False, max_length=2000, label="Insira a lista de proxies",
+        required=False, 
+        label="Insira a lista de proxies",
         widget=forms.Textarea(
             attrs={
                 'placeholder': (
@@ -197,7 +195,8 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
 
     antiblock_user_agents_list = forms.CharField(
-        required=False, max_length=2000, label="Lista de User-Agents",
+        required=False, 
+        label="Lista de User-Agents",
         widget=forms.Textarea(
             attrs={
                 'placeholder': (
@@ -220,7 +219,8 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
 
     antiblock_cookies_list = forms.CharField(
-        required=False, max_length=2000, label="Lista de cookies",
+        required=False,
+        label="Lista de cookies",
         widget=forms.Textarea(
             attrs={
                 'placeholder': (

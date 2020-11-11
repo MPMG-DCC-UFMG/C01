@@ -48,14 +48,9 @@ class CrawlRequest(TimeStamped):
     antiblock_autothrottle_max_delay = models.IntegerField(blank=True, null=True)
 
     # Options for IP rotation
-    IP_TYPE = [
-        ('tor', 'Tor'),
-        ('proxy', 'Proxy'),
-    ]
-
     antiblock_ip_rotation_enabled = models.BooleanField(default=False, blank=True)
 
-    antiblock_ip_rotation_type = models.CharField(max_length=15, choices=IP_TYPE, null=True, blank=True)
+    antiblock_ip_rotation_type = models.CharField(max_length=15, null=True, blank=True)
     antiblock_max_reqs_per_ip = models.IntegerField(blank=True, null=True)
     antiblock_max_reuse_rounds = models.IntegerField(blank=True, null=True)
 
