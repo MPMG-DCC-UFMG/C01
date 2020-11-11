@@ -17,7 +17,6 @@ from crawlers.base_messenger import BaseMessenger
 
 class FileDownloader(BaseMessenger):
     TEMP_FILES_FOLDER = "temp_files_to_download" 
-    TIME_BETWEEN_SAME_DOMAIN_REQUEST = 60 # SECONDS
 
     @staticmethod
     def feed_downloader(url, destination, description):
@@ -141,7 +140,7 @@ class FileDownloader(BaseMessenger):
 
     @staticmethod
     def internal_consumer(
-        wait_line, heap, stop, in_heap, 
+        wait_line, heap, stop, in_heap,
         downloads_waiting, lock
     ):
         print("Starting internal_consumer")
@@ -166,20 +165,20 @@ class FileDownloader(BaseMessenger):
 
             item_key = None
             item = None
-            
+
             with lock:
                 print("First on heap:", heap[:1])
                 if len(heap) == 0 or time.time() < heap[0][0]:
-                    local_stop = stop # update local stop
+                    local_stop = stop  # update local stop
                     need_to_sleep = True
                     print("Too soon to download. Sleeping...")
                     continue
 
                 (_, item_key) = heapq.heappop(heap)
                 item = wait_line[item_key].get()
-            
-            print(f"internal_consumer - Starting key: {item_key}, {item['url']},")
-            
+
+            print(f"internal_consumer - Starting url: {item['url']}")
+
             FileDownloader.process_item(item)
 
             next_download = int(time.time()) + item["time_between_downloads"]
@@ -192,7 +191,7 @@ class FileDownloader(BaseMessenger):
                 local_stop = stop
 
     def internal_producer(
-        wait_line, heap, stop, in_heap, 
+        wait_line, heap, stop, in_heap,
         downloads_waiting, lock,
         testing=False
     ):
@@ -215,9 +214,7 @@ class FileDownloader(BaseMessenger):
             if item["destination"][-1] != "/":
                 item["destination"] = item["destination"] + "/"
 
-            print("waiting lock")
             with lock:
-                print("got lock")
                 domain = crawling_utils.get_url_domain(item["url"])
 
                 if domain not in domain_to_key:
@@ -228,11 +225,11 @@ class FileDownloader(BaseMessenger):
 
                 key = domain_to_key[domain]
 
-                item = FileDownloader.log_item(item) # gets item id on db
+                item = FileDownloader.log_item(item)  # gets item id on db
                 wait_line[key].put(item)
                 if item["wait_crawler_finish_to_download"]:
                     print(
-                        "internal_producer  - item should wait " \
+                        "internal_producer  - item should wait "
                         "crawler to finish"
                     )
                     downloads_waiting.add((key, item["crawler_id"]))
@@ -241,22 +238,22 @@ class FileDownloader(BaseMessenger):
                     heapq.heappush(heap, (1, key))
                 else:
                     print(
-                        "internal_producer  - this domain " \
+                        "internal_producer  - this domain "
                         "already has itens on heap"
                     )
-                
+
                 size = wait_line[key].qsize()
                 print(f"internal_producer - Received: {item['url']}")
                 print(f"internal_producer - Domain key: {key}")
                 print(f"internal_producer - Domain wait line size: {size}")
                 print(f"internal_producer - heap: {heap}")
-        
+
         with lock:
             stop = True
-        
+
     @staticmethod
     def downloads_waiting_crawl_end(
-        wait_line, heap, stop, in_heap, 
+        wait_line, heap, stop, in_heap,
         downloads_waiting, lock
     ):
         """
@@ -289,9 +286,9 @@ class FileDownloader(BaseMessenger):
             crawlers_done = []
             for i in must_check:
                 crawler = requests.get(detail_url + str(i['crawler_id']) + "/")
-                if crawler.json()["running"] == False:
+                if crawler.json()["running"] is False:
                     crawlers_done.append(i)
-            
+
             print("downloads_waiting_crawl_end - crawlers_done:", must_check)
 
             with lock:
@@ -331,41 +328,41 @@ class FileDownloader(BaseMessenger):
             f"Starting file downloader at", 
             datetime.datetime.now().isoformat()
         )
-        wait_line = {} # list of itens to download by domain
-        heap = [] # min heap of (last access, domain)
-        stop = False # says if threads were told to stop by file flag
-        in_heap = {} # marks if domain is in the heap
-        downloads_waiting = set() # marks downloads waiting craler to finish
-        lock = threading.Lock() # lock to access variables above
+        wait_line = {}  # list of itens to download by domain
+        heap = []  # min heap of (last access, domain)
+        stop = False  # says if threads were told to stop by file flag
+        in_heap = {}  # marks if domain is in the heap
+        downloads_waiting = set()  # marks downloads waiting craler to finish
+        lock = threading.Lock()  # lock to access variables above
 
         threads = []
 
         threads.append(threading.Thread(
             target=FileDownloader.internal_consumer,
             args=(
-                wait_line, heap, stop, in_heap, 
+                wait_line, heap, stop, in_heap,
                 downloads_waiting, lock,
             ),
-            daemon=True, # will be killed if only deamon threads are running
+            daemon=True,  # will be killed if only deamon threads are running
         ))
 
         threads.append(threading.Thread(
             target=FileDownloader.downloads_waiting_crawl_end,
             args=(
-                wait_line, heap, stop, in_heap, 
+                wait_line, heap, stop, in_heap,
                 downloads_waiting, lock,
             ),
-            daemon=True, # will be killed if only deamon threads are running
+            daemon=True,  # will be killed if only deamon threads are running
         ))
 
         threads.append(threading.Thread(
             target=FileDownloader.internal_producer,
             args=(
-                wait_line, heap, stop, in_heap, 
+                wait_line, heap, stop, in_heap,
                 downloads_waiting, lock,
                 testing
             ),
-            daemon=True, # will be killed if only deamon threads are running
+            daemon=True,  # will be killed if only deamon threads are running
         ))
 
         for t in threads:
