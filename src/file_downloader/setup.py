@@ -7,6 +7,5 @@ setup(
     license="MIT",
     author='Gabriel Cardoso',
     author_email='gabrielcrds@users.noreply.github.com',
-    packages=[],
-    install_requires=[]
+    packages=setuptools.find_packages(),
 )
