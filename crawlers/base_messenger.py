@@ -38,7 +38,7 @@ class BaseMessenger:
             f.write(json.dumps({"stop": True}))
 
     @staticmethod
-    def source(address, testing=False, prepare_yield=lambda i: i):
+    def source(address, testing=False):
         """
         Download source 'gambiarra'.
         Must be replaced by a kafka listener when integrations with Kafka and
@@ -48,8 +48,6 @@ class BaseMessenger:
         address -- str, address to folder that will contain new items
         testing -- do not use this argument. It is used to stop process if any
         error occurs during tests. (default False)
-        prepare_yield -- function that will be called with content being
-            yielded. Can make some preprossesing if necessary.
         """
         # Create essential files and folder
         try:
@@ -80,7 +78,7 @@ class BaseMessenger:
                 if f == "flags.json":
                     continue
 
-                print(f"Found file {f}")
+                # print(f"Found file {f}")
 
                 if f not in file_check:
                     file_check[f] = 0
@@ -91,7 +89,7 @@ class BaseMessenger:
                 name = address + "/" + f
                 content = open(name, "r").read()
                 print("Yielding file", f, ", content:", content)
-                yield prepare_yield(content)
+                yield content
 
                 del file_check[f]
                 os.remove(name)
@@ -99,7 +97,8 @@ class BaseMessenger:
             time.sleep(5)
             with open(flag_file, "r") as f:
                 flags = json.loads(f.read())
-                print("flags:", flags)
                 stop = flags["stop"]
+                if stop:
+                    print("Sinalized to stop.")
 
         shutil.rmtree(address)
