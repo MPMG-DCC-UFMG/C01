@@ -9,11 +9,12 @@ import json
 import requests
 
 # Project libs
-from crawlers.base_spider import BaseSpider
+from crawling.spiders.base_spider import BaseSpider
+from crawling.spiders.redis_spider import RedisSpider
 import crawling_utils
 
 
-class StaticPageSpider(BaseSpider):
+class StaticPageSpider(RedisSpider, BaseSpider):
     name = 'static_page'
     
     def __init__(self, *args, **kwargs):
@@ -36,7 +37,7 @@ class StaticPageSpider(BaseSpider):
     def extract_links(self, response):
         """Filter and return a set with links found in this response."""
 
-        config = response.meta['config']
+        config = response.meta['attrs']
         # TODO: cant make regex tested on https://regexr.com/ work
         # here for some reason
         links_extractor = LinkExtractor()
@@ -56,7 +57,8 @@ class StaticPageSpider(BaseSpider):
         # TODO: cant make regex tested on https://regexr.com/ work
         # here for some reason
         links_extractor = LinkExtractor(
-            deny_extensions = config["donwload_files_deny_extensions"]
+            # deny_extensions = config["download_files_deny_extensions"]
+            deny_extensions = None
         #    allow = config["download_files_allow_url"], ())
         )
         urls_found = {i.url for i in links_extractor.extract_links(response)}
@@ -97,7 +99,7 @@ class StaticPageSpider(BaseSpider):
 
         config = response.meta['attrs']
 
-        if self.stop():
+        if self.stop(config):
             return
 
         if b'text/html' not in response_type:

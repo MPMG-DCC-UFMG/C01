@@ -18,7 +18,7 @@ from lxml.html.clean import Cleaner
 # Project libs
 import binary
 import crawling_utils
-from crawlers.constants import *
+from crawling.spiders.constants import *
 from file_descriptor.file_descriptor import FileDescriptor
 from file_downloader.file_downloader import FileDownloader
 from entry_probing import BinaryFormatProbingResponse, HTTPProbingRequest,\
@@ -33,11 +33,12 @@ import parsing_html
 class BaseSpider(scrapy.Spider):
     name = 'base_spider'
 
-    def __init__(self, config, *a, **kw):
+    def __init__(self, *args, **kwargs):
         """
         Spider init operations.
         Create folders to store files and some config and log files.
         """
+        super(BaseSpider, self).__init__(*args, **kwargs)
 
         print("At BaseSpider.init")
         
@@ -306,7 +307,7 @@ class BaseSpider(scrapy.Spider):
             "instance_id": config["instance_id"],
             "type": str(response.headers['Content-type']),
             "crawled_at_date": str(datetime.datetime.today()),
-            "referer": response.meta["referer"]
+            "referer": response.meta["url"]
         }
 
         self.feed_file_description(self.data_folder + "/raw_pages", description)
