@@ -323,12 +323,15 @@ class BaseSpider(scrapy.Spider):
             self.logger.error('TimeoutError on %s', request.url)
 
     def feed_file_downloader(self, url, response_origin):
+        wait_end = self.config["wait_crawler_finish_to_download"]
         description = {
             "url": url,
             "crawler_id": self.config["crawler_id"],
             "instance_id": self.config["instance_id"],
             "crawled_at_date": str(datetime.datetime.today()),
-            "referer": response_origin.url
+            "referer": response_origin.url,
+            "wait_crawler_finish_to_download": wait_end,
+            "time_between_downloads": self.config["time_between_downloads"],
         }
         FileDownloader.feed_downloader(url, self.data_folder, description)
 
