@@ -3,9 +3,6 @@ This module contains the classes which describe the response handling procedure
 for the entry probing process
 """
 
-# Allow postponed evaluation of type annotations
-from __future__ import annotations
-
 import abc
 import requests
 
@@ -20,9 +17,9 @@ class ResponseData():
     """
 
     def __init__(self,
-                 headers: dict = None,
-                 status_code: int = None,
-                 text: str = None):
+                 headers,
+                 status_code,
+                 text):
         """
         Response constructor. Should be called from the create_from_* methods.
 
@@ -36,7 +33,7 @@ class ResponseData():
 
     @classmethod
     def create_from_requests(cls,
-                             resp: requests.models.Response) -> ResponseData:
+                             resp):
         """
         Create an appropriate object from a requests.models.Response object
 
@@ -54,8 +51,7 @@ class ResponseData():
 
     @classmethod
     async def create_from_pyppeteer(cls,
-                                    resp: pyppeteer.network_manager.Response
-                                    ) -> ResponseData:
+                                    resp):
         """
         Create an appropriate object from a pyppeteer.network_manager.Response
         object
@@ -93,7 +89,7 @@ class ProbingResponse():
     """
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, opposite: bool = False):
+    def __init__(self, opposite):
         """
         Constructor for a response handler
 
@@ -106,7 +102,7 @@ class ProbingResponse():
         self.opposite = opposite
 
     @abc.abstractmethod
-    def _validate_resp(self, response: ResponseData) -> bool:
+    def _validate_resp(self, response):
         """
         Abstract method: checks if the response meets the desired condition
 
@@ -114,7 +110,7 @@ class ProbingResponse():
         """
         pass
 
-    def process(self, response: ResponseData) -> bool:
+    def process(self, response):
         """
         Uses the _validate_resp method to check if the response meets the
         desired condition, and inverts the result if the opposite flag is set
@@ -133,7 +129,7 @@ class HTTPStatusProbingResponse(ProbingResponse):
     Response handler which checks for a specific HTTP status code
     """
 
-    def __init__(self, status_code: str, *args, **kwargs):
+    def __init__(self, status_code, *args, **kwargs):
         """
         HTTP status response constructor
 
@@ -142,7 +138,7 @@ class HTTPStatusProbingResponse(ProbingResponse):
         super().__init__(*args, **kwargs)
         self.status_code = status_code
 
-    def _validate_resp(self, response: ResponseData) -> bool:
+    def _validate_resp(self, response):
         """
         Checks if the response has the specified HTTP status code
 
@@ -160,7 +156,7 @@ class TextMatchProbingResponse(ProbingResponse):
     the response body
     """
 
-    def __init__(self, text_match: str, *args, **kwargs):
+    def __init__(self, text_match, *args, **kwargs):
         """
         Text matching response constructor
 
@@ -169,7 +165,7 @@ class TextMatchProbingResponse(ProbingResponse):
         super().__init__(*args, **kwargs)
         self.text_match = text_match
 
-    def _validate_resp(self, response: ResponseData) -> bool:
+    def _validate_resp(self, response):
         """
         Checks if the response.text property has the specified string within it
 
@@ -187,7 +183,7 @@ class BinaryFormatProbingResponse(ProbingResponse):
     one
     """
 
-    def _validate_resp(self, response: ResponseData) -> bool:
+    def _validate_resp(self, response):
         """
         Checks if the response's MIME-type does not contain the word 'text'
         in the first part (before the backslash)
