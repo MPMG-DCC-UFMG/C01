@@ -261,8 +261,18 @@ New Crawler
                                         {{ form.download_files_allow_url | as_crispy_field}}
                                         {{ form.download_files_allow_extensions | as_crispy_field}}
                                     </div>
-                                    <div id="download_files" style="padding:20px; border-top: 1px solid #DCDCDC;">
+                                    <div id="download_img" style="padding:20px; border-top: 1px solid #DCDCDC;">
                                         {{ form.download_imgs | as_crispy_field}}
+                                    </div>
+                                    <div id="wait_crawler_finish_to_download" style="padding:20px; border-top: 1px solid #DCDCDC;">
+                                        <p>
+                                            Alguns servidores podem cancelar o download se outras requisições forem feitas ao mesmo tempo,
+                                            ou se um download for feito atrás do outro. Se os downloads começarem a dar erro com a mensagem
+                                            <i>"Foi forçado o cancelamento de uma conexão existente pelo host remoto"</i> ou mensagens 
+                                            parecidas, alterar estes valores pode ajudar.
+                                        </p>
+                                        {{ form.wait_crawler_finish_to_download | as_crispy_field }}
+                                        {{ form.time_between_downloads | as_crispy_field }}
                                     </div>
                                 </div>
                                 <div class="crawler-type-content-div" id="form_page" hidden>
