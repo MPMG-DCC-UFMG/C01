@@ -118,6 +118,14 @@ def crawler_process(config):
         raise NotImplementedError
     elif config["crawler_type"] == "static_page":
         process.crawl(StaticPageSpider, config=json.dumps(config))
+        data = {
+            "url": config['base_url'],
+            "appid": instance_id,
+            "crawlid": crawler_id,
+            "spiderid": "static_page",
+            "attrs": json.dumps(config)
+        }
+
 
     def update_database():
         # TODO: get port as variable
@@ -129,7 +137,12 @@ def crawler_process(config):
         crawler.signals.connect(
             update_database, signal=scrapy.signals.spider_closed)
 
-    process.start()
+    # process.start()
+    url = 'http://0.0.0.0:5343/feed'
+    headers = {'content-type': 'application/json'}
+
+    req = requests.post(url, data=json.dumps(data), headers=headers)
+    print(req.json())
 
 
 def gen_key():
