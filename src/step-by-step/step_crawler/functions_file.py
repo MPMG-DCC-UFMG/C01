@@ -131,3 +131,12 @@ async def break_image_captcha(page, xpath_input, xpath_output, preprocessing=Non
     type_function = f"(text) => {{ (document.querySelector('{cssify(xpath_output)}')).value = text; }}"
     await page.evaluate(type_function, text)
     return text
+
+
+async def element_in_page(page, xpath):
+    """This step returns True if there's any element given a xpath, otherwise, returns False
+
+        :param page : a pyppeteer page
+        :returns bool: True or False
+    """
+    return bool(await page.xpath(xpath))

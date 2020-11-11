@@ -287,5 +287,32 @@
                 }
             ]
         }
+    },
+    "simple_while": {
+        "description": "A simple while",
+        "recipe": {
+            "step": "root",
+            "depth": 0,
+            "children": [
+                {
+                    "step": "while",
+                    "negation": false,
+                    "condition": {
+                        "comparison": "True == 1",
+                        "limit": "5"
+                    },
+                    "depth": 1,
+                    "children": [
+                        {
+                            "step": "print_",
+                            "arguments": {
+                                "word": "\"teste\""
+                            },
+                            "depth": 2
+                        }
+                    ]
+                }
+            ]
+        }
     }
 }

@@ -37,14 +37,14 @@ pip install .
 
 Para execução da interface basta executar o seguinte comando:
 ```
-python manage.py runserver
+python run.py
 ```
 
 E então basta acessar _http://localhost:8000/_
 
 Se quiser acessar o programa através da rede, execute:
 ```
-python manage.py runserver 0.0.0.0:8000
+python run.py 0.0.0.0:8000
 ```
 E então use o IP da máquina onde a interface está sendo executada para acessá-la. Por exemplo, se a máquina onde você rodou o comando acima tem endereço de IP _1.2.3.4_, e esse endereço é visível para sua máquina através da rede, você pode acessar _http://1.2.3.4:8000/_.
 
