@@ -15,9 +15,8 @@ from multiprocessing import Process
 # Project libs
 import crawling_utils.crawling_utils as crawling_utils
 from crawlers.constants import *
-from crawlers.file_descriptor import FileDescriptor
-from crawlers.file_downloader import FileDownloader
-from crawlers.static_page import StaticPageSpider
+from file_descriptor.file_descriptor import FileDescriptor
+from file_downloader.file_downloader import FileDownloader
 
 # TODO: implement following antiblock options
 # antiblock_mask_type
@@ -98,13 +97,12 @@ def crawler_process(config):
         # process.crawl(StaticPageSpider, crawler_id=crawler_id)
         raise NotImplementedError
     elif config["crawler_type"] == "static_page":
-        process.crawl(StaticPageSpider, config=json.dumps(config))
         data = {
             "url": config['base_url'],
             "appid": instance_id,
-            "crawlid": crawler_id,
+            "crawlid": str(crawler_id),
             "spiderid": "static_page",
-            "attrs": json.dumps(config)
+            "attrs": config
         }
 
 
@@ -118,7 +116,6 @@ def crawler_process(config):
         crawler.signals.connect(
             update_database, signal=scrapy.signals.spider_closed)
 
-    # process.start()
     url = 'http://0.0.0.0:5343/feed'
     headers = {'content-type': 'application/json'}
 
