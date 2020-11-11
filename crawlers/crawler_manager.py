@@ -26,8 +26,8 @@ from crawlers.static_page import StaticPageSpider
 # antiblock_max_reqs_per_ip
 # antiblock_max_reuse_rounds
 # antiblock_reqs_per_user_agent
-# antiblock_user_agents_file
-# antiblock_cookies_file
+# antiblock_user_agents_list
+# antiblock_cookies_list
 # antiblock_persist_cookies
 
 def file_downloader_process():
