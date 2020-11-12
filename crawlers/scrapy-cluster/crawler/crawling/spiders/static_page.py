@@ -25,9 +25,9 @@ class StaticPageSpider(RedisSpider, BaseSpider):
         """Filter a list of urls according to a regex pattern."""
         def allow(url):
             if re.search(pattern, url) is not None:
-                print(f"ADDING link (passed regex filter) - {url}")
+                # print(f"ADDING link (passed regex filter) - {url}")
                 return True
-            print(f"DISCARDING link (filtered by regex) - {url}")
+            # print(f"DISCARDING link (filtered by regex) - {url}")
             return False
 
         urls_filtered = set(filter(allow, url_list))
@@ -117,10 +117,13 @@ class StaticPageSpider(RedisSpider, BaseSpider):
                 )
 
         if "download_files" in config and config["download_files"]:
+            print("\n\nÉ para baixar arquivos")
+            print(response)
             for file in self.extract_files(response):
                 self.feed_file_downloader(file, response, config)
 
-        print("download_imgs", config["download_imgs"])
+
+        # print("download_imgs", config["download_imgs"])
         if "download_imgs" in config and config["download_imgs"]:
             for img_url in self.extract_imgs(response):
                 print("feeding", img_url)
