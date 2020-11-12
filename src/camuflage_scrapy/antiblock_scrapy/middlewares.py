@@ -8,23 +8,26 @@ from scrapy.exceptions import NotConfigured
 from scrapy.http import Request
 from scrapy.spiders import Spider
 
-from antiblock_scrapy import TorController
+from toripchanger import TorIpChanger
 
 class TorProxyMiddleware(object):
     '''This middleware enables Tor to serve as connection proxies'''
 
-    def __init__(self, max_count: int, allow_reuse_ip_after: int):
+    def __init__(self, crawler: Crawler, max_count: int, allow_reuse_ip_after: int):
         '''Creates a new instance of TorProxyMiddleware
         
         Keywords arguments:
             max_count -- Maximum IP usage
             allow_reuse_ip_after -- When an IP can be reused
         '''
-        
-        self.items_scraped = 0
+
+        self.crawler = crawler
         self.max_count = max_count
 
-        self.tc = TorController(allow_reuse_ip_after=allow_reuse_ip_after)
+        self.tor_ip_changer = TorIpChanger(reuse_threshold=allow_reuse_ip_after)
+        self.tor_ip_changer.get_new_ip()
+
+        self.items_scraped = 0
 
     @classmethod
     def from_crawler(cls, crawler: Crawler):
@@ -34,7 +37,7 @@ class TorProxyMiddleware(object):
         max_count = crawler.settings.getint('TOR_IPROTATOR_CHANGE_AFTER', 1000)
         allow_reuse_ip_after = crawler.settings.getint('TOR_IPROTATOR_ALLOW_REUSE_IP_AFTER', 10)
 
-        mw = cls(max_count=max_count, allow_reuse_ip_after=allow_reuse_ip_after)
+        mw = cls(crawler=crawler, max_count=max_count, allow_reuse_ip_after=allow_reuse_ip_after)
 
         return mw
 
@@ -43,7 +46,10 @@ class TorProxyMiddleware(object):
             spider.log('Changing Tor IP...')
             self.items_scraped = 0
             
-            new_ip = self.tc.renew_ip() 
+            self.crawler.engine.pause()
+            new_ip = self.tor_ip_changer.get_new_ip()
+            self.crawler.engine.unpause()
+            
             if not new_ip:
                 raise Exception('FatalError: Failed to find a new IP')
             
