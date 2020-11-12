@@ -181,7 +181,12 @@ class FileDownloader(BaseMessenger):
 
             FileDownloader.process_item(item)
 
-            next_download = int(time.time()) + item["time_between_downloads"]
+            if item["time_between_downloads"] is None:
+                add = 60
+            else:
+                add = item["time_between_downloads"]
+            next_download = int(time.time()) + add
+
             with lock:
                 if wait_line[item_key].qsize() > 0:
                     heapq.heappush(heap, (next_download, item_key))
