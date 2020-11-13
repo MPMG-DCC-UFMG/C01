@@ -47,9 +47,9 @@ class StaticPageSpider(BaseSpider):
 
     def filter_list_of_urls(self, url_list, pattern, head):
         """Filter a list of urls according to a regex pattern."""
-        def allow(url):
+        def allow(url, head):
             # TODO: REQUEST HEAD
-            req_head = request.head(url).headers['Content-Type']
+            req_head = requests.head(url).headers['Content-Type']
             if (re.search(pattern, url) is not None) and (head in req_head):
                 print(f"ADDING link (passed regex filter) - {url}")
                 return True
