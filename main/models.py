@@ -123,6 +123,9 @@ class CrawlRequest(TimeStamped):
 
     download_imgs = models.BooleanField(default=False)
 
+    wait_crawler_finish_to_download = models.BooleanField(default=False)
+    time_between_downloads = models.IntegerField(blank=True, null=True)
+
     steps = models.CharField(
         blank=True, null=True, max_length=9999999, default='{}')
 
