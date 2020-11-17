@@ -12,6 +12,7 @@ def get_url_domain(url):
     return result
 
 
+
 def hash(byte_content):
     """Returns the md5 hash of a bytestring."""
     return hashlib.md5(byte_content).hexdigest()
@@ -29,19 +30,11 @@ FIREFOX_WEBDRIVER_PATH = 'geckodriver'
 
 def check_file_path(path):
     """Makes sure that folders in path exist."""
-    if path[-1] == "/":
-       path = path[:-1]
- 
-    path = path.split("/")
-    for i in range(len(path)):
-        try:
-            # treating paths from root like "/home/..."
-            if i == 0 and path[i] == "":
-                continue
-            os.mkdir("/".join(path[:i + 1]))
-        except FileExistsError:
-            pass
- 
+    try:
+        os.makedirs(path)
+    except FileExistsError:
+        pass
+
 
 def init_webdriver(
     driver_type: str = "chrome",

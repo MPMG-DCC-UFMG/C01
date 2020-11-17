@@ -18,6 +18,28 @@ class ParamInjector():
     """
 
     @staticmethod
+    def process_code_verification(sequential: int, year: int, seg_id: int,
+                                  court_id: int, origin_id: int):
+        """
+        Generates the verification digits for a process code.
+
+        :param sequential: the sequential identifier for the process
+        :param year:       the year of the process
+        :param seg_id:     the segment id of the process
+        :param court_id:   the court id of the process
+        :param origin_id:  the origin id of the process
+
+        :returns: the verification digits obtained
+        """
+
+        value_str = str(sequential) + str(year) + str(seg_id) + \
+            str(court_id) + str(origin_id)
+        verif_val = 98 - ((int(value_str) * 100) % 97)
+
+        return verif_val
+
+
+    @staticmethod
     def __format_unpack_ranges(param_limits: List[Union[Tuple[int, int],
                                                         List[int]]]
                                ) -> List[Union[range, list]]:
@@ -57,11 +79,11 @@ class ParamInjector():
 
 
     @staticmethod
-    def __format_params(code_format: str,
-                        entry: Tuple[int, ...],
-                        verif: Optional[Callable[[List[int]], int]],
-                        verif_index: Optional[int]
-                        ) -> str:
+    def format_params(code_format: str,
+                      entry: Tuple[int, ...],
+                      verif: Optional[Callable[[List[int]], int]],
+                      verif_index: Optional[int]
+                      ) -> str:
         """
         Generates the formatted code as a string for a single combination of
         parameters
@@ -129,8 +151,8 @@ class ParamInjector():
         # itertools.product generates all combinations of entries from each list
         # in ranges_list
         for entry in itertools.product(*ranges_list):
-            yield ParamInjector.__format_params(code_format, entry, verif,
-                                                verif_index)
+            yield ParamInjector.format_params(code_format, entry, verif,
+                                              verif_index)
 
 
     @staticmethod

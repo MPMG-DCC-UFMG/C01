@@ -4,6 +4,7 @@ from django.core.validators import RegexValidator
 
 from crawlers.constants import *
 
+
 class TimeStamped(models.Model):
     creation_date = models.DateTimeField()
     last_modified = models.DateTimeField()
@@ -156,7 +157,7 @@ class CrawlRequest(TimeStamped):
         parameter_handlers = []
         for param in crawler.parameter_handlers.values():
             del param['id']
-            del param['config_id']
+            del param['crawler_id']
 
             # Convert Date parameters into iso string for serialization into
             # JSON
@@ -173,7 +174,7 @@ class CrawlRequest(TimeStamped):
         response_handlers = []
         for resp in crawler.response_handlers.values():
             del resp['id']
-            del resp['config_id']
+            del resp['crawler_id']
             response_handlers.append(resp)
 
         config['templated_url_response_handlers'] = response_handlers
@@ -205,16 +206,26 @@ class ParameterHandler(models.Model):
     Details on how to handle a parameter to be injected
     """
 
-    # Configuration to which this handler is associated
-    config = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE,
+    LIST_REGEX = '^(\\s*[0-9]+\\s*,)*\\s*[0-9]+\\s*$'
+    list_validator = RegexValidator(LIST_REGEX, ('Insira uma lista de números '
+                                                 'separados por vírgula.'))
+
+    # Crawler to which this handler is associated
+    crawler = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE,
                                 related_name="parameter_handlers")
 
     # Parameter key for request contents
     parameter_key = models.CharField(max_length=1000, blank=True)
 
+    # Whether or not to filter the range for this parameter
+    filter_range = models.BooleanField(default=False)
+    # Number of consecutive entries to search during "binary search" if
+    # parameter should be range-filtered
+    cons_misses = models.PositiveIntegerField(null=True, blank=True)
+
     # Parameter configuration
     PARAM_TYPES = [
-        ('formatted_str', 'Código formatado'),
+        ('process_code', 'Código de processo'),
         ('number_seq', 'Sequência numérica'),
         ('date_seq', 'Sequência de datas'),
         ('alpha_seq', 'Sequência alfabética'),
@@ -223,6 +234,16 @@ class ParameterHandler(models.Model):
     parameter_type = models.CharField(max_length=15,
                                       choices=PARAM_TYPES,
                                       default='none')
+
+    # Process code param
+    first_year_proc_param = models.PositiveIntegerField(null=True, blank=True)
+    last_year_proc_param = models.PositiveIntegerField(null=True, blank=True)
+    segment_ids_proc_param = models.CharField(max_length=1000, blank=True,
+                                              validators=[list_validator])
+    court_ids_proc_param = models.CharField(max_length=1000, blank=True,
+                                            validators=[list_validator])
+    origin_ids_proc_param = models.CharField(max_length=1000, blank=True,
+                                             validators=[list_validator])
 
     # Numeric param
     first_num_param = models.IntegerField(null=True, blank=True)
@@ -254,8 +275,8 @@ class ResponseHandler(models.Model):
     Details on how to handle a response to a request
     """
 
-    # Configuration to which this handler is associated
-    config = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE,
+    # Crawler to which this handler is associated
+    crawler = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE,
                                 related_name="response_handlers")
 
     HANDLER_TYPES = [
