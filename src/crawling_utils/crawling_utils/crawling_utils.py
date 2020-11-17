@@ -4,6 +4,30 @@ import time
 import hashlib
 import os
 from urllib.parse import urlparse
+import wget
+
+class StopDownload(Exception):
+    """Used in func file_larger_than_giga"""
+    pass
+
+def file_larger_than_giga(url):
+    """
+    True if file has more than 1e9 bytes.
+    Request a single block from url and check its size.
+    """
+    save = {"url": url}
+
+    def get_size(current, total, widht=None):
+        save["total_size"] = total
+        raise StopDownload
+
+    try:
+        wget.download(url, bar=get_size)
+    except StopDownload:
+        pass
+
+    # total_size is in bytes
+    return save["total_size"] > 1e9
 
 
 def get_url_domain(url):
@@ -12,11 +36,9 @@ def get_url_domain(url):
     return result
 
 
-
 def hash(byte_content):
     """Returns the md5 hash of a bytestring."""
     return hashlib.md5(byte_content).hexdigest()
-
 
 # leave as 'chromedriver' if driver is on path
 CHROME_WEBDRIVER_PATH = 'chromedriver'
