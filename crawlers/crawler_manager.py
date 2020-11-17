@@ -15,8 +15,8 @@ from multiprocessing import Process
 # Project libs
 import crawling_utils.crawling_utils as crawling_utils
 from crawlers.constants import *
-from crawlers.file_descriptor import FileDescriptor
-from crawlers.file_downloader import FileDownloader
+from file_descriptor.file_descriptor import FileDescriptor
+from file_downloader.file_downloader import FileDownloader
 from crawlers.static_page import StaticPageSpider
 
 # TODO: implement following antiblock options

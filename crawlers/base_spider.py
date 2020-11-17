@@ -19,8 +19,8 @@ from lxml.html.clean import Cleaner
 import binary
 import crawling_utils
 from crawlers.constants import *
-from crawlers.file_descriptor import FileDescriptor
-from crawlers.file_downloader import FileDownloader
+from file_descriptor.file_descriptor import FileDescriptor
+from file_downloader.file_downloader import FileDownloader
 from entry_probing import BinaryFormatProbingResponse, HTTPProbingRequest,\
     HTTPStatusProbingResponse, TextMatchProbingResponse,\
     EntryProbing
