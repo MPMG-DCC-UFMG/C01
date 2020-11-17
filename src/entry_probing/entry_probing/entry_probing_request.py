@@ -25,8 +25,8 @@ class ProbingRequest():
 
     @abc.abstractmethod
     def process(self,
-                url_entries: List[Any] = [],
-                req_entries: Dict[Hashable, Any] = {}) -> ResponseData:
+                url_entries,
+                req_entries):
         """
         Abstract method: sends a request to the desired URL and returns the
         response
@@ -49,7 +49,7 @@ class HTTPProbingRequest(ProbingRequest):
         "POST": requests.post
     }
 
-    def __init__(self, url: str, method: str, req_data: dict = None):
+    def __init__(self, url, method, req_data):
         """
         Constructor for the HTTP request handler.
 
@@ -71,8 +71,8 @@ class HTTPProbingRequest(ProbingRequest):
             raise ValueError(f"HTTP method not supported: {method}")
 
     def process(self,
-                url_entries: List[Any] = [],
-                req_entries: Dict[Hashable, Any] = {}) -> ResponseData:
+                url_entries,
+                req_entries):
         """
         Sends an HTTP request to the desired URL, formmated according to the
         url_entries parameter. The entries in req_entries are included in the
@@ -118,7 +118,7 @@ class PyppeteerProbingRequest(ProbingRequest):
     """
 
     def __intercept_response(self,
-                             response: pyppeteer.network_manager.Response):
+                             response):
         """
         Intercepts the response to the first request made by the Pyppeteer page
         configured in the constructor and stores it
@@ -146,7 +146,7 @@ class PyppeteerProbingRequest(ProbingRequest):
 
         page.on('response', self.__intercept_response)
 
-    async def process(self, *_) -> ResponseData:
+    async def process(self, *_):
         """
         Returns the received response data from a request done using Pyppeteer,
         overwriting the text property to get the current contents of the page
