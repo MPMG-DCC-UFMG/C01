@@ -6,9 +6,11 @@ import os
 from urllib.parse import urlparse
 import wget
 
+
 class StopDownload(Exception):
     """Used in func file_larger_than_giga"""
     pass
+
 
 def file_larger_than_giga(url):
     """
