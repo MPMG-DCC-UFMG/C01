@@ -106,6 +106,24 @@ class FileDownloader(BaseMessenger):
         max_attempts = 3
         success = False
         error_message = ""
+
+        # file size > 1e9 bytes
+        big_file = crawling_utils.file_larger_than_giga(item["url"])
+
+        url_hash = crawling_utils.hash(item["url"].encode())
+        extension = item["url"].split(".")[-1]
+
+        if len(extension) > 5 or len(extension) == 0:
+            print("Could not identify extension of file:", item["url"])
+            print("Saving it without extension.")
+            extension = ""
+            fname = url_hash
+        else:
+            fname = f"{url_hash}.{extension}"
+
+        item["description"]["file_name"] = fname
+        item["description"]["type"] = extension
+
         for attempt in range(1, max_attempts + 1):
             print(
                 "Trying to download file "
@@ -113,12 +131,19 @@ class FileDownloader(BaseMessenger):
                 item["url"]
             )
             try:
-                FileDownloader.download_file(item)
+                if big_file:
+                    FileDownloader.download_large_file(item)
+                else:
+                    FileDownloader.download_small_file(item)
+
                 print("Downloaded", item["url"], "successfully.")
                 success = True
 
+                FileDescriptor.feed_description(
+                    item['destination'] + "files/", item['description'])
                 FileDownloader.convert_binary(item)
                 break
+
             except Exception as e:
                 print(
                     f"{attempt}-th attempt to download \"{item['url']}\" "
@@ -377,7 +402,7 @@ class FileDownloader(BaseMessenger):
             t.join()
 
     @staticmethod
-    def download_file(item):
+    def download_large_file(item):
         """
         Download an item using wget.download.
         The file name will be a hash function of the file url.
@@ -390,26 +415,22 @@ class FileDownloader(BaseMessenger):
         - destination: str, address of the folder that will containt the file
         - description: dict, dictionary of item descriptions
         """
-        url_hash = crawling_utils.hash(item["url"].encode())
-        extension = item["url"].split(".")[-1]
-
-        if len(extension) > 5:
-            print("Could not identify extension of file:", item["url"])
-            print("Saving it without extension.")
-            extension = ""
-
-        fname = f"{url_hash}.{extension}"
-        item["description"]["file_name"] = fname
-        item["description"]["type"] = extension
-
         def log_progress(current, total, widht=None):
             FileDownloader.log_progress(item["id"], current, total)
 
-        full_name = item["destination"] + "files/" + fname
-        wget.download(item["url"], full_name, bar=log_progress)
+        name = f"{item['destination']}files/{item['description']['file_name']}"
+        wget.download(item["url"], name, bar=log_progress)
+
+    @staticmethod
+    def download_small_file(item):
+        """Downloads file to memory then writes to disk."""
+        response = requests.get(item["url"], allow_redirects=True)
+
+        name = f"{item['destination']}files/{item['description']['file_name']}"
+        with open(name, 'wb') as file:
+            file.write(response.content)
         
-        FileDescriptor.feed_description(
-            item['destination'] + "files/", item['description'])
+        FileDownloader.log_progress(item["id"], 100, 100)
 
     @staticmethod
     def log_progress(item_id, current, total):
