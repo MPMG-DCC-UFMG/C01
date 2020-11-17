@@ -55,11 +55,6 @@ def signal_stop(e):
 def run():
     global stop_processes, process_exception, n_processes_running, global_lock
 
-    try:
-        subprocess.run(["rm", "*.tmp"])
-    except:
-        pass
-
     print("Initializing processes")
     pool = multiprocessing.Pool(
         processes=N_FUNCTIONS,

@@ -163,6 +163,12 @@ class FileDownloader(BaseMessenger):
                 }
             )
 
+        # downloads may create *.tmp files and leave them here.
+        try:
+            subprocess.run(["rm", "*.tmp"])
+        except:
+            pass
+
     @staticmethod
     def internal_consumer(
         wait_line, heap, stop, in_heap,
