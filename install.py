@@ -1,5 +1,6 @@
 import os
 import subprocess
+import asyncio
 
 
 src_folder = "src"
@@ -12,6 +13,18 @@ for folder in os.listdir(f"{src_folder}"):
 print(f"Installing other project dependencies...")
 subprocess.run(["pip", "install", "."])
 print()
+
+from twisted.internet import asyncioreactor
+try:
+    loop = asyncio.get_event_loop()
+except RuntimeError:
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+try:
+    asyncioreactor.install(loop)
+except Exception:
+    pass
 
 print(f"Creating database...")
 subprocess.run(["python", "manage.py", "makemigrations"])

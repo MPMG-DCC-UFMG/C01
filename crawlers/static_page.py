@@ -10,6 +10,7 @@ import requests
 
 # Project libs
 from crawlers.base_spider import BaseSpider
+import crawling_utils
 
 
 class StaticPageSpider(BaseSpider):
@@ -21,9 +22,15 @@ class StaticPageSpider(BaseSpider):
         self.convert_allow_extesions()
 
         for req in self.generate_initial_requests():
+
+            # Don't send an empty dict, may cause spider to be blocked
+            body_contents = None
+            if bool(req['body']):
+                body_contents = json.dumps(req['body'])
+
             yield scrapy.Request(url=req['url'],
                 method=req['method'],
-                body=json.dumps(req['body']),
+                body=body_contents,
                 callback=self.parse,
                 meta={
                     "referer": "start_requests",
@@ -111,6 +118,19 @@ class StaticPageSpider(BaseSpider):
 
         return urls_found
 
+    def extract_imgs(self, response):
+        url_domain = crawling_utils.get_url_domain(response.url)
+
+        src = []
+        for img in response.xpath("//img"):
+            img_src = img.xpath('@src').extract_first()
+            if img_src[0] == '/':
+                img_src = url_domain + img_src[1:]
+            src.append(img_src)
+
+        print(f"imgs found at page {response.url}", src)
+        return set(src)
+
     def parse(self, response):
         """
         Parse responses of static pages.
@@ -124,20 +144,26 @@ class StaticPageSpider(BaseSpider):
         if self.stop():
             return
 
-        if b'text/html' in response_type:
-            self.store_html(response)
-            if "explore_links" in config and config["explore_links"]:
-                this_url = response.url
-                for url in self.extract_links(response):
-                    yield scrapy.Request(
-                        url=url, callback=self.parse,
-                        meta={"referer": response.url,
-                              "config": config},
-                        errback=self.errback_httpbin
-                    )
-
-            if self.config["download_files"]:
-                for file in self.extract_files(response):
-                    self.feed_file_downloader(file, response)
-        else:
+        if b'text/html' not in response_type:
             self.store_raw(response)
+            return
+
+        self.store_html(response)
+        if "explore_links" in config and config["explore_links"]:
+            this_url = response.url
+            for url in self.extract_links(response):
+                yield scrapy.Request(
+                    url=url, callback=self.parse,
+                    meta={"referer": response.url, "config": config},
+                    errback=self.errback_httpbin
+                )
+
+        if "download_files" in self.config and self.config["download_files"]:
+            for file in self.extract_files(response):
+                self.feed_file_downloader(file, response)
+
+        print("download_imgs", self.config["download_imgs"])
+        if "download_imgs" in self.config and self.config["download_imgs"]:
+            for img_url in self.extract_imgs(response):
+                print("feeding", img_url)
+                self.feed_file_downloader(img_url, response)

@@ -46,15 +46,6 @@ def file_descriptor_process():
     FileDescriptor.description_consumer()
 
 
-def start_consumers_and_producers():
-    """Starts file_description and file_downlaoder processes."""
-    downloader = Process(target=file_downloader_process)
-    downloader.start()
-
-    descriptor = Process(target=file_descriptor_process)
-    descriptor.start()
-
-
 def create_folders(data_path):
     """Create essential folders for crawlers if they do not exists"""
     files = [
@@ -76,13 +67,8 @@ def get_crawler_base_settings(config):
         "BOT_NAME": "crawlers",
         "ROBOTSTXT_OBEY": config['obey_robots'],
         "DOWNLOAD_DELAY": 1,
-        # "SELENIUM_DRIVER_NAME": "chrome",
-        # "SELENIUM_DRIVER_EXECUTABLE_PATH": shutil.which(
-        #     crawling_utils.CHROME_WEBDRIVER_PATH
-        # ),
-        # "SELENIUM_DRIVER_ARGUMENTS": ["--headless"],
-        # "DOWNLOADER_MIDDLEWARES": {"scrapy_selenium.SeleniumMiddleware": 0},
         # "DOWNLOADER_MIDDLEWARES": {"redirect_middleware.RedirectMiddlewareC04": 0},
+        "DOWNLOADER_MIDDLEWARES": {'scrapy_puppeteer.PuppeteerMiddleware': 800},
         "DOWNLOAD_DELAY": config["antiblock_download_delay"],
         "RANDOMIZE_DOWNLOAD_DELAY": True,
         "AUTOTHROTTLE_ENABLED": config[f"{autothrottle}enabled"],
