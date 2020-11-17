@@ -82,6 +82,7 @@ def get_crawler_base_settings(config):
         # ),
         # "SELENIUM_DRIVER_ARGUMENTS": ["--headless"],
         # "DOWNLOADER_MIDDLEWARES": {"scrapy_selenium.SeleniumMiddleware": 0},
+        # "DOWNLOADER_MIDDLEWARES": {"redirect_middleware.RedirectMiddlewareC04": 0},
         "DOWNLOAD_DELAY": config["antiblock_download_delay"],
         "RANDOMIZE_DOWNLOAD_DELAY": True,
         "AUTOTHROTTLE_ENABLED": config[f"{autothrottle}enabled"],
