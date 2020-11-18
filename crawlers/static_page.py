@@ -114,7 +114,12 @@ class StaticPageSpider(BaseSpider):
         if pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
             
-        urls_found = self.filter_type_of_urls(urls_found, 'application/download')
+        urls_found_a = self.filter_type_of_urls(urls_found, 'application/download')
+        
+        urls_found_b = self.filter_list_of_urls(
+            urls_found, r"(.*\.[a-z]{3,4}$)(.*(?<!\.html)$)(.*(?<!\.php)$)")
+        
+        urls_found = urls_found_a.union(urls_found_b)
 
         return urls_found
 
