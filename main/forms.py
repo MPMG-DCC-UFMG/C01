@@ -200,8 +200,9 @@ class RawCrawlRequestForm(CrawlRequestForm):
         widget=forms.Textarea(
             attrs={
                 'placeholder': (
-                    'Cole aqui o conteúdo do seu arquivo'
-                    ' de user-agents'
+                    'Um user-agent por linha. Ex.:\n'
+                    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)...\n'
+                    'Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0'
                 )
             }
         )
@@ -224,8 +225,9 @@ class RawCrawlRequestForm(CrawlRequestForm):
         widget=forms.Textarea(
             attrs={
                 'placeholder': (
-                    'Cole aqui o conteúdo do seu arquivo'
-                    ' de cookies'
+                    'Um cookie por linha como objetos javascript. Ex.:\n'
+                    '{"authenticated": true, "access_token": "a93f31b19257193d49a971023dcd95f7"}\n'
+                    '{"valid_until": 1605225253, "private_key": "429b10192642a52276605047ddda9d45"}'
                 )
             }
         )

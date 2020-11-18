@@ -20,7 +20,6 @@ class StaticPageSpider(BaseSpider):
         print("At StaticPageSpider.start_requests")
 
         self.convert_allow_extesions()
-
         for req in self.generate_initial_requests():
             yield scrapy.Request(url=req['url'],
                 method=req['method'],
@@ -30,6 +29,7 @@ class StaticPageSpider(BaseSpider):
                     "referer": "start_requests",
                     "config": self.config
                 },
+                cookies=self.config["antiblock_cookies_list"],
                 errback=self.errback_httpbin)
 
     def convert_allow_extesions(self):
