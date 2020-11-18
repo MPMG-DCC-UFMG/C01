@@ -35,7 +35,7 @@ class StaticPageSpider(BaseSpider):
                 meta={
                     "referer": "start_requests",
                     "config": self.config
-                },
+            },
                 errback=self.errback_httpbin)
 
     def convert_allow_extesions(self):
@@ -64,7 +64,7 @@ class StaticPageSpider(BaseSpider):
         urls_filtered = set(filter(allow, url_list))
 
         return urls_filtered
-    
+
     def filter_type_of_urls(self, url_list, head):
         """Filter a list of urls according to the Content-Type."""
         def allow(url):
@@ -93,7 +93,7 @@ class StaticPageSpider(BaseSpider):
         pattern = config["link_extractor_allow_url"]
         if pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
-        
+
         urls_found = self.filter_type_of_urls(urls_found, 'text/html')
 
         return urls_found
@@ -104,8 +104,8 @@ class StaticPageSpider(BaseSpider):
         # TODO: cant make regex tested on https://regexr.com/ work
         # here for some reason
         links_extractor = LinkExtractor(
-            deny_extensions = self.config["donwload_files_deny_extensions"]
-        #    allow = self.config["download_files_allow_url"], ())
+            deny_extensions=self.config["donwload_files_deny_extensions"]
+            #    allow = self.config["download_files_allow_url"], ())
         )
         urls_found = {i.url for i in links_extractor.extract_links(response)}
 
@@ -113,12 +113,12 @@ class StaticPageSpider(BaseSpider):
 
         if pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
-            
+
         urls_found_a = self.filter_type_of_urls(urls_found, 'application/download')
-        
+
         urls_found_b = self.filter_list_of_urls(
             urls_found, r"(.*\.[a-z]{3,4}$)(.*(?<!\.html)$)(.*(?<!\.php)$)")
-        
+
         urls_found = urls_found_a.union(urls_found_b)
 
         return urls_found
