@@ -67,6 +67,7 @@ def get_crawler_base_settings(config):
         "BOT_NAME": "crawlers",
         "ROBOTSTXT_OBEY": config['obey_robots'],
         "DOWNLOAD_DELAY": 1,
+        # "DOWNLOADER_MIDDLEWARES": {"redirect_middleware.RedirectMiddlewareC04": 0},
         "DOWNLOADER_MIDDLEWARES": {'scrapy_puppeteer.PuppeteerMiddleware': 800},
         "DOWNLOAD_DELAY": config["antiblock_download_delay"],
         "RANDOMIZE_DOWNLOAD_DELAY": True,

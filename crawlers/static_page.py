@@ -55,10 +55,24 @@ class StaticPageSpider(BaseSpider):
     def filter_list_of_urls(self, url_list, pattern):
         """Filter a list of urls according to a regex pattern."""
         def allow(url):
-            if re.search(pattern, url) is not None:
+            if (re.search(pattern, url) is not None):
                 print(f"ADDING link (passed regex filter) - {url}")
                 return True
             print(f"DISCARDING link (filtered by regex) - {url}")
+            return False
+
+        urls_filtered = set(filter(allow, url_list))
+
+        return urls_filtered
+    
+    def filter_type_of_urls(self, url_list, head):
+        """Filter a list of urls according to the Content-Type."""
+        def allow(url):
+            req_head = requests.head(url).headers['Content-Type']
+            if (head in req_head):
+                print(f"ADDING link (correct type) - {url}")
+                return True
+            print(f"DISCARDING link (incorrect type) - {url}")
             return False
 
         urls_filtered = set(filter(allow, url_list))
@@ -79,6 +93,8 @@ class StaticPageSpider(BaseSpider):
         pattern = config["link_extractor_allow_url"]
         if pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
+        
+        urls_found = self.filter_type_of_urls(urls_found, 'text/html')
 
         return urls_found
 
@@ -97,12 +113,8 @@ class StaticPageSpider(BaseSpider):
 
         if pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
-
-        # removing non-file urls 
-        # (ends with '.' + 3 or 4 chars and does not ends with ".html" or
-        # ".php")
-        urls_found = self.filter_list_of_urls(
-            urls_found, r"(.*\.[a-z]{3,4}$)(.*(?<!\.html)$)(.*(?<!\.php)$)")
+            
+        urls_found = self.filter_type_of_urls(urls_found, 'application/download')
 
         return urls_found
 
