@@ -7,6 +7,7 @@ import heapq
 import queue
 import threading
 import time
+import subprocess
 
 # Project libs
 import binary
@@ -166,8 +167,8 @@ class FileDownloader(BaseMessenger):
         # downloads may create *.tmp files and leave them here.
         try:
             subprocess.run(["rm", "*.tmp"])
-        except:
-            pass
+        except Exception as e:
+            print(f"Cannot clean tmp files: {str(type(e))}-{e}")
 
     @staticmethod
     def internal_consumer(
