@@ -11,30 +11,37 @@ import requests
 # Project libs
 from crawlers.base_spider import BaseSpider
 import crawling_utils
+from scrapy_puppeteer import PuppeteerRequest
 
-
-class StaticPageSpider(BaseSpider):
-    name = 'static_page'
+class PageSpider(BaseSpider):
+    name = 'page_spider'
 
     def start_requests(self):
         print("At StaticPageSpider.start_requests")
 
         for req in self.generate_initial_requests():
+            if self.config["crawler_type"] == "static_page":
+                # Don't send an empty dict, may cause spider to be blocked
+                body_contents = None
+                if bool(req['body']):
+                    body_contents = json.dumps(req['body'])
 
-            # Don't send an empty dict, may cause spider to be blocked
-            body_contents = None
-            if bool(req['body']):
-                body_contents = json.dumps(req['body'])
+                yield scrapy.Request(url=req['url'],
+                    method=req['method'],
+                    body=body_contents,
+                    callback=self.parse,
+                    meta={
+                        "referer": "start_requests",
+                        "config": self.config
+                },
+                    errback=self.errback_httpbin)
+            else:
+                steps = json.loads(self.config["steps"])
 
-            yield scrapy.Request(url=req['url'],
-                method=req['method'],
-                body=body_contents,
-                callback=self.parse,
-                meta={
-                    "referer": "start_requests",
-                    "config": self.config
-            },
-                errback=self.errback_httpbin)
+                yield PuppeteerRequest(url=req['url'],
+                    callback=self.form_parse,
+                    dont_filter=True,
+                    steps=steps)
 
     def convert_allow_extesions(self, config):
         """Converts 'allow_extesions' configuration into 'deny_extesions'."""

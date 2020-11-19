@@ -17,7 +17,7 @@ import crawling_utils.crawling_utils as crawling_utils
 from crawlers.constants import *
 from crawlers.file_descriptor import FileDescriptor
 from crawlers.file_downloader import FileDownloader
-from crawlers.static_page import StaticPageSpider
+from crawlers.page_spider import PageSpider
 
 # TODO: implement following antiblock options
 # antiblock_mask_type
@@ -99,8 +99,8 @@ def crawler_process(config):
     elif config["crawler_type"] == "deep_crawler":
         # process.crawl(StaticPageSpider, crawler_id=crawler_id)
         raise NotImplementedError
-    elif config["crawler_type"] == "static_page":
-        process.crawl(StaticPageSpider, config=json.dumps(config))
+    elif config["crawler_type"] in ["static_page", "form_page"]:
+        process.crawl(PageSpider, config=json.dumps(config))
 
     def update_database():
         # TODO: get port as variable
