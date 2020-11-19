@@ -227,6 +227,7 @@ class FileDownloader(BaseMessenger):
                 print(f"re-building heap: {heap}")
                 local_stop = stop
 
+    @staticmethod
     def internal_producer(
         wait_line, heap, stop, in_heap,
         downloads_waiting, lock,
