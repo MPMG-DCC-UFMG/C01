@@ -340,15 +340,17 @@ class BaseSpider(scrapy.Spider):
 
         success = False
         try:
-            if self.config["table_attrs"] is None or self.config["table_attrs"] == "":
+            table_attrs = config["table_attrs"]
+            if table_attrs is None or table_attrs == "":
                 parsing_html.content.html_detect_content(
                     description["relative_path"],
                     is_string=False,
                     output_file=output_filename,
-                    to_csv=self.config["save_csv"]
+                    to_csv=config["save_csv"]
                 )
             else:
-                extra_config = self.extra_config_parser(self.config["table_attrs"])
+                extra_config = self.extra_config_parser(
+                    config["table_attrs"])
                 parsing_html.content.html_detect_content(
                     description["relative_path"],
                     is_string=False, output_file=output_filename,
@@ -365,7 +367,7 @@ class BaseSpider(scrapy.Spider):
                     na_values=extra_config['table_na_values'],
                     keep_default_na=extra_config['table_default_na'],
                     displayed_only=extra_config['table_displayed_only'],
-                    to_csv=self.config["save_csv"]
+                    to_csv=config["save_csv"]
                 )
             success = True
 
