@@ -205,6 +205,11 @@ class PageSpider(BaseSpider):
         print(f"imgs found at page {response.url}", src)
         return set(src)
 
+    def form_parse(self, response):
+        for page in response.request.meta["pages"].values():
+            response.body = str.encode(page)
+            self.parse(response)
+
     def parse(self, response):
         """
         Parse responses of static pages.
