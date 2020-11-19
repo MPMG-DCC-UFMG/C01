@@ -141,7 +141,6 @@ class BaseSpider(scrapy.Spider):
                 'body': {}
             }
 
-
     def create_probing_object(self, base_url, req_type, req_body,
                               resp_handlers):
         """
@@ -178,7 +177,6 @@ class BaseSpider(scrapy.Spider):
             probe.add_response_handler(resp_handler)
 
         return probe
-
 
     def create_parameter_generators(self, probe, parameter_handlers):
         """
@@ -311,7 +309,6 @@ class BaseSpider(scrapy.Spider):
 
         return url_injectors
 
-
     def stop(self):
         """
         Checks if the crawler was signaled to stop.
@@ -330,7 +327,6 @@ class BaseSpider(scrapy.Spider):
 
         return self.stop_flag
 
-
     def extract_and_store_csv(self, response, description):
         """Try to extract a json/csv from page html."""
 
@@ -339,31 +335,37 @@ class BaseSpider(scrapy.Spider):
         hsh = self.hash_response(response)
 
         output_filename = f"{self.data_folder}/csv/{hsh}"
-        if config["save_csv"] and ".csv" not in output_filename:
+        if config["save_csv"]:
             output_filename += ".csv"
-
 
         success = False
         try:
-            if self.config["table_attrs"] is None:
+            if self.config["table_attrs"] is None or self.config["table_attrs"] == "":
                 parsing_html.content.html_detect_content(
-                    f"{self.data_folder}/raw_pages/{hsh}.{file_format}",
+                    description["relative_path"],
                     is_string=False,
                     output_file=output_filename,
                     to_csv=self.config["save_csv"]
                 )
             else:
-                extra_config = extra_config_parser(self.config["table_attrs"])
+                extra_config = self.extra_config_parser(self.config["table_attrs"])
                 parsing_html.content.html_detect_content(
-                    f"{self.data_folder}/raw_pages/{hsh}.{file_format}",
+                    description["relative_path"],
                     is_string=False, output_file=output_filename,
-                    match=extra_config['table_match'], flavor=extra_config['table_flavor'],
-                    header=extra_config['table_header'], index_col=extra_config['table_index_col'],
-                    skiprows=extra_config['table_skiprows'], attrs=extra_config['table_attributes'],
-                    parse_dates=extra_config['table_parse_dates'], thousands=extra_config['table_thousands'],
-                    encoding=extra_config['table_encoding'], decimal=extra_config['table_decimal'],
-                    na_values=extra_config['table_na_values'], keep_default_na=extra_config['table_default_na'],
-                    displayed_only=extra_config['table_displayed_only'], to_csv=self.config["save_csv"]
+                    match=extra_config['table_match'],
+                    flavor=extra_config['table_flavor'],
+                    header=extra_config['table_header'],
+                    index_col=extra_config['table_index_col'],
+                    skiprows=extra_config['table_skiprows'],
+                    attrs=extra_config['table_attributes'],
+                    parse_dates=extra_config['table_parse_dates'],
+                    thousands=extra_config['table_thousands'],
+                    encoding=extra_config['table_encoding'],
+                    decimal=extra_config['table_decimal'],
+                    na_values=extra_config['table_na_values'],
+                    keep_default_na=extra_config['table_default_na'],
+                    displayed_only=extra_config['table_displayed_only'],
+                    to_csv=self.config["save_csv"]
                 )
             success = True
 
@@ -373,9 +375,14 @@ class BaseSpider(scrapy.Spider):
                 f"message: {str(type(e))}-{e}"
             )
 
-        description["type"] = "csv"
         if success:
-            self.feed_file_description(f"{self.data_folder}/csv/", description)
+            description["extracted_from"] = description["relative_path"]
+            description["relative_path"] = output_filename
+            description["type"] = "csv"
+            self.feed_file_description(f"{self.data_folder}csv/", description)
+            return [output_filename]
+
+        return []
 
     def store_html(self, response):
         """Stores html and adds its description to file_description file."""
@@ -390,14 +397,14 @@ class BaseSpider(scrapy.Spider):
 
         hsh = self.hash_response(response)
 
-        with open(
-            file=f"{self.data_folder}/raw_pages/{hsh}.html",
-            mode="w+", errors='ignore'
-        ) as f:
+        relative_path = f"{self.data_folder}raw_pages/{hsh}.html"
+
+        with open(file=relative_path, mode="w+", errors='ignore') as f:
             f.write(body)
 
         description = {
             "file_name": f"{hsh}.html",
+            "relative_path": relative_path,
             "url": response.url,
             "crawler_id": self.config["crawler_id"],
             "instance_id": self.config["instance_id"],
@@ -406,9 +413,12 @@ class BaseSpider(scrapy.Spider):
             "referer": response.meta["referer"]
         }
 
-        self.feed_file_description(self.data_folder + "/raw_pages", description)
+        extracted_files = self.extract_and_store_csv(
+            response, description.copy())
+        description["extracted_files"] = extracted_files
 
-        self.extract_and_store_csv(response, description)
+        self.feed_file_description(
+            self.data_folder + "raw_pages", description)
 
     def errback_httpbin(self, failure):
         # log all errback failures,
