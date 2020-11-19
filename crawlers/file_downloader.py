@@ -157,8 +157,8 @@ class FileDownloader(BaseMessenger):
                 print("Downloaded", item["url"], "successfully.")
                 success = True
 
-                extracted_files = FileDownloader.convert_binary(item)
-                item["extracted_files"] = extracted_files
+                extracted_files = FileDownloader.convert_binary(item.copy())
+                item['description']["extracted_files"] = extracted_files
 
                 FileDescriptor.feed_description(
                     item['destination'] + "files/", item['description'])
