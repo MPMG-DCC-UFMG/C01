@@ -214,7 +214,7 @@ class FileDownloader(BaseMessenger):
             FileDownloader.process_item(item)
 
             if item["time_between_downloads"] is None:
-                add = 60
+                add = 1
             else:
                 add = item["time_between_downloads"]
             next_download = int(time.time()) + add
