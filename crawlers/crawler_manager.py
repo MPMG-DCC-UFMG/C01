@@ -63,12 +63,11 @@ def create_folders(data_path):
 def get_crawler_base_settings(config):
     """Returns scrapy base configurations."""
     autothrottle = "antiblock_autothrottle_"
-    return {
+    settings = {
         "BOT_NAME": "crawlers",
         "ROBOTSTXT_OBEY": config['obey_robots'],
         "DOWNLOAD_DELAY": 1,
         # "DOWNLOADER_MIDDLEWARES": {"redirect_middleware.RedirectMiddlewareC04": 0},
-        "DOWNLOADER_MIDDLEWARES": {'scrapy_puppeteer.PuppeteerMiddleware': 800},
         "DOWNLOAD_DELAY": config["antiblock_download_delay"],
         "RANDOMIZE_DOWNLOAD_DELAY": True,
         "AUTOTHROTTLE_ENABLED": config[f"{autothrottle}enabled"],
@@ -76,6 +75,10 @@ def get_crawler_base_settings(config):
         "AUTOTHROTTLE_MAX_DELAY": config[f"{autothrottle}max_delay"],
     }
 
+    if config["crawler_type"] == "form_page":
+        settings["DOWNLOADER_MIDDLEWARES"] = {'scrapy_puppeteer.PuppeteerMiddleware': 800}
+
+    return settings
 
 def crawler_process(config):
     """Starts crawling."""
