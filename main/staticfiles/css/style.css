@@ -202,7 +202,7 @@ a.close {
     padding-top: 0.75rem;
 }
 
-.antiblock-wrapper .form-group {
+.antiblock-wrapper .form-group, #div_id_antiblock_reqs_per_user_agent {
     margin-bottom: 0;
 }
 

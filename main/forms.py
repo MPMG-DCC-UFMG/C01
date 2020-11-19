@@ -38,7 +38,7 @@ class CrawlRequestForm(forms.ModelForm):
             'antiblock_user_agents_list',
             'antiblock_insert_cookies_enabled',
             'antiblock_cookies_list',
-            'antiblock_persist_cookies',
+            # 'antiblock_persist_cookies',
 
             'has_webdriver',
             'webdriver_path',
@@ -164,7 +164,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     antiblock_proxy_list = forms.CharField(
         required=False, 
-        label="Insira a lista de proxies",
+        label="Insira a lista de proxy",
         widget=forms.Textarea(
             attrs={
                 'placeholder': (
@@ -189,14 +189,14 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     antiblock_reqs_per_user_agent = forms.IntegerField(
         required=False, 
-        label="Requisições por user-agents",
+        label="Requisições por User-Agent",
         initial=100,
         min_value=1
     )
 
     antiblock_user_agents_list = forms.CharField(
         required=False, 
-        label="Lista de User-Agents",
+        label="Lista de User-Agent",
         widget=forms.Textarea(
             attrs={
                 'placeholder': (
@@ -221,11 +221,11 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     antiblock_cookies_list = forms.CharField(
         required=False,
-        label="Lista de cookies",
+        label="Lista de cookie",
         widget=forms.Textarea(
             attrs={
                 'placeholder': (
-                    'Um cookie por linha como objetos javascript. Ex.:\n'
+                    'Um cookie por linha como objeto javascript. Ex.:\n'
                     '{"authenticated": true, "access_token": "a93f31b19257193d49a971023dcd95f7"}\n'
                     '{"valid_until": 1605225253, "private_key": "429b10192642a52276605047ddda9d45"}'
                 )
@@ -233,9 +233,9 @@ class RawCrawlRequestForm(CrawlRequestForm):
         )
     )
 
-    antiblock_persist_cookies = forms.BooleanField(
-        required=False, 
-        label="Manter cookies entre requisições")
+    # antiblock_persist_cookies = forms.BooleanField(
+    #     required=False, 
+    #     label="Manter cookies entre requisições")
 
     # CAPTCHA #################################################################
     captcha = forms.ChoiceField(

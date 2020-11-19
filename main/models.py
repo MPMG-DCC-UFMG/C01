@@ -66,7 +66,7 @@ class CrawlRequest(TimeStamped):
     antiblock_insert_cookies_enabled = models.BooleanField(default=False, blank=True)
 
     antiblock_cookies_list = models.TextField(blank=True, null=True)
-    antiblock_persist_cookies = models.BooleanField(blank=True, null=True)
+    # antiblock_persist_cookies = models.BooleanField(blank=True, null=True)
 
     # CAPTCHA #################################################################
     CAPTCHA_TYPE = [

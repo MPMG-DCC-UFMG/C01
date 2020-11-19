@@ -47,6 +47,8 @@ def create_folders(data_path: dict):
         crawling_utils.check_file_path(f)
 
 def get_ip_rotation_settings(config: dict, settings: dict):
+    """Updates the settings for ip rotation."""
+
     if config["antiblock_ip_rotation_enabled"]:
         # rotação de IPs via Tor
         if config["antiblock_ip_rotation_type"] == "tor":
@@ -68,6 +70,8 @@ def get_ip_rotation_settings(config: dict, settings: dict):
             settings["ROTATING_PROXY_LIST"] = config["antiblock_proxy_list"]
 
 def get_user_agent_rotation_settings(config: dict, settings: dict):
+    """Updates the settings for user-agent rotation."""
+
     if config["antiblock_user_agent_rotation_enabled"]:
         config["antiblock_user_agents_list"] = config["antiblock_user_agents_list"].split('\r\n')
         
@@ -82,6 +86,8 @@ def get_user_agent_rotation_settings(config: dict, settings: dict):
         settings["ROTATE_USER_AGENT_ENABLED"] = True
 
 def get_insert_cookies_settings(config: dict, settings: dict):
+    """Updates the settings for inserting cookies."""
+
     if config["antiblock_insert_cookies_enabled"]:
         cookies = [json.loads(cookie) for cookie in config["antiblock_cookies_list"].split('\r\n')] 
         config["antiblock_cookies_list"] = cookies
@@ -90,6 +96,8 @@ def get_insert_cookies_settings(config: dict, settings: dict):
         config["antiblock_cookies_list"] = None
 
 def get_autothrottle_settings(config: dict, settings: dict):
+    """Updates the settings to AUTOTHROTTLE."""
+
     settings["AUTOTHROTTLE_ENABLED"] = config["antiblock_autothrottle_enabled"]
     settings["AUTOTHROTTLE_START_DELAY"] = config["antiblock_autothrottle_start_delay"]
     settings["AUTOTHROTTLE_MAX_DELAY"] = config["antiblock_autothrottle_max_delay"]

@@ -33,6 +33,15 @@ cd src/form-parser
 pip install .
 ```
 
+Caso pretenda utilizar o Tor para rotacionar IPs, é necessário configurá-lo por meio dos seguintes comandos:
+
+```
+chmod 744 src/tor_setup/setup.sh
+./src/tor_setup/setup.sh
+```
+
+Um script de instalação diferente foi necessário pois para instalar o Tor é necessário ser superusuário.
+
 ## Execução
 
 Para execução da interface basta executar o seguinte comando:
