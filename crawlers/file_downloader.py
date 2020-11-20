@@ -83,38 +83,37 @@ class FileDownloader(BaseMessenger):
         url_hash = crawling_utils.hash(item["url"].encode())
         source_file = f"{item['destination']}files/{item_desc['file_name']}"
 
+        success = False
+        results = None
         try:
             # single DataFrame or list of DataFrames
             results = Extractor(source_file).extra().read()
-
-            if type(results) == pandas.DataFrame:
-                results = [results]
-
-            extracted_files = []
-            for i in range(len(results)):
-                r = results[i]
-                relative_path = f"{item['destination']}csv/{url_hash}_{i}.csv"
-                r.to_csv(relative_path, encoding='utf-8', index=False)
-
-                extracted_files.append(relative_path)
-
-                item_desc["file_name"] = f"{url_hash}_{file_count}.csv"
-                item_desc["type"] = ext
-                item_desc["extracted_from"] = source_file
-                item_desc["relative_path"] = relative_path
-
-                FileDescriptor.feed_description(
-                    item['destination'] + "csv/", item_desc.copy())
-
-            return extracted_files
-
         except Exception as e:
             print(
                 f"Could not extract csv files from {source_file} -",
                 f"message: {str(type(e))}-{e}"
             )
+            return []
 
-        return []
+        if type(results) == pandas.DataFrame:
+            results = [results]
+
+        extracted_files = []
+        for i in range(len(results)):
+            relative_path = f"{item['destination']}csv/{url_hash}_{i}.csv"
+            results[i].to_csv(relative_path, encoding='utf-8', index=False)
+
+            extracted_files.append(relative_path)
+
+            item_desc["file_name"] = f"{url_hash}_{i}.csv"
+            item_desc["type"] = "csv"
+            item_desc["extracted_from"] = source_file
+            item_desc["relative_path"] = relative_path
+
+            FileDescriptor.feed_description(
+                item['destination'] + "csv/", item_desc.copy())
+
+        return extracted_files
 
     @staticmethod
     def process_item(item):
