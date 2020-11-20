@@ -71,10 +71,10 @@ class StaticPageSpider(BaseSpider):
             headers = {'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
             req_head = requests.head(url, allow_redirects=True, headers=headers).headers['Content-Type']
             if (('html' in req_head) and page_flag) or (('html' not in req_head) and not page_flag):
-                    # print(f"ADDING link (correct type) - {url}")
-                    return True
-                # print(f"DISCARDING link (incorrect type) - {url}")
-                return False
+                # print(f"ADDING link (correct type) - {url}")
+                return True
+            # print(f"DISCARDING link (incorrect type) - {url}")
+            return False
 
         urls_filtered = set(filter(allow, url_list))
 
