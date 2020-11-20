@@ -7,10 +7,11 @@ import heapq
 import queue
 import threading
 import time
+import pandas
 import subprocess
 
 # Project libs
-import binary
+from binary import Extractor
 import crawling_utils
 from crawlers.file_descriptor import FileDescriptor
 from crawlers.base_messenger import BaseMessenger
@@ -78,29 +79,41 @@ class FileDownloader(BaseMessenger):
         - description: dict, dictionary of item descriptions
         """
 
+        item_desc = item["description"].copy()
         url_hash = crawling_utils.hash(item["url"].encode())
-        old_file_name = item["description"]["file_name"]
-        item["description"]["file_name"] = f"{url_hash}.csv"
-        item["description"]["type"] = "csv"
-        url_hash = crawling_utils.hash(item["url"].encode())
+        source_file = f"{item['destination']}files/{item_desc['file_name']}"
 
         success = False
+        results = None
+        try:
+            # single DataFrame or list of DataFrames
+            results = Extractor(source_file).extra().read()
+        except Exception as e:
+            print(
+                f"Could not extract csv files from {source_file} -",
+                f"message: {str(type(e))}-{e}"
+            )
+            return []
 
-        # # Not sure how binary extractor should work. Needs to check
-        # new_file = f"{item['destination']}/csv/{url_hash}.csv"
-        # try:
-        #     out = binary.extractor.Extractor(new_file)
-        #     out.extractor()
-        #     success = True
-        # except Exception as e:
-        #     print(
-        #         f"Could not extract csv files from {hsh}.{file_format} -",
-        #         f"message: {str(type(e))}-{e}"
-        #     )
+        if type(results) == pandas.DataFrame:
+            results = [results]
 
-        if success:
+        extracted_files = []
+        for i in range(len(results)):
+            relative_path = f"{item['destination']}csv/{url_hash}_{i}.csv"
+            results[i].to_csv(relative_path, encoding='utf-8', index=False)
+
+            extracted_files.append(relative_path)
+
+            item_desc["file_name"] = f"{url_hash}_{i}.csv"
+            item_desc["type"] = "csv"
+            item_desc["extracted_from"] = source_file
+            item_desc["relative_path"] = relative_path
+
             FileDescriptor.feed_description(
-                item['destination'] + "csv/", item['description'])
+                item['destination'] + "csv/", item_desc.copy())
+
+        return extracted_files
 
     @staticmethod
     def process_item(item):
@@ -123,6 +136,9 @@ class FileDownloader(BaseMessenger):
             fname = f"{url_hash}.{extension}"
 
         item["description"]["file_name"] = fname
+        item["relative_path"] = (
+            f"{item['destination']}files/{item['description']['file_name']}"
+        )
         item["description"]["type"] = extension
 
         for attempt in range(1, max_attempts + 1):
@@ -140,9 +156,11 @@ class FileDownloader(BaseMessenger):
                 print("Downloaded", item["url"], "successfully.")
                 success = True
 
+                extracted_files = FileDownloader.convert_binary(item.copy())
+                item['description']["extracted_files"] = extracted_files
+
                 FileDescriptor.feed_description(
                     item['destination'] + "files/", item['description'])
-                FileDownloader.convert_binary(item)
                 break
 
             except Exception as e:
@@ -426,16 +444,14 @@ class FileDownloader(BaseMessenger):
         def log_progress(current, total, widht=None):
             FileDownloader.log_progress(item["id"], current, total)
 
-        name = f"{item['destination']}files/{item['description']['file_name']}"
-        wget.download(item["url"], name, bar=log_progress)
+        wget.download(item["url"], item["relative_path"], bar=log_progress)
 
     @staticmethod
     def download_small_file(item):
         """Downloads file to memory then writes to disk."""
         response = requests.get(item["url"], allow_redirects=True)
 
-        name = f"{item['destination']}files/{item['description']['file_name']}"
-        with open(name, 'wb') as file:
+        with open(item["relative_path"], 'wb') as file:
             file.write(response.content)
         
         FileDownloader.log_progress(item["id"], 100, 100)
