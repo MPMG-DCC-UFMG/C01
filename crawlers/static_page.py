@@ -65,15 +65,16 @@ class StaticPageSpider(BaseSpider):
 
         return urls_filtered
 
-    def filter_type_of_urls(self, url_list, head):
+    def filter_type_of_urls(self, url_list, page_flag):
         """Filter a list of urls according to the Content-Type."""
         def allow(url):
-            req_head = requests.head(url).headers['Content-Type']
-            if (head in req_head):
-                # print(f"ADDING link (correct type) - {url}")
-                return True
-            # print(f"DISCARDING link (incorrect type) - {url}")
-            return False
+            headers = {'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
+            req_head = requests.head(url, allow_redirects=True, headers=headers).headers['Content-Type']
+            if (('text/html' in req_head) and page_flag) or (('text/html' not in req_head) and not page_flag):
+                    # print(f"ADDING link (correct type) - {url}")
+                    return True
+                # print(f"DISCARDING link (incorrect type) - {url}")
+                return False
 
         urls_filtered = set(filter(allow, url_list))
 
@@ -94,7 +95,7 @@ class StaticPageSpider(BaseSpider):
         if pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
-        urls_found = self.filter_type_of_urls(urls_found, 'text/html')
+        urls_found = self.filter_type_of_urls(urls_found, True)
 
         print("Links kept: ", urls_found)
 
@@ -116,7 +117,7 @@ class StaticPageSpider(BaseSpider):
         if pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
-        urls_found_a = self.filter_type_of_urls(urls_found, 'application/download')
+        urls_found_a = self.filter_type_of_urls(urls_found, False)
 
         urls_found_b = self.filter_list_of_urls(
             urls_found, r"(.*\.[a-z]{3,4}$)(.*(?<!\.html)$)(.*(?<!\.php)$)")
