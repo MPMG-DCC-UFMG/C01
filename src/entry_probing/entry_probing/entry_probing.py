@@ -55,8 +55,8 @@ class EntryProbing():
 
 
     def check_entry(self,
-                    url_entries = [],
-                    req_entries = {}) -> bool:
+                    url_entries=[],
+                    req_entries={}) -> bool:
         """
         Uses the request and response handlers to check for an entry's
         existence
@@ -71,8 +71,7 @@ class EntryProbing():
         self.__response_obj = response
         return all([h.process(response) for h in self.__resp_handlers])
 
-
-    async def async_check_entry(self, entry = None) -> bool:
+    async def async_check_entry(self, entry=None) -> bool:
         """
         Async version of the check_entry() method, to be used in an async
         context
