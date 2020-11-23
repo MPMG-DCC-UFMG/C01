@@ -3,10 +3,10 @@ import datetime
 import json
 
 # Project libs
-from base_messenger import BaseMessenger
+from base_messenger.base_messenger import BaseMessenger
 
 class FileDescriptor(BaseMessenger):
-    TEMP_DESCRIPTION_FOLDER = "/tmp/temp_description_folder"
+    TEMP_DESCRIPTION_FOLDER = "temp_description_folder"
 
     @staticmethod
     def feed_description(destination, description):
@@ -14,7 +14,6 @@ class FileDescriptor(BaseMessenger):
         File source 'gambiarra'.
         BaseMessenger.feed must be changed to a kafka producer when
         integrations with Kafka and SC are complete.
-
         Keyword arguments:
         destination -- str, address of the folder that will containt the file
         description -- dict, dictionary of item descriptions
@@ -56,7 +55,6 @@ class FileDescriptor(BaseMessenger):
         - destination: str, address of the folder that contains the file
           file_description.jsonl
         - description: str, file description
-
         Keyword arguments:
         testing -- do not use this argument. It is used to stop process if any
         error occurs during tests. (default False)
