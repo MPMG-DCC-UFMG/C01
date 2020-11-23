@@ -31,14 +31,11 @@
     {% block content %}
     {% endblock %}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
     <script src="{% static 'js/steps.js' %}"></script>
     <script src="{% static 'js/navmenu.js' %}"></script>
-    <!-- We no longer use the CDN for jquery.formset.js, since this version is
-         outdated, and also we had to apply manual changes to the code. More
-         information can be found in the jquery.formset.js file itself, in the
-         comment beginning with [EDITED] -->
-    <script src="{% static 'js/jquery.formset.js' %}"></script>
+    <script src="{% static 'js/jquery.formset.widget.js' %}"></script>
     <script src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.11.1/jquery.validate.min.js"></script>
 
     {% block js %}

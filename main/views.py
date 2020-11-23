@@ -93,9 +93,9 @@ def create_crawler(request):
     if request.method == "POST":
         my_form = RawCrawlRequestForm(request.POST)
         parameter_formset = ParameterHandlerFormSet(request.POST,
-            prefix='params')
+            prefix='templated-url-params')
         response_formset = ResponseHandlerFormSet(request.POST,
-            prefix='responses')
+            prefix='templated-url-responses')
         if my_form.is_valid() and parameter_formset.is_valid() and \
            response_formset.is_valid():
             new_crawl = CrawlRequestForm(my_form.cleaned_data)
@@ -110,8 +110,12 @@ def create_crawler(request):
             return redirect('list_crawlers')
     else:
         my_form = RawCrawlRequestForm()
-        parameter_formset = ParameterHandlerFormSet(prefix='params')
-        response_formset = ResponseHandlerFormSet(prefix='responses')
+        parameter_formset = ParameterHandlerFormSet(
+            prefix='templated-url-params'
+        )
+        response_formset = ResponseHandlerFormSet(
+            prefix='templated-url-responses'
+        )
     context['form'] = my_form
     context['response_formset'] = response_formset
     context['parameter_formset'] = parameter_formset
@@ -122,27 +126,22 @@ def edit_crawler(request, id):
     crawler = get_object_or_404(CrawlRequest, pk=id)
     form = RawCrawlRequestForm(request.POST or None, instance=crawler)
     parameter_formset = ParameterHandlerFormSet(request.POST or None,
-        instance=crawler, prefix='params')
+        instance=crawler, prefix='templated-url-params')
     response_formset = ResponseHandlerFormSet(request.POST or None,
-        instance=crawler, prefix='responses')
-
-    if (len(parameter_formset) > 1):
-        # we have at least one parameter to use as a base, no need to add an
-        # empty one
-        parameter_formset.extra=0
+        instance=crawler, prefix='templated-url-responses')
 
     if request.method == 'POST' and form.is_valid() and \
        parameter_formset.is_valid() and response_formset.is_valid():
-            form.save()
-            parameter_formset.save()
-            response_formset.save()
-            return redirect('list_crawlers')
+        form.save()
+        parameter_formset.save()
+        response_formset.save()
+        return redirect('list_crawlers')
     else:
         return render(request, 'main/create_crawler.html', {
             'form': form,
             'response_formset': response_formset,
             'parameter_formset': parameter_formset,
-            'crawler' : crawler
+            'crawler': crawler
         })
 
 
@@ -196,8 +195,8 @@ def run_crawl(request, crawler_id):
 def tail_log_file(request, instance_id):
 
     crawler_id = CrawlerInstance.objects.filter(
-                    instance_id=instance_id
-                ).values()[0]["crawler_id_id"]
+        instance_id=instance_id
+    ).values()[0]["crawler_id_id"]
 
     config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
     data_path = config["data_path"]

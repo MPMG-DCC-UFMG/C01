@@ -44,7 +44,7 @@ RangeInference.filter_numeric_range(0, 1000, probe)
 As these methods are not state-dependent, they are implemented as static methods, and therefore don't require a class instance. Each method returns the last parameter value for which we found an entry. Below we give a high level overview of each main method, with examples:
 
 ### Core range filter
-The `__filter_range` method is a general case of both filters described below, by using a binary search approach for both numerical and date type parameters. It takes in the general information on how to traverse the search space and tries to find out where the entries stop happening.
+The `__filter_range` method is a general case of both filters described below, by using a binary search approach for both numerical and date type parameters. It takes in the general information on how to traverse the search space and tries to find out where the entries stop happening. It can also accomodate other parameters to be sent to the probing mechanism, giving them a constant value supplied by the user.
 
 #### Caveats
 We found some websites where we can have an empty interval between two populated ranges for a parameter, for example, if we are generating a numerical parameter between 0 and 1000, we can maybe have entries in values from 0 to 230, then no entries until 260, and then have more entries up to 500. If we ran a simple binary search to find the maximum parameter value, we would stop at 230, missing all entries after that. To avoid this problem, our algorithm looks not only at the middle of a range, but at a certain number of entries after this midpoint, and considers a miss only if no entries were found.
@@ -55,7 +55,7 @@ Checks a range of numerical parameters and finds the maximum value for which we 
 ```
 from unittest import mock
 
-def check(x): lambda x: 50 <= x <= 100
+def check(x): return: 50 <= x[0] <= 100
 # Mock of an EntryProbing instance, used as an example (max param value is 100)
 entry_probe = mock.MagicMock(spec=EntryProbing, check_entry=check)
 
@@ -63,13 +63,15 @@ RangeInference.filter_numeric_range(0, 1000, entry_probe) # 100
 ```
 
 ### Date range filter
-Checks a range of date parameters and finds the maximum value for which we can find an entry. Works for daily, monthly or yearly ranges.
+Checks a range of date parameters and finds the maximum value for which we can find an entry. Works for daily, monthly or yearly ranges. Can use dates in a format supplied by the user when probing.
 
 ```
+from datetime import date, datetime
 from unittest import mock
 
-def check(x): lambda x: date(2000, 1, 1) <= x <= date(2010, 1, 1)
+def check(x): return date(2000, 1, 1) <= x[0] <= date(2010, 1, 1)
 # Mock of an EntryProbing instance, used as an example (max param value is date(2010, 1, 1))
+
 entry_probe = mock.MagicMock(spec=EntryProbing, check_entry=check)
 
 RangeInference.filter_daterange(date(2000, 1, 1), date(2020, 1, 1), entry_probe)
@@ -78,4 +80,61 @@ RangeInference.filter_daterange(date(2000, 1, 1), date(2020, 1, 1), entry_probe,
 # datetime.date(2010, 1, 1)
 RangeInference.filter_daterange(date(2000, 1, 1), date(2020, 1, 1), entry_probe, 'D')
 # datetime.date(2010, 1, 1)
+
+# Specifying a date format for probing
+def check_str(x):
+    return date(2000, 1, 1) <= datetime.strptime(x[0], "%d/%m/%Y").date() <= date(2010, 1, 1)
+
+entry_probe = mock.MagicMock(spec=EntryProbing, check_entry=check_str)
+RangeInference.filter_daterange(date(2000, 1, 1), date(2020, 1, 1), entry_probe, 'D', "%d/%m/%Y")
+# datetime.date(2010, 1, 1)
+```
+
+### Formatted code filter
+Checks the limits for the desired sub-parameters of a formatted code (for instance, a process number). To check a sub-parameter, all other sub-parameters are fixed to their initial values. Returns a list of the updated parameter limits
+
+```
+from unittest import mock
+
+def check(x):
+    for v in x[0].split("."):
+        if int(v) > 10:
+            return False
+    return True
+
+# Mock of an EntryProbing instance, used as an example (all sub-parameters must be <= 10)
+
+entry_probe = mock.MagicMock(spec=EntryProbing, check_entry=check)
+
+RangeInference.filter_formatted_code("{}.{}", [(1, 100), (1, 20)],
+                                     [True, True], entry_probe)
+# [(1, 10), (1, 10)]
+
+# Filtering a single sub-parameter
+RangeInference.filter_formatted_code("{}.{}", [(1, 100), (1, 20)],
+                                     [False, True], entry_probe)
+# [(1, 100), (1, 10)]
+```
+
+### Process code filter
+Checks the limits for the sequential parameter of a process number. The limit is chosen as the highest valid value obtained when trying all the combinations for the other parameters. Uses the formatted code filter internally.
+
+```
+from unittest import mock
+from param_injector import ParamInjector
+
+def check(x):
+    seq_num = x[0].split("-")[0]
+    if int(seq_num) > 10:
+        return False
+    return True
+
+# Mock of an EntryProbing instance, used as an example (sequential number must be <= 10)
+
+entry_probe = mock.MagicMock(spec=EntryProbing, check_entry=check)
+
+RangeInference.filter_process_code(
+    2010, 2020, [4], [2], [0, 9999], entry_probe
+)
+# 10
 ```

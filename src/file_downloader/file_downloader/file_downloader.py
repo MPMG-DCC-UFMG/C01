@@ -7,18 +7,17 @@ import heapq
 import queue
 import threading
 import time
-import pandas
 import subprocess
 
 # Project libs
-from binary import Extractor
+import binary
 import crawling_utils
 from file_descriptor.file_descriptor import FileDescriptor
 from base_messenger.base_messenger import BaseMessenger
 
 
 class FileDownloader(BaseMessenger):
-    TEMP_FILES_FOLDER = "temp_files_to_download" 
+    TEMP_FILES_FOLDER = "/tmp/temp_files_to_download" 
 
     @staticmethod
     def feed_downloader(url, destination, description):
@@ -26,6 +25,7 @@ class FileDownloader(BaseMessenger):
         Download source 'gambiarra'.
         BaseMessenger.feed must be changed to a kafka producer when
         integrations with Kafka and SC are complete.
+
         Keyword arguments:
         url -- str, file url
         destination -- str, address of the folder that will containt the file
@@ -78,41 +78,29 @@ class FileDownloader(BaseMessenger):
         - description: dict, dictionary of item descriptions
         """
 
-        item_desc = item["description"].copy()
         url_hash = crawling_utils.hash(item["url"].encode())
-        source_file = f"{item['destination']}files/{item_desc['file_name']}"
+        old_file_name = item["description"]["file_name"]
+        item["description"]["file_name"] = f"{url_hash}.csv"
+        item["description"]["type"] = "csv"
+        url_hash = crawling_utils.hash(item["url"].encode())
 
         success = False
-        results = None
-        try:
-            # single DataFrame or list of DataFrames
-            results = Extractor(source_file).extra().read()
-        except Exception as e:
-            print(
-                f"Could not extract csv files from {source_file} -",
-                f"message: {str(type(e))}-{e}"
-            )
-            return []
 
-        if type(results) == pandas.DataFrame:
-            results = [results]
+        # # Not sure how binary extractor should work. Needs to check
+        # new_file = f"{item['destination']}/csv/{url_hash}.csv"
+        # try:
+        #     out = binary.extractor.Extractor(new_file)
+        #     out.extractor()
+        #     success = True
+        # except Exception as e:
+        #     print(
+        #         f"Could not extract csv files from {hsh}.{file_format} -",
+        #         f"message: {str(type(e))}-{e}"
+        #     )
 
-        extracted_files = []
-        for i in range(len(results)):
-            relative_path = f"{item['destination']}csv/{url_hash}_{i}.csv"
-            results[i].to_csv(relative_path, encoding='utf-8', index=False)
-
-            extracted_files.append(relative_path)
-
-            item_desc["file_name"] = f"{url_hash}_{i}.csv"
-            item_desc["type"] = "csv"
-            item_desc["extracted_from"] = source_file
-            item_desc["relative_path"] = relative_path
-
+        if success:
             FileDescriptor.feed_description(
-                item['destination'] + "csv/", item_desc.copy())
-
-        return extracted_files
+                item['destination'] + "csv/", item['description'])
 
     @staticmethod
     def process_item(item):
@@ -135,9 +123,6 @@ class FileDownloader(BaseMessenger):
             fname = f"{url_hash}.{extension}"
 
         item["description"]["file_name"] = fname
-        item["relative_path"] = (
-            f"{item['destination']}files/{item['description']['file_name']}"
-        )
         item["description"]["type"] = extension
 
         for attempt in range(1, max_attempts + 1):
@@ -155,11 +140,9 @@ class FileDownloader(BaseMessenger):
                 print("Downloaded", item["url"], "successfully.")
                 success = True
 
-                extracted_files = FileDownloader.convert_binary(item.copy())
-                item['description']["extracted_files"] = extracted_files
-
                 FileDescriptor.feed_description(
                     item['destination'] + "files/", item['description'])
+                FileDownloader.convert_binary(item)
                 break
 
             except Exception as e:
@@ -372,6 +355,7 @@ class FileDownloader(BaseMessenger):
         - destination: str, address of the folder that will containt the file
         - description: dict, dictionary of item descriptions
         It will try to download a file 3 times before giving up.
+
         Keyword arguments:
         max_attempts -- max number of attempts to download a file
         testing -- do not use this argument. It is used to stop process if any
@@ -432,6 +416,7 @@ class FileDownloader(BaseMessenger):
         The file name will be a hash function of the file url.
         It will print a progress bar on stdout, and will add the file name to
         the description.
+
         Keyword arguments:
         item -- a dictionary with the following keys:
         - url: str, file url
@@ -441,14 +426,16 @@ class FileDownloader(BaseMessenger):
         def log_progress(current, total, widht=None):
             FileDownloader.log_progress(item["id"], current, total)
 
-        wget.download(item["url"], item["relative_path"], bar=log_progress)
+        name = f"{item['destination']}files/{item['description']['file_name']}"
+        wget.download(item["url"], name, bar=log_progress)
 
     @staticmethod
     def download_small_file(item):
         """Downloads file to memory then writes to disk."""
         response = requests.get(item["url"], allow_redirects=True)
 
-        with open(item["relative_path"], 'wb') as file:
+        name = f"{item['destination']}files/{item['description']['file_name']}"
+        with open(name, 'wb') as file:
             file.write(response.content)
         
         FileDownloader.log_progress(item["id"], 100, 100)

@@ -19,7 +19,7 @@ body {
     margin-right:0;
 }
 #sidebar-container {
-    min-height: 89vh;   
+    min-height: 89vh;
     background-color: #333;
     padding: 0;
 }
@@ -148,6 +148,10 @@ table.dataTable thead .sorting_desc_disabled:before {
     bottom: .5em;
 }
 
+.indented-subblock {
+    padding-left: 20px;
+}
+
 /* Step styles -----------*/
 
 .step-block {
@@ -192,9 +196,10 @@ card .step{
     margin: 0em;
 }
 
-a.close {
+a.close, a.add_form {
     margin-right: 0;
     margin-top: -2rem;
+    cursor: pointer;
 }
 
 .bordered-bottom-option {

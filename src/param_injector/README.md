@@ -30,6 +30,20 @@ gen = ParamInjector.generate_format('{}-{}', [(1996, 2000)], lambda x: x % 10, 1
 list(gen) # ['1996-6', '1997-7', '1998-8', '1999-9', '2000-0']
 ```
 
+#### Formatted string creator
+The method `format_params` is used by this module's internals, but can also be useful in other modules. It takes in the code information and returns the string, filled with the supplied values.
+
+```
+def verif(x, y):
+    return x + y
+
+verif_index = 2
+ParamInjector.format_params("{}-{}-{}", (1, 2), verif, verif_index) # '1-2-3'
+```
+
+#### Verification digits for process codes
+The method `process_code_verification` is also supplied. It takes the process code's data as input and returns the verification digits for this instance.
+
 ### Number sequence generator
 Generates a sequence of numbers between two values with a given step size. By default adds leading zeros to the values so that they have the same number of digits.
 

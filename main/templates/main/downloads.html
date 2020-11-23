@@ -22,6 +22,17 @@ Downloads
 <div class="row">
     <div class="col-2"></div>
     <div class="col">
+        Alguns downloads podem continuar na fila mesmo se não houver nenhum
+        download sendo feito. Isso acontece pois temos que respeitar o tempo
+        entre requisições a um mesmo domínio e um coletor pode estar 
+        configurado para baixar arquivos só depois que a coleta terminar.
+    </div>
+    <div class="col-2"></div>
+</div>
+
+<div class="row">
+    <div class="col-2"></div>
+    <div class="col">
         <div class="row"><div class="col"><h5>Na fila: </h5></div></div>
         <div class="row"><div id="file_queue" class="col"></div></div>
     </div>

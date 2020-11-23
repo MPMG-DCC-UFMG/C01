@@ -78,7 +78,7 @@ class BaseMessenger:
                 if f == "flags.json":
                     continue
 
-                print(f"Found file {f}")
+                # print(f"Found file {f}")
 
                 if f not in file_check:
                     file_check[f] = 0
@@ -97,7 +97,8 @@ class BaseMessenger:
             time.sleep(10)
             with open(flag_file, "r") as f:
                 flags = json.loads(f.read())
-                print("flags:", flags)
                 stop = flags["stop"]
+                if stop:
+                    print("Sinalized to stop.")
 
         shutil.rmtree(address)
