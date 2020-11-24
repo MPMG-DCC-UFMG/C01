@@ -254,15 +254,18 @@ class RawCrawlRequestForm(CrawlRequestForm):
     link_extractor_allow_url = forms.CharField(
         required=False, max_length=2000,
         label=(
-            "Permitir urls que casem com o regex"
-            " (deixe em branco para não filtrar):"
+            "Permitir urls que casem com o regex:"
+            " (deixe em branco para não filtrar)"
         ),
         widget=forms.TextInput(
             attrs={'placeholder': 'Regex para permitir urls'})
     )
     link_extractor_allow_domains = forms.CharField(
         required=False, max_length=2000,
-        label="Permitir só urls dos domínios: (em branco para não filtrar)",
+        label=(
+            "Permitir só urls dos domínios:"
+            "(em branco para não filtrar) (separado por vírgula)"
+        ),
         widget=forms.TextInput(
             attrs={'placeholder': ''})
     )
@@ -296,8 +299,8 @@ class RawCrawlRequestForm(CrawlRequestForm):
     download_files_allow_url = forms.CharField(
         required=False, max_length=2000,
         label=(
-            "Baixar arquivos de url que casem com o regex"
-            " (deixe em branco para não filtrar):"
+            "Baixar arquivos de url que casem com o regex:"
+            " (deixe em branco para não filtrar)"
         ),
         widget=forms.TextInput(
             attrs={'placeholder': 'Regex para permitir urls'})
@@ -309,7 +312,10 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
     download_files_allow_domains = forms.CharField(
         required=False, max_length=2000,
-        label="Permitir só urls dos domínios: (em branco para não filtrar)",
+        label=(
+            "Permitir só urls dos domínios:"
+            "(em branco para não filtrar) (separado por vírgula)"
+        ),
         widget=forms.TextInput(
             attrs={'placeholder': ''})
     )
