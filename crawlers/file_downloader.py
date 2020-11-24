@@ -79,6 +79,9 @@ class FileDownloader(BaseMessenger):
         - description: dict, dictionary of item descriptions
         """
 
+        if item["type"] != "pdf":
+            return
+
         item_desc = item["description"].copy()
         url_hash = crawling_utils.hash(item["url"].encode())
         source_file = f"{item['destination']}files/{item_desc['file_name']}"
