@@ -4,14 +4,14 @@
 # If all tests pass, then your all components appear to be working correctly
 # and integrated with all other components
 
-HOST='localhost'
+HOST='10.21.0.130'
 PORT=6379
-PASSWORD='None'
-ZOOKEEPER_HOST='localhost:2181'
+PASSWORD='aWx145'
+ZOOKEEPER_HOST='10.21.0.130:2181'
 
 if [ $# -ne 4 ]
   then
-    echo "---- Running utils online test with redis on localhost:6379 with password: None and zookeeper on localhost:2181"
+    echo "---- Running utils online test with redis on 10.21.0.130:6379 with password: aWx145 and zookeeper on 10.21.0.130:2181"
     echo "Other usage:"
     echo "    ./bundle.sh <utils_redis_host> <utils_redis_port> <utils_redis_password> <utils_zookeeper_host>"
 else
