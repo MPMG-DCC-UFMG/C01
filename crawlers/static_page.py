@@ -110,7 +110,7 @@ class StaticPageSpider(BaseSpider):
     def extract_links(self, response):
         """Filter and return a set with links found in this response."""
         config = self.preprocess_link_configs(response.meta["config"])
-        
+
         links_extractor = LinkExtractor(
             allow_domains=config["link_extractor_allow_domains"],
             tags=config["link_extractor_tags"],
@@ -157,7 +157,7 @@ class StaticPageSpider(BaseSpider):
     def extract_files(self, response):
         """Filter and return a set with links found in this response."""
         config = self.preprocess_download_configs(response.meta["config"])
-    
+
         links_extractor = LinkExtractor(
             allow_domains=config["download_files_allow_domains"],
             tags=config["download_files_tags"],
@@ -166,7 +166,7 @@ class StaticPageSpider(BaseSpider):
             deny_extensions=config["donwload_files_deny_extensions"]
         )
         urls_found = {i.url for i in links_extractor.extract_links(response)}
-        
+
         pattern = config["download_files_allow_url"]
 
         if pattern != "":
@@ -175,7 +175,7 @@ class StaticPageSpider(BaseSpider):
         urls_found_a = set()
         if config["download_files_check_type"]:
             urls_found_a = self.filter_type_of_urls(urls_found, False)
-            
+
         urls_found_b = self.filter_list_of_urls(
             urls_found, r"(.*\.[a-z]{3,4}$)(.*(?<!\.html)$)(.*(?<!\.php)$)")
 
