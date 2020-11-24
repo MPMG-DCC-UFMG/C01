@@ -7,9 +7,11 @@ import heapq
 import queue
 import threading
 import time
+import pandas
+import subprocess
 
 # Project libs
-import binary
+from binary import Extractor
 import crawling_utils
 from crawlers.file_descriptor import FileDescriptor
 from crawlers.base_messenger import BaseMessenger
@@ -77,35 +79,68 @@ class FileDownloader(BaseMessenger):
         - description: dict, dictionary of item descriptions
         """
 
+        item_desc = item["description"].copy()
         url_hash = crawling_utils.hash(item["url"].encode())
-        old_file_name = item["description"]["file_name"]
-        item["description"]["file_name"] = f"{url_hash}.csv"
-        item["description"]["type"] = "csv"
-        url_hash = crawling_utils.hash(item["url"].encode())
+        source_file = f"{item['destination']}files/{item_desc['file_name']}"
 
         success = False
+        results = None
+        try:
+            # single DataFrame or list of DataFrames
+            results = Extractor(source_file).extra().read()
+        except Exception as e:
+            print(
+                f"Could not extract csv files from {source_file} -",
+                f"message: {str(type(e))}-{e}"
+            )
+            return []
 
-        # # Not sure how binary extractor should work. Needs to check
-        # new_file = f"{item['destination']}/csv/{url_hash}.csv"
-        # try:
-        #     out = binary.extractor.Extractor(new_file)
-        #     out.extractor()
-        #     success = True
-        # except Exception as e:
-        #     print(
-        #         f"Could not extract csv files from {hsh}.{file_format} -",
-        #         f"message: {str(type(e))}-{e}"
-        #     )
+        if type(results) == pandas.DataFrame:
+            results = [results]
 
-        if success:
+        extracted_files = []
+        for i in range(len(results)):
+            relative_path = f"{item['destination']}csv/{url_hash}_{i}.csv"
+            results[i].to_csv(relative_path, encoding='utf-8', index=False)
+
+            extracted_files.append(relative_path)
+
+            item_desc["file_name"] = f"{url_hash}_{i}.csv"
+            item_desc["type"] = "csv"
+            item_desc["extracted_from"] = source_file
+            item_desc["relative_path"] = relative_path
+
             FileDescriptor.feed_description(
-                item['destination'] + "csv/", item['description'])
+                item['destination'] + "csv/", item_desc.copy())
+
+        return extracted_files
 
     @staticmethod
     def process_item(item):
         max_attempts = 3
         success = False
         error_message = ""
+
+        # file size > 1e9 bytes
+        big_file = crawling_utils.file_larger_than_giga(item["url"])
+
+        url_hash = crawling_utils.hash(item["url"].encode())
+        extension = item["url"].split(".")[-1]
+
+        if len(extension) > 5 or len(extension) == 0:
+            print("Could not identify extension of file:", item["url"])
+            print("Saving it without extension.")
+            extension = ""
+            fname = url_hash
+        else:
+            fname = f"{url_hash}.{extension}"
+
+        item["description"]["file_name"] = fname
+        item["relative_path"] = (
+            f"{item['destination']}files/{item['description']['file_name']}"
+        )
+        item["description"]["type"] = extension
+
         for attempt in range(1, max_attempts + 1):
             print(
                 "Trying to download file "
@@ -113,12 +148,21 @@ class FileDownloader(BaseMessenger):
                 item["url"]
             )
             try:
-                FileDownloader.download_file(item)
+                if big_file:
+                    FileDownloader.download_large_file(item)
+                else:
+                    FileDownloader.download_small_file(item)
+
                 print("Downloaded", item["url"], "successfully.")
                 success = True
 
-                FileDownloader.convert_binary(item)
+                extracted_files = FileDownloader.convert_binary(item.copy())
+                item['description']["extracted_files"] = extracted_files
+
+                FileDescriptor.feed_description(
+                    item['destination'] + "files/", item['description'])
                 break
+
             except Exception as e:
                 print(
                     f"{attempt}-th attempt to download \"{item['url']}\" "
@@ -137,6 +181,12 @@ class FileDownloader(BaseMessenger):
                     "error_message": error_message
                 }
             )
+
+        # downloads may create *.tmp files and leave them here.
+        try:
+            subprocess.run(["rm", "*.tmp"])
+        except Exception as e:
+            print(f"Cannot clean tmp files: {str(type(e))}-{e}")
 
     @staticmethod
     def internal_consumer(
@@ -182,7 +232,7 @@ class FileDownloader(BaseMessenger):
             FileDownloader.process_item(item)
 
             if item["time_between_downloads"] is None:
-                add = 60
+                add = 1
             else:
                 add = item["time_between_downloads"]
             next_download = int(time.time()) + add
@@ -195,6 +245,7 @@ class FileDownloader(BaseMessenger):
                 print(f"re-building heap: {heap}")
                 local_stop = stop
 
+    @staticmethod
     def internal_producer(
         wait_line, heap, stop, in_heap,
         downloads_waiting, lock,
@@ -377,7 +428,7 @@ class FileDownloader(BaseMessenger):
             t.join()
 
     @staticmethod
-    def download_file(item):
+    def download_large_file(item):
         """
         Download an item using wget.download.
         The file name will be a hash function of the file url.
@@ -390,26 +441,20 @@ class FileDownloader(BaseMessenger):
         - destination: str, address of the folder that will containt the file
         - description: dict, dictionary of item descriptions
         """
-        url_hash = crawling_utils.hash(item["url"].encode())
-        extension = item["url"].split(".")[-1]
-
-        if len(extension) > 5:
-            print("Could not identify extension of file:", item["url"])
-            print("Saving it without extension.")
-            extension = ""
-
-        fname = f"{url_hash}.{extension}"
-        item["description"]["file_name"] = fname
-        item["description"]["type"] = extension
-
         def log_progress(current, total, widht=None):
             FileDownloader.log_progress(item["id"], current, total)
 
-        full_name = item["destination"] + "files/" + fname
-        wget.download(item["url"], full_name, bar=log_progress)
+        wget.download(item["url"], item["relative_path"], bar=log_progress)
+
+    @staticmethod
+    def download_small_file(item):
+        """Downloads file to memory then writes to disk."""
+        response = requests.get(item["url"], allow_redirects=True)
+
+        with open(item["relative_path"], 'wb') as file:
+            file.write(response.content)
         
-        FileDescriptor.feed_description(
-            item['destination'] + "files/", item['description'])
+        FileDownloader.log_progress(item["id"], 100, 100)
 
     @staticmethod
     def log_progress(item_id, current, total):
