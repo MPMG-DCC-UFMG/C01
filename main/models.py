@@ -114,13 +114,41 @@ class CrawlRequest(TimeStamped):
     explore_links = models.BooleanField(blank=True, null=True)
     link_extractor_max_depth = models.IntegerField(blank=True, null=True)
     link_extractor_allow_url = models.CharField(
-        max_length=1000, blank=True, null=True)
+        max_length=1000, blank=True, null=True
+    )
+    link_extractor_allow_domains = models.CharField(
+        max_length=1000, blank=True, null=True
+    )
+    link_extractor_tags = models.CharField(
+        max_length=1000, blank=True, null=True
+    )
+    link_extractor_attrs = models.CharField(
+        max_length=1000, blank=True, null=True
+    )
+    link_extractor_check_type = models.BooleanField(blank=True, null=True)
+    link_extractor_process_value = models.TextField(
+        max_length=1000, blank=True, null=True
+    )
 
     download_files = models.BooleanField(blank=True, null=True)
     download_files_allow_url = models.CharField(
         max_length=1000, blank=True, null=True)
     download_files_allow_extensions = models.CharField(
         blank=True, null=True, max_length=2000)
+    download_files_allow_domains = models.CharField(
+        max_length=1000, blank=True, null=True
+    )
+    download_files_tags = models.CharField(
+        max_length=1000, blank=True, null=True
+    )
+    download_files_attrs = models.CharField(
+        max_length=1000, blank=True, null=True
+    )
+    download_files_check_type = models.BooleanField(blank=True, null=True)
+    download_files_process_value = models.TextField(
+        max_length=1000, blank=True, null=True
+    )
+
 
     download_imgs = models.BooleanField(default=False)
 
