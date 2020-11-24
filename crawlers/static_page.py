@@ -121,7 +121,7 @@ class StaticPageSpider(BaseSpider):
         urls_found = {i.url for i in links_extractor.extract_links(response)}
 
         pattern = config["link_extractor_allow_url"]
-        if pattern != "":
+        if pattern is not None and pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
         if config["link_extractor_check_type"]:
@@ -169,7 +169,7 @@ class StaticPageSpider(BaseSpider):
 
         pattern = config["download_files_allow_url"]
 
-        if pattern != "":
+        if pattern is not None and pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
         urls_found_a = set()
