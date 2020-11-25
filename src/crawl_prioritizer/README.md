@@ -7,7 +7,7 @@ Plugin para o Scrapy Cluster capaz de determinar prioridades para coletas indivi
 - Permite definir prioridades para requisições de coletas feitas ao Scrapy Cluster, baseado em seu histórico.
 
 
-Este módulo faz uso de consultas a banco de dados definido em no módulo https://github.com/MPMG-DCC-UFMG/C04/issues/238 (acesse-a para mais detalhes). Abaixo o esquema da tabela:
+Este módulo faz uso de consultas a banco de dados definido no módulo de https://github.com/MPMG-DCC-UFMG/C04/issues/238 (acesse-a para mais detalhes). Abaixo o esquema da tabela:
 
 | Tabela CRAWL_HISTORIC |
 | :--- |
