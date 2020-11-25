@@ -88,18 +88,7 @@ def crawler_process(config):
     sys.stderr = open(f"{data_path}/log/{instance_id}.err", "a", buffering=1)
 
     process = CrawlerProcess(settings=get_crawler_base_settings(config))
-
-    if config["crawler_type"] == "single_file":
-        # process.crawl(StaticPageSpider, crawler_id=crawler_id)
-        raise NotImplementedError
-    elif config["crawler_type"] == "file_bundle":
-        # process.crawl(StaticPageSpider, crawler_id=crawler_id)
-        raise NotImplementedError
-    elif config["crawler_type"] == "deep_crawler":
-        # process.crawl(StaticPageSpider, crawler_id=crawler_id)
-        raise NotImplementedError
-    elif config["crawler_type"] in ["static_page", "form_page"]:
-        process.crawl(PageSpider, config=json.dumps(config))
+    process.crawl(PageSpider, config=json.dumps(config))
 
     def update_database():
         # TODO: get port as variable
