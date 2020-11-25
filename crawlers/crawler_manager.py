@@ -33,16 +33,16 @@ from crawlers.page_spider import PageSpider
 def file_downloader_process():
     """Redirects downloader output and starts downloader consumer loop."""
     crawling_utils.check_file_path("crawlers/log/")
-    sys.stdout = open(f"crawlers/log/file_downloader.out", "a", buffering=1)
-    sys.stderr = open(f"crawlers/log/file_downloader.err", "a", buffering=1)
+    sys.stdout = open(f"crawlers/log/file_downloader.out", "w+", buffering=1)
+    sys.stderr = open(f"crawlers/log/file_downloader.err", "w+", buffering=1)
     FileDownloader.download_consumer()
 
 
 def file_descriptor_process():
     """Redirects descriptor output and starts descriptor consumer loop."""
     crawling_utils.check_file_path("crawlers/log/")
-    sys.stdout = open(f"crawlers/log/file_descriptor.out", "a", buffering=1)
-    sys.stderr = open(f"crawlers/log/file_descriptor.err", "a", buffering=1)
+    sys.stdout = open(f"crawlers/log/file_descriptor.out", "w+", buffering=1)
+    sys.stderr = open(f"crawlers/log/file_descriptor.err", "w+", buffering=1)
     FileDescriptor.description_consumer()
 
 
