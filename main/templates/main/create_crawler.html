@@ -91,18 +91,37 @@ New Crawler
 
                 <!-- /END Separator -->
                 <a onClick="showBlock(this.id)" href="#"
-                    class="button-block bg-dark list-group-item list-group-item-action" id="crawler-type-item">
+                    class="button-block bg-dark list-group-item list-group-item-action" id="crawler-details-item">
                     <div class="d-flex w-100 justify-content-start align-items-center">
                         <div class="col-md-10 sidemenu-items">
                             <span class="fa fa-gear fa-fw mr-3"></span>
-                            <span class="menu-collapsed">Tipo do coletor</span>
+                            <span class="menu-collapsed">Detalhes do coletor</span>
                         </div>
                         <div class="col-md-2">
-                            <span id="crawler-type-valid-icon"
-                                class="fa fa-check fa-fw mr-3 crawler-type-valid-icon valid-icon"></span>
+                            <span id="crawler-details-valid-icon"
+                                class="fa fa-check fa-fw mr-3 crawler-details-valid-icon valid-icon"></span>
                         </div>
                     </div>
                 </a>
+
+                <!-- implementation local begin -->
+                <a onClick="showBlock(this.id); load_steps_interface(this.id + '-block', 'id_steps');" 
+                    onLoad="load_steps_interface(this.id + '-block', 'id_steps');" href="#"
+                    class="disabled button-block bg-dark list-group-item list-group-item-action" id="dynamic-processing-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-code fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Processamento dinâmico</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span id="crawler-details-valid-icon"
+                                class="fa fa-check fa-fw mr-3 crawler-details-valid-icon valid-icon"></span>
+                        </div>
+                    </div>
+                </a>
+                <!-- implementation local end -->
+
+
                 <a href="#" class="disabled bg-dark list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-start align-items-center">
                         <span class="fa fa-shield fa-fw mr-3"></span>
@@ -138,8 +157,8 @@ New Crawler
                             <span class="menu-collapsed">Tratamento</span>
                         </div>
                         <div class="col-md-2">
-                            <span id="crawler-type-valid-icon"
-                                class="fa fa-check fa-fw mr-3 crawler-type-valid-icon valid-icon"></span>
+                            <span id="crawler-details-valid-icon"
+                                class="fa fa-check fa-fw mr-3 crawler-details-valid-icon valid-icon"></span>
                         </div>
                     </div>
                 </a>
@@ -249,43 +268,43 @@ New Crawler
                         </div>
                     </div>
 
-                    <div id="crawler-type-item-block" class="block" hidden>
+                    <div id="crawler-details-item-block" class="block" hidden>
                         <div class="row" style="padding:20px;">
-                            <div class="col md-6">
-                                {{ form.crawler_type | as_crispy_field}}
-                                <div class="crawler-type-content-div" id="static_page">
-                                    <div id="explore_links" style="padding: 20px; border-top: 1px solid #DCDCDC;">
-                                        {{ form.explore_links | as_crispy_field}}
-                                        {{ form.link_extractor_max_depth | as_crispy_field}}
-                                        {{ form.link_extractor_allow_url | as_crispy_field}}
-                                    </div>
-                                    <div id="download_files" style="padding: 20px; border-top: 1px solid #DCDCDC;">
-                                        {{ form.download_files | as_crispy_field}}
-                                        {{ form.download_files_allow_url | as_crispy_field}}
-                                        {{ form.download_files_allow_extensions | as_crispy_field}}
-                                    </div>
-                                    <div id="download_img" style="padding:20px; border-top: 1px solid #DCDCDC;">
-                                        {{ form.download_imgs | as_crispy_field}}
-                                    </div>
-                                    <div id="wait_crawler_finish_to_download" style="padding:20px; border-top: 1px solid #DCDCDC;">
-                                        <p>
-                                            Alguns servidores podem cancelar o download se outras requisições forem feitas ao mesmo tempo,
-                                            ou se um download for feito atrás do outro. Se os downloads começarem a dar erro com a mensagem
-                                            <i>"Foi forçado o cancelamento de uma conexão existente pelo host remoto"</i> ou mensagens 
-                                            parecidas, alterar estes valores pode ajudar.
-                                        </p>
-                                        {{ form.wait_crawler_finish_to_download | as_crispy_field }}
-                                        {{ form.time_between_downloads | as_crispy_field }}
-                                    </div>
-                                </div>
-                                <div class="crawler-type-content-div" id="form_page" hidden>
-                                    {{ form.steps |  as_crispy_field }}
-                                </div>
-                                <div class="crawler-type-content-div" id="single_file" hidden></div>
-                                <div class="crawler-type-content-div" id="bundle_file" hidden></div>
+                            <div id="explore_links" style="padding: 20px; border-top: 1px solid #DCDCDC;">
+                                {{ form.explore_links | as_crispy_field}}
+                                {{ form.link_extractor_max_depth | as_crispy_field}}
+                                {{ form.link_extractor_allow_url | as_crispy_field}}
+                            </div>
+                            <div id="download_files" style="padding: 20px; border-top: 1px solid #DCDCDC;">
+                                {{ form.download_files | as_crispy_field}}
+                                {{ form.download_files_allow_url | as_crispy_field}}
+                                {{ form.download_files_allow_extensions | as_crispy_field}}
+                            </div>
+                            <div id="download_img" style="padding:20px; border-top: 1px solid #DCDCDC;">
+                                {{ form.download_imgs | as_crispy_field}}
+                            </div>
+                            <div id="wait_crawler_finish_to_download" style="padding:20px; border-top: 1px solid #DCDCDC;">
+                                <p>
+                                    Alguns servidores podem cancelar o download se outras requisições forem feitas ao mesmo tempo,
+                                    ou se um download for feito atrás do outro. Se os downloads começarem a dar erro com a mensagem
+                                    <i>"Foi forçado o cancelamento de uma conexão existente pelo host remoto"</i> ou mensagens 
+                                    parecidas, alterar estes valores pode ajudar.
+                                </p>
+                                {{ form.wait_crawler_finish_to_download | as_crispy_field }}
+                                {{ form.time_between_downloads | as_crispy_field }}
+                            </div>
+                            <div id="dynamic_processing" style="padding:20px; border-top: 1px solid #DCDCDC;">
+                                {{ form.dynamic_processing | as_crispy_field}}
                             </div>
                         </div>
                     </div>
+
+                    <div id="dynamic-processing-item-block" class="block" hidden>
+                        <div class="row" style="padding:20px;">
+                            {{ form.steps | as_crispy_field }}
+                        </div>
+                    </div>
+
                     <div id="templated-url-item-block" class="block" hidden>
                         <div class="row">
                             <div class="col md-6" id="templated-url-config">

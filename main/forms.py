@@ -43,7 +43,7 @@ class CrawlRequestForm(forms.ModelForm):
             'webdriver_path',
             'img_xpath',
             'sound_xpath',
-            'crawler_type',
+            'dynamic_processing',
             'explore_links',
             'link_extractor_max_depth',
             'link_extractor_allow_url',
@@ -222,15 +222,13 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
 
     # CRAWLER TYPE ############################################################
-    crawler_type = forms.ChoiceField(
-        required=False, choices=(
-            ('static_page', 'Página estática'),
-            ('form_page', 'Páginas com formulário'),
-            # ('single_file', 'Arquivo único'),
-            # ('bundle_file', 'Conjunto de arquivos'),
-        ),
-        widget=forms.Select(attrs={'onchange': 'detailCrawlerType();'})
+    dynamic_processing = forms.BooleanField(
+        required=False, label="Processamento dinâmico",
+        widget=forms.CheckboxInput(
+            attrs={'onchange': 'detailDynamicProcessing();'}
+        )
     )
+
     explore_links = forms.BooleanField(required=False, label="Explorar links")
 
     # Crawler Type - Static

@@ -89,16 +89,12 @@ def crawler_process(config):
 
     process = CrawlerProcess(settings=get_crawler_base_settings(config))
 
-    if config["crawler_type"] == "single_file":
-        # process.crawl(StaticPageSpider, crawler_id=crawler_id)
+
+    if config["dynamic_processing"]:
+        # Chama o coletor com processamento dinamico
         raise NotImplementedError
-    elif config["crawler_type"] == "file_bundle":
-        # process.crawl(StaticPageSpider, crawler_id=crawler_id)
-        raise NotImplementedError
-    elif config["crawler_type"] == "deep_crawler":
-        # process.crawl(StaticPageSpider, crawler_id=crawler_id)
-        raise NotImplementedError
-    elif config["crawler_type"] == "static_page":
+    else:
+        #Chama o coletor sem processamento dinamico
         process.crawl(StaticPageSpider, config=json.dumps(config))
 
     def update_database():

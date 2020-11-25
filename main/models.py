@@ -102,15 +102,9 @@ class CrawlRequest(TimeStamped):
     # Options for sound
     sound_xpath = models.CharField(max_length=100, blank=True, null=True)
 
-    # CRAWLER TYPE ############################################################
-    CRAWLER_TYPE = [
-        ('static_page', 'Static Page'),
-        ('form_page', 'Page with Form'),
-        ('single_file', 'Single File'),
-        ('bundle_file', 'Bundle File'),
-    ]
-    crawler_type = models.CharField(
-        max_length=15, choices=CRAWLER_TYPE, default='static_page')
+    #Steps activation
+    dynamic_processing = models.BooleanField(blank=True, null=True)    
+
     explore_links = models.BooleanField(blank=True, null=True)
     link_extractor_max_depth = models.IntegerField(blank=True, null=True)
     link_extractor_allow_url = models.CharField(

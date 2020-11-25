@@ -4,7 +4,10 @@
  * @param  {Node} output_element [The element where the steps json are going to be placed]
  * @param  {String} json_path [The path of the json with the steps information]
  */
-function load_steps(interface_root_element, output_element, json_path="/static/json/step_signatures.json"){
+function load_steps_interface(interface_root_element_id, output_element_id, json_path="/static/json/step_signatures.json"){
+    interface_root_element = document.getElementById(interface_root_element_id) 
+    output_element = document.getElementById(output_element_id)
+
     var xmlhttp = new XMLHttpRequest();
     xmlhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {

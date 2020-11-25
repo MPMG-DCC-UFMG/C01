@@ -1,0 +1,9 @@
+==============================================================
+ Starting file downloader at 2020-11-24T12:31:26.877814
+Starting internal_consumer
+First on heap: []
+Too soon to download. Sleeping...
+Starting internal_producer
+downloads_waiting_crawl_end - downloads waiting: []
+downloads_waiting_crawl_end - crawlers_done: []
+['flags.json']
