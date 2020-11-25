@@ -309,7 +309,8 @@ class ResponseHandlerForm(forms.ModelForm):
         labels = {
             'handler_type': 'Tipo de validador',
             'opposite': 'Inverter',
-            'text_match_value': 'Valor a buscar',
+            'text_match_value': ('Valor a buscar (não diferencia maiúsculas de'
+                                 ' minúsculas)'),
             'http_status': 'Status HTTP'
 
         }
