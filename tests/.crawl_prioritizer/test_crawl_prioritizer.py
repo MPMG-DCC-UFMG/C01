@@ -1,5 +1,5 @@
 import unittest
-import time 
+import time
 
 from datetime import datetime, timedelta
 
@@ -10,11 +10,12 @@ from crawl_prioritizer import CrawlPrioritizer
 from crawl_prioritizer import hashfy, get_url_domain
 from crawl_prioritizer import settings
 
+
 class TestCrawlPrioritizer(unittest.TestCase):
     def setUp(self):
         '''Configure connection with PostgreSQL
         '''
-        
+
         self.conn = psycopg2.connect(
             # Name of the database that saved the crawl metadata,
             # see https://github.com/MPMG-DCC-UFMG/C04/issues/238 for more details
@@ -50,7 +51,7 @@ class TestCrawlPrioritizer(unittest.TestCase):
     def test_get_crawl_statistics(self):
         '''Checks whether retrieving statistics about a crawl in the database is correct.
         '''
-        
+
         crawl_priotizer = CrawlPrioritizer()
         crawlid = 'some_unique_crawlid'
 
@@ -67,7 +68,7 @@ class TestCrawlPrioritizer(unittest.TestCase):
         self._insert_crawl_historic_in_database(crawlid, simple_crawl_historic)
 
         time_since_last_crawl, change_frequency = crawl_priotizer.get_crawl_statistics(crawlid)
-        
+
         last_timestamp = curr_timestamp
         curr_timestamp = datetime.now().timestamp()
 
@@ -80,13 +81,13 @@ class TestCrawlPrioritizer(unittest.TestCase):
     def test_get_crawl_statistics_without_estimate_frequency_change(self):
         '''Checks whether the retrieval of statistics about a crawl in the database is correct.
         '''
-        
+
         crawl_priotizer = CrawlPrioritizer()
         crawlid = 'some_unique_crawlid_2'
 
         self._delete_crawl_historic_in_database(crawlid)
 
-        now = datetime.now() 
+        now = datetime.now()
 
         visits = {"0": list()}
         visit_group = visits["0"]
@@ -127,12 +128,12 @@ class TestCrawlPrioritizer(unittest.TestCase):
         '''
 
         crawl_req = {'url': 'wwww.some_url.com/content/1'}
-        
+
         crawlid = hashfy(crawl_req['url'])
         crawl_domain = get_url_domain(crawl_req['url'])
 
         self._delete_crawl_historic_in_database(crawlid)
-        
+
         settings.PRIORITY_EQUATION = 'crawl_priority = domain_prio + time_since_last_crawl * 0 + change_frequency'
         settings.DOMAIN_PRIORITY[crawl_domain] = 11
 
@@ -154,9 +155,9 @@ class TestCrawlPrioritizer(unittest.TestCase):
     def test_calculate_priority_never_made_crawl(self):
         '''Checks whether the priority set for a crawl never made is being applied correctly.
         '''
-        
+
         crawl_req = {'url': 'wwww.some_another_url.com/content_never_seen/1'}
-        
+
         crawlid = hashfy(crawl_req['url'])
         crawl_domain = get_url_domain(crawl_req['url'])
 
