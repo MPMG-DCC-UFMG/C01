@@ -1,8 +1,8 @@
 # Change the priority equation using the variables:
-#    - domain_prio: Priority of the crawl domain. If it is not defined in the DOMAIN_PRIORITY dictionary, by default, it will be 1. 
+#    - domain_prio: Priority of the crawl domain. If it is not defined in the DOMAIN_PRIORITY dictionary, by default, it will be 1.
 #    - time_since_last_crawl: Time in seconds since the last crawl. If this value is not available, it will be the largest possible (obtained by sys.maxsize).
-#    - change_frequency: Update frequency estimated in seconds. 
-# 
+#    - change_frequency: Update frequency estimated in seconds.
+#
 # Use only math functions from the math library in your equation and "crawl_priority" MUST appear on the left side of the equality.
 #
 # Arbitrary equation for demonstration ONLY.
@@ -20,7 +20,7 @@ DOMAIN_PRIORITY = {
     'some_url.com': 81
 }
 
-# PostgreSQL settings (needed to access saved statistics from previous crawls, 
+# PostgreSQL settings (needed to access saved statistics from previous crawls,
 # changing the time_since_last_crawl and change_frequency variables values automatically.)
 POSTGRESQL_USER = 'postgres'
 POSTGRESQL_PASSWORD = 'my_password'
