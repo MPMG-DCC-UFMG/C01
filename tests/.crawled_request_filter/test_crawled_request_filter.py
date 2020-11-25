@@ -7,6 +7,7 @@ from crawled_request_filter import CrawledRequestFilter
 from crawled_request_filter.utils import hashfy
 from crawled_request_filter import settings
 
+
 class TestCrawlRequestFilter(unittest.TestCase):
     def setUp(self):
         '''Configure connection with PostgreSQL
@@ -49,13 +50,13 @@ class TestCrawlRequestFilter(unittest.TestCase):
 
         crawl_req = {
             'url': 'https://www.some_url.com/content/1'
-        } 
+        }
 
         crawlid = hashfy(crawl_req['url'])
         self._delete_crawl_historic_in_database(crawlid)
 
         crf = CrawledRequestFilter()
-        self.assertTrue(crf.crawl_never_made(crawlid)) 
+        self.assertTrue(crf.crawl_never_made(crawlid))
 
         self._insert_crawl_historic_in_database(crawlid, {})
         self.assertTrue(crf.crawl_never_made(crawlid) == False)
@@ -65,7 +66,7 @@ class TestCrawlRequestFilter(unittest.TestCase):
     def test_filter(self):
         '''Checks whether the ability to determine whether a crawl should be filtered is working correctly.
         '''
-        
+
         crawl_req = {
             'url': 'https://www.some_another_url.com/content/1'
         }
@@ -74,7 +75,7 @@ class TestCrawlRequestFilter(unittest.TestCase):
         self._delete_crawl_historic_in_database(crawlid)
 
         crf = CrawledRequestFilter()
-        self.assertTrue(crf.filter(crawl_req) == False) 
+        self.assertTrue(crf.filter(crawl_req) == False)
 
         self._insert_crawl_historic_in_database(crawlid, {})
         self.assertTrue(crf.filter(crawl_req))
