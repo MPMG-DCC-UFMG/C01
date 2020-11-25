@@ -156,12 +156,13 @@ class TextMatchProbingResponse(ProbingResponse):
 
     def _validate_resp(self, response: ResponseData) -> bool:
         """
-        Checks if the response.text property has the specified string within it
+        Checks if the response.text property has the specified string within
+        it, using a case-insensitive comparison
         :param response: ResponseData object to be validated
         :returns: True if the response contains the specified string, false
                   otherwise
         """
-        return self.text_match in response.text
+        return self.text_match.lower() in response.text.lower()
 
 
 class BinaryFormatProbingResponse(ProbingResponse):
