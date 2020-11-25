@@ -9,10 +9,11 @@ import hashlib
 from redis.exceptions import ConnectionError
 from crawl_prioritizer import CrawlPrioritizer
 
+
 class ScraperHandlerWithPrioritizer(BaseHandler):
 
     schema = "scraper_schema.json"
-    crawl_prioritizer = CrawlPrioritizer() 
+    crawl_prioritizer = CrawlPrioritizer()
 
     def setup(self, settings):
         '''
@@ -48,7 +49,7 @@ class ScraperHandlerWithPrioritizer(BaseHandler):
             sid=dict['spiderid'],
             dom=ex_res.domain,
             suf=ex_res.suffix)
-        
+
         dict['priority'] = self.crawl_prioritizer.calculate_priority(dict)
 
         val = ujson.dumps(dict)
@@ -59,9 +60,9 @@ class ScraperHandlerWithPrioritizer(BaseHandler):
         # if timeout crawl, add value to redis
         if 'expires' in dict and dict['expires'] != 0:
             key = "timeout:{sid}:{appid}:{crawlid}".format(
-                            sid=dict['spiderid'],
-                            appid=dict['appid'],
-                            crawlid=dict['crawlid'])
+                sid=dict['spiderid'],
+                appid=dict['appid'],
+                crawlid=dict['crawlid'])
             self.redis_conn.set(key, dict['expires'])
 
         # log success
