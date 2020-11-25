@@ -20,7 +20,14 @@ class PageSpider(BaseSpider):
         print("At StaticPageSpider.start_requests")
 
         for req in self.generate_initial_requests():
-            if self.config["crawler_type"] == "static_page":
+            if self.config.get("dynamic_processing", False):
+                steps = json.loads(self.config["steps"])
+
+                yield PuppeteerRequest(url=req['url'],
+                    callback=self.form_parse,
+                    dont_filter=True,
+                    steps=steps)
+            else:
                 # Don't send an empty dict, may cause spider to be blocked
                 body_contents = None
                 if bool(req['body']):
@@ -35,13 +42,6 @@ class PageSpider(BaseSpider):
                         "config": self.config
                 },
                     errback=self.errback_httpbin)
-            else:
-                steps = json.loads(self.config["steps"])
-
-                yield PuppeteerRequest(url=req['url'],
-                    callback=self.form_parse,
-                    dont_filter=True,
-                    steps=steps)
 
     def convert_allow_extesions(self, config):
         """Converts 'allow_extesions' configuration into 'deny_extesions'."""
