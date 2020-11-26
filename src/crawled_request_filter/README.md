@@ -21,7 +21,7 @@ PLUGINS = {
     'plugins.zookeeper_handler.ZookeeperHandler': 400,
 }
 ``` 
-Adicione os arquivos da pasta `/plugin` de  na pasta `plugins/` do `Scrapy Cluster`.
+Adicione os arquivos da pasta `/plugin` na pasta `plugins/` de `kafka-monitor` do `Scrapy Cluster`.
 
 Adicione a pasta do módulo `crawled_request_filter/` a pasta `kafka-monitor/` do `Scrapy Cluster`.
 
