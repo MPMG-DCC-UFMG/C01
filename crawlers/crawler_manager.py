@@ -116,7 +116,7 @@ def crawler_process(config):
         crawler.signals.connect(
             update_database, signal=scrapy.signals.spider_closed)
 
-    url = 'http://0.0.0.0:5343/feed'
+    url = 'http://0.0.0.0:5353/feed'
     headers = {'content-type': 'application/json'}
 
     req = requests.post(url, data=json.dumps(data), headers=headers)
