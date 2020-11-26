@@ -187,6 +187,8 @@ def remove_crawler(instance_id, are_you_sure=False):
 
 
 def update_instances_info(data_path: str, instance_id: str, instance_info: dict):
+    """Updates the file with information about instances when they are created, initialized or terminated."""
+    
     instances_info = dict()
 
     filename = f"{data_path}/instances/instances_info.json"
