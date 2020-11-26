@@ -6,7 +6,7 @@ import json
 from base_messenger.base_messenger import BaseMessenger
 
 class FileDescriptor(BaseMessenger):
-    TEMP_DESCRIPTION_FOLDER = "/tmp/temp_description_folder"
+    TEMP_DESCRIPTION_FOLDER = "/datalake/ufmg/coletores/temp_description_folder"
 
     @staticmethod
     def feed_description(destination, description):

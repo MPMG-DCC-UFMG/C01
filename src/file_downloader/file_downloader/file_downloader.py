@@ -17,7 +17,7 @@ from base_messenger.base_messenger import BaseMessenger
 
 
 class FileDownloader(BaseMessenger):
-    TEMP_FILES_FOLDER = "/tmp/temp_files_to_download" 
+    TEMP_FILES_FOLDER = "/datalake/ufmg/coletores/temp_files_to_download" 
 
     @staticmethod
     def feed_downloader(url, destination, description):
