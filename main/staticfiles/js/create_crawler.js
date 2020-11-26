@@ -1,3 +1,21 @@
+/* Collapse div */
+
+function mycollapse(target){
+    console.log(target);
+    var el = $(target);
+    console.log(el.text());
+    if(el.hasClass("myshow")){
+        el.removeClass("myshow");
+        console.log("remove myshow");
+    }
+    else{
+        el.addClass("myshow");
+        console.log("add myshow");
+    }
+}
+
+/* End collapse div */
+
 function enableCreateButton() {
     var blocks = document.getElementsByClassName('valid-icon');
     var isValid = true;
@@ -243,8 +261,9 @@ function checkRelatedFields() {
 
 $(document).ready(function () {
     setNavigation();
-
     $('input').on('blur keyup', checkRelatedFields);
+    $('#collapse-adv-links').on("click", function () { mycollapse("#adv-links");})
+    $('#collapse-adv-download').on("click", function () { mycollapse("#adv-download"); })
 });
 
 function showBlock(clicked_id) {
@@ -298,7 +317,6 @@ function detailBaseUrl() {
 
     checkTemplatedURL();
 }
-
 
 function detailWebdriverType() {
     setHiddenState("webdriver_path_div", !getCheckboxState("id_has_webdriver"));
@@ -436,7 +454,6 @@ function detailCrawlerType() {
 function autothrottleEnabled() {
     setHiddenState("autothrottle-options-div", !getCheckboxState("id_antiblock_autothrottle_enabled"));
 }
-
 
 const table_input = document.querySelectorAll(".dynamic_input_table")
 
