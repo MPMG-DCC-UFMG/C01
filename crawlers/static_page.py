@@ -39,7 +39,7 @@ class StaticPageSpider(BaseSpider):
     def convert_allow_extesions(self, config):
         """Converts 'allow_extesions' configuration into 'deny_extesions'."""
         allow = "download_files_allow_extensions"
-        deny = "donwload_files_deny_extensions"
+        deny = "download_files_deny_extensions"
         if (
             allow in config and
             config[allow] is not None and
@@ -163,7 +163,7 @@ class StaticPageSpider(BaseSpider):
             tags=config["download_files_tags"],
             attrs=config["download_files_attrs"],
             process_value=config["download_files_process_value"],
-            deny_extensions=config["donwload_files_deny_extensions"]
+            deny_extensions=config["download_files_deny_extensions"]
         )
         urls_found = {i.url for i in links_extractor.extract_links(response)}
 
