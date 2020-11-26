@@ -53,6 +53,7 @@ def create_folders(data_path):
         f"{data_path}/config",
         f"{data_path}/data",
         f"{data_path}/flags",
+        f"{data_path}/instances",
         f"{data_path}/log",
         f"{data_path}/webdriver",
     ]
@@ -144,10 +145,10 @@ def start_crawler(config):
 
 def stop_crawler(instance_id, config):
     """Sets the flags of a crawler to stop."""
+    
     data_path = config["data_path"]
     with open(f"{data_path}/flags/{instance_id}.json", "w+") as f:
         f.write(json.dumps({"stop": True}))
-
 
 def remove_crawler(instance_id, are_you_sure=False):
     """
@@ -183,3 +184,16 @@ def remove_crawler(instance_id, are_you_sure=False):
             shutil.rmtree(f)
         except OSError as e:
             print("Error: %s : %s" % (f, e.strerror))
+
+
+def update_instances_info(data_path: str, instance_id: str, instance_info: dict):
+    instances_info = dict()
+
+    filename = f"{data_path}/instances/instances_info.json"
+    if os.path.exists(filename):
+        with open(filename) as f:
+            instances_info = json.loads(f.read()) 
+
+    instances_info[instance_id] = instance_info
+    with open(f"{data_path}/instances/instances_info.json", "w+") as f:
+        f.write(json.dumps(instances_info, indent=4))
