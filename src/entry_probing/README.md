@@ -119,11 +119,12 @@ resp_handler = HTTPStatusProbingResponse(404, opposite=True)
 
 #### TextMatchProbingResponse
 Implements a response handler which validates responses with a given text
-within their body. (case sensitive)
+within their body. (case insensitive)
 
 ```
 resp_handler = TextMatchProbingResponse("Page found")
 # Validates a response which has the text "Page found" within its body
+# (case insensitive)
 ```
 
 #### BinaryFormatProbingResponse

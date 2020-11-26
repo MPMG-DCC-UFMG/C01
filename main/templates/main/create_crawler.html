@@ -253,20 +253,66 @@ New Crawler
                         <div class="row" style="padding:20px;">
                             <div class="col md-6">
                                 {{ form.crawler_type | as_crispy_field}}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col md-6">
                                 <div class="crawler-type-content-div" id="static_page">
                                     <div id="explore_links" style="padding: 20px; border-top: 1px solid #DCDCDC;">
                                         {{ form.explore_links | as_crispy_field}}
                                         {{ form.link_extractor_max_depth | as_crispy_field}}
                                         {{ form.link_extractor_allow_url | as_crispy_field}}
+
+                                        <div class="btn btn-primary" id="collapse-adv-links">
+                                            Opções Avançadas
+                                        </div>
+                                        <div class="mycollapse" id="adv-links">
+                                            <div class="mycollapse-block">
+                                                {{ form.link_extractor_allow_domains | as_crispy_field }}
+                                                {{ form.link_extractor_tags | as_crispy_field }}
+                                                {{ form.link_extractor_attrs | as_crispy_field }}
+                                                {{ form.link_extractor_check_type | as_crispy_field }}
+                                                <p>Se existirem urls que apontam para arquivos mas não <strong>terminam</strong>
+                                                    em uma extensão de arquivo, o coletor pode conferir o tipo da página pra qual a url aponta.
+                                                    Nesse caso, ele irá requisitar os <i>headers</i> da url. Se o tipo for <i>'text/html'</i>,
+                                                    a página será tratada com um html; caso contrário, como um arquivo. Habilitar essa opção
+                                                    pode deixar a coleta mais lenta, então priorize filtrar urls com regex.
+                                                </p>
+                                                {{ form.link_extractor_process_value | as_crispy_field }}
+                                            </div>
+                                        </div>
                                     </div>
+
                                     <div id="download_files" style="padding: 20px; border-top: 1px solid #DCDCDC;">
                                         {{ form.download_files | as_crispy_field}}
                                         {{ form.download_files_allow_url | as_crispy_field}}
                                         {{ form.download_files_allow_extensions | as_crispy_field}}
+
+                                        <div class="btn btn-primary" id="collapse-adv-download">
+                                            Opções Avançadas
+                                        </div>
+                                        <div class="mycollapse" id="adv-download">
+                                            <div class="mycollapse-block">
+                                                {{ form.download_files_allow_domains | as_crispy_field }}
+                                                {{ form.download_files_tags | as_crispy_field }}
+                                                {{ form.download_files_attrs | as_crispy_field }}
+                                                {{ form.download_files_check_type | as_crispy_field }}
+                                                <p>Se existirem urls que apontam para arquivos mas não <strong>terminam</strong>
+                                                    em uma extensão de arquivo, o coletor pode conferir o tipo da página pra qual a url aponta.
+                                                    Nesse caso, ele irá requisitar os <i>headers</i> da url. Se o tipo for <i>'text/html'</i>,
+                                                    a página será tratada com um html; caso contrário, como um arquivo. Habilitar essa opção
+                                                    pode deixar a coleta mais lenta, então priorize filtrar urls com regex.
+                                                </p>
+                                                {{ form.download_files_process_value | as_crispy_field }}
+                                            </div>
+                                        </div>
                                     </div>
+
                                     <div id="download_img" style="padding:20px; border-top: 1px solid #DCDCDC;">
                                         {{ form.download_imgs | as_crispy_field}}
                                     </div>
+
                                     <div id="wait_crawler_finish_to_download" style="padding:20px; border-top: 1px solid #DCDCDC;">
                                         <p>
                                             Alguns servidores podem cancelar o download se outras requisições forem feitas ao mesmo tempo,
@@ -277,15 +323,21 @@ New Crawler
                                         {{ form.wait_crawler_finish_to_download | as_crispy_field }}
                                         {{ form.time_between_downloads | as_crispy_field }}
                                     </div>
+
                                 </div>
-                                <div class="crawler-type-content-div" id="form_page" hidden>
-                                    {{ form.steps |  as_crispy_field }}
-                                </div>
-                                <div class="crawler-type-content-div" id="single_file" hidden></div>
-                                <div class="crawler-type-content-div" id="bundle_file" hidden></div>
                             </div>
                         </div>
+
+                        <div class="row">
+                            <div class="col md-6">
+                                <div class="crawler-type-content-div" id="form_page" hidden>
+                                    {{ form.steps |  as_crispy_field }}
+                                </div>      
+                            </div>
+                        </div>
+
                     </div>
+
                     <div id="templated-url-item-block" class="block" hidden>
                         <div class="row">
                             <div class="col md-6" id="templated-url-config">
@@ -293,6 +345,7 @@ New Crawler
                             </div>
                         </div>
                     </div>
+
                     <div id="parsing-item-block" class="block" hidden>
                         <div class="row" style="padding:20px;">
                             <div class="col md-6">

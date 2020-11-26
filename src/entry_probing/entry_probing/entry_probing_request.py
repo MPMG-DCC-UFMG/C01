@@ -30,7 +30,6 @@ class ProbingRequest():
         """
         Abstract method: sends a request to the desired URL and returns the
         response
-
         :param url_entries: list of parameters to be inserted in the URL
         :param req_entries: dictionary of parameters to be inserted in the
                             request body
@@ -52,7 +51,6 @@ class HTTPProbingRequest(ProbingRequest):
     def __init__(self, url, method, req_data):
         """
         Constructor for the HTTP request handler.
-
         :param url:      URL to be requested, with possible placeholders for
                          entry parameters
         :param method:   HTTP method to use for the request
@@ -77,11 +75,9 @@ class HTTPProbingRequest(ProbingRequest):
         Sends an HTTP request to the desired URL, formmated according to the
         url_entries parameter. The entries in req_entries are included in the
         request body. Returns the response to this request.
-
         :param url_entries: list of parameters to be inserted in the URL
         :param req_entries: dictionary of parameters to be inserted in the
                             request body
-
         :returns: Response obtained from the HTTP request
         """
 
@@ -106,7 +102,6 @@ class PyppeteerProbingRequest(ProbingRequest):
     Description of a request which consists of using the currently open page in
     Pyppeteer as the response. The process() method is defined as a coroutine
     so it can be properly integrated with the Pyppeteer driver.
-
     The desired page must be requested after the constructor is called and
     before the call to the process() method. IMPORTANT: The HTTP headers and
     status code are captured from the first response received by the Pyppeteer
@@ -122,7 +117,6 @@ class PyppeteerProbingRequest(ProbingRequest):
         """
         Intercepts the response to the first request made by the Pyppeteer page
         configured in the constructor and stores it
-
         :param response: Response received by Pyppeteer
         """
 
@@ -134,7 +128,6 @@ class PyppeteerProbingRequest(ProbingRequest):
                  page: pyppeteer.page.Page):
         """
         Constructor for the Pyppeteer request process
-
         :param page: Reference to the page where we'll request the content
         """
         super().__init__()
@@ -150,10 +143,8 @@ class PyppeteerProbingRequest(ProbingRequest):
         """
         Returns the received response data from a request done using Pyppeteer,
         overwriting the text property to get the current contents of the page
-
         Defined as a coroutine to be properly integrated with the Pyppeteer
         driver
-
         The Pyppeteer page must have gotten a response between the constructor
         call and this one. IMPORTANT: The HTTP headers and status code are
         captured from the first response received by the Pyppeteer page after
@@ -162,7 +153,6 @@ class PyppeteerProbingRequest(ProbingRequest):
         synchronization issues if multiple pages are requested in sequence
         between these calls (e.g.: it will analyse the response to the first
         page request, and the text contents of the last page).
-
         :returns: Response received from Pyppeteer
         """
 

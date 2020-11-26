@@ -5,6 +5,8 @@ for the entry probing process
 
 import abc
 import requests
+import pyppeteer
+from typing import Any, Dict, Hashable, List, Optional
 
 # Helper class
 
@@ -22,7 +24,6 @@ class ResponseData():
                  text):
         """
         Response constructor. Should be called from the create_from_* methods.
-
         :param headers:     HTTP headers for the response
         :param status_code: HTTP status code for the response
         :param text:        text data received
@@ -33,12 +34,10 @@ class ResponseData():
 
     @classmethod
     def create_from_requests(cls,
-                             resp):
+                             resp: requests.models.Response) -> 'ResponseData':
         """
         Create an appropriate object from a requests.models.Response object
-
         :param resp: response received from the use of the requests library
-
         :returns: an instance of ResponseData with the information in resp
         """
         text = ""
@@ -51,16 +50,14 @@ class ResponseData():
 
     @classmethod
     async def create_from_pyppeteer(cls,
-                                    resp):
+                                    resp: pyppeteer.network_manager.Response
+                                    ) -> 'ResponseData':
         """
         Create an appropriate object from a pyppeteer.network_manager.Response
         object
-
         Defined as a coroutine to be propeprly integrated with the Pyppeteer
         driver
-
         :param resp: response received from the use of the Pyppeteer library
-
         :returns: an instance of ResponseData with the information in resp
         """
         text = ""
@@ -92,7 +89,6 @@ class ProbingResponse():
     def __init__(self, opposite):
         """
         Constructor for a response handler
-
         :param opposite: inverts the output of the response handler if set to
                          true
         """
@@ -105,7 +101,6 @@ class ProbingResponse():
     def _validate_resp(self, response):
         """
         Abstract method: checks if the response meets the desired condition
-
         :param response: ResponseData object to be validated
         """
         pass
@@ -114,9 +109,7 @@ class ProbingResponse():
         """
         Uses the _validate_resp method to check if the response meets the
         desired condition, and inverts the result if the opposite flag is set
-
         :param response: ResponseData object to be validated
-
         :returns: a boolean indicating if the specified condition was met,
                   taking the opposite flag into consideration
         """
@@ -132,7 +125,6 @@ class HTTPStatusProbingResponse(ProbingResponse):
     def __init__(self, status_code, *args, **kwargs):
         """
         HTTP status response constructor
-
         :param status_code: HTTP status code to check for
         """
         super().__init__(*args, **kwargs)
@@ -141,9 +133,7 @@ class HTTPStatusProbingResponse(ProbingResponse):
     def _validate_resp(self, response):
         """
         Checks if the response has the specified HTTP status code
-
         :param response: ResponseData object to be validated
-
         :returns: True if the response has the specified HTTP status code,
                   false otherwise
         """
@@ -159,7 +149,6 @@ class TextMatchProbingResponse(ProbingResponse):
     def __init__(self, text_match, *args, **kwargs):
         """
         Text matching response constructor
-
         :param text_match: string to be found within the response body
         """
         super().__init__(*args, **kwargs)
@@ -167,14 +156,13 @@ class TextMatchProbingResponse(ProbingResponse):
 
     def _validate_resp(self, response):
         """
-        Checks if the response.text property has the specified string within it
-
+        Checks if the response.text property has the specified string within
+        it, using a case-insensitive comparison
         :param response: ResponseData object to be validated
-
         :returns: True if the response contains the specified string, false
                   otherwise
         """
-        return self.text_match in response.text
+        return self.text_match.lower() in response.text.lower()
 
 
 class BinaryFormatProbingResponse(ProbingResponse):
@@ -187,9 +175,7 @@ class BinaryFormatProbingResponse(ProbingResponse):
         """
         Checks if the response's MIME-type does not contain the word 'text'
         in the first part (before the backslash)
-
         :param response: ResponseData object to be validated
-
         :returns: True if the response is non-textual, false otherwise
         """
 
