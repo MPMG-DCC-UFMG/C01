@@ -47,7 +47,7 @@ class TestCrawlRequestFilter(unittest.TestCase):
 
         '''
 
-        sql_query = f'SELECT datname FROM pg_catalog.pg_database WHERE datname = \'auto_scheduler\';'
+        sql_query = 'SELECT datname FROM pg_catalog.pg_database WHERE datname = \'auto_scheduler\';'
         cur.execute(sql_query)
 
         return cur.fetchone() is not None
@@ -63,7 +63,7 @@ class TestCrawlRequestFilter(unittest.TestCase):
         cur = conn.cursor()
 
         if not self._db_exists(cur):
-            sql_query = f'CREATE DATABASE auto_scheduler;'
+            sql_query = 'CREATE DATABASE auto_scheduler;'
             cur.execute(sql_query)
 
         cur.close()
@@ -73,7 +73,7 @@ class TestCrawlRequestFilter(unittest.TestCase):
         '''Creates the table to save the crawl history, if it does not exist.
         '''
 
-        sql_query = f'CREATE TABLE IF NOT EXISTS CRAWL_HISTORIC' \
+        sql_query = 'CREATE TABLE IF NOT EXISTS CRAWL_HISTORIC' \
                     '(CRAWLID CHAR(32) PRIMARY KEY NOT NULL, ' \
                     'CRAWL_HISTORIC JSONB);'
 
