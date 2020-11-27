@@ -30,6 +30,7 @@ from crawlers.static_page import StaticPageSpider
 # antiblock_cookies_file
 # antiblock_persist_cookies
 
+
 def file_downloader_process():
     """Redirects downloader output and starts downloader consumer loop."""
     crawling_utils.check_file_path("crawlers/log/")
@@ -122,7 +123,7 @@ def gen_key():
 
 def start_crawler(config):
     """Create and starts a crawler as a new process."""
-    
+
     config["crawler_id"] = config["id"]
     del config["id"]
     config["instance_id"] = gen_key()
@@ -145,10 +146,11 @@ def start_crawler(config):
 
 def stop_crawler(instance_id, config):
     """Sets the flags of a crawler to stop."""
-    
+
     data_path = config["data_path"]
     with open(f"{data_path}/flags/{instance_id}.json", "w+") as f:
         f.write(json.dumps({"stop": True}))
+
 
 def remove_crawler(instance_id, are_you_sure=False):
     """
@@ -188,13 +190,13 @@ def remove_crawler(instance_id, are_you_sure=False):
 
 def update_instances_info(data_path: str, instance_id: str, instance_info: dict):
     """Updates the file with information about instances when they are created, initialized or terminated."""
-    
+
     instances_info = dict()
 
     filename = f"{data_path}/instances/instances_info.json"
     if os.path.exists(filename):
         with open(filename) as f:
-            instances_info = json.loads(f.read()) 
+            instances_info = json.loads(f.read())
 
     instances_info[instance_id] = instance_info
     with open(f"{data_path}/instances/instances_info.json", "w+") as f:
