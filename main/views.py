@@ -9,10 +9,10 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm,\
-                   ResponseHandlerFormSet, ParameterHandlerFormSet
+    ResponseHandlerFormSet, ParameterHandlerFormSet
 from .models import CrawlRequest, CrawlerInstance, DownloadDetail
 from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer, \
-                        DownloadDetailSerializer
+    DownloadDetailSerializer
 
 from crawlers.constants import *
 
@@ -57,6 +57,7 @@ def process_run_crawl(crawler_id):
 
     return instance
 
+
 def process_stop_crawl(crawler_id):
     instance = CrawlRequest.objects.filter(
         id=crawler_id).get().running_instance
@@ -89,8 +90,10 @@ def process_stop_crawl(crawler_id):
 
     return instance
 
+
 def getAllData():
     return CrawlRequest.objects.all().order_by('-creation_date')
+
 
 def create_instance(crawler_id, instance_id):
     mother = CrawlRequest.objects.filter(id=crawler_id)
@@ -100,9 +103,11 @@ def create_instance(crawler_id, instance_id):
 
 # Views
 
+
 def list_crawlers(request):
     context = {'allcrawlers': getAllData()}
     return render(request, "main/list_crawlers.html", context)
+
 
 def create_crawler(request):
     context = {}
@@ -137,6 +142,7 @@ def create_crawler(request):
     context['parameter_formset'] = parameter_formset
     return render(request, "main/create_crawler.html", context)
 
+
 def edit_crawler(request, id):
     crawler = get_object_or_404(CrawlRequest, pk=id)
     form = RawCrawlRequestForm(request.POST or None, instance=crawler)
@@ -159,6 +165,7 @@ def edit_crawler(request, id):
             'crawler': crawler
         })
 
+
 def delete_crawler(request, id):
     crawler = CrawlRequest.objects.get(id=id)
 
@@ -171,6 +178,7 @@ def delete_crawler(request, id):
         'main/confirm_delete_modal.html',
         {'crawler': crawler}
     )
+
 
 def detail_crawler(request, id):
     crawler = CrawlRequest.objects.get(id=id)
@@ -186,19 +194,24 @@ def detail_crawler(request, id):
 
     return render(request, 'main/detail_crawler.html', context)
 
+
 def monitoring(request):
     return HttpResponseRedirect("http://localhost:5000/")
 
+
 def create_steps(request):
     return render(request, "main/steps_creation.html", {})
+
 
 def stop_crawl(request, crawler_id):
     process_stop_crawl(crawler_id)
     return redirect(detail_crawler, id=crawler_id)
 
+
 def run_crawl(request, crawler_id):
     process_run_crawl(crawler_id)
     return redirect(detail_crawler, id=crawler_id)
+
 
 def tail_log_file(request, instance_id):
     crawler_id = CrawlerInstance.objects.filter(
@@ -223,6 +236,7 @@ def tail_log_file(request, instance_id):
         "err": err.decode('utf-8'),
         "time": str(datetime.fromtimestamp(time.time())),
     })
+
 
 def downloads(request):
     return render(request, "main/downloads.html")
@@ -298,12 +312,14 @@ class CrawlerViewSet(viewsets.ModelViewSet):
         }
         return JsonResponse(data)
 
+
 class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     """
     A simple ViewSet for viewing and listing instances
     """
     queryset = CrawlerInstance.objects.all()
     serializer_class = CrawlerInstanceSerializer
+
 
 class DownloadDetailsViewSet(viewsets.ModelViewSet):
     """
