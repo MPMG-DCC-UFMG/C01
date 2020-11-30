@@ -2,8 +2,7 @@
 This module contains classes which abstract the process of checking an entry's
 existence
 """
-
-from typing import Any
+from typing import Any, Dict, Hashable, List, Optional
 
 from .entry_probing_request import ProbingRequest
 from .entry_probing_response import ProbingResponse, ResponseData
@@ -19,7 +18,6 @@ class EntryProbing():
     def __init__(self, req_handler):
         """
         Initializes the class with the request handler
-
         :param req_handler: Handler describing how to execute the request
         """
         if not isinstance(req_handler, ProbingRequest):
@@ -41,13 +39,11 @@ class EntryProbing():
         return self.__response_obj
 
 
-    def add_response_handler(self, resp_handler
-                             ):
+    def add_response_handler(self, resp_handler: ProbingResponse
+                             ) -> 'EntryProbing':
         """
         Adds a response handler to the probing process
-
         :param resp_handler: Handler describing how to validate the response
-
         :returns: Entry probing object, to enable chaining
         """
         if not isinstance(resp_handler, ProbingResponse):
@@ -59,16 +55,14 @@ class EntryProbing():
 
 
     def check_entry(self,
-                    url_entries,
-                    req_entries):
+                    url_entries=[],
+                    req_entries={}) -> bool:
         """
         Uses the request and response handlers to check for an entry's
         existence
-
         :param url_entries: entry parameters to be inserted in the URL in the
                             request
         :param req_entries: entry parameters to be inserted in the request body
-
         :returns: True if entry is valid, False otherwise
         """
 
@@ -77,14 +71,11 @@ class EntryProbing():
         self.__response_obj = response
         return all([h.process(response) for h in self.__resp_handlers])
 
-
-    async def async_check_entry(self, entry):
+    async def async_check_entry(self, entry=None) -> bool:
         """
         Async version of the check_entry() method, to be used in an async
         context
-
         :param entry: entry parameter to be used by the request, if necessary
-
         :returns: True if entry is valid, False otherwise
         """
 

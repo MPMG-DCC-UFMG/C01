@@ -45,11 +45,24 @@ class CrawlRequestForm(forms.ModelForm):
             'sound_xpath',
             'crawler_type',
             'explore_links',
+
             'link_extractor_max_depth',
             'link_extractor_allow_url',
+            'link_extractor_allow_domains',
+            'link_extractor_tags',
+            'link_extractor_attrs',
+            'link_extractor_check_type',
+            'link_extractor_process_value',
+
             'download_files',
             'download_files_allow_url',
+            'download_files_allow_domains',
+            'download_files_tags',
+            'download_files_attrs',
+            'download_files_check_type',
+            'download_files_process_value',
             'download_files_allow_extensions',
+
             'download_imgs',
             'wait_crawler_finish_to_download',
             'time_between_downloads',
@@ -241,30 +254,93 @@ class RawCrawlRequestForm(CrawlRequestForm):
     link_extractor_allow_url = forms.CharField(
         required=False, max_length=2000,
         label=(
-            "Permitir urls que casem com o regex"
-            " (deixe em branco para não filtrar):"
+            "Permitir urls que casem com o regex:"
+            " (deixe em branco para não filtrar)"
         ),
         widget=forms.TextInput(
             attrs={'placeholder': 'Regex para permitir urls'})
+    )
+    link_extractor_allow_domains = forms.CharField(
+        required=False, max_length=2000,
+        label=(
+            "Permitir só urls dos domínios:"
+            "(em branco para não filtrar) (separado por vírgula)"
+        ),
+        widget=forms.TextInput(
+            attrs={'placeholder': ''})
+    )
+    link_extractor_tags = forms.CharField(
+        required=False, max_length=2000,
+        label="Extrair links de tags do tipo: (separado por vírgula)",
+        widget=forms.TextInput(
+            attrs={'placeholder': 'a'})
+    )
+    link_extractor_attrs = forms.CharField(
+        required=False, max_length=2000,
+        label="Extrair urls dos atributos: (separado por vírgula)",
+        widget=forms.TextInput(
+            attrs={'placeholder': 'href'})
+    )
+    link_extractor_check_type = forms.BooleanField(
+        required=False, label="Checar tipo da página")
+    link_extractor_process_value = forms.CharField(
+        required=False, max_length=2000,
+        label=(
+            "Função python para processar os atributos: "
+            "(A função será chamada como 'eval(func)(attr)')"
+        ),
+        widget=forms.Textarea(
+            attrs={'placeholder': 'lambda x: x'})
     )
 
     download_files = forms.BooleanField(
-        required=False, label="Baixar arquivos")
-
+        required=False, label="Baixar arquivos"
+    )
     download_files_allow_url = forms.CharField(
         required=False, max_length=2000,
         label=(
-            "Baixar arquivos de url que casem com o regex"
-            " (deixe em branco para não filtrar):"
+            "Baixar arquivos de url que casem com o regex:"
+            " (deixe em branco para não filtrar)"
         ),
         widget=forms.TextInput(
             attrs={'placeholder': 'Regex para permitir urls'})
     )
-
     download_files_allow_extensions = forms.CharField(
         required=False, max_length=2000,
         label="Extensões de arquivo permitidas (separado por vírgula):",
         widget=forms.TextInput(attrs={'placeholder': 'pdf,xml'})
+    )
+    download_files_allow_domains = forms.CharField(
+        required=False, max_length=2000,
+        label=(
+            "Permitir só urls dos domínios:"
+            "(em branco para não filtrar) (separado por vírgula)"
+        ),
+        widget=forms.TextInput(
+            attrs={'placeholder': ''})
+    )
+    download_files_tags = forms.CharField(
+        required=False, max_length=2000,
+        label="Extrair links de tags do tipo: (separado por vírgula)",
+        widget=forms.TextInput(
+            attrs={'placeholder': 'a'})
+    )
+    download_files_attrs = forms.CharField(
+        required=False, max_length=2000,
+        label="Extrair urls dos atributos: (separado por vírgula)",
+        widget=forms.TextInput(
+            attrs={'placeholder': 'href'})
+    )
+    download_files_check_type = forms.BooleanField(
+        required=False, label="Checar tipo da página")
+    download_files_process_value = forms.CharField(
+        required=False, max_length=2000,
+        label=(
+            "Função python para processar os atributos: "
+            "(A função será chamada como 'eval(func)(attr)')"
+        ),
+        widget=forms.Textarea(
+            attrs={'placeholder': 'lambda x: x'})
     )
 
     download_imgs = forms.BooleanField(
@@ -311,7 +387,8 @@ class ResponseHandlerForm(forms.ModelForm):
         labels = {
             'handler_type': 'Tipo de validador',
             'opposite': 'Inverter',
-            'text_match_value': 'Valor a buscar',
+            'text_match_value': ('Valor a buscar (não diferencia maiúsculas de'
+                                 ' minúsculas)'),
             'http_status': 'Status HTTP'
 
         }

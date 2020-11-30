@@ -1,3 +1,7 @@
+*, ::after, ::before {
+    box-sizing: border-box;
+}
+
 .navbar{
     background-color: #286f99;
 }
@@ -18,6 +22,7 @@ body {
     margin-left:0;
     margin-right:0;
 }
+
 #sidebar-container {
     min-height: 89vh;
     background-color: #333;
@@ -28,6 +33,7 @@ body {
 .sidebar-expanded {
     width: 230px;
 }
+
 .sidebar-collapsed {
     width: 60px;
 }
@@ -47,6 +53,7 @@ body {
     height: 45px;
     padding-left: 30px;
 }
+
 .sidebar-submenu {
     font-size: 0.9rem;
 }
@@ -56,10 +63,12 @@ body {
     background-color: #333;
     height: 35px;
 }
+
 .sidebar-separator {
     background-color: #333;
     height: 25px;
 }
+
 .logo-separator {
     background-color: #333;    
     height: 60px;
@@ -73,6 +82,7 @@ body {
   text-align: right;
   padding-left: 10px;
 }
+
 /* Opened submenu icon */
 #sidebar-container .list-group .list-group-item[aria-expanded="true"] .submenu-icon::after {
     content: " \f0da";
@@ -206,3 +216,24 @@ a.close, a.add_form {
     border-bottom: 1px solid #DCDCDC;
     padding-top: 0.75rem;
 }
+
+/* Collapse div */
+.mycollapse {
+    display: block;
+    max-height: 0px;
+    overflow: hidden;
+    transition: max-height .5s cubic-bezier(0, 1, 0, 1);
+}
+
+.mycollapse-block {
+    padding: 5px;
+    margin: 5px 0px;
+    border: 1px solid #DCDCDC;
+}
+
+.myshow {
+    max-height: 99em;
+    transition: max-height .5s ease-in-out;
+}
+/* End collapse div */
+
