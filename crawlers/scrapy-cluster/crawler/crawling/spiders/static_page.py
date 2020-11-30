@@ -114,7 +114,7 @@ class StaticPageSpider(RedisSpider, BaseSpider):
 
     def extract_links(self, response):
         """Filter and return a set with links found in this response."""
-        config = self.preprocess_link_configs(response.meta["config"])
+        config = self.preprocess_link_configs(response.meta["attrs"])
 
         links_extractor = LinkExtractor(
             allow_domains=config["link_extractor_allow_domains"],
@@ -149,19 +149,19 @@ class StaticPageSpider(RedisSpider, BaseSpider):
         for attr, default in defaults:
             config[attr] = self.preprocess_listify(config[attr], default)
 
-        config = self.convert_allow_extesions(config)
+        config = self.convert_allow_extensions(config)
 
         attr = "download_files_process_value"
-        if config[attr] is not None and type(config[attr]) is str:
+        if config[attr] is not None and len(config[attr]) > 0 and type(config[attr]) is str:
             config[attr] = eval(config[attr])
-
+ 
         config["download_files_processed"] = True
 
         return config
 
     def extract_files(self, response):
         """Filter and return a set with links found in this response."""
-        config = self.preprocess_download_configs(response.meta["config"])
+        config = self.preprocess_download_configs(response.meta["attrs"])
 
         links_extractor = LinkExtractor(
             allow_domains=config["download_files_allow_domains"],
