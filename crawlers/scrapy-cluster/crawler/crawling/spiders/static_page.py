@@ -173,7 +173,7 @@ class StaticPageSpider(RedisSpider, BaseSpider):
             tags=config.get("download_files_tags", None),
             attrs=config.get("download_files_attrs", None),
             process_value=config.get("download_files_process_value", None),
-            deny_extensions=config.get("download_files_deny_extensions, None)]
+            deny_extensions=config.get("download_files_deny_extensions", None),
         )
         urls_found = {i.url for i in links_extractor.extract_links(response)}
 
