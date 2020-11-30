@@ -388,7 +388,7 @@ class BaseSpider(scrapy.Spider):
             description["extracted_from"] = description["relative_path"]
             description["relative_path"] = output_filename
             description["type"] = "csv"
-            self.feed_file_description(f"{self.data_folder}csv/", description)
+            self.feed_file_description(f"{self.data_folder}/csv/", description)
             return [output_filename]
 
         return []
@@ -410,7 +410,7 @@ class BaseSpider(scrapy.Spider):
 
         hsh = self.hash_response(response)
 
-        relative_path = f"{self.data_folder}raw_pages/{hsh}.html"
+        relative_path = f"{self.data_folder}/raw_pages/{hsh}.html"
 
         with open(file=relative_path, mode="w+", errors='ignore') as f:
             f.write(body)
@@ -431,7 +431,7 @@ class BaseSpider(scrapy.Spider):
         description["extracted_files"] = extracted_files
 
         self.feed_file_description(
-            self.data_folder + "raw_pages", description)
+            self.data_folder + "/raw_pages", description)
 
     def errback_httpbin(self, failure):
         # log all errback failures,
