@@ -5,31 +5,23 @@ import hashlib
 import os
 from urllib.parse import urlparse
 import wget
-
+import requests
 
 class StopDownload(Exception):
     """Used in func file_larger_than_giga"""
     pass
 
-
 def file_larger_than_giga(url):
-    """
-    True if file has more than 1e9 bytes.
-    Request a single block from url and check its size.
-    """
-    save = {"url": url}
+    # Mudar user-agent para evitar ser bloqueado por usar a biblioteca requests
+    headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
+    
+    # requisição apenas para obter o cabeçalho do conteúdo a ser baixado
+    response = requests.head(url, allow_redirects=True, headers=headers)
 
-    def get_size(current, total, widht=None):
-        save["total_size"] = total
-        raise StopDownload
+    # obtem o tamanho do arquivo e converte para inteiro
+    content_length = int(response.headers['Content-Length'])
 
-    try:
-        wget.download(url, bar=get_size)
-    except StopDownload:
-        pass
-
-    # total_size is in bytes
-    return save["total_size"] > 1e9
+    return content_length > 1e9
 
 
 def get_url_domain(url):
