@@ -20,26 +20,6 @@ class StaticPageSpider(RedisSpider, BaseSpider):
     def __init__(self, *args, **kwargs):
         super(StaticPageSpider, self).__init__(*args, **kwargs)
         print("////////////////////////////////////////////")
-        
-        
-    # def start_requests(self):
-
-    #     for req in self.generate_initial_requests():
-
-    #         # Don't send an empty dict, may cause spider to be blocked
-    #         body_contents = None
-    #         if bool(req['body']):
-    #             body_contents = json.dumps(req['body'])
-
-    #         yield scrapy.Request(url=req['url'],
-    #             method=req['method'],
-    #             body=body_contents,
-    #             callback=self.parse,
-    #             meta={
-    #                 "referer": "start_requests",
-    #                 "config": self.config
-    #         },
-    #             errback=self.errback_httpbin)
 
     def convert_allow_extensions(self, config):
         """Converts 'allow_extesions' configuration into 'deny_extesions'."""
@@ -111,9 +91,9 @@ class StaticPageSpider(RedisSpider, BaseSpider):
                 value = None
             else:
                 value = config[attr]
-            config.update(attr= self.preprocess_listify(value, default))
+            config.update(attr=self.preprocess_listify(value, default))
 
-        config["link_extractor_processed"] = True
+        config.update("link_extractor_processed"=True)
 
         return config
 
@@ -130,11 +110,11 @@ class StaticPageSpider(RedisSpider, BaseSpider):
 
         urls_found = {i.url for i in links_extractor.extract_links(response)}
 
-        pattern = config["link_extractor_allow_url"]
+        pattern = config.get("link_extractor_allow_url", None)
         if pattern is not None and pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
-        if config["link_extractor_check_type"]:
+        if config.get("link_extractor_check_type", None):
             urls_found = self.filter_type_of_urls(urls_found, True)
 
         print("Links kept: ", urls_found)
@@ -152,15 +132,20 @@ class StaticPageSpider(RedisSpider, BaseSpider):
             ("download_files_attrs", ('href',))
         ]
         for attr, default in defaults:
-            config[attr] = self.preprocess_listify(config[attr], default)
+            if attr not in config:
+                value = None
+            else:
+                value = config[attr]
+            config.update(attr=self.preprocess_listify(value, default))
 
         config = self.convert_allow_extensions(config)
 
         attr = "download_files_process_value"
-        if config[attr] is not None and len(config[attr]) > 0 and type(config[attr]) is str:
-            config[attr] = eval(config[attr])
+        value = config.get(attr, None)
+        if value is not None and len(value) > 0 and type(value) is str:
+            config.update(attr=eval(value))
  
-        config["download_files_processed"] = True
+        config.update("download_files_processed"=True)
 
         return config
 
@@ -177,13 +162,13 @@ class StaticPageSpider(RedisSpider, BaseSpider):
         )
         urls_found = {i.url for i in links_extractor.extract_links(response)}
 
-        pattern = config["download_files_allow_url"]
+        pattern = config.get("download_files_allow_url", None)
 
         if pattern is not None and pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
         urls_found_a = set()
-        if config["download_files_check_type"]:
+        if "download_files_check_type" in config:
             urls_found_a = self.filter_type_of_urls(urls_found, False)
 
         urls_found_b = self.filter_list_of_urls(
