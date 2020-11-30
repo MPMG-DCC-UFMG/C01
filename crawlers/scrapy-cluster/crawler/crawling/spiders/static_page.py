@@ -105,8 +105,13 @@ class StaticPageSpider(RedisSpider, BaseSpider):
             ("link_extractor_allow_domains", None),
             ("link_extractor_attrs", ('href',))
         ]
+
         for attr, default in defaults:
-            config[attr] = self.preprocess_listify(config[attr], default)
+            if attr not in config:
+                value = None
+            else:
+                value = config[attr]
+            config.update(attr= self.preprocess_listify(value, default))
 
         config["link_extractor_processed"] = True
 
@@ -117,10 +122,10 @@ class StaticPageSpider(RedisSpider, BaseSpider):
         config = self.preprocess_link_configs(response.meta["attrs"])
 
         links_extractor = LinkExtractor(
-            allow_domains=config["link_extractor_allow_domains"],
-            tags=config["link_extractor_tags"],
-            attrs=config["link_extractor_attrs"],
-            process_value=config["link_extractor_process_value"],
+            allow_domains=config.get("link_extractor_allow_domains", None),
+            tags=config.get("link_extractor_tags", None),
+            attrs=config.get("link_extractor_attrs", None),
+            process_value=config.get("link_extractor_process_value", None),
         )
 
         urls_found = {i.url for i in links_extractor.extract_links(response)}
@@ -164,11 +169,11 @@ class StaticPageSpider(RedisSpider, BaseSpider):
         config = self.preprocess_download_configs(response.meta["attrs"])
 
         links_extractor = LinkExtractor(
-            allow_domains=config["download_files_allow_domains"],
-            tags=config["download_files_tags"],
-            attrs=config["download_files_attrs"],
-            process_value=config["download_files_process_value"],
-            deny_extensions=config["download_files_deny_extensions"]
+            allow_domains=config.get("download_files_allow_domains", None),
+            tags=config.get("download_files_tags", None),
+            attrs=config.get("download_files_attrs", None),
+            process_value=config.get("download_files_process_value", None),
+            deny_extensions=config.get("download_files_deny_extensions, None)]
         )
         urls_found = {i.url for i in links_extractor.extract_links(response)}
 
