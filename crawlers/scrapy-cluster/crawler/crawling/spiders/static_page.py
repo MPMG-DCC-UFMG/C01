@@ -91,9 +91,9 @@ class StaticPageSpider(RedisSpider, BaseSpider):
                 value = None
             else:
                 value = config[attr]
-            config.update(attr=self.preprocess_listify(value, default))
+            config.update({attr: self.preprocess_listify(value, default)})
 
-        config.update("link_extractor_processed"=True)
+        config.update({"link_extractor_processed": True})
 
         return config
 
@@ -136,16 +136,16 @@ class StaticPageSpider(RedisSpider, BaseSpider):
                 value = None
             else:
                 value = config[attr]
-            config.update(attr=self.preprocess_listify(value, default))
+            config.update({attr: self.preprocess_listify(value, default)})
 
         config = self.convert_allow_extensions(config)
 
         attr = "download_files_process_value"
         value = config.get(attr, None)
         if value is not None and len(value) > 0 and type(value) is str:
-            config.update(attr=eval(value))
+            config.update({attr: eval(value)})
  
-        config.update("download_files_processed"=True)
+        config.update({"download_files_processed": True})
 
         return config
 
