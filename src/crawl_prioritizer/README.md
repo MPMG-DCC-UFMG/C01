@@ -14,6 +14,38 @@ Este módulo faz uso de consultas a banco de dados definido no módulo de https:
 | String: crawlid (PK) |
 | JsonB: crawl_historic |
 
+## Testes
+
+Para realizar os testes deste módulo, é necessário que o PostGreSQL esteja devidamente configurado, por esta razão, estão desabilitados.
+
+O teste individual pode ser feito configurando os campos relacionados ao PostGreSQL em `crawl_prioritizer/settings.py` de acordo. E então executar:
+
+```bash
+# na pasta C04/tests/.crawl_prioritizer
+python -m unittest test_crawl_prioritizer
+```
+
+Caso não possua o PostGreSQL instalado, pode-se seguir estes passos:
+
+**Instalação**:
+
+```bash
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+```
+
+**Configuração**:
+
+Defina uma senha ao PostGreSQL para o usuário padrão. Em `crawl_prioritizer/settings.py`, a senha de demonstração é `my_password`, utilize ela caso não queira alterar o arquivo citado.
+
+```bash
+sudo -u postgres psql postgres
+\password postgres
+
+# para sair do terminal
+\q
+```
+
 ## Configurações
 
 Adicione as seguintes configurações em `localsettings.py` do módulo `kafka-monitor` de Scrapy Cluster:
