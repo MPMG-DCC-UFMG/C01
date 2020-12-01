@@ -1,6 +1,7 @@
 # Scrapy and Twister libs
 import scrapy
 from scrapy.linkextractors import LinkExtractor
+from scrapy.http import HtmlResponse
 
 # Other external libs
 import logging
@@ -26,6 +27,10 @@ class PageSpider(BaseSpider):
                 yield PuppeteerRequest(url=req['url'],
                     callback=self.form_parse,
                     dont_filter=True,
+                    meta={
+                        "referer": "start_requests",
+                        "config": self.config
+                    },
                     steps=steps)
             else:
                 # Don't send an empty dict, may cause spider to be blocked
@@ -108,7 +113,7 @@ class PageSpider(BaseSpider):
             ("link_extractor_attrs", ('href',))
         ]
         for attr, default in defaults:
-            config[attr] = self.preprocess_listify(config[attr], default)
+            config[attr] = self.preprocess_listify(config.get(attr, None), default)
 
         config["link_extractor_processed"] = True
 
@@ -116,13 +121,13 @@ class PageSpider(BaseSpider):
 
     def extract_links(self, response):
         """Filter and return a set with links found in this response."""
-        config = self.preprocess_link_configs(response.meta["config"])
+        config = self.preprocess_link_configs(response.request.meta["config"])
 
         links_extractor = LinkExtractor(
             allow_domains=config["link_extractor_allow_domains"],
             tags=config["link_extractor_tags"],
             attrs=config["link_extractor_attrs"],
-            process_value=config["link_extractor_process_value"],
+            process_value=config.get("link_extractor_process_value", None),
         )
 
         urls_found = {i.url for i in links_extractor.extract_links(response)}
@@ -131,7 +136,7 @@ class PageSpider(BaseSpider):
         if pattern is not None and pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
-        if config["link_extractor_check_type"]:
+        if config.get("link_extractor_check_type", False):
             urls_found = self.filter_type_of_urls(urls_found, True)
 
         print("Links kept: ", urls_found)
@@ -149,12 +154,12 @@ class PageSpider(BaseSpider):
             ("download_files_attrs", ('href',))
         ]
         for attr, default in defaults:
-            config[attr] = self.preprocess_listify(config[attr], default)
+            config[attr] = self.preprocess_listify(config.get(attr, None), default)
 
         config = self.convert_allow_extesions(config)
 
         attr = "download_files_process_value"
-        if config[attr] is not None and len(config[attr]) > 0 and type(config[attr]) is str:
+        if config.get(attr, None) is not None and len(config[attr]) > 0 and type(config[attr]) is str:
             config[attr] = eval(config[attr])
 
         config["download_files_processed"] = True
@@ -169,8 +174,8 @@ class PageSpider(BaseSpider):
             allow_domains=config["download_files_allow_domains"],
             tags=config["download_files_tags"],
             attrs=config["download_files_attrs"],
-            process_value=config["download_files_process_value"],
-            deny_extensions=config["download_files_deny_extensions"]
+            process_value=config.get("download_files_process_value", None),
+            deny_extensions=config.get("download_files_deny_extensions", None)
         )
         urls_found = {i.url for i in links_extractor.extract_links(response)}
 
@@ -180,7 +185,7 @@ class PageSpider(BaseSpider):
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
         urls_found_a = set()
-        if config["download_files_check_type"]:
+        if config.get("download_files_check_type", None):
             urls_found_a = self.filter_type_of_urls(urls_found, False)
 
         urls_found_b = self.filter_list_of_urls(
@@ -206,9 +211,20 @@ class PageSpider(BaseSpider):
         return set(src)
 
     def form_parse(self, response):
-        for page in response.request.meta["pages"].values():
-            response.body = str.encode(page)
-            self.parse(response)
+        for page in list(response.request.meta["pages"].values()):
+            newResponse = HtmlResponse(
+                response.url,
+                status=response.status,
+                headers=response.headers,
+                body=page,
+                encoding='utf-8',
+                request=response.request
+            )
+
+            # como fazer o puppeteer fechar se a funcao tem yield
+            # scrapy sõ fecha se parse nao tiver yield
+            for request in self.parse(newResponse):
+                yield request
 
     def parse(self, response):
         """
@@ -218,7 +234,7 @@ class PageSpider(BaseSpider):
         response_type = response.headers['Content-type']
         print(f"Parsing {response.url}, type: {response_type}")
 
-        config = response.meta['config']
+        config = response.request.meta['config']
 
         if self.stop():
             return
@@ -228,7 +244,7 @@ class PageSpider(BaseSpider):
             return
 
         self.store_html(response)
-        if "explore_links" in config and config["explore_links"]:
+        if "explore_links" in config and config["explore_links"]:# and response.request.meta["referer"] == "start_requests":
             this_url = response.url
             for url in self.extract_links(response):
                 yield scrapy.Request(
