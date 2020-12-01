@@ -147,7 +147,7 @@ class StaticPageSpider(BaseSpider):
         config = self.convert_allow_extesions(config)
 
         attr = "download_files_process_value"
-        if config[attr] is not None and type(config[attr]) is str and config[attr] != "":
+        if config[attr] is not None and len(config[attr]) > 0 and type(config[attr]) is str:
             config[attr] = eval(config[attr])
 
         config["download_files_processed"] = True
