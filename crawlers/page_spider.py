@@ -19,8 +19,6 @@ class PageSpider(BaseSpider):
     def start_requests(self):
         print("At StaticPageSpider.start_requests")
 
-        self.convert_allow_extesions()
-
         for req in self.generate_initial_requests():
             if self.config.get("dynamic_processing", False):
                 steps = json.loads(self.config["steps"])
@@ -45,19 +43,22 @@ class PageSpider(BaseSpider):
                 },
                     errback=self.errback_httpbin)
 
-    def convert_allow_extesions(self):
+    def convert_allow_extesions(self, config):
         """Converts 'allow_extesions' configuration into 'deny_extesions'."""
-        allow_extension = f"download_files_allow_extensions"
+        allow = "download_files_allow_extensions"
+        deny = "download_files_deny_extensions"
         if (
-            allow_extension in self.config and
-            self.config[allow_extension] is not None and
-            self.config[allow_extension] != ""
+            allow in config and
+            config[allow] is not None and
+            config[allow] != "" and
+            deny not in config
         ):
-            allowed_extensions = set(self.config[allow_extension].split(","))
+            allowed_extensions = set(config[allow].split(","))
             extensions = [i for i in scrapy.linkextractors.IGNORED_EXTENSIONS]
-            self.config[f"donwload_files_deny_extensions"] = [
+            config[deny] = [
                 i for i in extensions if i not in allowed_extensions
             ]
+        return config
 
     def filter_list_of_urls(self, url_list, pattern):
         """Filter a list of urls according to a regex pattern."""
@@ -88,44 +89,99 @@ class PageSpider(BaseSpider):
 
         return urls_filtered
 
+    def preprocess_listify(self, value, default):
+        """Converts a string of ',' separaded values into a list."""
+        if value is None or len(value) == 0:
+            value = default
+        elif type(value) == str:
+            value = tuple(value.split(","))
+        return value
+
+    def preprocess_link_configs(self, config):
+        """Process link_extractor configurations."""
+        if "link_extractor_processed" in config:
+            return config
+
+        defaults = [
+            ("link_extractor_tags", ('a', 'area')),
+            ("link_extractor_allow_domains", None),
+            ("link_extractor_attrs", ('href',))
+        ]
+        for attr, default in defaults:
+            config[attr] = self.preprocess_listify(config[attr], default)
+
+        config["link_extractor_processed"] = True
+
+        return config
+
     def extract_links(self, response):
         """Filter and return a set with links found in this response."""
+        config = self.preprocess_link_configs(response.meta["config"])
 
-        config = response.meta['config']
-        # TODO: cant make regex tested on https://regexr.com/ work
-        # here for some reason
-        links_extractor = LinkExtractor()
-        #    allow=self.config["link_extractor_allow_url"])
+        links_extractor = LinkExtractor(
+            allow_domains=config["link_extractor_allow_domains"],
+            tags=config["link_extractor_tags"],
+            attrs=config["link_extractor_attrs"],
+            process_value=config["link_extractor_process_value"],
+        )
 
         urls_found = {i.url for i in links_extractor.extract_links(response)}
 
         pattern = config["link_extractor_allow_url"]
-        if pattern != "":
+        if pattern is not None and pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
-        urls_found = self.filter_type_of_urls(urls_found, True)
+        if config["link_extractor_check_type"]:
+            urls_found = self.filter_type_of_urls(urls_found, True)
 
         print("Links kept: ", urls_found)
 
         return urls_found
 
+    def preprocess_download_configs(self, config):
+        """Process download_files configurations."""
+        if "download_files_processed" in config:
+            return config
+
+        defaults = [
+            ("download_files_tags", ('a', 'area')),
+            ("download_files_allow_domains", None),
+            ("download_files_attrs", ('href',))
+        ]
+        for attr, default in defaults:
+            config[attr] = self.preprocess_listify(config[attr], default)
+
+        config = self.convert_allow_extesions(config)
+
+        attr = "download_files_process_value"
+        if config[attr] is not None and len(config[attr]) > 0 and type(config[attr]) is str:
+            config[attr] = eval(config[attr])
+
+        config["download_files_processed"] = True
+
+        return config
+
     def extract_files(self, response):
         """Filter and return a set with links found in this response."""
-        config = response.meta['config']
-        # TODO: cant make regex tested on https://regexr.com/ work
-        # here for some reason
+        config = self.preprocess_download_configs(response.meta["config"])
+
         links_extractor = LinkExtractor(
-            deny_extensions=self.config["donwload_files_deny_extensions"]
-            #    allow = self.config["download_files_allow_url"], ())
+            allow_domains=config["download_files_allow_domains"],
+            tags=config["download_files_tags"],
+            attrs=config["download_files_attrs"],
+            process_value=config["download_files_process_value"],
+            deny_extensions=config["download_files_deny_extensions"]
         )
         urls_found = {i.url for i in links_extractor.extract_links(response)}
 
         pattern = config["download_files_allow_url"]
 
-        if pattern != "":
+        if pattern is not None and pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
-        urls_found_a = self.filter_type_of_urls(urls_found, False)
+        urls_found_a = set()
+        if config["download_files_check_type"]:
+            urls_found_a = self.filter_type_of_urls(urls_found, False)
 
         urls_found_b = self.filter_list_of_urls(
             urls_found, r"(.*\.[a-z]{3,4}$)(.*(?<!\.html)$)(.*(?<!\.php)$)")
