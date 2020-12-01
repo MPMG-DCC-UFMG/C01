@@ -48,8 +48,7 @@ def process_run_crawl(crawler_id):
         instance_id = crawler_manager.start_crawler(data.copy())
         instance = create_instance(data['id'], instance_id)
 
-    instance_info["created_at"] = str(instance.creation_date)
-    instance_info["started_at"] = str(instance.started_at)
+    instance_info["started_at"] = str(instance.creation_date)
     instance_info["finished_at"] = None
 
     crawler_manager.update_instances_info(
@@ -79,9 +78,10 @@ def process_stop_crawl(crawler_id):
         instance.finished_at = timezone.now()
         instance.save()
 
-    instance_info["created_at"] = str(instance.creation_date)
-    instance_info["started_at"] = str(instance.started_at)
-    instance_info["finished_at"] = str(instance.finished_at)
+    # As soon as the instance is created, it starts to collect and is only modified when it stops,
+    # we use these fields to define when a collection started and ended
+    instance_info["started_at"] = str(instance.creation_date)
+    instance_info["finished_at"] = str(instance.last_modified)
 
     crawler_manager.update_instances_info(
         config["data_path"], str(instance_id), instance_info)

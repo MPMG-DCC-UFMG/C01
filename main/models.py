@@ -324,10 +324,6 @@ class CrawlerInstance(TimeStamped):
     instance_id = models.BigIntegerField(primary_key=True)
     running = models.BooleanField()
 
-    started_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    finished_at = models.DateTimeField(null=True, blank=True)
-
-
 class DownloadDetail(TimeStamped):
     """
     Details about file downloads requested by crawlers.
