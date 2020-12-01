@@ -54,7 +54,6 @@ def create_folders(data_path):
         f"{data_path}/config",
         f"{data_path}/data",
         f"{data_path}/flags",
-        f"{data_path}/instances",
         f"{data_path}/log",
         f"{data_path}/webdriver",
     ]
@@ -188,16 +187,16 @@ def remove_crawler(instance_id, are_you_sure=False):
             print("Error: %s : %s" % (f, e.strerror))
 
 
-def update_instances_info(data_path: str, instance_id: str, instance_info: dict):
+def update_instances_info(data_path: str, instance_id: str, instance: dict):
     """Updates the file with information about instances when they are created, initialized or terminated."""
 
-    instances_info = dict()
+    instances = dict()
 
-    filename = f"{data_path}/instances/instances_info.json"
+    filename = f"{data_path}/instances.json"
     if os.path.exists(filename):
         with open(filename) as f:
-            instances_info = json.loads(f.read())
+            instances = json.loads(f.read())
 
-    instances_info[instance_id] = instance_info
-    with open(f"{data_path}/instances/instances_info.json", "w+") as f:
-        f.write(json.dumps(instances_info, indent=4))
+    instances[instance_id] = instance
+    with open(filename, "w+") as f:
+        f.write(json.dumps(instances, indent=4))
