@@ -4,8 +4,8 @@ import time
 import hashlib
 import os
 from urllib.parse import urlparse
-import wget
 import requests
+
 
 class StopDownload(Exception):
     """Used in func file_larger_than_giga"""
