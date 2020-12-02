@@ -25,7 +25,7 @@ class PageSpider(BaseSpider):
                 steps = json.loads(self.config["steps"])
 
                 yield PuppeteerRequest(url=req['url'],
-                    callback=self.form_parse,
+                    callback=self.dynamic_parse,
                     dont_filter=True,
                     meta={
                         "referer": "start_requests",
@@ -210,9 +210,9 @@ class PageSpider(BaseSpider):
         print(f"imgs found at page {response.url}", src)
         return set(src)
 
-    def form_parse(self, response):
+    def dynamic_parse(self, response):
         for page in list(response.request.meta["pages"].values()):
-            newResponse = HtmlResponse(
+            res = HtmlResponse(
                 response.url,
                 status=response.status,
                 headers=response.headers,
@@ -221,9 +221,7 @@ class PageSpider(BaseSpider):
                 request=response.request
             )
 
-            # como fazer o puppeteer fechar se a funcao tem yield
-            # scrapy sõ fecha se parse nao tiver yield
-            for request in self.parse(newResponse):
+            for request in self.parse(res):
                 yield request
 
     def parse(self, response):
@@ -244,7 +242,7 @@ class PageSpider(BaseSpider):
             return
 
         self.store_html(response)
-        if "explore_links" in config and config["explore_links"]:# and response.request.meta["referer"] == "start_requests":
+        if "explore_links" in config and config["explore_links"]:
             this_url = response.url
             for url in self.extract_links(response):
                 yield scrapy.Request(
