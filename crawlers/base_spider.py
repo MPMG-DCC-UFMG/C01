@@ -14,6 +14,9 @@ import os
 import re
 import time
 from lxml.html.clean import Cleaner
+import urllib.parse as urlparse
+import mimetypes
+import requests
 
 # Project libs
 import binary
@@ -421,6 +424,96 @@ class BaseSpider(scrapy.Spider):
 
         self.feed_file_description(
             self.data_folder + "raw_pages", description)
+
+    # source: https://github.com/steveeJ/python-wget/blob/master/wget.py
+    def filename_from_url(self, url):
+        """:return: detected filename or None"""
+
+        fname = os.path.basename(urlparse.urlparse(url).path)
+        if len(fname.strip(" \n\t.")) == 0:
+            return ''
+        return '.' + fname.split('.')[-1]
+
+    def detect_file_extension(self, response):
+        mimetype = response.headers["Content-type"].decode()
+        extension = mimetypes.guess_extension(mimetype)
+
+        if extension:
+            return extension
+
+        extension = self.filename_from_url(response.url)
+        if extension:
+            return extension 
+
+        return ""
+    
+    def store_large_file(self, url, referer):
+        print(f"Saving large file {url}")
+
+        headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
+        mimetype = requests.head(url, allow_redirects=True, headers=headers).headers["Content-type"]
+
+        extension = mimetypes.guess_extension(mimetype)
+        if not extension:
+            extension = self.filename_from_url(url)
+
+        url_hash = crawling_utils.hash(url.encode())
+        file_name = url_hash + extension        
+        relative_path = f"{self.data_folder}files/{file_name}"
+
+        # The stream parameter is not to save in memory
+        with requests.get(url, stream=True, allow_redirects=True, headers=headers) as req:
+            with open(relative_path, "wb") as f:
+                for chunk in req.iter_content(chunk_size=8192):
+                    f.write(chunk)
+
+        wait_end = self.config["wait_crawler_finish_to_download"]
+        description = {
+            "url": url,
+            "file_name": file_name,
+            "crawler_id": self.config["crawler_id"],
+            "instance_id": self.config["instance_id"],
+            "crawled_at_date": str(datetime.datetime.today()),
+            "referer": referer,
+            "type": extension.replace('.',''),
+            "wait_crawler_finish_to_download": wait_end,
+            "time_between_downloads": self.config["time_between_downloads"],
+        }
+
+        file_address = f"{self.data_folder}files/file_description.jsonl"
+        with open(file_address, "a+") as f:
+            f.write(json.dumps(description))
+            f.write("\n")
+
+    def store_small_file(self, response):
+        print(f"Saving small file {response.url}")
+
+        url_hash = crawling_utils.hash(response.url.encode())
+        extension = self.detect_file_extension(response)
+        file_name = url_hash + extension
+
+        relative_path = f"{self.data_folder}files/{file_name}"
+
+        with open(relative_path, "wb") as f:
+            f.write(response.body)
+
+        wait_end = self.config["wait_crawler_finish_to_download"]
+        description = {
+            "url": response.url,
+            "file_name": file_name,
+            "crawler_id": self.config["crawler_id"],
+            "instance_id": self.config["instance_id"],
+            "crawled_at_date": str(datetime.datetime.today()),
+            "referer": response.meta["referer"],
+            "type": extension.replace('.',''),
+            "wait_crawler_finish_to_download": wait_end,
+            "time_between_downloads": self.config["time_between_downloads"],
+        }
+
+        file_address = f"{self.data_folder}files/file_description.jsonl"
+        with open(file_address, "a+") as f:
+            f.write(json.dumps(description))
+            f.write("\n")
 
     def errback_httpbin(self, failure):
         # log all errback failures,
