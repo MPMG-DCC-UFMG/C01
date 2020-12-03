@@ -30,6 +30,7 @@ from crawlers.static_page import StaticPageSpider
 # antiblock_cookies_file
 # antiblock_persist_cookies
 
+
 def file_downloader_process():
     """Redirects downloader output and starts downloader consumer loop."""
     crawling_utils.check_file_path("crawlers/log/")
@@ -121,7 +122,7 @@ def gen_key():
 
 def start_crawler(config):
     """Create and starts a crawler as a new process."""
-    
+
     config["crawler_id"] = config["id"]
     del config["id"]
     config["instance_id"] = gen_key()
@@ -144,6 +145,7 @@ def start_crawler(config):
 
 def stop_crawler(instance_id, config):
     """Sets the flags of a crawler to stop."""
+
     data_path = config["data_path"]
     with open(f"{data_path}/flags/{instance_id}.json", "w+") as f:
         f.write(json.dumps({"stop": True}))
@@ -183,3 +185,18 @@ def remove_crawler(instance_id, are_you_sure=False):
             shutil.rmtree(f)
         except OSError as e:
             print("Error: %s : %s" % (f, e.strerror))
+
+
+def update_instances_info(data_path: str, instance_id: str, instance: dict):
+    """Updates the file with information about instances when they are created, initialized or terminated."""
+
+    instances = dict()
+
+    filename = f"{data_path}/instances.json"
+    if os.path.exists(filename):
+        with open(filename) as f:
+            instances = json.loads(f.read())
+
+    instances[instance_id] = instance
+    with open(filename, "w+") as f:
+        f.write(json.dumps(instances, indent=4))
