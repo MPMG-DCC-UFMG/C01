@@ -459,7 +459,7 @@ class BaseSpider(scrapy.Spider):
         FileDescriptor.feed_description(destination, content)
 
     def extra_config_parser(self, table_attrs):
-        # get the json from extra_config and 
+        # get the json from extra_config and
         # formats in a python proper standard
         extra_config = json.loads(table_attrs)
         for key in extra_config:

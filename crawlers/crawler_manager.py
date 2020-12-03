@@ -4,12 +4,14 @@ from scrapy.crawler import CrawlerProcess
 
 # Other external libs
 import json
+import logging
 import os
 import random
 import requests
 import shutil
 import sys
 import time
+from kafkaloghandler import KafkaLogHandler
 from multiprocessing import Process
 
 # Project libs
@@ -17,6 +19,7 @@ import crawling_utils.crawling_utils as crawling_utils
 from crawlers.constants import *
 from crawlers.file_descriptor import FileDescriptor
 from crawlers.file_downloader import FileDownloader
+from crawlers.log_writer import LogWriter
 from crawlers.static_page import StaticPageSpider
 
 # TODO: implement following antiblock options
@@ -38,7 +41,6 @@ def file_downloader_process():
     sys.stderr = open(f"crawlers/log/file_downloader.err", "w+", buffering=1)
     FileDownloader.download_consumer()
 
-
 def file_descriptor_process():
     """Redirects descriptor output and starts descriptor consumer loop."""
     crawling_utils.check_file_path("crawlers/log/")
@@ -46,6 +48,12 @@ def file_descriptor_process():
     sys.stderr = open(f"crawlers/log/file_descriptor.err", "w+", buffering=1)
     FileDescriptor.description_consumer()
 
+def log_writer_process():
+    """Redirects log_writer output and starts descriptor consumer loop."""
+    crawling_utils.check_file_path("crawlers/log/")
+    sys.stdout = open(f"crawlers/log/log_writer.out", "a", buffering=1)
+    sys.stderr = open(f"crawlers/log/log_writer.err", "a", buffering=1)
+    LogWriter.log_consumer()
 
 def create_folders(data_path):
     """Create essential folders for crawlers if they do not exists"""
@@ -75,8 +83,8 @@ def get_crawler_base_settings(config):
         "AUTOTHROTTLE_ENABLED": config[f"{autothrottle}enabled"],
         "AUTOTHROTTLE_START_DELAY": config[f"{autothrottle}start_delay"],
         "AUTOTHROTTLE_MAX_DELAY": config[f"{autothrottle}max_delay"],
+        "LOG_ENABLED": True,
     }
-
 
 def crawler_process(config):
     """Starts crawling."""
@@ -88,7 +96,14 @@ def crawler_process(config):
     sys.stdout = open(f"{data_path}/log/{instance_id}.out", "a", buffering=1)
     sys.stderr = open(f"{data_path}/log/{instance_id}.err", "a", buffering=1)
 
-    process = CrawlerProcess(settings=get_crawler_base_settings(config))
+    process = CrawlerProcess(settings=get_crawler_base_settings(config),
+                             install_root_handler=False)
+
+    # A root kafka log handler to save in the database
+    logger = logging.getLogger()
+    kaflog = KafkaLogHandler(topic='logs', key=str(instance_id))
+    logging.basicConfig(level=logging.DEBUG)
+    logger.addHandler(kaflog)
 
     if config["crawler_type"] == "single_file":
         # process.crawl(StaticPageSpider, crawler_id=crawler_id)
@@ -125,7 +140,6 @@ def start_crawler(config):
 
     config["crawler_id"] = config["id"]
     del config["id"]
-    config["instance_id"] = gen_key()
 
     data_path = config["data_path"]
     create_folders(data_path=data_path)

@@ -9,8 +9,8 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm,\
-    ResponseHandlerFormSet, ParameterHandlerFormSet
-from .models import CrawlRequest, CrawlerInstance, DownloadDetail
+                   ResponseHandlerFormSet, ParameterHandlerFormSet
+from .models import CrawlRequest, CrawlerInstance, DownloadDetail, Log
 from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer, \
     DownloadDetailSerializer
 
@@ -18,6 +18,7 @@ from crawlers.constants import *
 
 import subprocess
 from datetime import datetime
+import json
 import time
 
 import crawlers.crawler_manager as crawler_manager
@@ -30,23 +31,21 @@ from rest_framework.parsers import JSONParser
 
 def process_run_crawl(crawler_id):
     instance = None
-    instance_id = None
     instance_info = dict()
 
-    with transaction.atomic():
-        # Execute DB commands atomically
-        crawler_entry = CrawlRequest.objects.filter(id=crawler_id)
-        data = crawler_entry.values()[0]
+    crawler_entry = CrawlRequest.objects.filter(id=crawler_id)
+    data = crawler_entry.values()[0]
 
-        # Instance already running
-        if crawler_entry.get().running:
-            instance_id = crawler_entry.get().running_instance.instance_id
-            raise ValueError("An instance is already running for this crawler "
-                             f"({instance_id})")
+    # Instance already running
+    if crawler_entry.get().running:
+        instance_id = crawler_entry.get().running_instance.instance_id
+        raise ValueError("An instance is already running for this crawler "
+                         f"({instance_id})")
 
-        data = CrawlRequest.process_config_data(crawler_entry.get(), data)
-        instance_id = crawler_manager.start_crawler(data.copy())
-        instance = create_instance(data['id'], instance_id)
+    data = CrawlRequest.process_config_data(crawler_entry.get(), data)
+    data["instance_id"] = crawler_manager.gen_key()
+    instance = create_instance(data['id'], data["instance_id"])
+    instance_id = crawler_manager.start_crawler(data.copy())
 
     instance_info["started_at"] = str(instance.creation_date)
     instance_info["finished_at"] = None
@@ -214,32 +213,41 @@ def run_crawl(request, crawler_id):
 
 
 def tail_log_file(request, instance_id):
-    crawler_id = CrawlerInstance.objects.filter(
-        instance_id=instance_id
-    ).values()[0]["crawler_id_id"]
 
-    config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
-    data_path = config["data_path"]
+    logs = Log.objects.filter(instance_id=instance_id)\
+                      .order_by('-creation_date')
 
-    out = subprocess.run(["tail",
-                          f"{data_path}/log/{instance_id}.out",
-                          "-n",
-                          "10"],
-                         stdout=subprocess.PIPE).stdout
-    err = subprocess.run(["tail",
-                          f"{data_path}/log/{instance_id}.err",
-                          "-n",
-                          "10"],
-                         stdout=subprocess.PIPE).stdout
+    log_results = logs.filter(Q(log_level="DEBUG"))[:10]
+    err_results = logs.filter(~Q(log_level="DEBUG"))[:10]
+
+    log_text = [f"[{r.logger_name:^30}] {r.log_message}" for r in log_results]
+    log_text = "\n".join(log_text)
+    err_text = [f"[{r.logger_name:^30}] [{r.log_level:^5}] {r.log_message}" for r in err_results]
+    err_text = "\n".join(err_text)
+
     return JsonResponse({
-        "out": out.decode('utf-8'),
-        "err": err.decode('utf-8'),
+        "out": log_text,
+        "err": err_text,
         "time": str(datetime.fromtimestamp(time.time())),
     })
 
 
+def raw_log(request, instance_id):
+    logs = Log.objects.filter(instance_id=instance_id)\
+                      .order_by('-creation_date')
+    raw_results = logs[:10]
+    raw_text = [json.loads(r.raw_log) for r in raw_results]
+
+    resp = JsonResponse({str(instance_id): raw_text},
+                        json_dumps_params={'indent': 2})
+
+    if len(logs) > 0 and logs[0].instance.running:
+        resp['Refresh'] = 5
+    return resp
+
 def downloads(request):
     return render(request, "main/downloads.html")
+
 
 # API
 ########
