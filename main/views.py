@@ -9,9 +9,8 @@ from rest_framework.decorators import action
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm,\
                    ResponseHandlerFormSet, ParameterHandlerFormSet
-from .models import CrawlRequest, CrawlerInstance, DownloadDetail
-from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer, \
-                        DownloadDetailSerializer
+from .models import CrawlRequest, CrawlerInstance
+from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer
 
 from crawlers.constants import *
 
@@ -299,43 +298,3 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = CrawlerInstance.objects.all()
     serializer_class = CrawlerInstanceSerializer
-
-
-class DownloadDetailsViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows users to be viewed or edited.
-    """
-    queryset = DownloadDetail.objects.all().order_by('-last_modified')
-    serializer_class = DownloadDetailSerializer
-
-    @action(detail=False)
-    def queue(self, request):
-        instances = DownloadDetail.objects.filter(
-            status="WAITING").order_by('creation_date')
-
-        response = {
-            "queue": [DownloadDetailSerializer(i).data for i in instances]
-        }
-
-        return JsonResponse(response)
-
-    @action(detail=False)
-    def progress(self, request):
-        instances = DownloadDetail.objects.filter(
-            status="DOWNLOADING").order_by('-last_modified')
-
-        if len(instances):
-            return JsonResponse(DownloadDetailSerializer(instances[0]).data)
-
-        return JsonResponse({})
-
-    @action(detail=False)
-    def error(self, request):
-        instances = DownloadDetail.objects.filter(
-            status="ERROR").order_by('-last_modified')
-
-        response = {
-            "error": [DownloadDetailSerializer(i).data for i in instances]
-        }
-
-        return JsonResponse(response)

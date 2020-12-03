@@ -19,8 +19,9 @@ import mimetypes
 import requests
 
 # Project libs
-import binary
 import crawling_utils
+
+from binary import Extractor
 from crawlers.constants import *
 from crawlers.file_descriptor import FileDescriptor
 from crawlers.file_downloader import FileDownloader
@@ -447,6 +448,46 @@ class BaseSpider(scrapy.Spider):
 
         return ""
     
+    def convert_binary(self, url, filetype, filename):
+        if filetype != "pdf":
+            return
+
+        url_hash = crawling_utils.hash(url.encode())
+        source_file = f"{self.data_folder}files/{filename}"
+
+        success = False
+        results = None
+        try:
+            # single DataFrame or list of DataFrames
+            results = Extractor(source_file).extra().read()
+        except Exception as e:
+            print(
+                f"Could not extract csv files from {source_file} -",
+                f"message: {str(type(e))}-{e}"
+            )
+            return []
+
+        if type(results) == pandas.DataFrame:
+            results = [results]
+
+        extracted_files = []
+        for i in range(len(results)):
+            relative_path = f"{self.data_folder}csv/{url_hash}_{i}.csv"
+            results[i].to_csv(relative_path, encoding='utf-8', index=False)
+
+            extracted_files.append(relative_path)
+
+            item_desc = {
+                "file_name": f"{url_hash}_{i}.csv",
+                "type": "csv",
+                "extracted_from": source_file,
+                "relative_path": relative_path
+            }
+
+            FileDescriptor.feed_description(f"{self.data_folder}csv/", item_desc)
+
+        return extracted_files
+
     def store_large_file(self, url, referer):
         print(f"Saving large file {url}")
 
@@ -480,6 +521,9 @@ class BaseSpider(scrapy.Spider):
             "time_between_downloads": self.config["time_between_downloads"],
         }
         
+        extracted_files = self.convert_binary(url, description["type"], description["file_name"])
+        description["extracted_files"] = extracted_files
+        
         FileDescriptor.feed_description(f"{self.data_folder}files/", description)
 
     def store_small_file(self, response):
@@ -506,6 +550,9 @@ class BaseSpider(scrapy.Spider):
             "wait_crawler_finish_to_download": wait_end,
             "time_between_downloads": self.config["time_between_downloads"],
         }
+
+        extracted_files = self.convert_binary(url, description["type"], description["file_name"])
+        description["extracted_files"] = extracted_files
 
         FileDescriptor.feed_description(f"{self.data_folder}files/", description)
 
