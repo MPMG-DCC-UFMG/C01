@@ -479,11 +479,8 @@ class BaseSpider(scrapy.Spider):
             "wait_crawler_finish_to_download": wait_end,
             "time_between_downloads": self.config["time_between_downloads"],
         }
-
-        file_address = f"{self.data_folder}files/file_description.jsonl"
-        with open(file_address, "a+") as f:
-            f.write(json.dumps(description))
-            f.write("\n")
+        
+        FileDescriptor.feed_description(f"{self.data_folder}files/", description)
 
     def store_small_file(self, response):
         print(f"Saving small file {response.url}")
@@ -510,10 +507,7 @@ class BaseSpider(scrapy.Spider):
             "time_between_downloads": self.config["time_between_downloads"],
         }
 
-        file_address = f"{self.data_folder}files/file_description.jsonl"
-        with open(file_address, "a+") as f:
-            f.write(json.dumps(description))
-            f.write("\n")
+        FileDescriptor.feed_description(f"{self.data_folder}files/", description)
 
     def errback_httpbin(self, failure):
         # log all errback failures,

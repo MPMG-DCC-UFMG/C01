@@ -64,8 +64,8 @@ def run():
     # List functions that will be executed by processes
     functions = [
         [run_django, []],
-        [run_file_downloader, []],
         [runn_file_descriptor, []],
+        # [run_file_downloader, []],
     ]
 
     # N_FUNCTIONS must be equal to len(functions)

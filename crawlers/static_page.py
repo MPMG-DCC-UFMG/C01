@@ -275,3 +275,14 @@ class StaticPageSpider(BaseSpider):
             for idx, url in enumerate(urls_large_file_content, 1):
                 print(f"Downloading large file {url} {idx} of {size}")
                 self.store_large_file(url, response.meta["referer"]) 
+
+        for url in urls:
+            yield scrapy.Request(
+                url=url, 
+                callback=self.parse,
+                meta={
+                    "referer": response.url,
+                    "config": config
+                },
+                errback=self.errback_httpbin
+            )
