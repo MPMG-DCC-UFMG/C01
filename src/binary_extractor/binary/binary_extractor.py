@@ -43,8 +43,6 @@ class BinaryExtractor():
         pure = Path(self.path)
         self.name = pure.stem
         self.directory = pure.parents[1].joinpath('csv/' + self.name)
-        Path.mkdir(self.directory, exist_ok=True)
-
         # file parsing
         try:
             self.open = parser.from_file(self.path)
@@ -78,7 +76,7 @@ class BinaryExtractor():
             name (str): name of the csv file.
 
         """
-
+        Path.mkdir(self.directory, exist_ok=True)
         file = self.directory.joinpath(name + '.csv')
         with open(file, 'w') as out:
             dataframe.to_csv(out, encoding='utf-8', index=None)

@@ -1,6 +1,7 @@
 # Scrapy and Twister libs
 import scrapy
 from scrapy.linkextractors import LinkExtractor
+from scrapy.http import HtmlResponse
 
 # Other external libs
 import logging
@@ -19,15 +20,17 @@ class PageSpider(BaseSpider):
     def start_requests(self):
         print("At StaticPageSpider.start_requests")
 
-        self.convert_allow_extesions()
-
         for req in self.generate_initial_requests():
             if self.config.get("dynamic_processing", False):
                 steps = json.loads(self.config["steps"])
 
                 yield PuppeteerRequest(url=req['url'],
-                    callback=self.form_parse,
+                    callback=self.dynamic_parse,
                     dont_filter=True,
+                    meta={
+                        "referer": "start_requests",
+                        "config": self.config
+                    },
                     steps=steps)
             else:
                 # Don't send an empty dict, may cause spider to be blocked
@@ -45,88 +48,152 @@ class PageSpider(BaseSpider):
                 },
                     errback=self.errback_httpbin)
 
-    def convert_allow_extesions(self):
+    def convert_allow_extesions(self, config):
         """Converts 'allow_extesions' configuration into 'deny_extesions'."""
-        allow_extension = f"download_files_allow_extensions"
+        allow = "download_files_allow_extensions"
+        deny = "download_files_deny_extensions"
         if (
-            allow_extension in self.config and
-            self.config[allow_extension] is not None and
-            self.config[allow_extension] != ""
+            allow in config and
+            config[allow] is not None and
+            config[allow] != "" and
+            deny not in config
         ):
-            allowed_extensions = set(self.config[allow_extension].split(","))
+            allowed_extensions = set(config[allow].split(","))
             extensions = [i for i in scrapy.linkextractors.IGNORED_EXTENSIONS]
-            self.config[f"donwload_files_deny_extensions"] = [
+            config[deny] = [
                 i for i in extensions if i not in allowed_extensions
             ]
+        return config
 
     def filter_list_of_urls(self, url_list, pattern):
         """Filter a list of urls according to a regex pattern."""
         def allow(url):
             if (re.search(pattern, url) is not None):
-                print(f"ADDING link (passed regex filter) - {url}")
+                # print(f"ADDING link (passed regex filter) - {url}")
                 return True
-            print(f"DISCARDING link (filtered by regex) - {url}")
+            # print(f"DISCARDING link (filtered by regex) - {url}")
             return False
 
         urls_filtered = set(filter(allow, url_list))
 
         return urls_filtered
 
-    def filter_type_of_urls(self, url_list, head):
+    def filter_type_of_urls(self, url_list, page_flag):
         """Filter a list of urls according to the Content-Type."""
         def allow(url):
-            req_head = requests.head(url).headers['Content-Type']
-            if (head in req_head):
-                print(f"ADDING link (correct type) - {url}")
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
+            req_head = requests.head(url, allow_redirects=True, headers=headers).headers['Content-Type']
+            if (('html' in req_head) and page_flag) or (('html' not in req_head) and not page_flag):
+                # print(f"ADDING link (correct type) - {url}")
                 return True
-            print(f"DISCARDING link (incorrect type) - {url}")
+            # print(f"DISCARDING link (incorrect type) - {url}")
             return False
 
         urls_filtered = set(filter(allow, url_list))
 
         return urls_filtered
+
+    def preprocess_listify(self, value, default):
+        """Converts a string of ',' separaded values into a list."""
+        if value is None or len(value) == 0:
+            value = default
+        elif type(value) == str:
+            value = tuple(value.split(","))
+        return value
+
+    def preprocess_link_configs(self, config):
+        """Process link_extractor configurations."""
+        if "link_extractor_processed" in config:
+            return config
+
+        defaults = [
+            ("link_extractor_tags", ('a', 'area')),
+            ("link_extractor_allow_domains", None),
+            ("link_extractor_attrs", ('href',))
+        ]
+        for attr, default in defaults:
+            config[attr] = self.preprocess_listify(config.get(attr, None), default)
+
+        config["link_extractor_processed"] = True
+
+        return config
 
     def extract_links(self, response):
         """Filter and return a set with links found in this response."""
+        config = self.preprocess_link_configs(response.request.meta["config"])
 
-        config = response.meta['config']
-        # TODO: cant make regex tested on https://regexr.com/ work
-        # here for some reason
-        links_extractor = LinkExtractor()
-        #    allow=self.config["link_extractor_allow_url"])
+        links_extractor = LinkExtractor(
+            allow_domains=config["link_extractor_allow_domains"],
+            tags=config["link_extractor_tags"],
+            attrs=config["link_extractor_attrs"],
+            process_value=config.get("link_extractor_process_value", None),
+        )
 
         urls_found = {i.url for i in links_extractor.extract_links(response)}
 
         pattern = config["link_extractor_allow_url"]
-        if pattern != "":
+        if pattern is not None and pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
-        urls_found = self.filter_type_of_urls(urls_found, 'text/html')
+        if config.get("link_extractor_check_type", False):
+            urls_found = self.filter_type_of_urls(urls_found, True)
+
+        print("Links kept: ", urls_found)
 
         return urls_found
 
+    def preprocess_download_configs(self, config):
+        """Process download_files configurations."""
+        if "download_files_processed" in config:
+            return config
+
+        defaults = [
+            ("download_files_tags", ('a', 'area')),
+            ("download_files_allow_domains", None),
+            ("download_files_attrs", ('href',))
+        ]
+        for attr, default in defaults:
+            config[attr] = self.preprocess_listify(config.get(attr, None), default)
+
+        config = self.convert_allow_extesions(config)
+
+        attr = "download_files_process_value"
+        if config.get(attr, None) is not None and len(config[attr]) > 0 and type(config[attr]) is str:
+            config[attr] = eval(config[attr])
+
+        config["download_files_processed"] = True
+
+        return config
+
     def extract_files(self, response):
         """Filter and return a set with links found in this response."""
-        config = response.meta['config']
-        # TODO: cant make regex tested on https://regexr.com/ work
-        # here for some reason
+        config = self.preprocess_download_configs(response.meta["config"])
+
         links_extractor = LinkExtractor(
-            deny_extensions=self.config["donwload_files_deny_extensions"]
-            #    allow = self.config["download_files_allow_url"], ())
+            allow_domains=config["download_files_allow_domains"],
+            tags=config["download_files_tags"],
+            attrs=config["download_files_attrs"],
+            process_value=config.get("download_files_process_value", None),
+            deny_extensions=config.get("download_files_deny_extensions", None)
         )
         urls_found = {i.url for i in links_extractor.extract_links(response)}
 
         pattern = config["download_files_allow_url"]
 
-        if pattern != "":
+        if pattern is not None and pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
-        urls_found_a = self.filter_type_of_urls(urls_found, 'application/download')
+        urls_found_a = set()
+        if config.get("download_files_check_type", None):
+            urls_found_a = self.filter_type_of_urls(urls_found, False)
 
         urls_found_b = self.filter_list_of_urls(
             urls_found, r"(.*\.[a-z]{3,4}$)(.*(?<!\.html)$)(.*(?<!\.php)$)")
 
         urls_found = urls_found_a.union(urls_found_b)
+
+        print("Files kept: ", urls_found)
 
         return urls_found
 
@@ -143,10 +210,19 @@ class PageSpider(BaseSpider):
         print(f"imgs found at page {response.url}", src)
         return set(src)
 
-    def form_parse(self, response):
-        for page in response.request.meta["pages"].values():
-            response.body = str.encode(page)
-            self.parse(response)
+    def dynamic_parse(self, response):
+        for page in list(response.request.meta["pages"].values()):
+            res = HtmlResponse(
+                response.url,
+                status=response.status,
+                headers=response.headers,
+                body=page,
+                encoding='utf-8',
+                request=response.request
+            )
+
+            for request in self.parse(res):
+                yield request
 
     def parse(self, response):
         """
@@ -156,7 +232,7 @@ class PageSpider(BaseSpider):
         response_type = response.headers['Content-type']
         print(f"Parsing {response.url}, type: {response_type}")
 
-        config = response.meta['config']
+        config = response.request.meta['config']
 
         if self.stop():
             return
