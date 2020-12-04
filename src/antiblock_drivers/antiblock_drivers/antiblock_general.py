@@ -11,6 +11,7 @@ import time
 
 from toripchanger import TorIpChanger
 
+
 class AntiblockDriver():
     """
     General implementation for anti-blocking procedures. The _send_request
@@ -63,11 +64,11 @@ class AntiblockDriver():
         """
 
         if not isinstance(self.at_start_delay, (int, float)) or \
-            self.at_start_delay < 0:
+                self.at_start_delay < 0:
             raise ValueError('The autothrottle start delay should be a '
                              'positive number.')
         if not isinstance(self.at_max_delay, (int, float)) or \
-            self.at_max_delay < 0:
+                self.at_max_delay < 0:
             raise ValueError('The autothrottle maximum delay should be a '
                              'positive number.')
 
@@ -78,7 +79,7 @@ class AntiblockDriver():
         """
 
         if not isinstance(self.ip_change_after, int) or \
-            self.ip_change_after < 0:
+                self.ip_change_after < 0:
             raise ValueError('The number of times an IP can be used in '
                              'succession should be a positive integer.')
         if not isinstance(self.ip_reuse_after, int) or self.ip_reuse_after < 0:
@@ -150,7 +151,7 @@ class AntiblockDriver():
                 .get('max_user_agent_usage', self.ua_rotate_min_usage)
 
             self.ua_rotate_limit_usage = random\
-                .randint(self.ua_rotate_min_usage,self.ua_rotate_max_usage)
+                .randint(self.ua_rotate_min_usage, self.ua_rotate_max_usage)
 
             self.__validate_user_agent_config()
 
@@ -198,7 +199,7 @@ class AntiblockDriver():
             if self.current_delay is None or self.time_last_request is None:
                 self.current_delay = self.at_start_delay
             else:
-                next_delay = (response_latency + self.current_delay)/2
+                next_delay = (response_latency + self.current_delay) / 2
 
                 # Non-200 responses can't decrease the delay
                 if last_status == 200 or next_delay > self.current_delay:
@@ -212,7 +213,7 @@ class AntiblockDriver():
             # Normal delay
             if self.randomize_delay:
                 self.current_delay = self.download_delay * \
-                                     random.uniform(0.5, 1.5)
+                    random.uniform(0.5, 1.5)
             else:
                 self.current_delay = self.download_delay
 
@@ -227,9 +228,9 @@ class AntiblockDriver():
             if self.ua_items_scraped >= self.ua_rotate_limit_usage:
                 self.ua_items_scraped = 0
                 self.ua_rotate_limit_usage = random.randint(
-                                                  self.ua_rotate_min_usage,
-                                                  self.ua_rotate_max_usage
-                                                  )
+                    self.ua_rotate_min_usage,
+                    self.ua_rotate_max_usage
+                )
 
                 self.user_agent = next(self.user_agents)
 
@@ -252,9 +253,9 @@ class AntiblockDriver():
             elapsed = time.perf_counter() - self.time_last_request
 
         if self.time_last_request is None or elapsed < self.current_delay:
-           # Wait for the remaining time
-           remaining = self.current_delay - elapsed
-           time.sleep(remaining)
+            # Wait for the remaining time
+            remaining = self.current_delay - elapsed
+            time.sleep(remaining)
 
     def _generate_headers(self, headers: Dict[str, Any] = {}):
         """
@@ -298,15 +299,15 @@ class AntiblockDriver():
                     logging.info(f'New Tor IP: {new_ip}')
 
                 proxies = {
-                    'http':  '127.0.0.1:8118',
+                    'http': '127.0.0.1:8118',
                     'https': '127.0.0.1:8118'
                 }
 
             elif self.ip_rotation_type == 'proxy':
                 proxy_len = len(self.proxy_list)
                 proxies = {
-                    'http':self.proxy_list[self.ip_items_scraped % proxy_len],
-                    'https':self.proxy_list[self.ip_items_scraped % proxy_len]
+                    'http': self.proxy_list[self.ip_items_scraped % proxy_len],
+                    'https': self.proxy_list[self.ip_items_scraped % proxy_len]
                 }
             self.ip_items_scraped += 1
 
@@ -362,7 +363,7 @@ class AntiblockDriver():
 
         # Calculate next delay value
         self._generate_next_delay(response.elapsed.total_seconds(),
-                                   response.status_code)
+                                  response.status_code)
 
         self.time_last_request = time.perf_counter()
 
