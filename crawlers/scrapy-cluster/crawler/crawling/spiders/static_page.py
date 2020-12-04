@@ -20,26 +20,6 @@ class StaticPageSpider(RedisSpider, BaseSpider):
     def __init__(self, *args, **kwargs):
         super(StaticPageSpider, self).__init__(*args, **kwargs)
         print("////////////////////////////////////////////")
-        
-        
-    # def start_requests(self):
-
-    #     for req in self.generate_initial_requests():
-
-    #         # Don't send an empty dict, may cause spider to be blocked
-    #         body_contents = None
-    #         if bool(req['body']):
-    #             body_contents = json.dumps(req['body'])
-
-    #         yield scrapy.Request(url=req['url'],
-    #             method=req['method'],
-    #             body=body_contents,
-    #             callback=self.parse,
-    #             meta={
-    #                 "referer": "start_requests",
-    #                 "config": self.config
-    #         },
-    #             errback=self.errback_httpbin)
 
     def convert_allow_extensions(self, config):
         """Converts 'allow_extesions' configuration into 'deny_extesions'."""
