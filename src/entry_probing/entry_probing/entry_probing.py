@@ -15,7 +15,7 @@ class EntryProbing():
     website has been hit or not
     """
 
-    def __init__(self, req_handler):
+    def __init__(self, req_handler: ProbingRequest):
         """
         Initializes the class with the request handler
         :param req_handler: Handler describing how to execute the request
