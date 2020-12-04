@@ -102,15 +102,9 @@ class CrawlRequest(TimeStamped):
     # Options for sound
     sound_xpath = models.CharField(max_length=100, blank=True, null=True)
 
-    # CRAWLER TYPE ############################################################
-    CRAWLER_TYPE = [
-        ('static_page', 'Static Page'),
-        ('form_page', 'Page with Form'),
-        ('single_file', 'Single File'),
-        ('bundle_file', 'Bundle File'),
-    ]
-    crawler_type = models.CharField(
-        max_length=15, choices=CRAWLER_TYPE, default='static_page')
+    #Steps activation
+    dynamic_processing = models.BooleanField(blank=True, null=True)    
+
     explore_links = models.BooleanField(blank=True, null=True)
     link_extractor_max_depth = models.IntegerField(blank=True, null=True)
     link_extractor_allow_url = models.CharField(
@@ -135,11 +129,9 @@ class CrawlRequest(TimeStamped):
         """
         Removes unnecessary fields from the configuration data and loads the
         data for modules that require access to other models
-
         :param crawler: the crawler instance for which we are configuring
         :param config:  dict containing the attributes for the CrawlRequest
                         instance
-
         :returns: dict with the configuration for the crawler
         """
         del config['creation_date']
