@@ -105,8 +105,7 @@ New Crawler
                 </a>
 
                 <!-- implementation local begin -->
-                <a onClick="showBlock(this.id); load_steps_interface(this.id + '-block', 'id_steps');" 
-                    onLoad="load_steps_interface(this.id + '-block', 'id_steps');" href="#"
+                <a onClick="showBlock(this.id); load_steps_interface(this.id + '-block', 'id_steps');" href="#"
                     class="disabled button-block bg-dark list-group-item list-group-item-action" id="dynamic-processing-item">
                     <div class="d-flex w-100 justify-content-start align-items-center">
                         <div class="col-md-10 sidemenu-items">
@@ -385,6 +384,7 @@ New Crawler
     });
 </script>
 <script src="{% static 'js/create_crawler.js' %}"></script>
+<script>detailDynamicProcessing();</script>
 <script src="{% static 'js/steps.js' %}"></script>
 <script src="{% static 'js/step_block.js' %}"></script>
 {% endblock %}
