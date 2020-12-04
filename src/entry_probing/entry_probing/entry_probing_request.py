@@ -58,7 +58,7 @@ class HTTPProbingRequest(ProbingRequest):
                          body, if necessary
         """
         super().__init__()
-        self.__url    = url
+        self.__url = url
         self.__method = method.upper()
         self.__req_data = req_data if req_data is not None else {}
 
