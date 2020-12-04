@@ -5,6 +5,7 @@ import unittest
 
 from antiblock_drivers import AntiblockDriver
 
+
 class AntiblockTest(unittest.TestCase):
     """
     Testing routines for the anti-block driver.
@@ -61,13 +62,13 @@ class AntiblockTest(unittest.TestCase):
         self.assertRaises(ValueError, AntiblockDriver, {
             'iprotator_enabled': True,
             'iprotator_type': 'proxy',
-            'iprotator_proxy_list': { 'test': 0 }
+            'iprotator_proxy_list': {'test': 0}
         })
 
         # Cookie parameters
         self.assertRaises(ValueError, AntiblockDriver, {
             'insert_cookies': True,
-            'cookies': { 'test': 0 }
+            'cookies': {'test': 0}
         })
 
 
@@ -77,14 +78,14 @@ class AntiblockTest(unittest.TestCase):
         methods.
         """
         antiblock = AntiblockDriver({
-            'download_delay' : 15,
+            'download_delay': 15,
             'download_delay_randomize': False
         })
         antiblock._generate_next_delay()
         self.assertEqual(antiblock.current_delay, 15)
 
         antiblock = AntiblockDriver({
-            'download_delay' : 15
+            'download_delay': 15
         })
         antiblock._generate_next_delay()
         self.assertTrue(7.5 <= antiblock.current_delay <= 22.5)
@@ -109,7 +110,7 @@ class AntiblockTest(unittest.TestCase):
         Tests the user-agent rotation
         """
         antiblock = AntiblockDriver({
-            'rotate_user_agent_enabled' : True,
+            'rotate_user_agent_enabled': True,
             'user_agents': ['A', 'B', 'C'],
             'min_user_agent_usage': 3,
             'max_user_agent_usage': 3
@@ -125,7 +126,7 @@ class AntiblockTest(unittest.TestCase):
         """
         antiblock = AntiblockDriver({
             'iprotator_enabled': True,
-            'iprotator_type' : 'proxy',
+            'iprotator_type': 'proxy',
             'iprotator_proxy_list': ['A', 'B', 'C'],
         })
         result = [antiblock._generate_proxies()['http'] for _ in range(10)]
@@ -134,11 +135,12 @@ class AntiblockTest(unittest.TestCase):
 
         antiblock = AntiblockDriver({
             'iprotator_enabled': True,
-            'iprotator_type' : 'proxy',
+            'iprotator_type': 'proxy',
             'iprotator_proxy_list': ['A', 'B', 'C'],
         })
         result = [antiblock._generate_proxies()['https'] for _ in range(10)]
         self.assertEqual(result, expected)
+
 
 if __name__ == '__main__':
     unittest.main()

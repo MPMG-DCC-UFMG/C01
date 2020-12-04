@@ -6,6 +6,7 @@ import requests
 
 from .antiblock_general import AntiblockDriver
 
+
 class AntiblockRequests(AntiblockDriver):
     """
     Implementation of anti-blocking procedures with the Requests library.
