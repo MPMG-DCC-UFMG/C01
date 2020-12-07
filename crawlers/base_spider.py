@@ -12,6 +12,7 @@ import itertools
 import logging
 import os
 import re
+import pandas
 import time
 from lxml.html.clean import Cleaner
 import urllib.parse as urlparse
@@ -433,21 +434,26 @@ class BaseSpider(scrapy.Spider):
         fname = os.path.basename(urlparse.urlparse(url).path)
         if len(fname.strip(" \n\t.")) == 0:
             return ''
-        return '.' + fname.split('.')[-1]
+        return fname.split('.')[-1]
 
     def detect_file_extension(self, response):
         mimetype = response.headers["Content-type"].decode()
-        extension = mimetypes.guess_extension(mimetype)
+        extension = mimetypes.guess_extension(mimetype).replace('.','')
 
-        if extension:
+        if not extension or extension == "bin":
             return extension
 
         extension = self.filename_from_url(response.url)
         if extension:
             return extension 
 
-        return ""
-    
+        headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
+        response = requests.head(response.url, allow_redirects=True, headers=headers)
+        content_disposition = response.headers.get("Content-Disposition", "")
+        response.close()
+            
+        return content_disposition.split('=')[-1].replace('"','').split('.')[-1]
+
     def convert_binary(self, url, filetype, filename):
         if filetype != "pdf":
             return
@@ -492,14 +498,25 @@ class BaseSpider(scrapy.Spider):
         print(f"Saving large file {url}")
 
         headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
-        mimetype = requests.head(url, allow_redirects=True, headers=headers).headers["Content-type"]
+        response = requests.head(url, allow_redirects=True, headers=headers)
+        mimetype = response.headers.get("Content-type", "")
+        content_disposition = response.headers.get("Content-Disposition", "")
+        response.close()
 
-        extension = mimetypes.guess_extension(mimetype)
-        if not extension:
+        extension = mimetypes.guess_extension(mimetype).replace('.', '')
+
+        # Extension cannot be None and not be as generic as being binary 
+        if not extension or extension == "bin":
             extension = self.filename_from_url(url)
 
+        if not extension:
+            # attachment;filename="filename.filetype"
+            extension = content_disposition.split('=')[-1].replace('"','').split('.')[-1]
+
         url_hash = crawling_utils.hash(url.encode())
-        file_name = url_hash + extension        
+        file_name = url_hash 
+        file_name += '.' + extension if extension else ''
+
         relative_path = f"{self.data_folder}files/{file_name}"
 
         # The stream parameter is not to save in memory
@@ -508,7 +525,6 @@ class BaseSpider(scrapy.Spider):
                 for chunk in req.iter_content(chunk_size=8192):
                     f.write(chunk)
 
-        wait_end = self.config["wait_crawler_finish_to_download"]
         description = {
             "url": url,
             "file_name": file_name,
@@ -516,29 +532,32 @@ class BaseSpider(scrapy.Spider):
             "instance_id": self.config["instance_id"],
             "crawled_at_date": str(datetime.datetime.today()),
             "referer": referer,
-            "type": extension.replace('.',''),
-            "wait_crawler_finish_to_download": wait_end,
+            "type": extension,
             "time_between_downloads": self.config["time_between_downloads"],
         }
         
         extracted_files = self.convert_binary(url, description["type"], description["file_name"])
         description["extracted_files"] = extracted_files
         
-        FileDescriptor.feed_description(f"{self.data_folder}files/", description)
+        self.feed_file_description(f"{self.data_folder}files/", description)
+        
+        if self.config["time_between_downloads"]:
+            print(f"Waiting {self.config['time_between_downloads']}s for the next download...")
+            time.sleep(self.config["time_between_downloads"])
 
     def store_small_file(self, response):
         print(f"Saving small file {response.url}")
 
         url_hash = crawling_utils.hash(response.url.encode())
         extension = self.detect_file_extension(response)
-        file_name = url_hash + extension
+        file_name = url_hash 
+        file_name += '.' + extension if extension else ''
 
         relative_path = f"{self.data_folder}files/{file_name}"
 
         with open(relative_path, "wb") as f:
             f.write(response.body)
 
-        wait_end = self.config["wait_crawler_finish_to_download"]
         description = {
             "url": response.url,
             "file_name": file_name,
@@ -547,14 +566,17 @@ class BaseSpider(scrapy.Spider):
             "crawled_at_date": str(datetime.datetime.today()),
             "referer": response.meta["referer"],
             "type": extension.replace('.',''),
-            "wait_crawler_finish_to_download": wait_end,
             "time_between_downloads": self.config["time_between_downloads"],
         }
 
-        extracted_files = self.convert_binary(url, description["type"], description["file_name"])
+        extracted_files = self.convert_binary(response.url, description["type"], description["file_name"])
         description["extracted_files"] = extracted_files
-
-        FileDescriptor.feed_description(f"{self.data_folder}files/", description)
+        
+        self.feed_file_description(f"{self.data_folder}files/", description)
+        
+        if self.config["time_between_downloads"]:
+            print(f"Waiting {self.config['time_between_downloads']}s for the next download...")
+            time.sleep(self.config["time_between_downloads"])
 
     def errback_httpbin(self, failure):
         # log all errback failures,
@@ -575,19 +597,6 @@ class BaseSpider(scrapy.Spider):
         elif failure.check(TimeoutError):
             request = failure.request
             self.logger.error('TimeoutError on %s', request.url)
-
-    def feed_file_downloader(self, url, response_origin):
-        wait_end = self.config["wait_crawler_finish_to_download"]
-        description = {
-            "url": url,
-            "crawler_id": self.config["crawler_id"],
-            "instance_id": self.config["instance_id"],
-            "crawled_at_date": str(datetime.datetime.today()),
-            "referer": response_origin.url,
-            "wait_crawler_finish_to_download": wait_end,
-            "time_between_downloads": self.config["time_between_downloads"],
-        }
-        FileDownloader.feed_downloader(url, self.data_folder, description)
 
     def feed_file_description(self, destination, content):
         FileDescriptor.feed_description(destination, content)

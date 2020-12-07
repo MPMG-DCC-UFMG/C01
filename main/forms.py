@@ -64,7 +64,6 @@ class CrawlRequestForm(forms.ModelForm):
             'download_files_allow_extensions',
 
             'download_imgs',
-            'wait_crawler_finish_to_download',
             'time_between_downloads',
             'steps',
             'save_csv',
@@ -345,9 +344,6 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     download_imgs = forms.BooleanField(
         required=False, label="Baixar imagens")
-
-    wait_crawler_finish_to_download = forms.BooleanField(
-        required=False, label="Esperar coletor finalizar para baixar arquivos")
 
     time_between_downloads = forms.IntegerField(
         required=False,

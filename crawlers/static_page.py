@@ -12,7 +12,7 @@ import requests
 from crawlers.base_spider import BaseSpider
 import crawling_utils
 
-LARGE_CONTENT_LENGHT = 30000
+LARGE_CONTENT_LENGHT = 1e9
 
 class StaticPageSpider(BaseSpider):
     name = 'static_page'
