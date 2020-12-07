@@ -14,6 +14,7 @@ from crawlers.base_spider import BaseSpider
 import crawling_utils
 from scrapy_puppeteer import PuppeteerRequest
 
+
 class PageSpider(BaseSpider):
     name = 'page_spider'
 
@@ -30,7 +31,7 @@ class PageSpider(BaseSpider):
                     meta={
                         "referer": "start_requests",
                         "config": self.config
-                    },
+                },
                     steps=steps)
             else:
                 # Don't send an empty dict, may cause spider to be blocked
