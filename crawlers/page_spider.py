@@ -113,7 +113,7 @@ class PageSpider(BaseSpider):
             ("link_extractor_attrs", ('href',))
         ]
         for attr, default in defaults:
-            config[attr] = self.preprocess_listify(config.get(attr, None), default)
+            config[attr] = self.preprocess_listify(config[attr], default)
 
         config["link_extractor_processed"] = True
 
@@ -121,13 +121,13 @@ class PageSpider(BaseSpider):
 
     def extract_links(self, response):
         """Filter and return a set with links found in this response."""
-        config = self.preprocess_link_configs(response.request.meta["config"])
+        config = self.preprocess_link_configs(response.meta["config"])
 
         links_extractor = LinkExtractor(
             allow_domains=config["link_extractor_allow_domains"],
             tags=config["link_extractor_tags"],
             attrs=config["link_extractor_attrs"],
-            process_value=config.get("link_extractor_process_value", None),
+            process_value=config["link_extractor_process_value"],
         )
 
         urls_found = {i.url for i in links_extractor.extract_links(response)}
@@ -136,7 +136,7 @@ class PageSpider(BaseSpider):
         if pattern is not None and pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
-        if config.get("link_extractor_check_type", False):
+        if config["link_extractor_check_type"]:
             urls_found = self.filter_type_of_urls(urls_found, True)
 
         print("Links kept: ", urls_found)
@@ -154,12 +154,12 @@ class PageSpider(BaseSpider):
             ("download_files_attrs", ('href',))
         ]
         for attr, default in defaults:
-            config[attr] = self.preprocess_listify(config.get(attr, None), default)
+            config[attr] = self.preprocess_listify(config[attr], default)
 
         config = self.convert_allow_extesions(config)
 
         attr = "download_files_process_value"
-        if config.get(attr, None) is not None and len(config[attr]) > 0 and type(config[attr]) is str:
+        if config[attr] is not None and len(config[attr]) > 0 and type(config[attr]) is str:
             config[attr] = eval(config[attr])
 
         config["download_files_processed"] = True
@@ -174,8 +174,8 @@ class PageSpider(BaseSpider):
             allow_domains=config["download_files_allow_domains"],
             tags=config["download_files_tags"],
             attrs=config["download_files_attrs"],
-            process_value=config.get("download_files_process_value", None),
-            deny_extensions=config.get("download_files_deny_extensions", None)
+            process_value=config["download_files_process_value"],
+            deny_extensions=config["download_files_deny_extensions"]
         )
         urls_found = {i.url for i in links_extractor.extract_links(response)}
 
@@ -185,7 +185,7 @@ class PageSpider(BaseSpider):
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
         urls_found_a = set()
-        if config.get("download_files_check_type", None):
+        if config["download_files_check_type"]:
             urls_found_a = self.filter_type_of_urls(urls_found, False)
 
         urls_found_b = self.filter_list_of_urls(
