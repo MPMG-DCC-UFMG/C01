@@ -255,7 +255,6 @@ class PageSpider(BaseSpider):
             for file in self.extract_files(response):
                 self.feed_file_downloader(file, response)
 
-        print("download_imgs", self.config["download_imgs"])
         if "download_imgs" in self.config and self.config["download_imgs"]:
             for img_url in self.extract_imgs(response):
                 print("feeding", img_url)
