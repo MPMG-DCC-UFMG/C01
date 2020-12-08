@@ -47,9 +47,9 @@ def run_zookeeper():
     crawling_utils.check_file_path("crawlers/log/")
     os.chdir('kafka-2.5.0-src')
 
-    # Starts zookeeper server
+    # Starts zookeeper server with overriten properties
     subprocess.run(['bin/zookeeper-server-start.sh',
-                    'config/zookeeper.properties'],
+                    'config/zoo.properties'],
                     stdout=open(f"../crawlers/log/zookeeper.out", "a", buffering=1),
                     stderr=open(f"../crawlers/log/zookeeper.err", "a", buffering=1))
 
@@ -60,7 +60,9 @@ def run_kafka():
 
     # Starts kafka server
     subprocess.run(['bin/kafka-server-start.sh',
-                    'config/server.properties'],
+                    'config/server.properties',
+                    '--override',
+                    'log.dirs=kafka-logs'],
                     stdout=open(f"../crawlers/log/kafka.out", "a", buffering=1),
                     stderr=open(f"../crawlers/log/kafka.err", "a", buffering=1))
 
