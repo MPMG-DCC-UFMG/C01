@@ -35,6 +35,6 @@ class MainConfig(AppConfig):
         except OperationalError as err:
             print(
                 f"Error at MainConfig.ready(). Message:\n{err}\n"
-                f"Are you making migrations or migrating?\n" 
+                f"Are you making migrations or migrating?\n"
                 f" If so, ignore this error. Otherwise you should fix it."
             )
