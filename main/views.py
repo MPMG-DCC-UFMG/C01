@@ -8,7 +8,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm,\
-                   ResponseHandlerFormSet, ParameterHandlerFormSet
+    ResponseHandlerFormSet, ParameterHandlerFormSet
 from .models import CrawlRequest, CrawlerInstance
 from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer
 
