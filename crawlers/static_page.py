@@ -81,8 +81,10 @@ class StaticPageSpider(BaseSpider):
 
         return urls_filtered
 
-    def filter_type_of_urls(self, url_list, page_flag, split_large_content=True):
-        """Filter a list of urls according to the Content-Type."""
+    def filter_type_of_urls_and_split_small_content(self, url_list, page_flag, split_large_content=True):
+        """Filter a list of urls according to the Content-Type and split urls with small content (avoiding send too many requests
+        to the server to verify if the content is large or not)
+        """
         def allow_type(url_with_type_and_lenght):
             req_head = url_with_type_and_lenght[1]
             if (('html' in req_head) and page_flag) or (('html' not in req_head) and not page_flag):
@@ -109,6 +111,7 @@ class StaticPageSpider(BaseSpider):
             response = requests.head(url, allow_redirects=True, headers=headers)
             content_lenght = int(response.headers.get('Content-Length', '0'))
             response.close()
+
             return content_lenght < LARGE_CONTENT_LENGHT
 
         urls_small_content = set(url for url in url_list if is_small_content(url))
@@ -157,7 +160,7 @@ class StaticPageSpider(BaseSpider):
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
         if config["link_extractor_check_type"]:
-            urls_found = self.filter_type_of_urls(urls_found, True, False)
+            urls_found = self.filter_type_of_urls_and_split_small_content(urls_found, True, False)
 
         print("Links kept: ", urls_found)
 
@@ -204,14 +207,15 @@ class StaticPageSpider(BaseSpider):
         if pattern is not None and pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
-        urls_files = self.filter_list_of_urls(
-            urls_found, r"(.*\.[a-z]{3,4}$)(.*(?<!\.html)$)(.*(?<!\.php)$)")
         
         urls_small_content = set()
         urls_large_content = set()
         
         if config["download_files_check_type"]:
-            urls_small_content, urls_large_content = self.filter_type_of_urls(urls_found, False)
+            urls_small_content, urls_large_content = self.filter_type_of_urls_and_split_small_content(urls_found, False)
+
+        urls_files = self.filter_list_of_urls(
+            urls_found, r"(.*\.[a-z]{3,4}$)(.*(?<!\.html)$)(.*(?<!\.php)$)")
 
         urls_files = urls_files.difference(urls_small_content)
         urls_files = urls_files.difference(urls_large_content)

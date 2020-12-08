@@ -25,15 +25,12 @@ import crawling_utils
 from binary import Extractor
 from crawlers.constants import *
 from crawlers.file_descriptor import FileDescriptor
-from crawlers.file_downloader import FileDownloader
 from entry_probing import BinaryFormatProbingResponse, HTTPProbingRequest,\
     HTTPStatusProbingResponse, TextMatchProbingResponse,\
     EntryProbing
 from param_injector import ParamInjector
 from range_inference import RangeInference
 import parsing_html
-
-
 
 class BaseSpider(scrapy.Spider):
     name = 'base_spider'
@@ -427,37 +424,37 @@ class BaseSpider(scrapy.Spider):
         self.feed_file_description(
             self.data_folder + "raw_pages", description)
 
-    # source: https://github.com/steveeJ/python-wget/blob/master/wget.py
-    def filename_from_url(self, url):
-        """:return: detected filename or None"""
+    # based on: https://github.com/steveeJ/python-wget/blob/master/wget.py
+    def filetype_from_url(self, url: str) -> str:
+        """Detects the file type through its"""
 
         fname = os.path.basename(urlparse.urlparse(url).path)
         if len(fname.strip(" \n\t.")) == 0:
             return ''
         return fname.split('.')[-1]
 
-    def detect_file_extension(self, response):
-        mimetype = response.headers["Content-type"].decode()
-        extension = mimetypes.guess_extension(mimetype).replace('.','')
+    def filetype_from_mimetype(self, mimetype: str) -> str:
+        """Detects the file type using its mimetype"""
+        
+        return mimetypes.guess_extension(mimetype).replace('.','')        
+
+    def detect_file_extension(self, url, content_type: str, content_disposition: str) -> str:
+        """detects the file extension, using its mimetype, url or name on the server, if available"""
+        extension = self.filetype_from_mimetype(content_type)
 
         if not extension or extension == "bin":
             return extension
 
-        extension = self.filename_from_url(response.url)
+        extension = self.filetype_from_url(url)
         if extension:
             return extension 
 
-        headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
-        response = requests.head(response.url, allow_redirects=True, headers=headers)
-        content_disposition = response.headers.get("Content-Disposition", "")
-        response.close()
-            
         return content_disposition.split('=')[-1].replace('"','').split('.')[-1]
 
-    def convert_binary(self, url, filetype, filename):
+    def convert_binary(self, url: str, filetype: str, filename: str):
         if filetype != "pdf":
             return
-
+        
         url_hash = crawling_utils.hash(url.encode())
         source_file = f"{self.data_folder}files/{filename}"
 
@@ -494,30 +491,29 @@ class BaseSpider(scrapy.Spider):
 
         return extracted_files
 
-    def store_large_file(self, url, referer):
-        print(f"Saving large file {url}")
-
-        headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
-        response = requests.head(url, allow_redirects=True, headers=headers)
-        mimetype = response.headers.get("Content-type", "")
-        content_disposition = response.headers.get("Content-Disposition", "")
-        response.close()
-
-        extension = mimetypes.guess_extension(mimetype).replace('.', '')
-
-        # Extension cannot be None and not be as generic as being binary 
-        if not extension or extension == "bin":
-            extension = self.filename_from_url(url)
-
-        if not extension:
-            # attachment;filename="filename.filetype"
-            extension = content_disposition.split('=')[-1].replace('"','').split('.')[-1]
-
+    def get_download_filename_and_relative_path(self, url: str, extension: str) -> tuple:
         url_hash = crawling_utils.hash(url.encode())
         file_name = url_hash 
         file_name += '.' + extension if extension else ''
 
         relative_path = f"{self.data_folder}files/{file_name}"
+
+        return file_name, relative_path
+
+    def store_large_file(self, url: str, referer: str):
+        print(f"Saving large file {url}")
+        
+        # Head type request to obtain the mimetype and/or file name to be downloaded on the server
+        headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
+        response = requests.head(url, allow_redirects=True, headers=headers)
+        
+        content_type = response.headers.get("Content-type", "")
+        content_disposition = response.headers.get("Content-Disposition", "")
+
+        response.close()
+
+        extension = self.detect_file_extension(url, content_type, content_disposition)
+        file_name, relative_path = self.get_download_filename_and_relative_path(url, extension)
 
         # The stream parameter is not to save in memory
         with requests.get(url, stream=True, allow_redirects=True, headers=headers) as req:
@@ -525,58 +521,21 @@ class BaseSpider(scrapy.Spider):
                 for chunk in req.iter_content(chunk_size=8192):
                     f.write(chunk)
 
-        description = {
-            "url": url,
-            "file_name": file_name,
-            "crawler_id": self.config["crawler_id"],
-            "instance_id": self.config["instance_id"],
-            "crawled_at_date": str(datetime.datetime.today()),
-            "referer": referer,
-            "type": extension,
-            "time_between_downloads": self.config["time_between_downloads"],
-        }
-        
-        extracted_files = self.convert_binary(url, description["type"], description["file_name"])
-        description["extracted_files"] = extracted_files
-        
-        self.feed_file_description(f"{self.data_folder}files/", description)
-        
-        if self.config["time_between_downloads"]:
-            print(f"Waiting {self.config['time_between_downloads']}s for the next download...")
-            time.sleep(self.config["time_between_downloads"])
+        self.create_and_feed_file_description(url, file_name, referer, extension)
 
     def store_small_file(self, response):
         print(f"Saving small file {response.url}")
+        
+        content_type = response.headers.get("Content-Type", b"").decode()
+        content_disposition = response.headers.get("Content-Disposition", b"").decode()
 
-        url_hash = crawling_utils.hash(response.url.encode())
-        extension = self.detect_file_extension(response)
-        file_name = url_hash 
-        file_name += '.' + extension if extension else ''
-
-        relative_path = f"{self.data_folder}files/{file_name}"
+        extension = self.detect_file_extension(response.url, content_type, content_disposition)
+        file_name, relative_path = self.get_download_filename_and_relative_path(response.url, extension)
 
         with open(relative_path, "wb") as f:
             f.write(response.body)
 
-        description = {
-            "url": response.url,
-            "file_name": file_name,
-            "crawler_id": self.config["crawler_id"],
-            "instance_id": self.config["instance_id"],
-            "crawled_at_date": str(datetime.datetime.today()),
-            "referer": response.meta["referer"],
-            "type": extension.replace('.',''),
-            "time_between_downloads": self.config["time_between_downloads"],
-        }
-
-        extracted_files = self.convert_binary(response.url, description["type"], description["file_name"])
-        description["extracted_files"] = extracted_files
-        
-        self.feed_file_description(f"{self.data_folder}files/", description)
-        
-        if self.config["time_between_downloads"]:
-            print(f"Waiting {self.config['time_between_downloads']}s for the next download...")
-            time.sleep(self.config["time_between_downloads"])
+        self.create_and_feed_file_description(response.url, file_name, response.meta["referer"], extension)
 
     def errback_httpbin(self, failure):
         # log all errback failures,
@@ -598,8 +557,31 @@ class BaseSpider(scrapy.Spider):
             request = failure.request
             self.logger.error('TimeoutError on %s', request.url)
 
-    def feed_file_description(self, destination, content):
+    def feed_file_description(self, destination: str, content: dict):        
         FileDescriptor.feed_description(destination, content)
+
+    def create_and_feed_file_description(self, url: str, file_name: str, referer: str, extension: str):
+        """Creates the description file of the downloaded files and saves them"""
+
+        description = {
+            "url": url,
+            "file_name": file_name,
+            "crawler_id": self.config["crawler_id"],
+            "instance_id": self.config["instance_id"],
+            "crawled_at_date": str(datetime.datetime.today()),
+            "referer": referer,
+            "type": extension,
+            "time_between_downloads": self.config["time_between_downloads"],
+        }
+        
+        # extracted_files = self.convert_binary(url, extension, file_name)
+        # description["extracted_files"] = extracted_files
+        
+        self.feed_file_description(f"{self.data_folder}files/", description)
+        
+        if self.config["time_between_downloads"]:
+            print(f"Waiting {self.config['time_between_downloads']}s for the next download...")
+            time.sleep(self.config["time_between_downloads"])
 
     def extra_config_parser(self, table_attrs):
         # get the json from extra_config and 

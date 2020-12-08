@@ -4,8 +4,7 @@ import time
 import sys
 import subprocess
 
-from crawlers.crawler_manager import file_downloader_process, \
-    file_descriptor_process
+from crawlers.crawler_manager import file_descriptor_process
 
 # GLOBAL VARIABLES
 
@@ -24,10 +23,6 @@ N_FUNCTIONS = 3
 def run_django():
     # Runs django repassing cli parameters
     subprocess.run(["python", "manage.py", "runserver"] + sys.argv[1:])
-
-
-def run_file_downloader():
-    file_downloader_process()
 
 
 def runn_file_descriptor():
