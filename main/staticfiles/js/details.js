@@ -38,7 +38,7 @@ function tail_logs(instance_id){
 }
 
 function tail_f_logs(instance_id){
-    // Calls tail_logs and raw_logs every 5 seconds
+    // Calls tail_logs every 5 seconds
     setInterval(
         function(){tail_logs(instance_id);},
         5000
