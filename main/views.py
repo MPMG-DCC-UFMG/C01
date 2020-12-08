@@ -9,7 +9,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm,\
-                   ResponseHandlerFormSet, ParameterHandlerFormSet
+    ResponseHandlerFormSet, ParameterHandlerFormSet
 from .models import CrawlRequest, CrawlerInstance, DownloadDetail, Log
 from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer, \
     DownloadDetailSerializer
@@ -244,6 +244,7 @@ def raw_log(request, instance_id):
     if len(logs) > 0 and logs[0].instance.running:
         resp['Refresh'] = 5
     return resp
+
 
 def downloads(request):
     return render(request, "main/downloads.html")

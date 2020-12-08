@@ -8,7 +8,7 @@ import sys
 import time
 
 from crawlers.crawler_manager import file_downloader_process, \
-     file_descriptor_process
+    file_descriptor_process
 
 import crawling_utils.crawling_utils as crawling_utils
 
@@ -25,6 +25,7 @@ global_lock = multiprocessing.Lock()
 
 N_FUNCTIONS = 5
 
+
 def wait_for_port(port):
     # Wait until the process is running in a port
     a_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -36,12 +37,14 @@ def wait_for_port(port):
 
     a_socket.close()
 
+
 def run_django():
-    signal.signal(signal.SIGCHLD,lambda _, __: os.wait())
+    signal.signal(signal.SIGCHLD, lambda _, __: os.wait())
     wait_for_port(9092)
 
     # Runs django repassing cli parameters
     subprocess.run(["python", "manage.py", "runserver"] + sys.argv[1:])
+
 
 def run_zookeeper():
     crawling_utils.check_file_path("crawlers/log/")
@@ -50,8 +53,9 @@ def run_zookeeper():
     # Starts zookeeper server with overriten properties
     subprocess.run(['bin/zookeeper-server-start.sh',
                     'config/zoo.properties'],
-                    stdout=open(f"../crawlers/log/zookeeper.out", "a", buffering=1),
-                    stderr=open(f"../crawlers/log/zookeeper.err", "a", buffering=1))
+                   stdout=open(f"../crawlers/log/zookeeper.out", "a", buffering=1),
+                   stderr=open(f"../crawlers/log/zookeeper.err", "a", buffering=1))
+
 
 def run_kafka():
     wait_for_port(2181)
@@ -63,11 +67,13 @@ def run_kafka():
                     'config/server.properties',
                     '--override',
                     'log.dirs=kafka-logs'],
-                    stdout=open(f"../crawlers/log/kafka.out", "a", buffering=1),
-                    stderr=open(f"../crawlers/log/kafka.err", "a", buffering=1))
+                   stdout=open(f"../crawlers/log/kafka.out", "a", buffering=1),
+                   stderr=open(f"../crawlers/log/kafka.err", "a", buffering=1))
+
 
 def run_file_downloader():
     file_downloader_process()
+
 
 def runn_file_descriptor():
     file_descriptor_process()
@@ -78,10 +84,12 @@ def runn_file_descriptor():
 def init_process():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
+
 def signal_done(r):
     global global_logk, n_processes_running
     with global_lock:
         n_processes_running -= 1
+
 
 def signal_stop(e):
     global stop_processes, process_exception

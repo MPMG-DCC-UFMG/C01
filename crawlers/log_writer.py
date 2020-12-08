@@ -10,6 +10,7 @@ import sys
 from django.apps import apps
 from kafka import KafkaConsumer
 
+
 class LogWriter():
     """
     This class consumes logs from running spiders and save them in the database.
@@ -22,9 +23,9 @@ class LogWriter():
     # KafkaConsumer parameters dictionary:
     DEFAULT_CONSUMER_PARAMS = {
         'enable_auto_commit': True,
-        'auto_offset_reset' : 'latest',
-        'bootstrap_servers' : ['localhost:9092'],
-        'key_deserializer'  : lambda m: m.decode('utf-8'),
+        'auto_offset_reset': 'latest',
+        'bootstrap_servers': ['localhost:9092'],
+        'key_deserializer': lambda m: m.decode('utf-8'),
         'value_deserializer': lambda m: json.loads(m.decode('utf-8'))
     }
 
@@ -39,11 +40,11 @@ class LogWriter():
         try:
             for message in consumer:
                 log = {}
-                log['iid']  = int(message.key)
-                log['raw']  = json.dumps(message.value)
+                log['iid'] = int(message.key)
+                log['raw'] = json.dumps(message.value)
                 log['name'] = message.value['name']
-                log['msg']  = message.value['message']
-                log['lvl']  = message.value['levelname']
+                log['msg'] = message.value['message']
+                log['lvl'] = message.value['levelname']
 
                 LogWriter.log_writer(log)
         finally:

@@ -41,6 +41,7 @@ def file_downloader_process():
     sys.stderr = open(f"crawlers/log/file_downloader.err", "w+", buffering=1)
     FileDownloader.download_consumer()
 
+
 def file_descriptor_process():
     """Redirects descriptor output and starts descriptor consumer loop."""
     crawling_utils.check_file_path("crawlers/log/")
@@ -48,12 +49,14 @@ def file_descriptor_process():
     sys.stderr = open(f"crawlers/log/file_descriptor.err", "w+", buffering=1)
     FileDescriptor.description_consumer()
 
+
 def log_writer_process():
     """Redirects log_writer output and starts descriptor consumer loop."""
     crawling_utils.check_file_path("crawlers/log/")
     sys.stdout = open(f"crawlers/log/log_writer.out", "a", buffering=1)
     sys.stderr = open(f"crawlers/log/log_writer.err", "a", buffering=1)
     LogWriter.log_consumer()
+
 
 def create_folders(data_path):
     """Create essential folders for crawlers if they do not exists"""
@@ -85,6 +88,7 @@ def get_crawler_base_settings(config):
         "AUTOTHROTTLE_MAX_DELAY": config[f"{autothrottle}max_delay"],
         "LOG_ENABLED": True,
     }
+
 
 def crawler_process(config):
     """Starts crawling."""
