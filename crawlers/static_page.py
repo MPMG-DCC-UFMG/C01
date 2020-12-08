@@ -14,6 +14,7 @@ import crawling_utils
 
 LARGE_CONTENT_LENGHT = 1e9
 
+
 class StaticPageSpider(BaseSpider):
     name = 'static_page'
 
@@ -56,9 +57,10 @@ class StaticPageSpider(BaseSpider):
 
     def get_url_content_type_and_lenght(self, url) -> tuple:
         """Retrieves the type of URL content and its size"""
-        
-        # TODO: Use antiblock mechanisms here 
-        headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
+
+        # TODO: Use antiblock mechanisms here
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
         response = requests.head(url, allow_redirects=True, headers=headers)
 
         content_type = response.headers.get('Content-Type')
@@ -94,11 +96,11 @@ class StaticPageSpider(BaseSpider):
         urls_with_type_and_lenght = [self.get_url_content_type_and_lenght(url) for url in url_list]
         urls_with_type_and_lenght_filtered = set(filter(allow_type, urls_with_type_and_lenght))
 
-        urls = set(url_type_lenght[0] for url_type_lenght in urls_with_type_and_lenght_filtered)         
+        urls = set(url_type_lenght[0] for url_type_lenght in urls_with_type_and_lenght_filtered)
         if split_large_content:
-            urls_with_small_content = set(url_type_lenght[0] 
-                                            for url_type_lenght in urls_with_type_and_lenght
-                                            if url_type_lenght[2] < LARGE_CONTENT_LENGHT)
+            urls_with_small_content = set(url_type_lenght[0]
+                                          for url_type_lenght in urls_with_type_and_lenght
+                                          if url_type_lenght[2] < LARGE_CONTENT_LENGHT)
 
             return urls_with_small_content, urls.difference(urls_with_small_content)
 
@@ -106,8 +108,9 @@ class StaticPageSpider(BaseSpider):
 
     def split_urls_in_small_content(self, url_list):
         def is_small_content(url):
-            # TODO: Use antiblock mechanisms here 
-            headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
+            # TODO: Use antiblock mechanisms here
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
             response = requests.head(url, allow_redirects=True, headers=headers)
             content_lenght = int(response.headers.get('Content-Length', '0'))
             response.close()
@@ -207,10 +210,10 @@ class StaticPageSpider(BaseSpider):
         if pattern is not None and pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
-        
+
         urls_small_content = set()
         urls_large_content = set()
-        
+
         if config["download_files_check_type"]:
             urls_small_content, urls_large_content = self.filter_type_of_urls_and_split_small_content(urls_found, False)
 
@@ -221,7 +224,7 @@ class StaticPageSpider(BaseSpider):
         urls_files = urls_files.difference(urls_large_content)
 
         urls_small_content_b, urls_large_content_b = self.split_urls_in_small_content(urls_files)
-        
+
         urls_small_content = urls_small_content.union(urls_small_content_b)
         urls_large_content = urls_large_content.union(urls_large_content_b)
 
@@ -261,7 +264,7 @@ class StaticPageSpider(BaseSpider):
             return
 
         self.store_html(response)
-        
+
         urls = set()
         if "explore_links" in config and config["explore_links"]:
             this_url = response.url
@@ -278,11 +281,11 @@ class StaticPageSpider(BaseSpider):
             size = len(urls_large_file_content)
             for idx, url in enumerate(urls_large_file_content, 1):
                 print(f"Downloading large file {url} {idx} of {size}")
-                self.store_large_file(url, response.meta["referer"]) 
+                self.store_large_file(url, response.meta["referer"])
 
         for url in urls:
             yield scrapy.Request(
-                url=url, 
+                url=url,
                 callback=self.parse,
                 meta={
                     "referer": response.url,
