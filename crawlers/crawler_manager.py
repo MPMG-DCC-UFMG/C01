@@ -29,6 +29,7 @@ from crawlers.static_page import StaticPageSpider
 # antiblock_cookies_file
 # antiblock_persist_cookies
 
+
 def file_descriptor_process():
     """Redirects descriptor output and starts descriptor consumer loop."""
     crawling_utils.check_file_path("crawlers/log/")
@@ -112,7 +113,7 @@ def gen_key():
 
 def start_crawler(config):
     """Create and starts a crawler as a new process."""
-    
+
     config["crawler_id"] = config["id"]
     del config["id"]
     config["instance_id"] = gen_key()
