@@ -574,8 +574,8 @@ class BaseSpider(scrapy.Spider):
             "time_between_downloads": self.config["time_between_downloads"],
         }
         
-        # extracted_files = self.convert_binary(url, extension, file_name)
-        # description["extracted_files"] = extracted_files
+        extracted_files = self.convert_binary(url, extension, file_name)
+        description["extracted_files"] = extracted_files
         
         self.feed_file_description(f"{self.data_folder}files/", description)
         
