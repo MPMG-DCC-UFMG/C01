@@ -12,6 +12,7 @@ import signal
 # Enable interrupt signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
+
 class MainConfig(AppConfig):
     name = 'main'
     server_running = False
