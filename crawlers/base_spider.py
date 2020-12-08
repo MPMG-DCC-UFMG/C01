@@ -32,6 +32,7 @@ from param_injector import ParamInjector
 from range_inference import RangeInference
 import parsing_html
 
+
 class BaseSpider(scrapy.Spider):
     name = 'base_spider'
 
@@ -435,8 +436,8 @@ class BaseSpider(scrapy.Spider):
 
     def filetype_from_mimetype(self, mimetype: str) -> str:
         """Detects the file type using its mimetype"""
-        
-        return mimetypes.guess_extension(mimetype).replace('.','')        
+
+        return mimetypes.guess_extension(mimetype).replace('.', '')
 
     def detect_file_extension(self, url, content_type: str, content_disposition: str) -> str:
         """detects the file extension, using its mimetype, url or name on the server, if available"""
@@ -447,14 +448,14 @@ class BaseSpider(scrapy.Spider):
 
         extension = self.filetype_from_url(url)
         if extension:
-            return extension 
+            return extension
 
-        return content_disposition.split('=')[-1].replace('"','').split('.')[-1]
+        return content_disposition.split('=')[-1].replace('"', '').split('.')[-1]
 
     def convert_binary(self, url: str, filetype: str, filename: str):
         if filetype != "pdf":
             return
-        
+
         url_hash = crawling_utils.hash(url.encode())
         source_file = f"{self.data_folder}files/{filename}"
 
@@ -493,7 +494,7 @@ class BaseSpider(scrapy.Spider):
 
     def get_download_filename_and_relative_path(self, url: str, extension: str) -> tuple:
         url_hash = crawling_utils.hash(url.encode())
-        file_name = url_hash 
+        file_name = url_hash
         file_name += '.' + extension if extension else ''
 
         relative_path = f"{self.data_folder}files/{file_name}"
@@ -502,11 +503,12 @@ class BaseSpider(scrapy.Spider):
 
     def store_large_file(self, url: str, referer: str):
         print(f"Saving large file {url}")
-        
+
         # Head type request to obtain the mimetype and/or file name to be downloaded on the server
-        headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
         response = requests.head(url, allow_redirects=True, headers=headers)
-        
+
         content_type = response.headers.get("Content-type", "")
         content_disposition = response.headers.get("Content-Disposition", "")
 
@@ -525,7 +527,7 @@ class BaseSpider(scrapy.Spider):
 
     def store_small_file(self, response):
         print(f"Saving small file {response.url}")
-        
+
         content_type = response.headers.get("Content-Type", b"").decode()
         content_disposition = response.headers.get("Content-Disposition", b"").decode()
 
@@ -557,7 +559,7 @@ class BaseSpider(scrapy.Spider):
             request = failure.request
             self.logger.error('TimeoutError on %s', request.url)
 
-    def feed_file_description(self, destination: str, content: dict):        
+    def feed_file_description(self, destination: str, content: dict):
         FileDescriptor.feed_description(destination, content)
 
     def create_and_feed_file_description(self, url: str, file_name: str, referer: str, extension: str):
@@ -573,18 +575,18 @@ class BaseSpider(scrapy.Spider):
             "type": extension,
             "time_between_downloads": self.config["time_between_downloads"],
         }
-        
+
         extracted_files = self.convert_binary(url, extension, file_name)
         description["extracted_files"] = extracted_files
-        
+
         self.feed_file_description(f"{self.data_folder}files/", description)
-        
+
         if self.config["time_between_downloads"]:
             print(f"Waiting {self.config['time_between_downloads']}s for the next download...")
             time.sleep(self.config["time_between_downloads"])
 
     def extra_config_parser(self, table_attrs):
-        # get the json from extra_config and 
+        # get the json from extra_config and
         # formats in a python proper standard
         extra_config = json.loads(table_attrs)
         for key in extra_config:
