@@ -39,6 +39,13 @@ class AntiblockTest(unittest.TestCase):
             'min_user_agent_usage': 10,
             'max_user_agent_usage': 5
         })
+        # Test if it doesn't raise an Exception with correct values
+        AntiblockDriver({
+            'rotate_user_agent_enabled': True,
+            'user_agents': ['Mozilla'],
+            'min_user_agent_usage': 5,
+            'max_user_agent_usage': 10
+        })
 
         # Delay parameters
         self.assertRaises(ValueError, AntiblockDriver, {
@@ -53,6 +60,12 @@ class AntiblockTest(unittest.TestCase):
             'autothrottle_start_delay': 10,
             'autothrottle_max_delay': 'Test',
         })
+        # Test if it doesn't raise an Exception with correct values
+        AntiblockDriver({
+            'autothrottle_enabled': True,
+            'autothrottle_start_delay': 10,
+            'autothrottle_max_delay': 15,
+        })
 
         # IP-rotation parameters
         self.assertRaises(ValueError, AntiblockDriver, {
@@ -64,11 +77,22 @@ class AntiblockTest(unittest.TestCase):
             'iprotator_type': 'proxy',
             'iprotator_proxy_list': {'test': 0}
         })
+        # Test if it doesn't raise an Exception with correct values
+        AntiblockDriver({
+            'iprotator_enabled': True,
+            'iprotator_type': 'proxy',
+            'iprotator_proxy_list': ['127.0.0.1']
+        })
 
         # Cookie parameters
         self.assertRaises(ValueError, AntiblockDriver, {
             'insert_cookies': True,
             'cookies': {'test': 0}
+        })
+        # Test if it doesn't raise an Exception with correct values
+        AntiblockDriver({
+            'insert_cookies': True,
+            'cookies': [{'test': 0}]
         })
 
 

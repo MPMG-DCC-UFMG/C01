@@ -116,13 +116,12 @@ class AntiblockDriver():
                 .get('tor_iprotator_change_after', 1)
             self.ip_reuse_after = antiblock_config\
                 .get('tor_iprotator_allow_reuse_ip_after', 10)
-            self.__validate_ip_config()
+            self.__validate_ip_tor_config()
 
             self.tor_controller = TorIpChanger(
                 reuse_threshold=self.ip_reuse_after
             )
             self.tor_controller.get_new_ip()
-            self.__validate_ip_tor_config()
         elif rot_type == 'proxy':
             self.proxy_list = antiblock_config.get('iprotator_proxy_list', [])
             self.__validate_ip_proxy_config()
