@@ -7,11 +7,11 @@ src_folder = "src"
 for folder in os.listdir(f"{src_folder}"):
     if "setup.py" in os.listdir(f"{src_folder}/{folder}"):
         print(f"Installing {folder}...")
-        subprocess.run(["pip", "--no-cache-dir","install", "--force-reinstall", f"{src_folder}/{folder}"])
+        subprocess.run(["pip", "--no-cache-dir", "install", "--force-reinstall", f"{src_folder}/{folder}"])
         print()
 
 print(f"Installing other project dependencies...")
-subprocess.run(["pip", "--no-cache-dir","install", "--force-reinstall", "."])
+subprocess.run(["pip", "--no-cache-dir", "install", "--force-reinstall", "."])
 print()
 
 from twisted.internet import asyncioreactor

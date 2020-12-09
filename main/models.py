@@ -157,11 +157,9 @@ class CrawlRequest(TimeStamped):
         """
         Removes unnecessary fields from the configuration data and loads the
         data for modules that require access to other models
-
         :param crawler: the crawler instance for which we are configuring
         :param config:  dict containing the attributes for the CrawlRequest
                         instance
-
         :returns: dict with the configuration for the crawler
         """
         del config['creation_date']
