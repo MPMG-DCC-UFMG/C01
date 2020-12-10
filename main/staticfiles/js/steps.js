@@ -174,28 +174,41 @@ function load_steps(json_steps, step_list){
                 block.iterable_select.value = "object";
                 block.iterable_select.onchange();
             }
+            refill_parameters(json_steps.iterable.call.arguments, block)
+        }else if(json_steps.step == "for_each_page_in")
+            refill_parameters(json_steps.arguments, block)
+        
 
-
-
-            for(argument in json_steps.iterable.call.arguments){ 
-                for(param_box of block.params){
-                    if(param_box.children[0].placeholder == argument){
-                        param_box.children[0].value = json_steps.iterable.call.arguments[argument];
-                    }
-                }
-            }
-        }else if(json_steps.step == "for_each_page_in"){
-            ;
-        }
         for(child of json_steps["children"]){
             this.load_steps(child, step_list);
         }
+    }else{
+        refill_parameters(step_arguments, block)
     }
-    for(argument in step_arguments){ 
-        for(param_box of block.params){
-            if(param_box.children[0].placeholder == argument){
-                param_box.children[0].value = step_arguments[argument];
-            }
+}
+
+function refill_parameters(args, block){
+    params = []
+    for(param_input of block.params)
+        params = params.concat(param_input.children[0].placeholder.replace(/ /g, "_"))
+    
+    optional_params = []
+    for(optional_param_button of block.new_parameter_button.dropdown_menu.children)
+        optional_params = optional_params.concat(optional_param_button.innerHTML.replace(/ /g, "_"))
+    alert("list " + params)
+    alert("list " + optional_params)
+    for(arg in args){
+        alert(arg)
+        arg_index = params.findIndex(function(a){return a==arg})
+        alert(arg_index)
+        if(arg_index!=-1){
+            block.params[arg_index].children[0].value = args[arg] 
+        }else{
+            arg_index = optional_params.findIndex(function(a){return a==arg})
+            alert(arg_index)
+            block.new_parameter_button.dropdown_menu.children[arg_index].onclick()
+            last_index =  block.params.length-1
+            block.params[last_index].children[0].value = args[arg]
         }
     }
 }
@@ -265,8 +278,9 @@ function get_step_json_format(block){
         }
     }else if(param_name == "for_each_page_in"){
         step_dict.children = []
+        step_dict.arguments = {}
         for(param of block.params){
-            step_dict[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
+            step_dict.arguments[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
         }
     }else {
         step_dict.arguments = {}

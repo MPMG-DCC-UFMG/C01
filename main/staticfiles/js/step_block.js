@@ -291,6 +291,7 @@ function delete_lines(m, n=null){
 function refresh_iterable(){
     block = find_parent_with_attr_worth(this, "block")
     block.iterable_step = get_step_info(this.value, block.step_list)
+    block.params = []
 
     block.delete_lines(1, block.lines.length)
     block.add_line()
