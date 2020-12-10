@@ -426,7 +426,7 @@ class BaseSpider(scrapy.Spider):
 
     # based on: https://github.com/steveeJ/python-wget/blob/master/wget.py
     def filetype_from_url(self, url: str) -> str:
-        """Detects the file type through its"""
+        """Detects the file type through its URL"""
 
         fname = os.path.basename(urlparse.urlparse(url).path)
         if len(fname.strip(" \n\t.")) == 0:
@@ -571,7 +571,6 @@ class BaseSpider(scrapy.Spider):
             "crawled_at_date": str(datetime.datetime.today()),
             "referer": referer,
             "type": extension,
-            "time_between_downloads": self.config["time_between_downloads"],
         }
         
         extracted_files = self.convert_binary(url, extension, file_name)
@@ -579,10 +578,6 @@ class BaseSpider(scrapy.Spider):
         
         self.feed_file_description(f"{self.data_folder}files/", description)
         
-        if self.config["time_between_downloads"]:
-            print(f"Waiting {self.config['time_between_downloads']}s for the next download...")
-            time.sleep(self.config["time_between_downloads"])
-
     def extra_config_parser(self, table_attrs):
         # get the json from extra_config and 
         # formats in a python proper standard

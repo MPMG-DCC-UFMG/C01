@@ -7,6 +7,7 @@ import logging
 import re
 import json
 import requests
+import time
 
 # Project libs
 from crawlers.base_spider import BaseSpider
@@ -279,6 +280,11 @@ class StaticPageSpider(BaseSpider):
             for idx, url in enumerate(urls_large_file_content, 1):
                 print(f"Downloading large file {url} {idx} of {size}")
                 self.store_large_file(url, response.meta["referer"]) 
+                
+                # So that the interval between requests is concise between Scrapy and downloading large files
+                if self.config["antiblock_download_delay"]:
+                    print(f"Waiting {self.config['antiblock_download_delay']}s for the next download...")
+                    time.sleep(self.config["antiblock_download_delay"])
 
         for url in urls:
             yield scrapy.Request(
