@@ -13,7 +13,7 @@ import time
 from crawlers.base_spider import BaseSpider
 import crawling_utils
 
-LARGE_CONTENT_LENGHT = 1e9
+LARGE_CONTENT_LENGTH = 1e9
 
 class StaticPageSpider(BaseSpider):
     name = 'static_page'
@@ -99,7 +99,7 @@ class StaticPageSpider(BaseSpider):
         if split_large_content:
             urls_with_small_content = set(url_type_lenght[0] 
                                             for url_type_lenght in urls_with_type_and_lenght
-                                            if url_type_lenght[2] < LARGE_CONTENT_LENGHT)
+                                            if url_type_lenght[2] < LARGE_CONTENT_LENGTH)
 
             return urls_with_small_content, urls.difference(urls_with_small_content)
 
@@ -113,7 +113,7 @@ class StaticPageSpider(BaseSpider):
             content_lenght = int(response.headers.get('Content-Length', '0'))
             response.close()
 
-            return content_lenght < LARGE_CONTENT_LENGHT
+            return content_lenght < LARGE_CONTENT_LENGTH
 
         urls_small_content = set(url for url in url_list if is_small_content(url))
         return urls_small_content, set(url_list).difference(urls_small_content)
