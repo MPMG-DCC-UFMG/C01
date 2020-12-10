@@ -122,6 +122,7 @@ def generate_call_step(child, module):
                         is_coroutine) + '\n'
     return code
 
+
 def dict_to_arguments(dict_of_arguments):
     """
     Generates a string that represents a parameter pass
