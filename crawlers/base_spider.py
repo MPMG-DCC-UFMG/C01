@@ -436,7 +436,9 @@ class BaseSpider(scrapy.Spider):
     def filetype_from_mimetype(self, mimetype: str) -> str:
         """Detects the file type using its mimetype"""
         filetype = mimetypes.guess_extension(mimetype) 
-        return filetype.replace(".","") if filetype else ""       
+        if bool(filetype):
+            return filetype.replace(".","")
+        return ""       
 
     def detect_file_extension(self, url, content_type: str, content_disposition: str) -> str:
         """detects the file extension, using its mimetype, url or name on the server, if available"""
