@@ -17,7 +17,7 @@ import crawling_utils.crawling_utils as crawling_utils
 from crawlers.constants import *
 from crawlers.file_descriptor import FileDescriptor
 from crawlers.file_downloader import FileDownloader
-from crawlers.page_spider import PageSpider
+#from crawlers.page_spider import PageSpider
 
 # TODO: implement following antiblock options
 # antiblock_mask_type
@@ -80,6 +80,9 @@ def get_crawler_base_settings(config):
 
 
 def crawler_process(config):
+    import scrapy_puppeteer
+    from crawlers.page_spider import PageSpider
+
     """Starts crawling."""
     crawler_id = config["crawler_id"]
     instance_id = config["instance_id"]
