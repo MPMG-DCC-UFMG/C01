@@ -430,26 +430,30 @@ class BaseSpider(scrapy.Spider):
 
         fname = os.path.basename(urlparse.urlparse(url).path)
         if len(fname.strip(" \n\t.")) == 0:
-            return ''
+            return ""
         return fname.split('.')[-1]
 
     def filetype_from_mimetype(self, mimetype: str) -> str:
         """Detects the file type using its mimetype"""
-        
-        return mimetypes.guess_extension(mimetype).replace('.','')        
+        filetype = mimetypes.guess_extension(mimetype) 
+        return filetype.replace(".","") if filetype else ""       
 
     def detect_file_extension(self, url, content_type: str, content_disposition: str) -> str:
         """detects the file extension, using its mimetype, url or name on the server, if available"""
         extension = self.filetype_from_mimetype(content_type)
 
-        if not extension or extension == "bin":
+        if bool(extension) and extension != "bin":
             return extension
 
         extension = self.filetype_from_url(url)
-        if extension:
+        if bool(extension) and extension != "bin":
             return extension 
 
-        return content_disposition.split('=')[-1].replace('"','').split('.')[-1]
+        filetype = content_disposition.split("=")[-1]
+        filetype = filetype.replace('"',"")
+        filetype = filetype.replace(";","")
+
+        return filetype.replace(".","")
 
     def convert_binary(self, url: str, filetype: str, filename: str):
         if filetype != "pdf":
