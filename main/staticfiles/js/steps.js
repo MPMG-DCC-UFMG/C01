@@ -163,6 +163,7 @@ function load_steps(json_steps, step_list){
     step_arguments = json_steps.arguments;
 
     if("children" in json_steps){
+
         if(json_steps.step == "for_each"){
             block.iterator_input.value = json_steps.iterator
             if("call" in json_steps.iterable){
@@ -173,6 +174,9 @@ function load_steps(json_steps, step_list){
                 block.iterable_select.value = "object";
                 block.iterable_select.onchange();
             }
+
+
+
             for(argument in json_steps.iterable.call.arguments){ 
                 for(param_box of block.params){
                     if(param_box.children[0].placeholder == argument){
@@ -243,23 +247,23 @@ function build_json(step_board, output_element){
  * @return {Dict} the step that was parameterized in the block, but now in the json steps represtation.
  */
 function get_step_json_format(block){
-    param_name = block.step.name.replace("_", / /g)
+    param_name = block.step.name.replace(/ /g, "_")
     step_dict={
         step : param_name,
         depth : block.depth,
     }
-    if(param_name == "for each"){
-        step_dict.iterator = block.iterator_input.value
+    if(param_name == "for_each"){
+        step_dict.iterator = block.iterator_input.value.replace(/ /g, "_")
         step_dict.children = []
         step_dict.iterable = {call:{}}
         step_dict.iterable.call = {
-            step: block.iterable_select.value,
+            step: block.iterable_select.value.replace(/ /g, "_"),
             arguments:{}
         }
         for(param of block.params){
             step_dict.iterable.call.arguments[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
         }
-    }else if(param_name == "for each page in"){
+    }else if(param_name == "for_each_page_in"){
         step_dict.children = []
         for(param of block.params){
             step_dict[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
