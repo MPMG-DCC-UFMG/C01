@@ -8,19 +8,11 @@ from captcha_solver.image_solver import ImageSolver
 from pyext import RuntimeModule
 
 
-def range_(stop):
-    return [i for i in range(stop)]
-
-
-def print_(word):
-    return word
-
-
-def espere(segs):
+def wait(segs):
     time.sleep(segs)
 
 
-def gera_nome_arquivo():
+def generates_file_name():
     return "./{}.html".format(uuid.uuid4().hex)
 
 
@@ -31,36 +23,36 @@ async def wait_page(page):
         await page.waitFor(1)
 
 
-async def clique(page, xpath):
+async def click(page, xpath):
     await page.waitForXPath(xpath)
     await page.click(cssify(xpath))
     await wait_page(page)
 
 
-async def selecione(page, xpath, opcao):
+async def select_this_in(page, option, xpath):
     await page.waitForXPath(xpath)
-    await page.type(cssify(xpath), opcao)
+    await page.type(cssify(xpath), option)
     await wait_page(page)
 
 
-async def salva_pagina(page):
+async def save_page(page):
     content = await page.content()
     body = str.encode(content)
     return body
 
 
-async def opcoes(page, xpath, exceto=None):
-    if exceto is None:
-        exceto = []
+async def options_in(page, xpath, except_=None):
+    if except_ is None:
+        except_ = []
     options = []
     await page.waitForXPath(xpath)
     for option in (await page.xpath(xpath + "/option")):
         value = await option.getProperty("text")
         options.append(value.toString().split(":")[-1])
-    return [value for value in options if value not in exceto]
+    return [value for value in options if value not in except_]
 
 
-async def for_clicavel(page, xpath):
+async def is_clickable(page, xpath):
     try:
         await clique(page, xpath)
         return True
@@ -69,16 +61,16 @@ async def for_clicavel(page, xpath):
 
 
 
-async def pegue_os_links_da_paginacao(page, xpath_dos_botoes, xpath_dos_links, indice_do_botao_proximo=-1):
+async def get_pagination_links(page, buttons_xpath, links_xpath, next_button_index=-1):
     clickable = True
     urls = []
     while clickable:
-        urls += [await (await link.getProperty('href')).jsonValue() for link in await page.xpath(xpath_dos_links)]
+        urls += [await (await link.getProperty('href')).jsonValue() for link in await page.xpath(links_xpath)]
 
 
-        buttons = await page.xpath(xpath_dos_botoes)
+        buttons = await page.xpath(buttons_xpath)
         if len(buttons) != 0:
-            next_button = buttons[indice_do_botao_proximo]
+            next_button = buttons[next_button_index]
             before_click = await page.content()
             await next_button.click()
             after_click = await page.content()
@@ -88,12 +80,12 @@ async def pegue_os_links_da_paginacao(page, xpath_dos_botoes, xpath_dos_links, i
             clickable = False
 
 
-async def digite(page, xpath, texto):
-    await page.type(cssify(xpath), texto)
+async def send_keys(page, xpath, text):
+    await page.type(cssify(xpath), text)
 
 
 
-async def nesse_elemento_esta_escrito(page, xpath, texto):
+async def is_writed_in(page, text, xpath):
     elements = await page.xpath(xpath)
     if len(elements):
         element = elements[0]
@@ -102,7 +94,7 @@ async def nesse_elemento_esta_escrito(page, xpath, texto):
 
     element_text_content = await element.getProperty('textContent')
     element_text = await (element_text_content).jsonValue()
-    if texto in element_text:
+    if text in element_text:
         return True
     else:
         return False
