@@ -81,16 +81,16 @@ def generate_attribution(child, module):
     return code
 
 
-def generate_para_cada_pagina_em(child, module):
+def generate_for_each_page_in(child, module):
     code = ""
     code += child['depth'] * '    ' + 'clickable = True' + '\n'\
         + child['depth'] * '    ' + 'while clickable:' + '\n'\
         + generate_body(child, module)\
         + (1 + child['depth']) * '    ' + "buttons = await page.xpath("\
-        + child["xpath_dos_botoes"] + ")\n"\
+        + child["buttons_xpath"] + ")\n"\
         + (1 + child['depth']) * '    ' + "if len(buttons) !=0: \n"\
         + (1 + child['depth']) * '    ' + "    next_button = buttons["\
-        + str(child["indice_do_botao_proximo"]) + "] \n"\
+        + str(child["next_button_index"]) + "] \n"\
         + (1 + child['depth']) * '    '\
         + "    before_click = await page.content()\n"\
         + (1 + child['depth']) * '    '\
@@ -106,10 +106,10 @@ def generate_para_cada_pagina_em(child, module):
     return code
 
 
-def generate_salva_pagina(child, module):
+def generate_save_page(child, module):
     code = ""
-    code += child['depth'] * '    ' + "pages[gera_nome_arquivo()] = "
-    code += "await salva_pagina(**missing_arguments)\n"
+    code += child['depth'] * '    ' + "pages[generates_file_name()] = "
+    code += "await save_page(**missing_arguments)\n"
     return code
 
 
