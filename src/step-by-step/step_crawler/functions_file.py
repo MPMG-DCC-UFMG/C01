@@ -60,13 +60,11 @@ async def is_clickable(page, xpath):
         return False
 
 
-
 async def get_pagination_links(page, buttons_xpath, links_xpath, next_button_index=-1):
     clickable = True
     urls = []
     while clickable:
-        urls += [await (await link.getProperty('href')).jsonValue() for link in await page.xpath(links_xpath)]
-
+        urls += [await(await link.getProperty('href')).jsonValue() for link in await page.xpath(links_xpath)]
 
         buttons = await page.xpath(buttons_xpath)
         if len(buttons) != 0:
@@ -84,7 +82,6 @@ async def send_keys(page, xpath, text):
     await page.type(cssify(xpath), text)
 
 
-
 async def is_writed_in(page, text, xpath):
     elements = await page.xpath(xpath)
     if len(elements):
@@ -93,7 +90,7 @@ async def is_writed_in(page, text, xpath):
         return 0
 
     element_text_content = await element.getProperty('textContent')
-    element_text = await (element_text_content).jsonValue()
+    element_text = await(element_text_content).jsonValue()
     if text in element_text:
         return True
     else:
