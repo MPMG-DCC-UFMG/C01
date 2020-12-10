@@ -106,10 +106,10 @@ def generate_for_each_page_in(child, module):
     return code
 
 
-def generate_save_page(child, module):
+def generate_salva_pagina(child, module):
     code = ""
-    code += child['depth'] * '    ' + "pages[generates_file_name()] = "
-    code += "await save_page(**missing_arguments)\n"
+    code += child['depth'] * '    ' + "pages[gera_nome_do_arquivo()] = "
+    code += "await salva_pagina(**missing_arguments)\n"
     return code
 
 
@@ -121,7 +121,6 @@ def generate_call_step(child, module):
         + generate_call(child['step'], child['arguments'],
                         is_coroutine) + '\n'
     return code
-
 
 def dict_to_arguments(dict_of_arguments):
     """

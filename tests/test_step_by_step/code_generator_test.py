@@ -69,15 +69,15 @@ class TestExtractInfo(unittest.TestCase):
         result = cg.generate_body(
             recipe_examples['unbreakable_between_breakable']['recipe'], ff)
         expected_result = "    for i in [1, 2, 3]:\n"
-        expected_result += "        for j in range_(stop = 2):\n"
-        expected_result += "            for k in range_(stop = 2):\n"
+        expected_result += "        for j in intervalo(stop = 2):\n"
+        expected_result += "            for k in intervalo(stop = 2):\n"
         expected_result += "                print_(word = \"teste\")\n"
         self.assertEqual(expected_result, result)
 
         result = cg.generate_body(atom.extend(
             recipe_examples['unbreakable_between_breakable']['recipe'])[0], ff)
         expected_result = "    i = 1\n"
-        expected_result += "    for j in range_(stop = 2):\n"
+        expected_result += "    for j in intervalo(stop = 2):\n"
         expected_result += "        k = 0\n"
         expected_result += "        print_(word = \"teste\")\n"
         self.assertEqual(expected_result, result)
@@ -96,8 +96,8 @@ class TestExtractInfo(unittest.TestCase):
 
 
         expected_result = "    for i in [1, 2, 3]:\n"
-        expected_result += "        for j in range_(stop = 2):\n"
-        expected_result += "            for k in range_(stop = 2):\n"
+        expected_result += "        for j in intervalo(stop = 2):\n"
+        expected_result += "            for k in intervalo(stop = 2):\n"
         expected_result += "                print_(word = \"teste\")\n"
 
         result = cg.generate_para_cada(recipe_examples['unbreakable_between_breakable']['recipe']['children'][0], ff)
@@ -116,9 +116,9 @@ class TestExtractInfo(unittest.TestCase):
     #     code += "execute_steps(**missing_arguments):\n"
     #     code += "    pages = {}\n"
     #     code += "    page = missing_arguments['page']\n"
-    #     code += "    for i in range_(stop = 2):\n"
-    #     code += "        for j in range_(stop = 2):\n"
-    #     code += "            for k in range_(stop = 2):\n"
+    #     code += "    for i in intervalo(stop = 2):\n"
+    #     code += "        for j in intervalo(stop = 2):\n"
+    #     code += "            for k in intervalo(stop = 2):\n"
     #     code += "                print_(word = \"teste\")\n"
     #     code += "    return pages"
 
