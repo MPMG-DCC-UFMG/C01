@@ -18,6 +18,7 @@ from lxml.html.clean import Cleaner
 import urllib.parse as urlparse
 import mimetypes
 import requests
+import string
 
 # Project libs
 import crawling_utils
@@ -31,6 +32,8 @@ from entry_probing import BinaryFormatProbingResponse, HTTPProbingRequest,\
 from param_injector import ParamInjector
 from range_inference import RangeInference
 import parsing_html
+
+PUNCTUATIONS = "[{}]".format(string.punctuation)
 
 class BaseSpider(scrapy.Spider):
     name = 'base_spider'
@@ -427,11 +430,20 @@ class BaseSpider(scrapy.Spider):
     # based on: https://github.com/steveeJ/python-wget/blob/master/wget.py
     def filetype_from_url(self, url: str) -> str:
         """Detects the file type through its URL"""
+        extension = fname.split('.')[-1]
+        if 0 < len(extension) < 6:
+            return extension
+        return ""
 
-        fname = os.path.basename(urlparse.urlparse(url).path)
-        if len(fname.strip(" \n\t.")) == 0:
-            return ""
-        return fname.split('.')[-1]
+    def filetype_from_filename_on_server(self, content_disposition: str) -> str:
+        """Detects the file extension by its name on the server"""
+
+        # content_disposition is a string with the following format: 'attachment; filename="filename.extension"'
+        # the following operations are to extract only the extension
+        extension = content_disposition.split(".")[-1]
+
+        # removes any kind of accents
+        return re.sub(PUNCTUATIONS, "", extension)
 
     def filetype_from_mimetype(self, mimetype: str) -> str:
         """Detects the file type using its mimetype"""
@@ -443,19 +455,14 @@ class BaseSpider(scrapy.Spider):
     def detect_file_extension(self, url, content_type: str, content_disposition: str) -> str:
         """detects the file extension, using its mimetype, url or name on the server, if available"""
         extension = self.filetype_from_mimetype(content_type)
-
         if bool(extension) and extension != "bin":
             return extension
 
-        extension = self.filetype_from_url(url)
+        extension = self.filetype_from_filename_on_server(content_disposition)
         if bool(extension) and extension != "bin":
             return extension 
 
-        filetype = content_disposition.split("=")[-1]
-        filetype = filetype.replace('"',"")
-        filetype = filetype.replace(";","")
-
-        return filetype.replace(".","")
+        return self.filetype_from_url(url)
 
     def convert_binary(self, url: str, filetype: str, filename: str):
         if filetype != "pdf":
