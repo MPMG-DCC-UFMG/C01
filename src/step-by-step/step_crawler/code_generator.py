@@ -23,7 +23,7 @@ def generate_para_cada(child, module):
     return code
 
 
-def generate_if(child, module):
+def generate_se(child, module):
     code = ''
     code += child['depth'] * '    ' + 'if '
     if child['negation']:
@@ -44,7 +44,7 @@ def generate_if(child, module):
     return code
 
 
-def generate_while(child, module):
+def generate_enquanto(child, module):
     code = ''
     if 'limit' in child['condition']:
         code += child['depth'] * '    ' + 'limit = 0\n'
@@ -74,14 +74,14 @@ def generate_while(child, module):
     return code
 
 
-def generate_attribution(child, module):
+def generate_atribuicao(child, module):
     code = ""
     code += child['depth'] * '    ' + child['target']
     code += ' = ' + str(child['source']) + '\n'
     return code
 
 
-def generate_for_each_page_in(child, module):
+def generate_para_cada_pagina_em(child, module):
     code = ""
     code += child['depth'] * '    ' + 'clickable = True' + '\n'\
         + child['depth'] * '    ' + 'while clickable:' + '\n'\

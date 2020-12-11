@@ -125,7 +125,7 @@ def for_to_attribution(recipe, target, source):
         raise TypeError("This step is not a for")
 
     new_recipe = []
-    attribution_step = {"step": "attribution",
+    attribution_step = {"step": "atribuicao",
                         "source": source,
                         "target": target,
                         "depth": recipe["depth"]}

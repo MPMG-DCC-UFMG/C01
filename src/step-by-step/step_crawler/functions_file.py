@@ -4,7 +4,7 @@ import time
 import uuid
 from cssify import cssify
 from PIL import Image
-from captcha_solver.image_solver import ImageSolver
+#from captcha_solver.image_solver import ImageSolver
 from pyext import RuntimeModule
 
 
@@ -105,29 +105,29 @@ async def esta_escrito_em(page, texto, xpath):
         return False
 
 
-async def quebre_o_capcha(page, xpath_do_input, xpath_do_output, preprocessamento=None):
-    """This step downloads the captcha image then solves it and fills its respective form field
+# async def quebre_o_capcha(page, xpath_do_input, xpath_do_output, preprocessamento=None):
+#     """This step downloads the captcha image then solves it and fills its respective form field
 
-        :param page : a pyppeteer page
-        :param xpath_do_input : XPATH of the captcha image element
-        :param xpath_do_output : XPATH of the form field for captcha text.
-        :param preprocessamento (optional): The preprocessing function, to be applied
-                                         before character recognition. Defaults to None.
-        :returns text: the string representing the captcha characters
-    """
+#         :param page : a pyppeteer page
+#         :param xpath_do_input : XPATH of the captcha image element
+#         :param xpath_do_output : XPATH of the form field for captcha text.
+#         :param preprocessamento (optional): The preprocessing function, to be applied
+#                                          before character recognition. Defaults to None.
+#         :returns text: the string representing the captcha characters
+#     """
 
-    element = (await page.xpath(xpath_do_input))[0]
-    image_data = await element.screenshot(type='jpeg')
-    image = Image.open(io.BytesIO(image_data))
-    if preprocessamento:
-        module = RuntimeModule.from_string("preprocessing", preprocessamento)
-        solver = ImageSolver(preprocessing=module.preprocessing)
-    else:
-        solver = ImageSolver()
-    text = solver.solve(image=image)
-    type_function = f"(text) => {{ (document.querySelector('{cssify(xpath_do_output)}')).value = text; }}"
-    await page.evaluate(type_function, text)
-    return text
+#     element = (await page.xpath(xpath_do_input))[0]
+#     image_data = await element.screenshot(type='jpeg')
+#     image = Image.open(io.BytesIO(image_data))
+#     if preprocessamento:
+#         module = RuntimeModule.from_string("preprocessing", preprocessamento)
+#         solver = ImageSolver(preprocessing=module.preprocessing)
+#     else:
+#         solver = ImageSolver()
+#     text = solver.solve(image=image)
+#     type_function = f"(text) => {{ (document.querySelector('{cssify(xpath_do_output)}')).value = text; }}"
+#     await page.evaluate(type_function, text)
+#     return text
 
 
 async def elemento_existe_na_pagina(page, xpath):
