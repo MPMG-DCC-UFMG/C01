@@ -36,8 +36,8 @@ class StaticPageSpider(BaseSpider):
             },
                 errback=self.errback_httpbin)
 
-    def convert_allow_extesions(self, config):
-        """Converts 'allow_extesions' configuration into 'deny_extesions'."""
+    def convert_allow_extensions(self, config):
+        """Converts 'allow_extensions' configuration into 'deny_extensions'."""
         allow = "download_files_allow_extensions"
         deny = "download_files_deny_extensions"
         if (
@@ -46,7 +46,7 @@ class StaticPageSpider(BaseSpider):
             config[allow] != "" and
             deny not in config
         ):
-            allowed_extensions = set(config[allow].split(","))
+            allowed_extensions = set([i.strip() for i in  config[allow].split(',')])
             extensions = [i for i in scrapy.linkextractors.IGNORED_EXTENSIONS]
             config[deny] = [
                 i for i in extensions if i not in allowed_extensions
@@ -87,7 +87,7 @@ class StaticPageSpider(BaseSpider):
         if value is None or len(value) == 0:
             value = default
         elif type(value) == str:
-            value = tuple(value.split(","))
+            value = ([i.strip() for i in value.split(',')])
         return value
 
     def preprocess_link_configs(self, config):
@@ -144,7 +144,7 @@ class StaticPageSpider(BaseSpider):
         for attr, default in defaults:
             config[attr] = self.preprocess_listify(config[attr], default)
 
-        config = self.convert_allow_extesions(config)
+        config = self.convert_allow_extensions(config)
 
         attr = "download_files_process_value"
         if config[attr] is not None and len(config[attr]) > 0 and type(config[attr]) is str:
