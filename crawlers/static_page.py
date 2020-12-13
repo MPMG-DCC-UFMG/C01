@@ -87,7 +87,7 @@ class StaticPageSpider(BaseSpider):
         if value is None or len(value) == 0:
             value = default
         elif type(value) == str:
-            value = ([i.strip() for i in value.split(',')])
+            value = tuple([i.strip() for i in value.split(',')])
         return value
 
     def preprocess_link_configs(self, config):
