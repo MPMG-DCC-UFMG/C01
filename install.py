@@ -4,15 +4,17 @@ import asyncio
 import sys
 
 ###################### INSTALANDO O REDIS
-subprocess.run(["wget", "https://download.redis.io/releases/redis-5.0.10.tar.gz"])
-subprocess.run(["tar", "-xvzf", "redis-5.0.10.tar.gz"])
-subprocess.run(["make"], cwd="redis-5.0.10")
-subprocess.run(["rm", "redis-5.0.10.tar.gz"])
+if not os.path.isdir('redis-5.0.10'):
+    subprocess.run(["wget", "https://download.redis.io/releases/redis-5.0.10.tar.gz"])
+    subprocess.run(["tar", "-xvzf", "redis-5.0.10.tar.gz"])
+    subprocess.run(["make"], cwd="redis-5.0.10")
+    subprocess.run(["rm", "redis-5.0.10.tar.gz"])
 
 ###################### INSTALANDO O KAFKA / ZOOKEEPER
-subprocess.run(["wget", "http://www-us.apache.org/dist/kafka/2.4.0/kafka_2.13-2.4.0.tgz"])
-subprocess.run(["tar", "-xzf", "kafka_2.13-2.4.0.tgz"])
-subprocess.run(["rm", "kafka_2.13-2.4.0.tgz"])
+if not os.path.isdir('kafka_2.13-2.4.0'):
+    subprocess.run(["wget", "http://www-us.apache.org/dist/kafka/2.4.0/kafka_2.13-2.4.0.tgz"])
+    subprocess.run(["tar", "-xzf", "kafka_2.13-2.4.0.tgz"])
+    subprocess.run(["rm", "kafka_2.13-2.4.0.tgz"])
 
 ###################### ADICIONANDO WHITELIST TO ZOOKEEPER
 with open("kafka_2.13-2.4.0/config/zookeeper.properties", "a") as f:
