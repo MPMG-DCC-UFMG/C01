@@ -16,10 +16,6 @@ if not os.path.isdir('kafka_2.13-2.4.0'):
     subprocess.run(["tar", "-xzf", "kafka_2.13-2.4.0.tgz"])
     subprocess.run(["rm", "kafka_2.13-2.4.0.tgz"])
 
-###################### ADICIONANDO WHITELIST TO ZOOKEEPER
-with open("kafka_2.13-2.4.0/config/zookeeper.properties", "a") as f:
-    f.write("4lw.commands.whitelist=*")
-
 ###################### INSTALANDO OS MÓDULOS DO PROJETO
 src_folder = "src"
 for folder in os.listdir(f"{src_folder}"):
