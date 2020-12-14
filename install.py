@@ -1,8 +1,22 @@
 import os
 import subprocess
 import asyncio
+import sys
 
+###################### INSTALANDO O REDIS
+if not os.path.isdir('redis-5.0.10'):
+    subprocess.run(["wget", "https://download.redis.io/releases/redis-5.0.10.tar.gz"])
+    subprocess.run(["tar", "-xvzf", "redis-5.0.10.tar.gz"])
+    subprocess.run(["make"], cwd="redis-5.0.10")
+    subprocess.run(["rm", "redis-5.0.10.tar.gz"])
 
+###################### INSTALANDO O KAFKA / ZOOKEEPER
+if not os.path.isdir('kafka_2.13-2.4.0'):
+    subprocess.run(["wget", "http://www-us.apache.org/dist/kafka/2.4.0/kafka_2.13-2.4.0.tgz"])
+    subprocess.run(["tar", "-xzf", "kafka_2.13-2.4.0.tgz"])
+    subprocess.run(["rm", "kafka_2.13-2.4.0.tgz"])
+
+###################### INSTALANDO OS MÓDULOS DO PROJETO
 src_folder = "src"
 for folder in os.listdir(f"{src_folder}"):
     if "setup.py" in os.listdir(f"{src_folder}/{folder}"):
