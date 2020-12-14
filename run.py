@@ -48,7 +48,7 @@ def run_django():
 
 def run_zookeeper():
     crawling_utils.check_file_path("crawlers/log/")
-    os.chdir('kafka-2.5.0-src')
+    os.chdir('kafka_2.13-2.4.0')
 
     # Starts zookeeper server with overriten properties
     subprocess.run(['bin/zookeeper-server-start.sh',
@@ -60,7 +60,7 @@ def run_zookeeper():
 def run_kafka():
     wait_for_port(2181)
     crawling_utils.check_file_path("crawlers/log/")
-    os.chdir('kafka-2.5.0-src')
+    os.chdir('kafka_2.13-2.4.0')
 
     # Starts kafka server
     subprocess.run(['bin/kafka-server-start.sh',
@@ -152,7 +152,7 @@ def run():
 
     finally:
         # stop kafka and zookeeper:
-        os.chdir('kafka-2.5.0-src')
+        os.chdir('kafka_2.13-2.4.0')
         subprocess.run(['bin/kafka-server-stop.sh'])
         subprocess.run(['bin/zookeeper-server-stop.sh'])
         shutil.rmtree('zookeeper')
