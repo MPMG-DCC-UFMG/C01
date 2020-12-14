@@ -2,7 +2,18 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+import asyncio
+from twisted.internet import asyncioreactor
+try:
+    loop = asyncio.get_event_loop()
+except RuntimeError:
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
+try:
+    asyncioreactor.install(loop)
+except Exception:
+    pass
 
 def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'interface.settings')

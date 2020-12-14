@@ -1,3 +1,6 @@
+#needs to be imported before scrapy
+from scrapy_puppeteer import PuppeteerRequest
+
 # Scrapy and Twister libs
 import scrapy
 from scrapy.linkextractors import LinkExtractor
@@ -12,7 +15,6 @@ import requests
 # Project libs
 from crawlers.base_spider import BaseSpider
 import crawling_utils
-from scrapy_puppeteer import PuppeteerRequest
 
 class PageSpider(BaseSpider):
     name = 'page_spider'
