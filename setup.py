@@ -7,6 +7,6 @@ setuptools.setup(
     install_requires=[
         'django', 'django-crispy-forms', 'djangorestframework',
         'scrapy', 'requests', 'pytest', 'pytest-mock', 'python3-wget',
-        'kafka-python'
+        'kafka-python', 'kafkaloghandler'
     ],
 )
