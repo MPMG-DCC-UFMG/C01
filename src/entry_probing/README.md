@@ -56,6 +56,21 @@ req.process([10], {'test_prop': 100})
 # pair {"test_prop": 100} in the request body
 ```
 
+The `set_request_function()` method changes the request function used by an
+HTTP method. This can be used to switch the usual `requests` implementation for
+another one. For example, using the `antiblock_drivers` module (more details on
+this module can be found in it's README file):
+
+```
+from antiblock_drivers import AntiblockRequests
+
+antiblock = AntiblockRequests()
+req = HTTPProbingRequest("http://test.com/", "GET")
+
+# Use the version of the get() method inside the AntiblockRequests class
+req.set_request_function("GET", antiblock.get)
+```
+
 #### PyppeteerProbingRequest
 Implements a Pyppeteer request handler. Receives an instance of
 `pyppeteer.page.Page`, which is the page where the desired URL will be loaded.
