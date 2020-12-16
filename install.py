@@ -1,8 +1,12 @@
-from twisted.internet import asyncioreactor
 import os
 import subprocess
 import asyncio
 import sys
+
+subprocess.run(["pip", "install", "-U", "pip"])
+subprocess.run(["pip", "install", "twisted"])
+
+from twisted.internet import asyncioreactor
 
 # Install Redis
 if not os.path.isdir("redis-5.0.10"):
@@ -22,6 +26,9 @@ if not os.path.isdir("kafka_2.13-2.4.0"):
 # If not, make sure you have it on kafka_<version>/config/
 if os.path.isfile("zoo.properties"):
     os.rename("zoo.properties", "kafka_2.13-2.4.0/config/zoo.properties")
+
+# Install Scrapy Cluster requirements
+subprocess.run(["pip", "install", "-r", "requirements.txt"], cwd="crawlers/scrapy-cluster")
 
 # Install modules from src directory, with their dependencies
 src_folder = "src"
