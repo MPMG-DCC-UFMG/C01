@@ -18,19 +18,72 @@ Dentre as funcionalidades disponíveis para os coletores, temos:
 
 Os coletores também podem ser gerenciados através de uma API RESTful.
 
-## Instalação
+## Instalação e configuração da _master_
 
-Para usar o programa é necessário um _virtualenv_ ou uma máquina apenas com **Python 3.7+**, de maneira que os comandos _"python"_ referencie o Python 3.7+, e _"pip"_ procure a instalação de pacotes também do Python 3.7+.
+Para a instalação do projeto na master, basta clonar o repositório na branch issue-261-mp, criar um ambiente virtual python 3.6 e rodar o script install.py, que instala o projeto e as dependências do Scrapy Cluster.
 
-Para instalar todos os programas e suas dependencias execute o script install.py.
 ```
-python install.py
+$ git clone -b issue-261-mp https://github.com/MPMG-DCC-UFMG/C04.git
+$ cd C04
+$ python3.6 -m venv env
+$ source env/bin/activate
+$ sudo chmod 777 /tmp/tika.log
+$ python install.py
 ```
 
-Se deseja instalar apenas algum dos módulos implementados como o módulo de extração de parâmetros de formulários, navegue até a pasta do módulo e execute pip install:
+Após as instalações, é necessário inciar os seguintes componentes: Zookeeper, Kafka, serviço REST, monitor do Kafka e as n spiders desejadas. Os dois primeiros são inicializados ao executar run.py.
+
 ```
-cd src/form-parser
-pip install .
+$ tmux new -s django
+$ source env/bin/activate
+$ python run.py
+ctrl + b + d   # para minimizar o tmux
+```
+
+O processo a seguir será feito manualmente, mas haverá uma automatização no futuro. Em uma nova janela, execute cada comando bash a seguir, e, após cada um, rode o comando ctrl + b + d para minimizar o tmux que será aberto.
+
+```
+$ cd crawlers/scrapy-cluster/start-sc
+$ ./1-start-redis.sh   # ctrl + b + d
+$ ./2-start-km.sh      # ctrl + b + d
+$ ./3-start-rest.sh     # ctrl + b + d
+```
+
+## Instalação e configuração de uma _slave_
+
+Para a instalação do projeto em uma slave, basta clonar o repositório na branch issue-261-mp, criar um ambiente virtual python 3.6 e rodar o script install.py, que instala o projeto e as dependências do Scrapy Cluster.
+
+```
+$ git clone -b issue-261-mp https://github.com/MPMG-DCC-UFMG/C04.git
+$ cd C04
+$ python3.6 -m venv env
+$ source env/bin/activate
+$ python install.py
+```
+
+Após as instalações, é necessário iniciar as spiders. O projeto do Scrapy Cluster recomenda abrir de cinco a 10 por máquina. Para iniciá-las, vá para o diretório de crawler do scrapy cluster.
+
+```
+$ cd crawlers/scrapy-cluster/crawler/
+```
+
+Para inciar as n spiders, abra um tmux com um nome para a sessão (você pode nomear as sessões como, por exemplo, s1, s2, …, sn), execute a spider e, em seguida, minimize a sessão com o comando ctrl + b + d. Repita o processo n vezes:
+
+```
+$ tmux new -s <nome_da_sessão>
+$ scrapy runspider crawling/spiders/static_page.py
+ctrl + b + d   # para minimizar o tmux
+```
+
+## Remoção de uma _slave_
+
+Para remover uma slave, basta fechar as spiders que estão rodando nela. Para isso, veja as sessões existentes naquela máquina e repita o processo a seguir até que não haja spiders:
+
+```
+$ tmux ls   # para ver as sessões ativas
+$ tmux attach -t <nome_da_sessão>
+ctrl + c   # para matar a spider
+ctrl + b + d   # para minimizar o tmux
 ```
 
 ## Execução
