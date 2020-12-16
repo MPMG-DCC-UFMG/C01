@@ -15,7 +15,7 @@ class EntryProbing():
     website has been hit or not
     """
 
-    def __init__(self, req_handler):
+    def __init__(self, req_handler: ProbingRequest):
         """
         Initializes the class with the request handler
         :param req_handler: Handler describing how to execute the request
@@ -66,8 +66,8 @@ class EntryProbing():
         :returns: True if entry is valid, False otherwise
         """
 
-        response = self.__req_handler.process(url_entries = url_entries,
-                                              req_entries = req_entries)
+        response = self.__req_handler.process(url_entries=url_entries,
+                                              req_entries=req_entries)
         self.__response_obj = response
         return all([h.process(response) for h in self.__resp_handlers])
 

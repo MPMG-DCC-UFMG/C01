@@ -4,12 +4,12 @@ the entry probing process
 """
 
 from enum import Enum
-from typing import Any, Dict, Hashable, List, Optional
+from typing import Any, Callable, Dict, Hashable, List, Optional
 
 import asyncio
 import abc
-import requests
 import pyppeteer
+import requests
 
 from .entry_probing_response import ResponseData
 
@@ -58,7 +58,7 @@ class HTTPProbingRequest(ProbingRequest):
                          body, if necessary
         """
         super().__init__()
-        self.__url    = url
+        self.__url = url
         self.__method = method.upper()
         self.__req_data = req_data if req_data is not None else {}
 
@@ -67,6 +67,21 @@ class HTTPProbingRequest(ProbingRequest):
 
         if self.__method not in self.REQUEST_METHODS:
             raise ValueError(f"HTTP method not supported: {method}")
+
+
+    def set_request_function(self, method: str, function: Callable):
+        """
+        Change the request function to be used for an HTTP method
+
+        :param method:   HTTP method to be handled
+        :param function: New function to use as this method's handler
+        """
+
+        if method.upper() not in self.REQUEST_METHODS:
+            raise ValueError(f"HTTP method not supported: {method}")
+
+        self.REQUEST_METHODS[method] = function
+
 
     def process(self,
                 url_entries,
@@ -90,9 +105,13 @@ class HTTPProbingRequest(ProbingRequest):
         for key in req_entries:
             self.__req_data[key] = req_entries[key]
 
-        # Does the request with the supplied method
+        request_data = None
+        if bool(self.__req_data):
+            request_data = self.__req_data
+
+        # Sends the request with the supplied method
         resp = self.REQUEST_METHODS[self.__method](formatted_url,
-                                                   data=self.__req_data)
+                                                   data=request_data)
 
         return ResponseData.create_from_requests(resp)
 
