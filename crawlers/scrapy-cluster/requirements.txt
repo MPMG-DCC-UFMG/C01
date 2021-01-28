@@ -3,7 +3,7 @@
 ConcurrentLogHandler==0.9.1
 Flask==1.0.2  # Updated from 0.12
 Jinja2==2.10  # Updated from 2.9.5
-MarkupSafe==1.0
+MarkupSafe==1.1.1 # Update from 1.0 by Rennan
 PyDispatcher==2.0.5
 PyYAML==3.12
 Scrapy==1.5.0  # Updated from 1.4.0
@@ -49,5 +49,5 @@ tldextract==2.2.0  # Updated from 2.1.0
 ujson==1.35
 urllib3==1.25.8 # Added by Lorena
 w3lib==1.19.0  # Updated from 1.18.0
-zope.interface==4.5.0  # Updated from 4.4.2
+zope.interface==5.2.0  # Updated from 4.5.0 by Rennan
 # Generated with piprot 0.9.10
