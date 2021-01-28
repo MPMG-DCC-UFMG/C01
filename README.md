@@ -28,6 +28,11 @@ As instruções para instalar e configurar a _master_ e as _slaves_, bem como re
 
 ## Instalação e configuração da _master_
 
+Antes de intalar o projeto, instale a biblioteca libxss1 com o seguinte comando:
+```
+$ sudo apt-get install libxss1
+```
+
 Para a instalação do projeto na master, basta clonar o repositório na branch issue-261-mp, criar um ambiente virtual python 3.6 e rodar o script install.py, que instala o projeto e as dependências do Scrapy Cluster.
 
 ```
