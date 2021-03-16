@@ -1,8 +1,13 @@
-from twisted.internet import asyncioreactor
 import os
 import subprocess
 import asyncio
 import sys
+
+subprocess.run(["pip", "install", "-U", "pip"])
+subprocess.run(["pip", "install", "twisted"])
+
+from twisted.internet import asyncioreactor
+
 
 # Install Redis
 if not os.path.isdir("redis-5.0.10"):
@@ -13,7 +18,7 @@ if not os.path.isdir("redis-5.0.10"):
 
 # Install Kafka and Zookeeper
 if not os.path.isdir("kafka_2.13-2.4.0"):
-    subprocess.run(["wget", "http://www-us.apache.org/dist/kafka/2.4.0/kafka_2.13-2.4.0.tgz"])
+    subprocess.run(["wget", "http://archive.apache.org/dist/kafka/2.4.0/kafka_2.13-2.4.0.tgz"])
     subprocess.run(["tar", "-xzf", "kafka_2.13-2.4.0.tgz"])
     subprocess.run(["rm", "kafka_2.13-2.4.0.tgz"])
 
