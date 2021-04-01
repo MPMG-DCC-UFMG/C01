@@ -18,7 +18,7 @@ Dentre as funcionalidades disponíveis para os coletores, temos:
 
 Os coletores também podem ser gerenciados através de uma API RESTful.
 
-## Instalação
+##  Instalação
 
 Para usar o programa é necessário um _virtualenv_ ou uma máquina apenas com **Python 3.7+**, de maneira que os comandos _"python"_ referencie o Python 3.7+, e _"pip"_ procure a instalação de pacotes também do Python 3.7+.
 
