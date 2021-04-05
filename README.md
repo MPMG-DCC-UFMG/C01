@@ -22,6 +22,11 @@ Os coletores também podem ser gerenciados através de uma API RESTful.
 
 Para usar o programa é necessário um _virtualenv_ ou uma máquina apenas com **Python 3.7+**, de maneira que os comandos _"python"_ referencie o Python 3.7+, e _"pip"_ procure a instalação de pacotes também do Python 3.7+.
 
+Alguns serviços necessitam que o Java esteja rodando no sistema, o mesmo pode ser instalado por 
+```
+sudo apt install default-jre  
+```
+
 Para instalar todos os programas e suas dependencias execute o script install.py.
 ```
 python install.py
