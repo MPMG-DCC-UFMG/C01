@@ -32,8 +32,9 @@ class StaticPageSpider(BaseSpider):
                 callback=self.parse,
                 meta={
                     "referer": "start_requests",
-                    "config": self.config
-            },
+                    "config": self.config,
+                    "depth": 0
+                },
                 errback=self.errback_httpbin)
 
     def convert_allow_extesions(self, config):
@@ -216,12 +217,17 @@ class StaticPageSpider(BaseSpider):
             return
 
         self.store_html(response)
-        if "explore_links" in config and config["explore_links"]:
+        if ("explore_links" in config and config["explore_links"] and
+            response.meta["depth"] < config["link_extractor_max_depth"]):
             this_url = response.url
             for url in self.extract_links(response):
                 yield scrapy.Request(
                     url=url, callback=self.parse,
-                    meta={"referer": response.url, "config": config},
+                    meta={
+                        "referer": response.url,
+                        "config": config,
+                        "depth": response.meta["depth"] + 1
+                    },
                     errback=self.errback_httpbin
                 )
 
