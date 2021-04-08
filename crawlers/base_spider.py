@@ -430,7 +430,7 @@ class BaseSpider(scrapy.Spider):
     # based on: https://github.com/steveeJ/python-wget/blob/master/wget.py
     def filetype_from_url(self, url: str) -> str:
         """Detects the file type through its URL"""
-        extension = fname.split('.')[-1]
+        extension = url.split('.')[-1]
         if 0 < len(extension) < 6:
             return extension
         return ""
