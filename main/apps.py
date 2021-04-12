@@ -2,8 +2,12 @@ from django.apps import AppConfig
 from django.db.utils import OperationalError
 from step_crawler import parameter_extractor
 from step_crawler import functions_file
-import json
 
+import json
+import signal
+
+# Enable interrupt signal
+signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 class MainConfig(AppConfig):
     name = 'main'
@@ -35,6 +39,6 @@ class MainConfig(AppConfig):
         except OperationalError as err:
             print(
                 f"Error at MainConfig.ready(). Message:\n{err}\n"
-                f"Are you making migrations or migrating?\n" 
+                f"Are you making migrations or migrating?\n"
                 f" If so, ignore this error. Otherwise you should fix it."
             )

@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.utils import timezone
 from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
@@ -28,6 +29,9 @@ from rest_framework.parsers import JSONParser
 
 def process_run_crawl(crawler_id):
     instance = None
+    instance_id = None
+    instance_info = dict()
+
     with transaction.atomic():
         # Execute DB commands atomically
         crawler_entry = CrawlRequest.objects.filter(id=crawler_id)
@@ -42,6 +46,12 @@ def process_run_crawl(crawler_id):
         data = CrawlRequest.process_config_data(crawler_entry.get(), data)
         instance_id = crawler_manager.start_crawler(data.copy())
         instance = create_instance(data['id'], instance_id)
+
+    instance_info["started_at"] = str(instance.creation_date)
+    instance_info["finished_at"] = None
+
+    crawler_manager.update_instances_info(
+        data["data_path"], str(instance_id), instance_info)
 
     return instance
 
@@ -58,13 +68,24 @@ def process_stop_crawl(crawler_id):
     instance_id = instance.instance_id
     config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
 
-    crawler_manager.stop_crawler(instance_id, config)
     instance = None
+    instance_info = {}
     with transaction.atomic():
         # Execute DB commands atomically
         instance = CrawlerInstance.objects.get(instance_id=instance_id)
         instance.running = False
+        instance.finished_at = timezone.now()
         instance.save()
+
+    # As soon as the instance is created, it starts to collect and is only modified when it stops,
+    # we use these fields to define when a collection started and ended
+    instance_info["started_at"] = str(instance.creation_date)
+    instance_info["finished_at"] = str(instance.last_modified)
+
+    crawler_manager.update_instances_info(
+        config["data_path"], str(instance_id), instance_info)
+
+    crawler_manager.stop_crawler(instance_id, config)
 
     return instance
 
@@ -79,8 +100,8 @@ def create_instance(crawler_id, instance_id):
         crawler_id=mother[0], instance_id=instance_id, running=True)
     return obj
 
-
 # Views
+
 
 def list_crawlers(request):
     context = {'allcrawlers': getAllData()}
@@ -192,7 +213,6 @@ def run_crawl(request, crawler_id):
 
 
 def tail_log_file(request, instance_id):
-
     crawler_id = CrawlerInstance.objects.filter(
         instance_id=instance_id
     ).values()[0]["crawler_id_id"]

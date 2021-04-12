@@ -35,9 +35,9 @@ def create_mock_pyp_page(content_type: str = None,
 
     # mock of the Pyppeteer response
     mock_pyp_resp = mock.Mock(spec=pyppeteer.network_manager.Response,
-                                   headers={'content-type': content_type},
-                                   status=status_code,
-                                   text=lambda: return_async_text(text))
+                              headers={'content-type': content_type},
+                              status=status_code,
+                              text=lambda: return_async_text(text))
 
     on_event = mock.Mock(return_value=None)
     if trigger_response:
@@ -49,7 +49,7 @@ def create_mock_pyp_page(content_type: str = None,
 
     # mock of the Pyppeteer page
     mock_page = mock.Mock(spec=pyppeteer.page.Page, on=on_event,
-                               content=lambda: return_async_text(text))
+                          content=lambda: return_async_text(text))
 
     return mock_page
 
@@ -85,7 +85,7 @@ class ProbingRequestTest(unittest.TestCase):
 
         # Changes the method used by the HTTPProbingRequest when requesting to
         # use our mock
-        mock_response = mock.Mock(headers= {'Content-Type': 'text/html'})
+        mock_response = mock.Mock(headers={'Content-Type': 'text/html'})
 
         get_mock = mock.Mock(return_value=mock_response)
         post_mock = mock.Mock(return_value=mock_response)
@@ -95,51 +95,51 @@ class ProbingRequestTest(unittest.TestCase):
         # GET request with a parameter in the URL
         probe = HTTPProbingRequest("http://test.com/{}", "GET")
         probe.process([10])
-        expected = [("http://test.com/10",), {'data':{}}]
+        expected = [("http://test.com/10",), {'data': None}]
         self.assertEqual(list(get_mock.call_args), expected)
 
         # POST request with a parameter in the URL
         probe = HTTPProbingRequest("http://test.com/{}", "POST")
         probe.process([10])
-        expected = [("http://test.com/10",), {'data':{}}]
+        expected = [("http://test.com/10",), {'data': None}]
         self.assertEqual(list(post_mock.call_args), expected)
 
         # GET request with a formatted parameter in the URL
         probe = HTTPProbingRequest("http://test.com/{:03d}", "GET")
         probe.process([10])
-        expected = [("http://test.com/010",), {'data':{}}]
+        expected = [("http://test.com/010",), {'data': None}]
         self.assertEqual(list(get_mock.call_args), expected)
 
         # GET request with no parameter
         probe = HTTPProbingRequest("http://test.com/", "GET")
         probe.process()
-        expected = [("http://test.com/",), {'data':{}}]
+        expected = [("http://test.com/",), {'data': None}]
         self.assertEqual(list(get_mock.call_args), expected)
 
         # GET request with placeholder but no parameter
         probe = HTTPProbingRequest("http://test.com/{}", "GET")
         probe.process()
-        expected = [("http://test.com/{}",), {'data':{}}]
+        expected = [("http://test.com/{}",), {'data': None}]
         self.assertEqual(list(get_mock.call_args), expected)
 
         # If entry is present but URL doesn't have any placeholders it just
         # uses the given url
         probe = HTTPProbingRequest("http://test.com/", "GET")
         probe.process([1])
-        expected = [("http://test.com/",), {'data':{}}]
+        expected = [("http://test.com/",), {'data': None}]
         self.assertEqual(list(get_mock.call_args), expected)
 
         # GET request with one parameter in the request body
         probe = HTTPProbingRequest("http://test.com/", "GET")
         probe.process([], {'test1': 100})
-        expected = [("http://test.com/",), {'data':{'test1': 100}}]
+        expected = [("http://test.com/",), {'data': {'test1': 100}}]
         self.assertEqual(list(get_mock.call_args), expected)
 
         # GET request with two parameters in the URL and two in the request
         # body
         probe = HTTPProbingRequest("http://test.com/{}/{}", "GET")
         probe.process([1, 2], {'test1': 10, 'test2': 200})
-        expected = [("http://test.com/1/2",), {'data':{'test1': 10,
+        expected = [("http://test.com/1/2",), {'data': {'test1': 10,
                                                        'test2': 200}}]
         self.assertEqual(list(get_mock.call_args), expected)
 
@@ -147,7 +147,7 @@ class ProbingRequestTest(unittest.TestCase):
         probe = HTTPProbingRequest("http://test.com/", "GET",
                                    {'test1': 10, 'test2': 200})
         probe.process()
-        expected = [("http://test.com/",), {'data':{'test1': 10,
+        expected = [("http://test.com/",), {'data': {'test1': 10,
                                                     'test2': 200}}]
         self.assertEqual(list(get_mock.call_args), expected)
 
@@ -169,7 +169,7 @@ class ProbingRequestTest(unittest.TestCase):
         # POST request with no parameters in the request body
         probe = HTTPProbingRequest("http://test.com/", "POST")
         probe.process()
-        expected = [('http://test.com/',), {'data': {}}]
+        expected = [('http://test.com/',), {'data': None}]
         self.assertEqual(list(post_mock.call_args), expected)
 
         # POST request using only the pre-made request body
@@ -182,7 +182,7 @@ class ProbingRequestTest(unittest.TestCase):
         # body
         probe = HTTPProbingRequest("http://test.com/{}/{}", "POST")
         probe.process([1, 2], {'test1': 10, 'test2': 200})
-        expected = [("http://test.com/1/2",), {'data':{'test1': 10,
+        expected = [("http://test.com/1/2",), {'data': {'test1': 10,
                                                        'test2': 200}}]
         self.assertEqual(list(post_mock.call_args), expected)
 
@@ -257,6 +257,27 @@ class ProbingRequestTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             # process() should raise a ValueError
             result = self.loop.run_until_complete(probe.process())
+
+    def test_method_function_change(self):
+        """
+        Tests if switching the default "requests" methods for custom methods
+        works properly
+        """
+
+        mock_response = mock.Mock(headers={'Content-Type': 'text/html'})
+
+        get_mock = mock.Mock(return_value=mock_response)
+        post_mock = mock.Mock(return_value=mock_response)
+
+        probe = HTTPProbingRequest("http://test.com/", "GET")
+        probe.set_request_function("GET", get_mock)
+        probe.process()
+        self.assertTrue(get_mock.called)
+
+        probe = HTTPProbingRequest("http://test.com/", "POST")
+        probe.set_request_function("POST", post_mock)
+        probe.process()
+        self.assertTrue(post_mock.called)
 
 
 if __name__ == '__main__':
