@@ -1,16 +1,16 @@
 /* Collapse div */
 
 function mycollapse(target){
-    console.log(target);
+    // console.log(target);
     var el = $(target);
-    console.log(el.text());
+    // console.log(el.text());
     if(el.hasClass("myshow")){
         el.removeClass("myshow");
-        console.log("remove myshow");
+        // console.log("remove myshow");
     }
     else{
         el.addClass("myshow");
-        console.log("add myshow");
+        // console.log("add myshow");
     }
 }
 
@@ -264,6 +264,7 @@ $(document).ready(function () {
     $('input').on('blur keyup', checkRelatedFields);
     $('#collapse-adv-links').on("click", function () { mycollapse("#adv-links");})
     $('#collapse-adv-download').on("click", function () { mycollapse("#adv-download"); })
+
 });
 
 function showBlock(clicked_id) {
@@ -493,4 +494,103 @@ function getExtraParsingConfig(e) {
   var table_attrs_hidden = document.getElementById("table_attrs_hidden");
   var dict_string = JSON.stringify(dict);
   table_attrs_hidden.value = dict_string;
+}
+
+// Import colector
+
+function processCheckBoxInput(data) {
+    // Converts checkbox entries in the json file to the html form
+
+    let checkbox_input, checkbox_input_id;
+    $('input[type=checkbox]').each(function () {
+        checkbox_input = $(this);
+        checkbox_input_id = checkbox_input.attr('id');
+        if (checkbox_input_id) {
+            checkbox_input_id = checkbox_input_id.replace('id_', '');
+            if (checkbox_input_id in data)
+                checkbox_input.prop('checked', data[checkbox_input_id]);
+        }
+    });
+}
+
+function processSelectInput(data) {
+    // Convert "select" entries in the json file to the html form
+
+    let select_input, select_input_id;
+    $('select').each(function () {
+        select_input = $(this);
+        select_input_id = select_input.attr('id');
+        if (select_input_id) {
+            select_input_id = select_input_id.replace('id_', '');
+            if (select_input_id in data) 
+                select_input.val(data[select_input_id]);
+        }        
+    });
+}
+
+function processTextInput(data) {
+    // Converts text-type entries in the json file to the html form
+
+    let text_input, text_input_id;
+    $('input[type=text]').each(function () {
+        text_input = $(this);
+        text_input_id = text_input.attr('id');
+        if (text_input_id) {
+            text_input_id = text_input_id.replace('id_', '');
+            if (text_input_id in data) 
+                text_input.val(data[text_input_id]);
+        } 
+    });
+}
+
+function processNumberInput(data) {
+    // Converts number-type entries in the json file to the html form
+
+    let number_input, number_input_id;
+    $('input[type=number]').each(function () {
+        number_input = $(this);
+        number_input_id = number_input.attr('id');
+        if (number_input_id) {
+            number_input_id = number_input_id.replace('id_', '');
+            if (number_input_id in data)
+                number_input.val(data[number_input_id]);
+        }
+    });
+}
+
+
+function processSettings(data) {
+    // Converts the settings of the json file into
+    // parameters of the creation form
+    processCheckBoxInput(data);
+    processSelectInput(data);
+    processTextInput(data);
+    processNumberInput(data);
+}
+
+function parseSettings(e) {
+    const file = e.files[0];
+
+    const reader = new FileReader();
+    reader.addEventListener('load', (event) => {
+        // configuratiion file parsing
+        const result = event.target.result;
+        const data = JSON.parse(result);
+
+        processSettings(data);
+
+        // checks if the settings are valid
+        checkBasicInfo();
+        checkAntiblock();
+        checkCaptcha();
+        checkCrawlerType();
+        checkTemplatedURL();
+
+        // go to the option that allows the user to change the location
+        // saving downloaded files
+        showBlock('basic-info-item');
+        $('#id_data_path').focus();
+    });
+    
+    reader.readAsText(file);
 }
