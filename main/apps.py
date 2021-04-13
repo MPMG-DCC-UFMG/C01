@@ -33,10 +33,6 @@ class MainConfig(AppConfig):
             instance.running = False
             instance.save()
 
-        # cleaning download queue and current download
-        from .models import DownloadDetail
-        DownloadDetail.objects.all().delete()
-
     def ready(self):
         try:
             self.runOnce()

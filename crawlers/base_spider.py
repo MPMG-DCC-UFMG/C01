@@ -12,15 +12,20 @@ import itertools
 import logging
 import os
 import re
+import pandas
 import time
 from lxml.html.clean import Cleaner
+import urllib.parse as urlparse
+import mimetypes
+import requests
+import string
 
 # Project libs
-import binary
 import crawling_utils
+
+from binary import Extractor
 from crawlers.constants import *
 from crawlers.file_descriptor import FileDescriptor
-from crawlers.file_downloader import FileDownloader
 from entry_probing import BinaryFormatProbingResponse, HTTPProbingRequest,\
     HTTPStatusProbingResponse, TextMatchProbingResponse,\
     EntryProbing
@@ -28,7 +33,7 @@ from param_injector import ParamInjector
 from range_inference import RangeInference
 import parsing_html
 
-
+PUNCTUATIONS = "[{}]".format(string.punctuation)
 
 class BaseSpider(scrapy.Spider):
     name = 'base_spider'
@@ -422,6 +427,129 @@ class BaseSpider(scrapy.Spider):
         self.feed_file_description(
             self.data_folder + "raw_pages", description)
 
+    # based on: https://github.com/steveeJ/python-wget/blob/master/wget.py
+    def filetype_from_url(self, url: str) -> str:
+        """Detects the file type through its URL"""
+        extension = url.split('.')[-1]
+        if 0 < len(extension) < 6:
+            return extension
+        return ""
+
+    def filetype_from_filename_on_server(self, content_disposition: str) -> str:
+        """Detects the file extension by its name on the server"""
+
+        # content_disposition is a string with the following format: 'attachment; filename="filename.extension"'
+        # the following operations are to extract only the extension
+        extension = content_disposition.split(".")[-1]
+
+        # removes any kind of accents
+        return re.sub(PUNCTUATIONS, "", extension)
+
+    def filetype_from_mimetype(self, mimetype: str) -> str:
+        """Detects the file type using its mimetype"""
+        filetype = mimetypes.guess_extension(mimetype) 
+        if bool(filetype):
+            return filetype.replace(".","")
+        return ""       
+
+    def detect_file_extension(self, url, content_type: str, content_disposition: str) -> str:
+        """detects the file extension, using its mimetype, url or name on the server, if available"""
+        extension = self.filetype_from_mimetype(content_type)
+        if bool(extension) and extension != "bin":
+            return extension
+
+        extension = self.filetype_from_filename_on_server(content_disposition)
+        if bool(extension) and extension != "bin":
+            return extension 
+
+        return self.filetype_from_url(url)
+
+    def convert_binary(self, url: str, filetype: str, filename: str):
+        if filetype != "pdf":
+            return
+        
+        url_hash = crawling_utils.hash(url.encode())
+        source_file = f"{self.data_folder}files/{filename}"
+
+        success = False
+        results = None
+        try:
+            # single DataFrame or list of DataFrames
+            results = Extractor(source_file).extra().read()
+        except Exception as e:
+            print(
+                f"Could not extract csv files from {source_file} -",
+                f"message: {str(type(e))}-{e}"
+            )
+            return []
+
+        if type(results) == pandas.DataFrame:
+            results = [results]
+
+        extracted_files = []
+        for i in range(len(results)):
+            relative_path = f"{self.data_folder}csv/{url_hash}_{i}.csv"
+            results[i].to_csv(relative_path, encoding='utf-8', index=False)
+
+            extracted_files.append(relative_path)
+
+            item_desc = {
+                "file_name": f"{url_hash}_{i}.csv",
+                "type": "csv",
+                "extracted_from": source_file,
+                "relative_path": relative_path
+            }
+
+            FileDescriptor.feed_description(f"{self.data_folder}csv/", item_desc)
+
+        return extracted_files
+
+    def get_download_filename_and_relative_path(self, url: str, extension: str) -> tuple:
+        url_hash = crawling_utils.hash(url.encode())
+        file_name = url_hash 
+        file_name += '.' + extension if extension else ''
+
+        relative_path = f"{self.data_folder}files/{file_name}"
+
+        return file_name, relative_path
+
+    def store_large_file(self, url: str, referer: str):
+        print(f"Saving large file {url}")
+        
+        # Head type request to obtain the mimetype and/or file name to be downloaded on the server
+        headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
+        response = requests.head(url, allow_redirects=True, headers=headers)
+        
+        content_type = response.headers.get("Content-type", "")
+        content_disposition = response.headers.get("Content-Disposition", "")
+
+        response.close()
+
+        extension = self.detect_file_extension(url, content_type, content_disposition)
+        file_name, relative_path = self.get_download_filename_and_relative_path(url, extension)
+
+        # The stream parameter is not to save in memory
+        with requests.get(url, stream=True, allow_redirects=True, headers=headers) as req:
+            with open(relative_path, "wb") as f:
+                for chunk in req.iter_content(chunk_size=8192):
+                    f.write(chunk)
+
+        self.create_and_feed_file_description(url, file_name, referer, extension)
+
+    def store_small_file(self, response):
+        print(f"Saving small file {response.url}")
+        
+        content_type = response.headers.get("Content-Type", b"").decode()
+        content_disposition = response.headers.get("Content-Disposition", b"").decode()
+
+        extension = self.detect_file_extension(response.url, content_type, content_disposition)
+        file_name, relative_path = self.get_download_filename_and_relative_path(response.url, extension)
+
+        with open(relative_path, "wb") as f:
+            f.write(response.body)
+
+        self.create_and_feed_file_description(response.url, file_name, response.meta["referer"], extension)
+
     def errback_httpbin(self, failure):
         # log all errback failures,
         # in case you want to do something special for some errors,
@@ -442,22 +570,27 @@ class BaseSpider(scrapy.Spider):
             request = failure.request
             self.logger.error('TimeoutError on %s', request.url)
 
-    def feed_file_downloader(self, url, response_origin):
-        wait_end = self.config["wait_crawler_finish_to_download"]
+    def feed_file_description(self, destination: str, content: dict):        
+        FileDescriptor.feed_description(destination, content)
+
+    def create_and_feed_file_description(self, url: str, file_name: str, referer: str, extension: str):
+        """Creates the description file of the downloaded files and saves them"""
+
         description = {
             "url": url,
+            "file_name": file_name,
             "crawler_id": self.config["crawler_id"],
             "instance_id": self.config["instance_id"],
             "crawled_at_date": str(datetime.datetime.today()),
-            "referer": response_origin.url,
-            "wait_crawler_finish_to_download": wait_end,
-            "time_between_downloads": self.config["time_between_downloads"],
+            "referer": referer,
+            "type": extension,
         }
-        FileDownloader.feed_downloader(url, self.data_folder, description)
-
-    def feed_file_description(self, destination, content):
-        FileDescriptor.feed_description(destination, content)
-
+        
+        extracted_files = self.convert_binary(url, extension, file_name)
+        description["extracted_files"] = extracted_files
+        
+        self.feed_file_description(f"{self.data_folder}files/", description)
+        
     def extra_config_parser(self, table_attrs):
         # get the json from extra_config and 
         # formats in a python proper standard
