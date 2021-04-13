@@ -151,3 +151,5 @@ cython_debug/
 kafka_2.13-2.4.0/
 temp_description_folder/
 redis-5.0.10/
+
+.vscode/
