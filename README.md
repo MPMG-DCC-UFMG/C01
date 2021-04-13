@@ -53,5 +53,21 @@ python run.py 0.0.0.0:8000
 ```
 E então use o IP da máquina onde a interface está sendo executada para acessá-la. Por exemplo, se a máquina onde você rodou o comando acima tem endereço de IP _1.2.3.4_, e esse endereço é visível para sua máquina através da rede, você pode acessar _http://1.2.3.4:8000/_.
 
+
+## Execução com Docker (standalone)
+
+Para execução da é necessário montar a imagem a partir do docker file, para isso execute o seguinte comando:
+```
+docker build -t c01 .
+```
+
+Em seguida, é necessário executar a imagem. O seguinte comando é responsável por isso:
+```
+docker run --mount type=bind,source="$(pwd)"/data,target=/home/data -p 8000:8000 -t c01
+```
+
+E então basta acessar _http://localhost:8000/_
+
+
 ## Fluxo de interação com a interface
 ![Fluxograma](fluxo_interface_coletor_20200625.png)
