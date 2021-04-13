@@ -56,17 +56,21 @@ E então use o IP da máquina onde a interface está sendo executada para acess�
 
 ## Execução com Docker (standalone)
 
-Para execução da é necessário montar a imagem a partir do docker file, para isso execute o seguinte comando:
+Antes de tudo, assegure-se de que o Docker está devidamente instalado no seu computador. Caso precise de instruições de como fazer isso, o seguinte link pode auxiliar nesse processo: https://docs.docker.com/get-docker/
+
+Para instalação do sistema é necessário montar a imagem a partir do Dockerfile, para isso execute o seguinte comando a partir da raiz do repositório:
 ```
 docker build -t c01 .
 ```
 
-Em seguida, é necessário executar a imagem. O seguinte comando é responsável por isso:
+Em seguida, é necessário executar a imagem. Ainda na raiz do respositório execute o comando responsável por isso:
 ```
-docker run --mount type=bind,source="$(pwd)"/data,target=/home/data -p 8000:8000 -t c01
+docker run --mount type=bind,source="$(pwd)/data",target=/data -p 8000:8000 -t c01
 ```
 
-E então basta acessar _http://localhost:8000/_
+O comando acima garante que o container terá acesso ao disco da máquina, e esse aceso foi feito através da ligação da raiz do respositório com a raiz da imagem. Ou seja, ao configurar coletores com o seguinte caminho "/data/nome_coletor", os dados estarão sendo salvos na verdade no seguinte diretório da máquina: "caminho_da_raiz_repositório>/data/nome_coletor". É possível alterar o diretório na máquina hospedeira, para isso, basta alterar o trecho "$(pwd)" do comando para o diretório desejado.
+
+Ao final do processo, basta acessar _http://localhost:8000/_
 
 
 ## Fluxo de interação com a interface
