@@ -8,7 +8,6 @@ from . import views
 api_router = routers.DefaultRouter()
 api_router.register(r'crawlers', views.CrawlerViewSet)
 api_router.register(r'instances', views.CrawlerInstanceViewSet)
-api_router.register(r'downloads', views.DownloadDetailsViewSet)
 
 urlpatterns = [
     path("", views.list_crawlers, name="list_crawlers"),
@@ -22,7 +21,6 @@ urlpatterns = [
     path("detail/run_crawl/<int:crawler_id>", views.run_crawl, name="run_crawl"),
     path("detail/stop_crawl/<int:crawler_id>", views.stop_crawl, name="stop_crawl"),
     path("tail_log_file/<str:instance_id>", views.tail_log_file, name="tail_log_file"),
-    path("downloads/", views.downloads, name="downloads"),
 
     # Includes the API endpoints in the URLs
     url(r'^api/', include(api_router.urls)),

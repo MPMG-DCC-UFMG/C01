@@ -20,7 +20,11 @@ def file_larger_than_giga(url):
     response = requests.head(url, allow_redirects=True, headers=headers)
 
     # obtem o tamanho do arquivo e converte para inteiro
-    content_length = int(response.headers['Content-Length'])
+    content_length = response.headers.get('Content-Length')
+    if content_length is None:
+        return True
+
+    content_length = int(content_length)
 
     return content_length > 1e9
 

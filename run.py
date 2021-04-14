@@ -7,8 +7,7 @@ import subprocess
 import sys
 import time
 
-from crawlers.crawler_manager import file_downloader_process, \
-    file_descriptor_process
+from crawlers.crawler_manager import file_descriptor_process
 
 import crawling_utils.crawling_utils as crawling_utils
 
@@ -45,7 +44,6 @@ def run_django():
     # Runs django repassing cli parameters
     subprocess.run(["python", "manage.py", "runserver"] + sys.argv[1:])
 
-
 def run_zookeeper():
     crawling_utils.check_file_path("crawlers/log/")
     os.chdir('kafka_2.13-2.4.0')
@@ -69,11 +67,6 @@ def run_kafka():
                     'log.dirs=kafka-logs'],
                    stdout=open(f"../crawlers/log/kafka.out", "a", buffering=1),
                    stderr=open(f"../crawlers/log/kafka.err", "a", buffering=1))
-
-
-def run_file_downloader():
-    file_downloader_process()
-
 
 def runn_file_descriptor():
     file_descriptor_process()
@@ -111,8 +104,8 @@ def run():
         [run_zookeeper, []],
         [run_kafka, []],
         [run_django, []],
-        [run_file_downloader, []],
         [runn_file_descriptor, []],
+        # [run_file_downloader, []],
     ]
 
     # N_FUNCTIONS must be equal to len(functions)
