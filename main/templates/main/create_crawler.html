@@ -183,7 +183,13 @@ New Crawler
                                 <div id="div_id_import_settings" class="form-group">
                                     <label for="id_import_settings">Importar arquivo de configuração</label>
                                     <div class="">
-                                        <input type="file" class="form-control-file" accept="application/JSON" id="id_import_settings" onchange="parseSettings(this)">
+                                        <input type="file" 
+                                                class="form-control-file"
+                                                accept="application/JSON"
+                                                id="id_import_settings"
+                                                name="import_settings"
+                                                onchange="parseSettings(this)"
+                                        >
                                     </div>
                                 </div>
                             </div>

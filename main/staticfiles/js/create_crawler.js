@@ -108,7 +108,7 @@ function checkAntiblock() {
     }
 
     var selected_option = getSelectedOptionValue("id_antiblock_mask_type");
-    console.log("id_antiblock_mask_type", selected_option);
+    // console.log("id_antiblock_mask_type", selected_option);
     if (selected_option == 'ip') {
         valid = (
             valid &&
@@ -227,6 +227,9 @@ function checkTemplatedURL() {
 
 function checkRelatedFields() {
     var input_name = $(this).attr('name');
+
+    if (input_name == "import_settings")
+        return;
 
     if (input_name.length >= 11 && input_name.substring(0, 10) == "antiblock_") {
         checkAntiblock();
