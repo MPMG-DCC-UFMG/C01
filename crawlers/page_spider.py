@@ -238,7 +238,7 @@ class PageSpider(BaseSpider):
         urls_files = urls_files.difference(urls_large_content)
 
         urls_small_content_b, urls_large_content_b = self.split_urls_in_small_content(urls_files)
-        
+
         urls_small_content = urls_small_content.union(urls_small_content_b)
         urls_large_content = urls_large_content.union(urls_large_content_b)
 
@@ -253,16 +253,17 @@ class PageSpider(BaseSpider):
         src = []
         for img in response.xpath("//img"):
             img_src = img.xpath('@src').extract_first()
-            if img_src[0] == '/':
-                img_src = url_domain + img_src[1:]
-            src.append(img_src)
+            if type(img_src) is str:
+                if img_src[0] == '/':
+                    img_src = url_domain + img_src[1:]
+                src.append(img_src)
 
         print(f"imgs found at page {response.url}", src)
         return set(src)
 
     def dynamic_parse(self, response):
         for page in list(response.request.meta["pages"].values()):
-            res = HtmlResponse(
+            dynamic_response = HtmlResponse(
                 response.url,
                 status=response.status,
                 headers=response.headers,
@@ -271,7 +272,7 @@ class PageSpider(BaseSpider):
                 request=response.request
             )
 
-            for request in self.parse(res):
+            for request in self.parse(dynamic_response):
                 yield request
 
     def parse(self, response):
@@ -292,8 +293,9 @@ class PageSpider(BaseSpider):
             return
 
         self.store_html(response)
-        
+
         urls = set()
+        urls_large_file_content = []
         if "explore_links" in config and config["explore_links"]:
             this_url = response.url
             urls = self.extract_links(response)
@@ -309,16 +311,18 @@ class PageSpider(BaseSpider):
             size = len(urls_large_file_content)
             for idx, url in enumerate(urls_large_file_content, 1):
                 print(f"Downloading large file {url} {idx} of {size}")
-                self.store_large_file(url, response.meta["referer"]) 
-                
+                self.store_large_file(url, response.meta["referer"])
+
                 # So that the interval between requests is concise between Scrapy and downloading large files
                 if self.config["antiblock_download_delay"]:
                     print(f"Waiting {self.config['antiblock_download_delay']}s for the next download...")
                     time.sleep(self.config["antiblock_download_delay"])
 
         for url in urls:
+            print("AQUI", url)
+
             yield scrapy.Request(
-                url=url, 
+                url=url,
                 callback=self.parse,
                 meta={
                     "referer": response.url,
