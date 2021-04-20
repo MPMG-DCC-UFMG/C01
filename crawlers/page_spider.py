@@ -319,8 +319,6 @@ class PageSpider(BaseSpider):
                     time.sleep(self.config["antiblock_download_delay"])
 
         for url in urls:
-            print("AQUI", url)
-
             yield scrapy.Request(
                 url=url,
                 callback=self.parse,
