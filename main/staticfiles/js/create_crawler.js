@@ -1,17 +1,12 @@
 /* Collapse div */
 
 function mycollapse(target){
-    // console.log(target);
     var el = $(target);
-    // console.log(el.text());
-    if(el.hasClass("myshow")){
+    
+    if(el.hasClass("myshow"))
         el.removeClass("myshow");
-        // console.log("remove myshow");
-    }
-    else{
+    else
         el.addClass("myshow");
-        // console.log("add myshow");
-    }
 }
 
 /* End collapse div */
@@ -516,47 +511,15 @@ function processCheckBoxInput(data) {
     });
 }
 
-function processSelectInput(data) {
-    // Convert "select" entries in the json file to the html form
-
-    let select_input, select_input_id;
-    $('select').each(function () {
-        select_input = $(this);
-        select_input_id = select_input.attr('id');
-        if (select_input_id) {
-            select_input_id = select_input_id.replace('id_', '');
-            if (select_input_id in data)
-                select_input.val(data[select_input_id]);
-        }
-    });
-}
-
-function processTextInput(data) {
-    // Converts text-type entries in the json file to the html form
-
-    let text_input, text_input_id;
-    $('input[type=text]').each(function () {
-        text_input = $(this);
-        text_input_id = text_input.attr('id');
-        if (text_input_id) {
-            text_input_id = text_input_id.replace('id_', '');
-            if (text_input_id in data)
-                text_input.val(data[text_input_id]);
-        }
-    });
-}
-
-function processNumberInput(data) {
-    // Converts number-type entries in the json file to the html form
-
-    let number_input, number_input_id;
-    $('input[type=number]').each(function () {
-        number_input = $(this);
-        number_input_id = number_input.attr('id');
-        if (number_input_id) {
-            number_input_id = number_input_id.replace('id_', '');
-            if (number_input_id in data)
-                number_input.val(data[number_input_id]);
+function processInput(input_selector, data) {
+    let input, input_id;
+    $(input_selector).each(function () {
+        input = $(this);
+        input_id = input.attr('id');
+        if (input_id) {
+            input_id = input_id.replace('id_', '');
+            if (input_id in data)
+                input.val(data[input_id]);
         }
     });
 }
@@ -597,14 +560,15 @@ function processParameterizedURL(data) {
     detailBaseUrl();
 }
 
-
 function processSettings(data) {
     // Converts the settings of the json file into
     // parameters of the creation form
     processCheckBoxInput(data);
-    processSelectInput(data);
-    processTextInput(data);
-    processNumberInput(data);
+
+    processInput('select', data);
+    processInput('input[type=text]', data);
+    processInput('input[type=number]', data);
+
 }
 
 function parseSettings(e) {
