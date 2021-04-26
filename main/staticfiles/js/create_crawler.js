@@ -441,12 +441,12 @@ function detailCrawlerType() {
     for (const i in contents)
         contents[i].hidden = true;
     setHiddenState(crawler_type, false);
-    
+
 
     if(crawler_type == "form_page"){
         interface_root_element = document.getElementById("form_page");
         if(interface_root_element.type != "root" ){
-            
+
             steps_output_element = interface_root_element.children[0].children[1].children[0]
             load_steps(interface_root_element, steps_output_element);
         }
@@ -525,9 +525,9 @@ function processSelectInput(data) {
         select_input_id = select_input.attr('id');
         if (select_input_id) {
             select_input_id = select_input_id.replace('id_', '');
-            if (select_input_id in data) 
+            if (select_input_id in data)
                 select_input.val(data[select_input_id]);
-        }        
+        }
     });
 }
 
@@ -540,9 +540,9 @@ function processTextInput(data) {
         text_input_id = text_input.attr('id');
         if (text_input_id) {
             text_input_id = text_input_id.replace('id_', '');
-            if (text_input_id in data) 
+            if (text_input_id in data)
                 text_input.val(data[text_input_id]);
-        } 
+        }
     });
 }
 
@@ -559,6 +559,42 @@ function processNumberInput(data) {
                 number_input.val(data[number_input_id]);
         }
     });
+}
+
+function processParameterizedURL(data) {
+    // Loads the parameterized URL data from the configuration
+
+    // Updates the parameterized URL section based on the URL
+    detailBaseUrl();
+
+    let num_params = data["parameter_handlers"].length;
+    let num_validators = data["templated_url_response_handlers"].length;
+
+    // Updates the number of validators in the form
+    $('#templated-url-response').formset('setNumForms', num_validators);
+
+    // Create a new data object to match with the parameterized URL parameter
+    // ids
+    let new_data = {};
+    for (let i = 0; i < num_params; i++) {
+        let param = data["parameter_handlers"][i];
+        for (let key in param) {
+            new_data["templated-url-params-" + i + "-" + key] = param[key];
+        }
+    }
+    for (let i = 0; i < num_validators; i++) {
+        let param = data["templated_url_response_handlers"][i];
+        for (let key in param) {
+            new_data["templated-url-responses-" + i + "-" + key] = param[key];
+        }
+    }
+
+    // Re-run the processing with only the parameterized URL config data
+    processSettings(new_data);
+
+    // Re-updates the parameterized URL section (used to refresh sub-options
+    // based on select values and remove/add the "required" attribute)
+    detailBaseUrl();
 }
 
 
@@ -581,6 +617,7 @@ function parseSettings(e) {
         const data = JSON.parse(result);
 
         processSettings(data);
+        processParameterizedURL(data);
 
         // checks if the settings are valid
         checkBasicInfo();
@@ -594,6 +631,6 @@ function parseSettings(e) {
         showBlock('basic-info-item');
         $('#id_data_path').focus();
     });
-    
+
     reader.readAsText(file);
 }
