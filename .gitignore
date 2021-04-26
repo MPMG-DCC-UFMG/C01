@@ -148,9 +148,9 @@ dmypy.json
 cython_debug/
 
 # These folders have many files that are downloaded or temporary that do not need to go to the project repository
-kafka_2.13-2.4.0/
+kafka_*/
 temp_description_folder/
-redis-5.0.10/
+redis-*/
 crawlers/log/
 
 .vscode/
