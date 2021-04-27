@@ -7,11 +7,13 @@ import logging
 import re
 import json
 import requests
+import time
 
 # Project libs
 from crawlers.base_spider import BaseSpider
 import crawling_utils
 
+LARGE_CONTENT_LENGTH = 1e9
 
 class StaticPageSpider(BaseSpider):
     name = 'static_page'
@@ -53,6 +55,20 @@ class StaticPageSpider(BaseSpider):
             ]
         return config
 
+    def get_url_content_type_and_lenght(self, url) -> tuple:
+        """Retrieves the type of URL content and its size"""
+        
+        # TODO: Use antiblock mechanisms here 
+        headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
+        response = requests.head(url, allow_redirects=True, headers=headers)
+
+        content_type = response.headers.get('Content-Type')
+        content_lenght = int(response.headers.get('Content-Length', '0'))
+
+        response.close()
+
+        return url, content_type, content_lenght
+
     def filter_list_of_urls(self, url_list, pattern):
         """Filter a list of urls according to a regex pattern."""
         def allow(url):
@@ -66,21 +82,41 @@ class StaticPageSpider(BaseSpider):
 
         return urls_filtered
 
-    def filter_type_of_urls(self, url_list, page_flag):
-        """Filter a list of urls according to the Content-Type."""
-        def allow(url):
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
-            req_head = requests.head(url, allow_redirects=True, headers=headers).headers['Content-Type']
+    def filter_type_of_urls_and_split_small_content(self, url_list, page_flag, split_large_content=True):
+        """Filter a list of urls according to the Content-Type and split urls with small content (avoiding send too many requests
+        to the server to verify if the content is large or not)
+        """
+        def allow_type(url_with_type_and_lenght):
+            req_head = url_with_type_and_lenght[1]
             if (('html' in req_head) and page_flag) or (('html' not in req_head) and not page_flag):
-                # print(f"ADDING link (correct type) - {url}")
                 return True
-            # print(f"DISCARDING link (incorrect type) - {url}")
             return False
 
-        urls_filtered = set(filter(allow, url_list))
+        urls_with_type_and_lenght = [self.get_url_content_type_and_lenght(url) for url in url_list]
+        urls_with_type_and_lenght_filtered = set(filter(allow_type, urls_with_type_and_lenght))
 
-        return urls_filtered
+        urls = set(url_type_lenght[0] for url_type_lenght in urls_with_type_and_lenght_filtered)         
+        if split_large_content:
+            urls_with_small_content = set(url_type_lenght[0] 
+                                            for url_type_lenght in urls_with_type_and_lenght
+                                            if url_type_lenght[2] < LARGE_CONTENT_LENGTH)
+
+            return urls_with_small_content, urls.difference(urls_with_small_content)
+
+        return urls
+
+    def split_urls_in_small_content(self, url_list):
+        def is_small_content(url):
+            # TODO: Use antiblock mechanisms here 
+            headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
+            response = requests.head(url, allow_redirects=True, headers=headers)
+            content_lenght = int(response.headers.get('Content-Length', '0'))
+            response.close()
+
+            return content_lenght < LARGE_CONTENT_LENGTH
+
+        urls_small_content = set(url for url in url_list if is_small_content(url))
+        return urls_small_content, set(url_list).difference(urls_small_content)
 
     def preprocess_listify(self, value, default):
         """Converts a string of ',' separaded values into a list."""
@@ -125,7 +161,7 @@ class StaticPageSpider(BaseSpider):
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
         if config["link_extractor_check_type"]:
-            urls_found = self.filter_type_of_urls(urls_found, True)
+            urls_found = self.filter_type_of_urls_and_split_small_content(urls_found, True, False)
 
         print("Links kept: ", urls_found)
 
@@ -172,18 +208,28 @@ class StaticPageSpider(BaseSpider):
         if pattern is not None and pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
-        urls_found_a = set()
+        
+        urls_small_content = set()
+        urls_large_content = set()
+        
         if config["download_files_check_type"]:
-            urls_found_a = self.filter_type_of_urls(urls_found, False)
+            urls_small_content, urls_large_content = self.filter_type_of_urls_and_split_small_content(urls_found, False)
 
-        urls_found_b = self.filter_list_of_urls(
+        urls_files = self.filter_list_of_urls(
             urls_found, r"(.*\.[a-z]{3,4}$)(.*(?<!\.html)$)(.*(?<!\.php)$)")
 
-        urls_found = urls_found_a.union(urls_found_b)
+        urls_files = urls_files.difference(urls_small_content)
+        urls_files = urls_files.difference(urls_large_content)
 
-        print("Files kept: ", urls_found)
+        urls_small_content_b, urls_large_content_b = self.split_urls_in_small_content(urls_files)
+        
+        urls_small_content = urls_small_content.union(urls_small_content_b)
+        urls_large_content = urls_large_content.union(urls_large_content_b)
 
-        return urls_found
+        print(f"+{len(urls_small_content)} small files detected: ", urls_small_content)
+        print(f"+{len(urls_large_content)} large files detected: ", urls_large_content)
+
+        return urls_small_content, urls_large_content
 
     def extract_imgs(self, response):
         url_domain = crawling_utils.get_url_domain(response.url)
@@ -212,27 +258,41 @@ class StaticPageSpider(BaseSpider):
             return
 
         if b'text/html' not in response_type:
-            self.store_raw(response)
+            self.store_small_file(response)
             return
 
         self.store_html(response)
+        
+        urls = set()
         if "explore_links" in config and config["explore_links"]:
             this_url = response.url
-            for url in self.extract_links(response):
-                yield scrapy.Request(
-                    url=url, callback=self.parse,
-                    meta={
-                        "referer": response.url,
-                        "config": config
-                    },
-                    errback=self.errback_httpbin
-                )
+            urls = self.extract_links(response)
 
         if "download_files" in self.config and self.config["download_files"]:
-            for file in self.extract_files(response):
-                self.feed_file_downloader(file, response)
+            urls_small_file_content, urls_large_file_content = self.extract_files(response)
+            urls = urls.union(urls_small_file_content)
 
         if "download_imgs" in self.config and self.config["download_imgs"]:
-            for img_url in self.extract_imgs(response):
-                print("feeding", img_url)
-                self.feed_file_downloader(img_url, response)
+            urls = self.extract_imgs(response).union(urls)
+
+        if len(urls_large_file_content) > 0:
+            size = len(urls_large_file_content)
+            for idx, url in enumerate(urls_large_file_content, 1):
+                print(f"Downloading large file {url} {idx} of {size}")
+                self.store_large_file(url, response.meta["referer"]) 
+                
+                # So that the interval between requests is concise between Scrapy and downloading large files
+                if self.config["antiblock_download_delay"]:
+                    print(f"Waiting {self.config['antiblock_download_delay']}s for the next download...")
+                    time.sleep(self.config["antiblock_download_delay"])
+
+        for url in urls:
+            yield scrapy.Request(
+                url=url, 
+                callback=self.parse,
+                meta={
+                    "referer": response.url,
+                    "config": config
+                },
+                errback=self.errback_httpbin
+            )

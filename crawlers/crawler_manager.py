@@ -16,7 +16,6 @@ from multiprocessing import Process
 import crawling_utils.crawling_utils as crawling_utils
 from crawlers.constants import *
 from crawlers.file_descriptor import FileDescriptor
-from crawlers.file_downloader import FileDownloader
 from crawlers.static_page import StaticPageSpider
 
 # TODO: implement following antiblock options
@@ -29,15 +28,6 @@ from crawlers.static_page import StaticPageSpider
 # antiblock_user_agents_file
 # antiblock_cookies_file
 # antiblock_persist_cookies
-
-
-def file_downloader_process():
-    """Redirects downloader output and starts downloader consumer loop."""
-    crawling_utils.check_file_path("crawlers/log/")
-    sys.stdout = open(f"crawlers/log/file_downloader.out", "w+", buffering=1)
-    sys.stderr = open(f"crawlers/log/file_downloader.err", "w+", buffering=1)
-    FileDownloader.download_consumer()
-
 
 def file_descriptor_process():
     """Redirects descriptor output and starts descriptor consumer loop."""

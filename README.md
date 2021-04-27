@@ -53,5 +53,25 @@ python run.py 0.0.0.0:8000
 ```
 E então use o IP da máquina onde a interface está sendo executada para acessá-la. Por exemplo, se a máquina onde você rodou o comando acima tem endereço de IP _1.2.3.4_, e esse endereço é visível para sua máquina através da rede, você pode acessar _http://1.2.3.4:8000/_.
 
+
+## Execução com Docker (standalone)
+
+Antes de tudo, assegure-se de que o Docker está devidamente instalado no seu computador. Caso precise de instruições de como fazer isso, o seguinte link pode auxiliar nesse processo: https://docs.docker.com/get-docker/
+
+Para instalação do sistema é necessário montar a imagem a partir do Dockerfile, para isso execute o seguinte comando a partir da raiz do repositório:
+```
+sudo docker build -t c01 .
+```
+
+Em seguida, é necessário executar a imagem. Ainda na raiz do respositório execute o comando responsável por isso:
+```
+sudo docker run --mount type=bind,source="$(pwd)/data",target=/data -p 8000:8000 -t c01
+```
+
+O comando acima garante que o container terá acesso ao disco da máquina, e esse aceso foi feito através da ligação da raiz do respositório com a raiz da imagem. Ou seja, ao configurar coletores com o seguinte caminho "/data/nome_coletor", os dados estarão sendo salvos na verdade no seguinte diretório da máquina: "caminho_da_raiz_repositório>/data/nome_coletor". É possível alterar o diretório na máquina hospedeira, para isso, basta alterar o trecho "$(pwd)" do comando para o diretório desejado.
+
+Ao final do processo, basta acessar _http://localhost:8000/_
+
+
 ## Fluxo de interação com a interface
 ![Fluxograma](fluxo_interface_coletor_20200625.png)

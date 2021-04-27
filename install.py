@@ -37,7 +37,7 @@ for folder in os.listdir(f"{src_folder}"):
         print()
 
 print(f"Installing other project dependencies...")
-subprocess.run(["pip", "install", "."])
+subprocess.run(["pip", "install", "-r" "requirements.txt"])
 print()
 
 try:
