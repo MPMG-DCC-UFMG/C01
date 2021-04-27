@@ -569,6 +569,7 @@ function processSettings(data) {
     processInput('input[type=text]', data);
     processInput('input[type=number]', data);
 
+    processInput('input[type=date]', data);
 }
 
 function parseSettings(e) {
