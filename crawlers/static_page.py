@@ -264,6 +264,7 @@ class StaticPageSpider(BaseSpider):
         self.store_html(response)
         
         urls = set()
+        urls_large_file_content = []
         if "explore_links" in config and config["explore_links"]:
             this_url = response.url
             urls = self.extract_links(response)
