@@ -599,8 +599,8 @@ function processSettings(data) {
     processInput('select', data);
     processInput('input[type=text]', data);
     processInput('input[type=number]', data);
-
     processInput('input[type=date]', data);
+    processInput('textarea', data);
 }
 
 function parseSettings(e) {
