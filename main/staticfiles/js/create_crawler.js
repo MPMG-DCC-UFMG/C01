@@ -565,6 +565,10 @@ function processParameterizedURL(data) {
 
 
 function processParsing(data) {
+    // When the configuration is to not save csv, the field checked below is null
+    if (!data["table_attrs"])
+        return;
+
     let parsing_data = JSON.parse(data["table_attrs"]);
 
     let parsing_input, parsing_input_name;
