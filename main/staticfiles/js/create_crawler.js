@@ -506,7 +506,10 @@ function processCheckBoxInput(data) {
         if (checkbox_input_id) {
             checkbox_input_id = checkbox_input_id.replace('id_', '');
             if (checkbox_input_id in data)
-                checkbox_input.prop('checked', data[checkbox_input_id]);
+                // Use the .click() method instead of directly changing the
+                // checked value so that the correct events are triggered
+                if (data[checkbox_input_id] != checkbox_input.prop('checked'))
+                    checkbox_input.click();
         }
     });
 }
@@ -560,6 +563,34 @@ function processParameterizedURL(data) {
     detailBaseUrl();
 }
 
+
+function processParsing(data) {
+    let parsing_data = JSON.parse(data["table_attrs"]);
+
+    let parsing_input, parsing_input_name;
+    $('#parsing-item-block input').each(function () {
+        parsing_input = $(this);
+        parsing_input_name = parsing_input.attr('name');
+        if (parsing_input_name) {
+            if (parsing_input_name in parsing_data) {
+                if(this.type == "checkbox") {
+                    let bool_value = String(parsing_data[parsing_input_name])
+                                        .toLowerCase() == "true";
+
+                    // Use the .click() method instead of directly changing the
+                    // checked value so that the correct events are triggered
+                    if (bool_value != parsing_input.prop('checked'))
+                        parsing_input.click();
+                } else {
+                    parsing_input.val(parsing_data[parsing_input_name]);
+                }
+            }
+        }
+    });
+
+    getExtraParsingConfig();
+}
+
 function processSettings(data) {
     // Converts the settings of the json file into
     // parameters of the creation form
@@ -583,6 +614,7 @@ function parseSettings(e) {
 
         processSettings(data);
         processParameterizedURL(data);
+        processParsing(data);
 
         // checks if the settings are valid
         checkBasicInfo();
