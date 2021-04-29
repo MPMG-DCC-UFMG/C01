@@ -34,8 +34,8 @@ class StaticPageSpider(BaseSpider):
                 callback=self.parse,
                 meta={
                     "referer": "start_requests",
-                    "config": self.config
-            },
+                    "config": self.config,
+                },
                 errback=self.errback_httpbin)
 
     def convert_allow_extesions(self, config):
@@ -264,6 +264,7 @@ class StaticPageSpider(BaseSpider):
         self.store_html(response)
         
         urls = set()
+        urls_large_file_content = []
         if "explore_links" in config and config["explore_links"]:
             this_url = response.url
             urls = self.extract_links(response)
