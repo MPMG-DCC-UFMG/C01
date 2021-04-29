@@ -25,7 +25,7 @@ class ExcelExtractor(BinaryExtractor):
         super().__init__(path)
 
         try:
-            self.sheets = pd.ExcelFile(self.path).sheet_names
+            self.sheets = pd.ExcelFile(self.path, engine='openpyxl').sheet_names
         except:
             raise TypeError('O arquivo não foi reconhecido como Excel.')
 
@@ -40,7 +40,7 @@ class ExcelExtractor(BinaryExtractor):
 
         """
 
-        tables = pd.read_excel(self.path, sheet_name=None)
+        tables = pd.read_excel(self.path, sheet_name=None, engine='openpyxl')
 
         return tables
 
