@@ -4,6 +4,7 @@ from step_crawler import parameter_extractor
 from step_crawler import functions_file
 
 import json
+import os
 import signal
 
 # Enable interrupt signal
@@ -14,6 +15,10 @@ class MainConfig(AppConfig):
     server_running = False
 
     def runOnce(self):
+        # Create json folder if necessary
+        if not os.path.exists('main/staticfiles/json/'):
+            os.makedirs('main/staticfiles/json/')
+
         steps_signature = parameter_extractor.get_module_functions_info(
             functions_file)
         with open('main/staticfiles/json/steps_signature.json', 'w+') as file:

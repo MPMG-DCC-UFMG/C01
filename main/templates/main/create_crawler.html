@@ -20,6 +20,20 @@ New Crawler
             <!-- d-* hiddens the Sidebar in smaller devices. Its itens can be kept on the Navbar 'Menu' -->
             <!-- Bootstrap List Group -->
             <ul class="list-group list-group-mine sticky-top sticky-offset">
+                {% if not form.instance.pk %}
+                <!-- import settings -->
+                <a onClick="showBlock(this.id);" href="#" class="button-block bg-dark list-group-item list-group-item-action"
+                    id="import-settings-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-download fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Importar configuração</span>
+                        </div>
+                    </div>
+                </a>
+                <!-- End of import settings -->
+                {% endif %}
+
                 <!-- Separator with title -->
                 <li
                     class="sidebar list-group-item sidebar-separator-title text-muted d-flex align-items-center menu-collapsed">
@@ -164,6 +178,25 @@ New Crawler
             <div class="row justify-content-center">
                 <div class="col-8">
                     <hr class="mt-0 mb-4">
+                    
+                    <div id="import-settings-item-block" class="block" hidden>
+                        <div class="row" style="padding: 20px;">
+                            <div class="col md-6">
+                                <div id="div_id_import_settings" class="form-group">
+                                    <label for="id_import_settings">Importar arquivo de configuração</label>
+                                    <div class="">
+                                        <input type="file" 
+                                                class="form-control-file"
+                                                accept="application/JSON"
+                                                id="id_import_settings"
+                                                name="import_settings"
+                                                onchange="parseSettings(this)"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <div id="basic-info-item-block" class="block">
                         <div class="row" style="padding:20px;">

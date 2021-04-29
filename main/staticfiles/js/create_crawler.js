@@ -1,17 +1,12 @@
 /* Collapse div */
 
 function mycollapse(target){
-    console.log(target);
     var el = $(target);
-    console.log(el.text());
-    if(el.hasClass("myshow")){
+    
+    if(el.hasClass("myshow"))
         el.removeClass("myshow");
-        console.log("remove myshow");
-    }
-    else{
+    else
         el.addClass("myshow");
-        console.log("add myshow");
-    }
 }
 
 /* End collapse div */
@@ -108,7 +103,7 @@ function checkAntiblock() {
     }
 
     var selected_option = getSelectedOptionValue("id_antiblock_mask_type");
-    console.log("id_antiblock_mask_type", selected_option);
+    // console.log("id_antiblock_mask_type", selected_option);
     if (selected_option == 'ip') {
         valid = (
             valid &&
@@ -228,6 +223,9 @@ function checkTemplatedURL() {
 function checkRelatedFields() {
     var input_name = $(this).attr('name');
 
+    if (input_name == "import_settings")
+        return;
+
     if (input_name.length >= 11 && input_name.substring(0, 10) == "antiblock_") {
         checkAntiblock();
     }
@@ -264,6 +262,7 @@ $(document).ready(function () {
     $('input').on('blur keyup', checkRelatedFields);
     $('#collapse-adv-links').on("click", function () { mycollapse("#adv-links");})
     $('#collapse-adv-download').on("click", function () { mycollapse("#adv-download"); })
+
 });
 
 function showBlock(clicked_id) {
@@ -437,12 +436,12 @@ function detailCrawlerType() {
     for (const i in contents)
         contents[i].hidden = true;
     setHiddenState(crawler_type, false);
-    
+
 
     if(crawler_type == "form_page"){
         interface_root_element = document.getElementById("form_page");
         if(interface_root_element.type != "root" ){
-            
+
             steps_output_element = interface_root_element.children[0].children[1].children[0]
             load_steps(interface_root_element, steps_output_element);
         }
@@ -493,4 +492,146 @@ function getExtraParsingConfig(e) {
   var table_attrs_hidden = document.getElementById("table_attrs_hidden");
   var dict_string = JSON.stringify(dict);
   table_attrs_hidden.value = dict_string;
+}
+
+// Import colector
+
+function processCheckBoxInput(data) {
+    // Converts checkbox entries in the json file to the html form
+
+    let checkbox_input, checkbox_input_id;
+    $('input[type=checkbox]').each(function () {
+        checkbox_input = $(this);
+        checkbox_input_id = checkbox_input.attr('id');
+        if (checkbox_input_id) {
+            checkbox_input_id = checkbox_input_id.replace('id_', '');
+            if (checkbox_input_id in data)
+                // Use the .click() method instead of directly changing the
+                // checked value so that the correct events are triggered
+                if (data[checkbox_input_id] != checkbox_input.prop('checked'))
+                    checkbox_input.click();
+        }
+    });
+}
+
+function processInput(input_selector, data) {
+    let input, input_id;
+    $(input_selector).each(function () {
+        input = $(this);
+        input_id = input.attr('id');
+        if (input_id) {
+            input_id = input_id.replace('id_', '');
+            if (input_id in data)
+                input.val(data[input_id]);
+        }
+    });
+}
+
+function processParameterizedURL(data) {
+    // Loads the parameterized URL data from the configuration
+
+    // Updates the parameterized URL section based on the URL
+    detailBaseUrl();
+
+    let num_params = data["parameter_handlers"].length;
+    let num_validators = data["templated_url_response_handlers"].length;
+
+    // Updates the number of validators in the form
+    $('#templated-url-response').formset('setNumForms', num_validators);
+
+    // Create a new data object to match with the parameterized URL parameter
+    // ids
+    let new_data = {};
+    for (let i = 0; i < num_params; i++) {
+        let param = data["parameter_handlers"][i];
+        for (let key in param) {
+            new_data["templated-url-params-" + i + "-" + key] = param[key];
+        }
+    }
+    for (let i = 0; i < num_validators; i++) {
+        let param = data["templated_url_response_handlers"][i];
+        for (let key in param) {
+            new_data["templated-url-responses-" + i + "-" + key] = param[key];
+        }
+    }
+
+    // Re-run the processing with only the parameterized URL config data
+    processSettings(new_data);
+
+    // Re-updates the parameterized URL section (used to refresh sub-options
+    // based on select values and remove/add the "required" attribute)
+    detailBaseUrl();
+}
+
+
+function processParsing(data) {
+    // When the configuration is to not save csv, the field checked below is null
+    if (!data["table_attrs"])
+        return;
+
+    let parsing_data = JSON.parse(data["table_attrs"]);
+
+    let parsing_input, parsing_input_name;
+    $('#parsing-item-block input').each(function () {
+        parsing_input = $(this);
+        parsing_input_name = parsing_input.attr('name');
+        if (parsing_input_name) {
+            if (parsing_input_name in parsing_data) {
+                if(this.type == "checkbox") {
+                    let bool_value = String(parsing_data[parsing_input_name])
+                                        .toLowerCase() == "true";
+
+                    // Use the .click() method instead of directly changing the
+                    // checked value so that the correct events are triggered
+                    if (bool_value != parsing_input.prop('checked'))
+                        parsing_input.click();
+                } else {
+                    parsing_input.val(parsing_data[parsing_input_name]);
+                }
+            }
+        }
+    });
+
+    getExtraParsingConfig();
+}
+
+function processSettings(data) {
+    // Converts the settings of the json file into
+    // parameters of the creation form
+    processCheckBoxInput(data);
+
+    processInput('select', data);
+    processInput('input[type=text]', data);
+    processInput('input[type=number]', data);
+    processInput('input[type=date]', data);
+    processInput('textarea', data);
+}
+
+function parseSettings(e) {
+    const file = e.files[0];
+
+    const reader = new FileReader();
+    reader.addEventListener('load', (event) => {
+        // configuratiion file parsing
+        const result = event.target.result;
+        const data = JSON.parse(result);
+
+        processSettings(data);
+        processParameterizedURL(data);
+        processParsing(data);
+
+        // checks if the settings are valid
+        checkBasicInfo();
+        checkAntiblock();
+        checkCaptcha();
+        checkCrawlerType();
+        checkTemplatedURL();
+
+        // go to the option that allows the user to change the location
+        // saving downloaded files
+        showBlock('basic-info-item');
+        $('#id_data_path').focus();
+    });
+
+    reader.readAsText(file);
 }
