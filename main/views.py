@@ -3,14 +3,14 @@ from django.utils import timezone
 from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, \
-                        FileResponse, HttpResponseNotFound
+    FileResponse, HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404, redirect
 
 from rest_framework import viewsets
 from rest_framework.decorators import action, api_view
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm,\
-                   ResponseHandlerFormSet, ParameterHandlerFormSet
+    ResponseHandlerFormSet, ParameterHandlerFormSet
 from .models import CrawlRequest, CrawlerInstance
 from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer
 
@@ -213,6 +213,7 @@ def run_crawl(request, crawler_id):
     process_run_crawl(crawler_id)
     return redirect(detail_crawler, id=crawler_id)
 
+
 def tail_log_file(request, instance_id):
     crawler_id = CrawlerInstance.objects.filter(
         instance_id=instance_id
@@ -241,6 +242,7 @@ def tail_log_file(request, instance_id):
 def downloads(request):
     return render(request, "main/downloads.html")
 
+
 def export_config(request, instance_id):
     crawler_id = CrawlerInstance.objects.filter(
         instance_id=instance_id
@@ -260,7 +262,7 @@ def export_config(request, instance_id):
         return HttpResponseNotFound("<h1>Página Não Encontrada</h1>")
     else:
         response['Content-Length'] = os.path.getsize(path)
-        response['Content-Disposition'] = "attachment; filename=%s" %file_name
+        response['Content-Disposition'] = "attachment; filename=%s" % file_name
 
     return response
 
