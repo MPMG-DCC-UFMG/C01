@@ -19,7 +19,7 @@ Crawler "{{ crawler.source_name }}"
                 <li>ID do coletor: <strong>{{ crawler.id }}</strong></li>
                 <li>URL base: <strong>{{ crawler.base_url }}</strong></li>
                 <li>Data de criação: <strong>{{ crawler.creation_date }}</strong></li>
-                <li id="crawler_ status">Status: 
+                <li id="crawler_ status">Status:
                 {% if crawler.running == True %}
                   <span class="badge badge-success">Rodando</span>
                 {% elif crawler.running == False %}
@@ -30,7 +30,7 @@ Crawler "{{ crawler.source_name }}"
             </ul>
         </div>
     </div>
-    
+
     <div class="row" style="display: none">
     <!-- <div class="row"> -->
         <div class="col" id="crawler_id">
@@ -60,18 +60,17 @@ Crawler "{{ crawler.source_name }}"
                         <th scope="col">Iniciado em</th>
                         <th scope="col">Última atualização</th>
                         <th scope="col">Arquivo de configurações</th>
-                        <th scope="col">Arquivo de dados</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for instance in instances %}
-                    <tr>                        
+                    <tr>
                         <td>{{instance.instance_id}}</td>
                         <td>{{instance.creation_date}}</td>
                         <td>{{instance.last_modified}}</td>
-                        <td><button type="button" class="btn btn-primary">Abrir</button></td>
-                        <td><button type="button" class="btn btn-primary">Abrir</button></td>
+                        <td><a class="btn btn-primary" href="{% url 'export_config' instance.instance_id%}">Baixar</a></td>
                     </tr>
+
                     {% endfor %}
                 </tbody>
             </table>
@@ -95,9 +94,9 @@ Crawler "{{ crawler.source_name }}"
             <a id="stopBtn" class="btn btn-danger"
                 href="{% url 'stop_crawl' crawler.id %}">Parar</a>
             {% elif crawler.running == False %}
-            <a id="runBtn" class="btn btn-success" 
+            <a id="runBtn" class="btn btn-success"
                 href="{% url 'run_crawl' crawler.id %}">Começar</a>
-            <a id="stopBtn" class="btn btn-danger disabled" 
+            <a id="stopBtn" class="btn btn-danger disabled"
                 dataref="{% url 'stop_crawl' crawler.id %}">Parar</a>
 
             {% endif %}
@@ -140,7 +139,7 @@ Crawler "{{ crawler.source_name }}"
                     'scrapy.extensions.memusage.MemoryUsage', <br>
                     'scrapy.extensions.logstats.LogStats'] <br>
                 </div>
-            </div>          
+            </div>
             <div class="row"><div class="col"><i id="stdout_tail_update">Última atualização: 07/06/2020 11:09</i></div></div>
         </div>
     </div>
@@ -166,7 +165,7 @@ Crawler "{{ crawler.source_name }}"
                     'scrapy.extensions.logstats.LogStats'] <br>
                 </div>
             </div>
-            <div class="row"><div class="col"><i id="stderr_tail_update">Última atualização: 07/06/2020 11:09</i></div></div> 
+            <div class="row"><div class="col"><i id="stderr_tail_update">Última atualização: 07/06/2020 11:09</i></div></div>
         </div>
     </div>
     {% endif %}
