@@ -148,7 +148,7 @@ class CrawlRequest(TimeStamped):
     download_files_process_value = models.TextField(
         max_length=1000, blank=True, null=True
     )
-
+    download_files_check_large_content = models.BooleanField(default=False, blank=True, null=True)
 
     download_imgs = models.BooleanField(default=False)
 

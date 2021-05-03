@@ -301,7 +301,7 @@ New Crawler
                                             Opções Avançadas
                                         </div>
                                         <div class="mycollapse" id="adv-links">
-                                            <div class="mycollapse-block">
+                                            <div class="mycollapse-block  p-4 pb-0 rounded mt-3">
                                                 {{ form.link_extractor_allow_domains | as_crispy_field }}
                                                 {{ form.link_extractor_tags | as_crispy_field }}
                                                 {{ form.link_extractor_attrs | as_crispy_field }}
@@ -326,7 +326,12 @@ New Crawler
                                             Opções Avançadas
                                         </div>
                                         <div class="mycollapse" id="adv-download">
-                                            <div class="mycollapse-block">
+                                            <div class="mycollapse-block p-4 pb-0 rounded mt-3">
+                                                {{ form.download_files_check_large_content | as_crispy_field}}
+                                                
+                                                <p>Habilite o campo acima somente se você acredita que há arquivos grandes (>1GB) a serem coletados. Esses arquivos exigem tratamento especial para serem
+                                                    identificados e baixados, reduzindo o desempenho. </p>
+
                                                 {{ form.download_files_allow_domains | as_crispy_field }}
                                                 {{ form.download_files_tags | as_crispy_field }}
                                                 {{ form.download_files_attrs | as_crispy_field }}
