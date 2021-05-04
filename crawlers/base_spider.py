@@ -44,15 +44,14 @@ class BaseSpider(scrapy.Spider):
         Spider init operations.
         Create folders to store files and some config and log files.
         """
-        config = json.loads(config)
 
         print("At BaseSpider.init")
         self.stop_flag = False
 
-        self.data_folder = f"{config['data_path']}/data/"
-        self.flag_folder = f"{config['data_path']}/flags/"
+        self.config = json.loads(config)
 
-        self.config = config
+        self.data_folder = f"{self.config['data_path']}/data/"
+        self.flag_folder = f"{self.config['data_path']}/flags/"
 
         folders = [
             f"{self.data_folder}",
