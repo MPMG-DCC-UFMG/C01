@@ -14,7 +14,9 @@ from crawlers.base_spider import BaseSpider
 import crawling_utils
 
 LARGE_CONTENT_LENGTH = 1e9
-HTTP_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
+HTTP_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
+
 
 class StaticPageSpider(BaseSpider):
     name = 'static_page'
@@ -35,7 +37,7 @@ class StaticPageSpider(BaseSpider):
                 callback=self.parse,
                 meta={
                     "referer": "start_requests",
-                },
+            },
                 errback=self.errback_httpbin)
 
     def get_url_info(self, url: str) -> tuple:
@@ -82,7 +84,7 @@ class StaticPageSpider(BaseSpider):
             urls_info = list(self.get_url_info(url) for url in urls_found)
             urls_info_filtered = self.filter_urls_by_content_type(urls_info, {'html'})
             urls_found = set(url for url, _, _, _ in urls_info_filtered)
-        
+
         else:
             urls_found = set(urls_found)
 
@@ -103,14 +105,14 @@ class StaticPageSpider(BaseSpider):
 
         urls_found = set(link.url for link in links_extractor.extract_links(response))
 
-        exclude_html_and_php_regex_pattern = r"(.*\.[a-z]{3,4}$)(.*(?<!\.html)$)(.*(?<!\.php)$)" 
+        exclude_html_and_php_regex_pattern = r"(.*\.[a-z]{3,4}$)(.*(?<!\.html)$)(.*(?<!\.php)$)"
         urls_found = self.filter_urls_by_regex(urls_found, exclude_html_and_php_regex_pattern)
 
         pattern = self.config["download_files_allow_url"]
         if bool(pattern):
             urls_found = self.filter_urls_by_regex(urls_found, pattern)
 
-        urls_info = None 
+        urls_info = None
 
         if self.config["download_files_check_type"]:
             urls_info = list(self.get_url_info(url) for url in urls_found)
@@ -154,7 +156,7 @@ class StaticPageSpider(BaseSpider):
             src.append(img_src)
 
         print(f"+{len(src)}imgs found at page {response.url}")
-        
+
         return set(src)
 
     def parse(self, response):
@@ -173,7 +175,7 @@ class StaticPageSpider(BaseSpider):
             return
 
         self.store_html(response)
-        
+
         urls = set()
         urls_large_file_content = []
         if "explore_links" in self.config and self.config["explore_links"]:
@@ -191,8 +193,8 @@ class StaticPageSpider(BaseSpider):
             size = len(urls_large_file_content)
             for idx, url in enumerate(urls_large_file_content, 1):
                 print(f"Downloading large file {url} {idx} of {size}")
-                self.store_large_file(url, response.meta["referer"]) 
-                
+                self.store_large_file(url, response.meta["referer"])
+
                 # So that the interval between requests is concise between Scrapy and downloading large files
                 if self.config["antiblock_download_delay"]:
                     print(f"Waiting {self.config['antiblock_download_delay']}s for the next download...")
@@ -200,7 +202,7 @@ class StaticPageSpider(BaseSpider):
 
         for url in urls:
             yield scrapy.Request(
-                url=url, 
+                url=url,
                 callback=self.parse,
                 meta={
                     "referer": response.url,
