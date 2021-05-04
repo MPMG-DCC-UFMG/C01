@@ -63,7 +63,8 @@ def get_crawler_base_settings(config):
         "RANDOMIZE_DOWNLOAD_DELAY": True,
         "AUTOTHROTTLE_ENABLED": config[f"{autothrottle}enabled"],
         "AUTOTHROTTLE_START_DELAY": config[f"{autothrottle}start_delay"],
-        "AUTOTHROTTLE_MAX_DELAY": config[f"{autothrottle}max_delay"]
+        "AUTOTHROTTLE_MAX_DELAY": config[f"{autothrottle}max_delay"],
+        "DEPTH_LIMIT": config["link_extractor_max_depth"]
     }
 
     if config.get("dynamic_processing", False):
