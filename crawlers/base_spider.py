@@ -35,9 +35,10 @@ import parsing_html
 
 PUNCTUATIONS = "[{}]".format(string.punctuation)
 
+
 class BaseSpider(scrapy.Spider):
     name = 'base_spider'
-    request_session = requests.sessions.Session() 
+    request_session = requests.sessions.Session()
 
     def __init__(self, config, *a, **kw):
         """
@@ -79,7 +80,7 @@ class BaseSpider(scrapy.Spider):
             normalized_allowed_extensions = config["download_files_allow_extensions"].replace(" ", "")
             normalized_allowed_extensions = normalized_allowed_extensions.lower()
             self.download_allowed_extensions = set(normalized_allowed_extensions.split(","))
-        
+
         else:
             self.download_allowed_extensions = set()
 
@@ -457,7 +458,7 @@ class BaseSpider(scrapy.Spider):
 
     def filetypes_from_mimetype(self, mimetype: str) -> str:
         """Detects the file type using its mimetype"""
-        extensions = mimetypes.guess_all_extensions(mimetype) 
+        extensions = mimetypes.guess_all_extensions(mimetype)
         if len(extensions) > 0:
             return [ext.replace(".", "") for ext in extensions]
         return [""]
@@ -470,14 +471,14 @@ class BaseSpider(scrapy.Spider):
 
         extension = self.filetype_from_filename_on_server(content_disposition)
         if len(extensions) > 0:
-            return [extension] 
+            return [extension]
 
         return self.filetypes_from_mimetype(content_type)
 
     def convert_binary(self, url: str, filetype: str, filename: str):
         if filetype != "pdf":
             return
-        
+
         url_hash = crawling_utils.hash(url.encode())
         source_file = f"{self.data_folder}files/{filename}"
 
@@ -516,18 +517,19 @@ class BaseSpider(scrapy.Spider):
 
     def get_download_filename(self, url: str, extension: str) -> tuple:
         url_hash = crawling_utils.hash(url.encode())
-        file_name = url_hash 
+        file_name = url_hash
         file_name += '.' + extension if extension else ''
 
         return file_name
 
     def store_large_file(self, url: str, referer: str):
         print(f"Saving large file {url}")
-        
+
         # Head type request to obtain the mimetype and/or file name to be downloaded on the server
-        headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
         response = requests.head(url, allow_redirects=True, headers=headers)
-        
+
         content_type = response.headers.get("Content-type", "")
         content_disposition = response.headers.get("Content-Disposition", "")
 
@@ -548,7 +550,7 @@ class BaseSpider(scrapy.Spider):
 
     def store_small_file(self, response):
         print(f"Saving small file {response.url}")
-        
+
         content_type = response.headers.get("Content-Type", b"").decode()
         content_disposition = response.headers.get("Content-Disposition", b"").decode()
 
@@ -582,7 +584,7 @@ class BaseSpider(scrapy.Spider):
             request = failure.request
             self.logger.error('TimeoutError on %s', request.url)
 
-    def feed_file_description(self, destination: str, content: dict):        
+    def feed_file_description(self, destination: str, content: dict):
         FileDescriptor.feed_description(destination, content)
 
     def create_and_feed_file_description(self, url: str, file_name: str, referer: str, extension: str):
@@ -597,14 +599,14 @@ class BaseSpider(scrapy.Spider):
             "referer": referer,
             "type": extension,
         }
-        
+
         extracted_files = self.convert_binary(url, extension, file_name)
         description["extracted_files"] = extracted_files
-        
+
         self.feed_file_description(f"{self.data_folder}files/", description)
-        
+
     def extra_config_parser(self, table_attrs):
-        # get the json from extra_config and 
+        # get the json from extra_config and
         # formats in a python proper standard
         extra_config = json.loads(table_attrs)
         for key in extra_config:
@@ -637,15 +639,15 @@ class BaseSpider(scrapy.Spider):
         # POST requests may access the same URL with different parameters, so
         # we hash the URL with the response body
         return crawling_utils.hash(response.url.encode() + response.body)
-    
+
     def preprocess_listify(self, value, default):
         """Converts a string of ',' separaded values into a list."""
         if value is None or len(value) == 0:
             value = default
-        
+
         elif type(value) == str:
             value = tuple(value.split(","))
-        
+
         return value
 
     def preprocess_download_configs(self):
