@@ -75,8 +75,8 @@ class BaseSpider(scrapy.Spider):
         self.get_format = lambda i: str(i).split("/")[1][:-1].split(";")[0]
 
 
-        if bool(config.get("download_files_allow_extensions")):
-            normalized_allowed_extensions = config["download_files_allow_extensions"].replace(" ", "")
+        if bool(self.config.get("download_files_allow_extensions")):
+            normalized_allowed_extensions = self.config["download_files_allow_extensions"].replace(" ", "")
             normalized_allowed_extensions = normalized_allowed_extensions.lower()
             self.download_allowed_extensions = set(normalized_allowed_extensions.split(","))
 
