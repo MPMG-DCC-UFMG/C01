@@ -321,6 +321,16 @@ function detailWebdriverType() {
     setHiddenState("webdriver_path_div", !getCheckboxState("id_has_webdriver"));
 }
 
+function detailDynamicProcessing() {
+    dynamic_processing_block = document.getElementById("dynamic-processing-item")
+    if(getCheckboxState("id_dynamic_processing")){
+        dynamic_processing_block.classList.remove("disabled")
+    }else{
+        dynamic_processing_block.classList.add("disabled")
+    }
+}
+
+
 function detailCaptcha() {
     var mainSelect = document.getElementById("id_captcha");
     const captcha_type = mainSelect.options[mainSelect.selectedIndex].value;
@@ -428,27 +438,28 @@ function detailAntiblock() {
     checkAntiblock();
 }
 
-function detailCrawlerType() {
-    var mainSelect = document.getElementById("id_crawler_type");
-    const crawler_type = mainSelect.options[mainSelect.selectedIndex].value;
+// function detailCrawlerType() {
+//     var mainSelect = document.getElementById("id_crawler_type");
+//     const crawler_type = mainSelect.options[mainSelect.selectedIndex].value;
 
-    var contents = document.getElementsByClassName("crawler-type-content-div");
-    for (const i in contents)
-        contents[i].hidden = true;
-    setHiddenState(crawler_type, false);
+//     var contents = document.getElementsByClassName("crawler-type-content-div");
+//     for (const i in contents)
+//         contents[i].hidden = true;
+//     setHiddenState(crawler_type, false);
+    
 
+//     if(crawler_type == "form_page"){
+//         interface_root_element = document.getElementById("form_page");
+//         if(interface_root_element.type != "root" ){
+            
+//             steps_output_element = interface_root_element.children[0].children[1].children[0]
+//             load_steps_interface(interface_root_element, steps_output_element);
+//         }
+//     }
 
-    if(crawler_type == "form_page"){
-        interface_root_element = document.getElementById("form_page");
-        if(interface_root_element.type != "root" ){
+//     checkCrawlerType();
+// }
 
-            steps_output_element = interface_root_element.children[0].children[1].children[0]
-            load_steps(interface_root_element, steps_output_element);
-        }
-    }
-
-    checkCrawlerType();
-}
 
 function autothrottleEnabled() {
     setHiddenState("autothrottle-options-div", !getCheckboxState("id_antiblock_autothrottle_enabled"));
