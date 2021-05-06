@@ -19,7 +19,13 @@ LARGE_CONTENT_LENGTH = 1e9
 HTTP_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
 
 class StaticPageSpider(BaseSpider):
-    name = 'static_page'
+    # nome temporário, que será alterado no __init__
+    name = 'temp_name'
+
+    def __init__(self, name: str, *args, **kwargs):
+        # nome único do spider, para que não haja conflitos entre coletores
+        self.name = name
+        super(StaticPageSpider, self).__init__(*args, **kwargs)
 
     def get_url_info(self, url: str) -> tuple:
         """Retrieves the type of URL content and its size"""
@@ -75,6 +81,7 @@ class StaticPageSpider(BaseSpider):
 
     def extract_files(self, response):
         """Filter and return a set with links found in this response."""
+        self._logger.info(f"Trying to extract urls files in \"{response.url}\"...")
 
         links_extractor = LinkExtractor(
             allow_domains=self.config["download_files_allow_domains"],

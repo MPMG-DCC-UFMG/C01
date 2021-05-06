@@ -39,7 +39,7 @@ class Executor:
         base_settings = self.__get_spider_base_settings(config)
         process = CrawlerProcess(settings=base_settings)
 
-        process.crawl(StaticPageSpider, config=ujson.dumps(config))
+        process.crawl(StaticPageSpider, name=config['instance_id'], config=ujson.dumps(config))
 
         # process.crawlers é um set() com um único spider. Como não há como recuperar o spider
         # sem removê-lo do set() diretamente, é realizado o esquema abaixo para isso. Assim, é

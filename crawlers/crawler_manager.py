@@ -33,7 +33,7 @@ def generate_initial_requests(config: dict):
         "url": config['base_url'],
         "appid": config['instance_id'],
         "crawlid": str(config['crawler_id']),
-        "spiderid": 'static_page',
+        "spiderid": config['instance_id'],
         "attrs": {
             "referer": "start_requests"
         }
