@@ -65,8 +65,8 @@ class Executor:
 
     def create_spider(self, config: dict) -> None:
         print(f'Criando novo spider #{config["instance_id"]}...')
-        instance_id = config['instance_id']
 
+        instance_id = config['instance_id']
         self.__processes[instance_id] = Process(target=self.__new_spider, args=(config, ))  
         self.__processes[instance_id].start()
 

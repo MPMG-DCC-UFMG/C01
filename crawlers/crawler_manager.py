@@ -28,6 +28,25 @@ def gen_key():
     """Generates a unique key based on time and a random seed."""
     return str(int(time.time() * 100)) + str((int(random.random() * 1000)))
 
+def generate_initial_requests(config: dict):
+    data = {
+        "url": config['base_url'],
+        "appid": config['instance_id'],
+        "crawlid": str(config['crawler_id']),
+        "spiderid": 'static_page',
+        "attrs": {
+            "referer": "start_requests"
+        }
+    }
+
+
+    url = 'http://0.0.0.0:5343/feed'
+    headers = {'content-type': 'application/json'}
+
+    print('\nFeeding API\n')
+    req = requests.post(url, data=json.dumps(data), headers=headers)
+    print(req.json())
+
 def start_crawler(config):
     """Create and starts a crawler as a new process."""
     config["crawler_id"] = config["id"]
@@ -35,6 +54,8 @@ def start_crawler(config):
     config["instance_id"] = gen_key()
     
     command_sender.send_create_spider(config)
+    generate_initial_requests(config)
+
     return config["instance_id"]
 
 def stop_crawler(instance_id, config):
