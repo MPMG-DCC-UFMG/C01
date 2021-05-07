@@ -4,7 +4,6 @@
 
 Para executar:
 
-- Crie um ambiente virtual com `Python3.6`: `python3.6 -m venv venv`
-- Instale as dependências: `pip install -r requirements.txt`
+- Criar a imagem: `sudo docker image build . -t spider_manager`
 - Certifique-se que o `Zookeeper`, `Kafka`, `Redis`, `Kafka-Monitor (Scrapy-Cluster)` e `Rest (Scrapy-Cluster)`.
-- Execute o command listener: `(venv) python command_listener.py`
+- Rodar o container: `sudo docker container run -i --network="host" spider_manager`

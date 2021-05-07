@@ -30,7 +30,7 @@ class BaseSpider(RedisSpider):
     name = 'base_spider'
     request_session = requests.sessions.Session() 
 
-    def __init__(self, config, *args, **kwargs):
+    def __init__(self, config: dict, *args, **kwargs):
         """
         Spider init operations.
         Create folders to store files and some config and log files.

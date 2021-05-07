@@ -12,14 +12,21 @@ class CommandListener:
                                         value_deserializer=lambda m: ujson.loads(m.decode('utf-8')))
 
         self.__executor = Executor()
+        self.__stop = False
 
     def __process_commands(self, commands: dict):
         for command, data in commands.items():
+            # criar um spider
             if command == 'create':
                 self.__executor.create_spider(data)
 
+            # parar a execução de um spider
             elif command == 'stop':
                 self.__executor.stop_spider(data) 
+
+            elif command == 'finish':
+                self.__executor.stop_all_spider()
+                raise Exception('Finalizar coleta')
 
             else:
                 print(f'"{command}" não é um comando válido!')
@@ -28,6 +35,8 @@ class CommandListener:
         for message in self.__consumer:
             commands = message.value
             self.__process_commands(commands)
+            if self.__stop:
+                break
 
 if __name__ == '__main__':
     cl = CommandListener(KAFKA_HOSTS, COMMANDS_TOPIC)

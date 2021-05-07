@@ -24,8 +24,8 @@ class StaticPageSpider(BaseSpider):
 
     def __init__(self, name: str, *args, **kwargs):
         # nome único do spider, para que não haja conflitos entre coletores
-        self.name = name
         super(StaticPageSpider, self).__init__(*args, **kwargs)
+        self.name = name
 
     def get_url_info(self, url: str) -> tuple:
         """Retrieves the type of URL content and its size"""
@@ -75,13 +75,13 @@ class StaticPageSpider(BaseSpider):
         else:
             urls_found = set(urls_found)
 
-        self._logger.info(f"+{len(urls_found)} urls found in \"{response.url}\"...")
+        self._logger.info(f"[Spider:  {self.config['source_name']}] +{len(urls_found)} urls found in \"{response.url}\"...")
 
         return urls_found
 
     def extract_files(self, response):
         """Filter and return a set with links found in this response."""
-        self._logger.info(f"Trying to extract urls files in \"{response.url}\"...")
+        self._logger.info(f"[Spider:  {self.config['source_name']}] Trying to extract urls files in \"{response.url}\"...")
 
         links_extractor = LinkExtractor(
             allow_domains=self.config["download_files_allow_domains"],
@@ -108,7 +108,7 @@ class StaticPageSpider(BaseSpider):
         else:
             urls_found = set(urls_found)
 
-        self._logger.info(f"+{len(urls_found)} files found in \"{response.url}\"...")
+        self._logger.info(f"[Spider:  {self.config['source_name']}] +{len(urls_found)} files found in \"{response.url}\"...")
 
         return urls_found
 
@@ -122,7 +122,7 @@ class StaticPageSpider(BaseSpider):
                 img_src = url_domain + img_src[1:]
             src.append(img_src)
 
-        self._logger.debug(f"\t+{len(src)} imgs found at page {response.url}")
+        self._logger.info(f"[Spider:  {self.config['source_name']}] +{len(src)} imgs found at page {response.url}")
         
         return set(src)
 
@@ -156,7 +156,7 @@ class StaticPageSpider(BaseSpider):
         Will try to follow links if config["explore_links"] is set.
         """
         referer = response.meta["attrs"]["referer"]
-        self._logger.info(f"Parsing \"{response.url}\" originated from \"{referer}\"")
+        self._logger.info(f"[Spider:  {self.config['source_name']}] Parsing \"{response.url}\" originated from \"{referer}\"")
 
 
         if self.config.get("explore_links", False):

@@ -20,7 +20,7 @@ class Executor:
         #                                 value_serializer=lambda m: ujson.dumps(m).encode('utf-8'))
 
     def __get_spider_base_settings(self, config: dict) -> dict:
-        with open('base_config.json') as f:
+        with open('sc_base_config.json') as f:
             base_config = ujson.loads(f.read())
             # autothrottle = "antiblock_autothrottle_"
 
@@ -73,3 +73,7 @@ class Executor:
     def stop_spider(self, instance_id: str) -> None:
         print(f'Parando spider #{instance_id}...')
         self.__processes[instance_id].terminate()
+
+    def stop_all_spider(self):
+        for instance_id in self.__processes:
+            self.stop_spider(instance_id)
