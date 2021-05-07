@@ -1,3 +1,5 @@
+import os
+
 import ujson
 from kafka import KafkaConsumer
 
@@ -39,5 +41,8 @@ class CommandListener:
                 break
 
 if __name__ == '__main__':
-    cl = CommandListener(KAFKA_HOSTS, COMMANDS_TOPIC)
+    kafka_hosts = [os.environ['KAFKA_HOSTS']]
+    commands_topic = os.environ['COMMANDS_TOPIC']
+
+    cl = CommandListener(kafka_hosts, commands_topic)
     cl.run()
