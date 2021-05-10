@@ -1,4 +1,7 @@
 import time
+import sys
+import os
+import datetime
 from multiprocessing import Process
 
 import ujson
@@ -10,8 +13,10 @@ from kafka import KafkaProducer
 from crawling.spiders.base_spider import BaseSpider
 from crawling.spiders.static_page import StaticPageSpider
 
-# KAFKA_HOSTS = ['localhost:9092']
-# STOP_NOTIFICATION_TOPIC = 'spider_manager-notifications-spider_stopped'
+from kafka_logger import KafkaLogger
+
+LOGGING_OUT_PREFIX = os.getenv('SPIDER_LOGGING_OUT_PREFIX', 'spider_logging_out')
+LOGGING_ERR_PREFIX = os.getenv('SPIDER_LOGGING_ERR_PREFIX', 'spider_logging_err')
 
 class Executor:
     def __init__(self):
@@ -19,9 +24,17 @@ class Executor:
         # self.__notifier = KafkaProducer(bootstrap_servers=KAFKA_HOSTS,
         #                                 value_serializer=lambda m: ujson.dumps(m).encode('utf-8'))
 
+    def __get_random_logging_name(self) -> str:
+        first_name = os.getpid()
+        last_name = int(datetime.datetime.now().timestamp())
+
+        return f'{first_name}-{last_name}'
+
     def __get_spider_base_settings(self, config: dict) -> dict:
         with open('sc_base_config.json') as f:
             base_config = ujson.loads(f.read())
+            base_config['SC_LOGGER_NAME'] = self.__get_random_logging_name()
+
             # autothrottle = "antiblock_autothrottle_"
 
             # base_config["ROBOTSTXT_OBEY"] = config['obey_robots']
@@ -37,9 +50,14 @@ class Executor:
 
     def __new_spider(self, config: dict) -> None:
         base_settings = self.__get_spider_base_settings(config)
+        instance_id = config['instance_id']
+    
         process = CrawlerProcess(settings=base_settings)
 
-        process.crawl(StaticPageSpider, name=config['instance_id'], config=ujson.dumps(config))
+        sys.stdout = KafkaLogger(topic=f'{LOGGING_OUT_PREFIX}-{instance_id}')
+        sys.stderr = KafkaLogger(topic=f'{LOGGING_ERR_PREFIX}-{instance_id}')
+
+        process.crawl(StaticPageSpider, name=instance_id, config=ujson.dumps(config))
 
         # process.crawlers é um set() com um único spider. Como não há como recuperar o spider
         # sem removê-lo do set() diretamente, é realizado o esquema abaixo para isso. Assim, é

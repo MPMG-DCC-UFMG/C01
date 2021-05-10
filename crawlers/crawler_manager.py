@@ -19,8 +19,8 @@ from crawlers.file_descriptor import FileDescriptor
 
 from crawlers.command_sender import CommandSender
 
-KAFKA_HOSTS = ['localhost:9092']
-COMMANDS_TOPIC = 'spider_manager-commands'
+KAFKA_HOSTS = os.getenv('KAFKA_HOSTS', 'localhost:9092')
+COMMANDS_TOPIC = os.getenv('SM_COMMAND_TOPIC', 'sm-commands')
 
 command_sender = CommandSender(KAFKA_HOSTS, COMMANDS_TOPIC)
 
@@ -38,7 +38,6 @@ def generate_initial_requests(config: dict):
             "referer": "start_requests"
         }
     }
-
 
     url = 'http://0.0.0.0:5343/feed'
     headers = {'content-type': 'application/json'}

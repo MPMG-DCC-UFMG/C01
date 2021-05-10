@@ -1,12 +1,9 @@
-import os
+import os 
 
 import ujson
 from kafka import KafkaConsumer
 
 from executor import Executor
-
-KAFKA_HOSTS = ['localhost:9092']
-COMMANDS_TOPIC = 'spider_manager-commands'
 
 class CommandListener:
     def __init__(self, kafka_hosts: list, commands_topic: str):
@@ -41,8 +38,8 @@ class CommandListener:
                 break
 
 if __name__ == '__main__':
-    kafka_hosts = [os.environ['KAFKA_HOSTS']]
-    commands_topic = os.environ['COMMANDS_TOPIC']
-
-    cl = CommandListener(kafka_hosts, commands_topic)
+    kafka_hosts = os.getenv('KAFKA_HOSTS', 'localhost:9092')
+    kafka_topic = os.getenv('SM_COMMAND_TOPIC', 'sm-commands')
+    
+    cl = CommandListener(kafka_hosts, kafka_topic)
     cl.run()
