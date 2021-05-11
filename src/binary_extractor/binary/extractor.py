@@ -11,6 +11,7 @@ from .excel_extractor import ExcelExtractor
 from .texts_extractor import TextsExtractor
 from .tabula_extractor import TabulaExtractor
 
+
 class Extractor():
     """
     This class chooses the right binary extractor for the file.
