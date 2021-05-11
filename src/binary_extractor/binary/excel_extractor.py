@@ -7,6 +7,7 @@ import pandas as pd
 
 from .binary_extractor import BinaryExtractor
 
+
 class ExcelExtractor(BinaryExtractor):
     """
     Child Class: This class extracts tabular contents from an Excel file.
