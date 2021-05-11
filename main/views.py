@@ -7,7 +7,7 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, \
 from django.shortcuts import render, get_object_or_404, redirect
 
 from rest_framework import viewsets
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm,\
     ResponseHandlerFormSet, ParameterHandlerFormSet
@@ -244,16 +244,11 @@ def downloads(request):
 
 
 def export_config(request, instance_id):
-    crawler_id = CrawlerInstance.objects.filter(
-        instance_id=instance_id
-    ).values()[0]["crawler_id_id"]
+    instance = get_object_or_404(CrawlerInstance, pk=instance_id)
+    data_path = instance.crawler_id.data_path
 
-    config = CrawlRequest.objects.filter(
-        id=int(crawler_id)).values()[0]
-
-    data_path = config["data_path"]
     file_name = f"{instance_id}.json"
-    path = os.path.join(data_path, f"config/{file_name}")
+    path = os.path.join(data_path, "config", file_name)
 
     try:
         response = FileResponse(open(path, 'rb'), content_type='application/json')
