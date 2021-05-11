@@ -8,13 +8,16 @@ from unittest import mock
 
 import scrapy_puppeteer
 
+
 class BrowserMock(pyppeteer.browser.Browser):
     """
     Pyppeteer browser mock to avoid passing in the required constructor
     parameters
     """
+
     def __init__(self):
         pass
+
 
 def gen_async(result: Any):
     """
@@ -29,6 +32,7 @@ def gen_async(result: Any):
     async def fn(*_, **__):
         return result
     return fn
+
 
 class ScrapyPuppeteerTestCase(unittest.TestCase):
     """Test case for the ``scrapy-puppeteer`` package"""
@@ -118,7 +122,7 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
         """
 
         with mock.patch('scrapy_puppeteer.middlewares.launch',
-            side_effect=gen_async(self.mockBrowser)) as mockLaunch:
+                side_effect=gen_async(self.mockBrowser)) as mockLaunch:
 
             middleware = scrapy_puppeteer.PuppeteerMiddleware()
             f = middleware._process_request(self.mockRequest, self.mockSpider)
@@ -139,7 +143,7 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
         """
 
         with mock.patch('scrapy_puppeteer.middlewares.launch',
-            side_effect=gen_async(self.mockBrowser)) as mockLaunch:
+                side_effect=gen_async(self.mockBrowser)) as mockLaunch:
 
             # Enable the screenshot feature
             self.mockRequest.screenshot = True
@@ -163,7 +167,7 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
         """
 
         with mock.patch('scrapy_puppeteer.middlewares.launch',
-            side_effect=gen_async(self.mockBrowser)) as mockLaunch:
+                side_effect=gen_async(self.mockBrowser)) as mockLaunch:
 
             # Enable the wait_for feature
             self.mockRequest.wait_for = True
@@ -197,11 +201,11 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
         mockCode_g.generate_code = mock.MagicMock(return_value=mockSteps)
 
         with mock.patch('scrapy_puppeteer.middlewares.launch',
-            side_effect=gen_async(self.mockBrowser)) as mockLaunch:
+                side_effect=gen_async(self.mockBrowser)) as mockLaunch:
 
             # Enable the steps feature (dummy entry just to check function
             # calls)
-            self.mockRequest.steps = { "test": True }
+            self.mockRequest.steps = {"test": True}
 
             middleware = scrapy_puppeteer.PuppeteerMiddleware()
             f = middleware._process_request(self.mockRequest, self.mockSpider)
@@ -238,7 +242,7 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
         """
 
         with mock.patch('scrapy_puppeteer.middlewares.launch',
-            side_effect=gen_async(self.mockBrowser)) as mockLaunch:
+                side_effect=gen_async(self.mockBrowser)) as mockLaunch:
 
             self.mockSpider.settings = {}
             self.mockSpider.signals = mock.MagicMock()
