@@ -1,17 +1,17 @@
-import os
 import datetime
+import os
+import sys
 from multiprocessing import Process
 
-import ujson
 import scrapy
+import ujson
+from kafka import KafkaProducer
 from scrapy.crawler import CrawlerProcess
 from scrapy.spiders import Spider
-from kafka import KafkaProducer
-
-from crawling.spiders.base_spider import BaseSpider
-from crawling.spiders.static_page import StaticPageSpider
 
 import settings
+from crawling.spiders.static_page import StaticPageSpider
+from kafka_logger import KafkaLogger
 
 class Executor:
     def __init__(self):
@@ -41,13 +41,14 @@ class Executor:
             return base_config
 
     def __new_spider(self, config: dict) -> None:
-        base_settings = self.__get_spider_base_settings(config)
         instance_id = config['instance_id']
-    
+        logger_name = self.__get_random_logging_name()
+
+        base_settings = self.__get_spider_base_settings(config)
         process = CrawlerProcess(settings=base_settings)
 
-        # sys.stdout = KafkaLogger(instance_id, logger_name, 'out')
-        # sys.stderr = KafkaLogger(instance_id, logger_name, 'err')
+        sys.stdout = KafkaLogger(instance_id, logger_name, 'out')
+        sys.stderr = KafkaLogger(instance_id, logger_name, 'err')
 
         process.crawl(StaticPageSpider, name=instance_id, container_id=self.__container_id, config=ujson.dumps(config))
 
