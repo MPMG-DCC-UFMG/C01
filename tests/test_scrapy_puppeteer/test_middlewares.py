@@ -55,9 +55,6 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
         mockPage = mock.create_autospec(pyppeteer.page.Page)
         mockPage.goto = mock.MagicMock(side_effect=gen_async(mockResponse))
         mockPage.setCookie = mock.MagicMock(side_effect=gen_async(None))
-        mockPage.setRequestInterception = mock.MagicMock(
-            side_effect=gen_async(None)
-        )
         mockPage.content = mock.MagicMock(side_effect=gen_async(""))
         mockPage.close = mock.MagicMock(side_effect=gen_async(None))
         mockPage.screenshot = mock.MagicMock(side_effect=gen_async(None))
@@ -106,9 +103,6 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
         self.mockBrowser.newPage.assert_called()
         # page.setCookie should be called once
         self.mockPage.setCookie.assert_called_once()
-        # page.setRequestInterception should be called once with a True
-        # argument
-        self.mockPage.setRequestInterception.assert_called_once_with(True)
         # Page content should be loaded
         self.mockPage.content.assert_called_once()
         # Page should be closed once
