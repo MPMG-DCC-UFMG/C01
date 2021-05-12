@@ -4,6 +4,7 @@ from scrapy.crawler import CrawlerProcess
 
 # Other external libs
 import json
+import logging
 import os
 import random
 import requests
@@ -16,13 +17,22 @@ from multiprocessing import Process
 import crawling_utils.crawling_utils as crawling_utils
 from crawlers.constants import *
 from crawlers.file_descriptor import FileDescriptor
-
+from crawlers.log_writer import LogWriter
 from crawlers.command_sender import CommandSender
 
 KAFKA_HOSTS = os.getenv('KAFKA_HOSTS', 'localhost:9092')
 COMMANDS_TOPIC = os.getenv('SM_COMMAND_TOPIC', 'sm-commands')
 
 command_sender = CommandSender(KAFKA_HOSTS, COMMANDS_TOPIC)
+
+def log_writer_process():
+    """Redirects log_writer output and starts descriptor consumer loop."""
+
+    # crawling_utils.check_file_path("crawlers/log/")
+    # sys.stdout = open(f"crawlers/log/log_writer.out", "a", buffering=1)
+    # sys.stderr = open(f"crawlers/log/log_writer.err", "a", buffering=1)
+
+    LogWriter.log_consumer()
 
 def gen_key():
     """Generates a unique key based on time and a random seed."""
@@ -50,12 +60,9 @@ def start_crawler(config):
     """Create and starts a crawler as a new process."""
     config["crawler_id"] = config["id"]
     del config["id"]
-    config["instance_id"] = gen_key()
-    
+
     command_sender.send_create_spider(config)
     generate_initial_requests(config)
-
-    return config["instance_id"]
 
 def stop_crawler(instance_id, config):
     """Sets the flags of a crawler to stop."""

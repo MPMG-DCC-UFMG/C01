@@ -19,7 +19,7 @@ Crawler "{{ crawler.source_name }}"
                 <li>ID do coletor: <strong>{{ crawler.id }}</strong></li>
                 <li>URL base: <strong>{{ crawler.base_url }}</strong></li>
                 <li>Data de criação: <strong>{{ crawler.creation_date }}</strong></li>
-                <li id="crawler_ status">Status: 
+                <li id="crawler_ status">Status:
                 {% if crawler.running == True %}
                   <span class="badge badge-success">Rodando</span>
                 {% elif crawler.running == False %}
@@ -30,7 +30,7 @@ Crawler "{{ crawler.source_name }}"
             </ul>
         </div>
     </div>
-    
+
     <div class="row" style="display: none">
     <!-- <div class="row"> -->
         <div class="col" id="crawler_id">
@@ -65,7 +65,7 @@ Crawler "{{ crawler.source_name }}"
                 </thead>
                 <tbody>
                     {% for instance in instances %}
-                    <tr>                        
+                    <tr>
                         <td>{{instance.instance_id}}</td>
                         <td>{{instance.creation_date}}</td>
                         <td>{{instance.last_modified}}</td>
@@ -95,9 +95,9 @@ Crawler "{{ crawler.source_name }}"
             <a id="stopBtn" class="btn btn-danger"
                 href="{% url 'stop_crawl' crawler.id %}">Parar</a>
             {% elif crawler.running == False %}
-            <a id="runBtn" class="btn btn-success" 
+            <a id="runBtn" class="btn btn-success"
                 href="{% url 'run_crawl' crawler.id %}">Começar</a>
-            <a id="stopBtn" class="btn btn-danger disabled" 
+            <a id="stopBtn" class="btn btn-danger disabled"
                 dataref="{% url 'stop_crawl' crawler.id %}">Parar</a>
 
             {% endif %}
@@ -118,6 +118,7 @@ Crawler "{{ crawler.source_name }}"
         <div class="col">
             <h4>Logs da última instância</h4>
         </div>
+        <td><a class="btn btn-primary" href="{% url 'raw_log' last_instance.instance_id %}">Abrir Log Bruto</a></td>
     </div>
 
     <!-- Tail stdout -->
@@ -125,50 +126,25 @@ Crawler "{{ crawler.source_name }}"
         <div class="col">
             <div class="row"><div class="col"><h5>Últimas linhas do stdout</h5></div></div>
             <div class="row">
-                <div class="col" style="border: 1px solid gray" id="stdout_tail">
-                    2020-06-19 14:24:24 [scrapy.utils.log] INFO: Scrapy 2.1.0 started (bot: crawlers) <br>
-                    2020-06-19 14:24:24 [scrapy.utils.log] INFO: Versions: lxml 4.5.1.0, libxml2 2.9.10, cssselect 1.1.0, parsel 1.6.0,
-                    w3lib 1.22.0, Twisted 20.3.0, Python 3.6.9 (default, Apr 18 2020, 01:56:04) - [GCC 8.4.0], pyOpenSSL 19.1.0 (OpenSSL
-                    1.1.1g 21 Apr 2020), cryptography 2.9.2, Platform Linux-5.3.0-59-generic-x86_64-with-Ubuntu-18.04-bionic <br>
-                    2020-06-19 14:24:24 [scrapy.utils.log] DEBUG: Using reactor: twisted.internet.epollreactor.EPollReactor <br>
-                    2020-06-19 14:24:24 [scrapy.crawler] INFO: Overridden settings: <br>
-                    {'BOT_NAME': 'crawlers', 'DOWNLOAD_DELAY': 1, 'ROBOTSTXT_OBEY': True} <br>
-                    2020-06-19 14:24:24 [scrapy.extensions.telnet] INFO: Telnet Password: 12e8d0344a5231aa <br>
-                    2020-06-19 14:24:24 [scrapy.middleware] INFO: Enabled extensions: <br>
-                    ['scrapy.extensions.corestats.CoreStats', <br>
-                    'scrapy.extensions.telnet.TelnetConsole', <br>
-                    'scrapy.extensions.memusage.MemoryUsage', <br>
-                    'scrapy.extensions.logstats.LogStats'] <br>
-                </div>
-            </div>          
+                <pre class="col" style="border: 1px solid gray" id="stdout_tail">
+                    Arquivo em branco.
+                </pre>
+            </div>
             <div class="row"><div class="col"><i id="stdout_tail_update">Última atualização: 07/06/2020 11:09</i></div></div>
         </div>
     </div>
-
+    <br>
     <!-- Tail stderr -->
     <div class="row">
         <div class="col">
             <div class="row"><div class="col"><h5>Últimas linhas do stderr</h5></div></div>
             <div class="row">
-                <div class="col" style="border: 1px solid gray" id="stderr_tail">
-                    2020-06-19 14:24:24 [scrapy.utils.log] INFO: Scrapy 2.1.0 started (bot: crawlers) <br>
-                    2020-06-19 14:24:24 [scrapy.utils.log] INFO: Versions: lxml 4.5.1.0, libxml2 2.9.10, cssselect 1.1.0, parsel 1.6.0,
-                    w3lib 1.22.0, Twisted 20.3.0, Python 3.6.9 (default, Apr 18 2020, 01:56:04) - [GCC 8.4.0], pyOpenSSL 19.1.0 (OpenSSL
-                    1.1.1g 21 Apr 2020), cryptography 2.9.2, Platform Linux-5.3.0-59-generic-x86_64-with-Ubuntu-18.04-bionic <br>
-                    2020-06-19 14:24:24 [scrapy.utils.log] DEBUG: Using reactor: twisted.internet.epollreactor.EPollReactor <br>
-                    2020-06-19 14:24:24 [scrapy.crawler] INFO: Overridden settings: <br>
-                    {'BOT_NAME': 'crawlers', 'DOWNLOAD_DELAY': 1, 'ROBOTSTXT_OBEY': True} <br>
-                    2020-06-19 14:24:24 [scrapy.extensions.telnet] INFO: Telnet Password: 12e8d0344a5231aa <br>
-                    2020-06-19 14:24:24 [scrapy.middleware] INFO: Enabled extensions: <br>
-                    ['scrapy.extensions.corestats.CoreStats', <br>
-                    'scrapy.extensions.telnet.TelnetConsole', <br>
-                    'scrapy.extensions.memusage.MemoryUsage', <br>
-                    'scrapy.extensions.logstats.LogStats'] <br>
-                </div>
+                <pre class="col" style="border: 1px solid gray" id="stderr_tail">
+                    Arquivo em branco.
+                </pre>
             </div>
-            <div class="row"><div class="col"><i id="stderr_tail_update">Última atualização: 07/06/2020 11:09</i></div></div> 
+            <div class="row"><div class="col"><i id="stderr_tail_update">Última atualização: 07/06/2020 11:09</i></div></div>
         </div>
-    </div>
     {% endif %}
 </div>
 {% endblock %}

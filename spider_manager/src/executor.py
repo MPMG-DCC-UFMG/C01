@@ -15,9 +15,6 @@ from crawling.spiders.static_page import StaticPageSpider
 
 from kafka_logger import KafkaLogger
 
-LOGGING_OUT_PREFIX = os.getenv('SPIDER_LOGGING_OUT_PREFIX', 'spider_logging_out')
-LOGGING_ERR_PREFIX = os.getenv('SPIDER_LOGGING_ERR_PREFIX', 'spider_logging_err')
-
 class Executor:
     def __init__(self):
         self.__processes = dict()
@@ -33,7 +30,7 @@ class Executor:
     def __get_spider_base_settings(self, config: dict) -> dict:
         with open('sc_base_config.json') as f:
             base_config = ujson.loads(f.read())
-            base_config['SC_LOGGER_NAME'] = self.__get_random_logging_name()
+            # base_config['SC_LOGGER_NAME'] = self.__get_random_logging_name()
 
             # autothrottle = "antiblock_autothrottle_"
 
@@ -50,12 +47,14 @@ class Executor:
 
     def __new_spider(self, config: dict) -> None:
         base_settings = self.__get_spider_base_settings(config)
+        
+        logger_name = self.__get_random_logging_name()
         instance_id = config['instance_id']
     
         process = CrawlerProcess(settings=base_settings)
 
-        sys.stdout = KafkaLogger(topic=f'{LOGGING_OUT_PREFIX}-{instance_id}')
-        sys.stderr = KafkaLogger(topic=f'{LOGGING_ERR_PREFIX}-{instance_id}')
+        sys.stdout = KafkaLogger(instance_id, logger_name, 'out')
+        sys.stderr = KafkaLogger(instance_id, logger_name, 'err')
 
         process.crawl(StaticPageSpider, name=instance_id, config=ujson.dumps(config))
 

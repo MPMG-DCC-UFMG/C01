@@ -21,7 +21,7 @@ urlpatterns = [
     path("detail/run_crawl/<int:crawler_id>", views.run_crawl, name="run_crawl"),
     path("detail/stop_crawl/<int:crawler_id>", views.stop_crawl, name="stop_crawl"),
     path("tail_log_file/<str:instance_id>", views.tail_log_file, name="tail_log_file"),
-
+    path("raw_log/<str:instance_id>", views.raw_log, name="raw_log"),
     # Includes the API endpoints in the URLs
     url(r'^api/', include(api_router.urls)),
 ]

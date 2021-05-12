@@ -1,3 +1,4 @@
+from twisted.internet import asyncioreactor
 import os
 import subprocess
 import asyncio
@@ -7,7 +8,6 @@ subprocess.run(["pip", "install", "-U", "pip"])
 subprocess.run(["pip", "install", "twisted"])
 
 from twisted.internet import asyncioreactor
-
 
 # Install Redis
 if not os.path.isdir("redis-5.0.10"):
@@ -45,12 +45,10 @@ try:
 except RuntimeError:
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-
 try:
     asyncioreactor.install(loop)
 except Exception:
     pass
-
 print(f"Creating database...")
 subprocess.run(["python", "manage.py", "makemigrations"])
 subprocess.run(["python", "manage.py", "migrate"])
