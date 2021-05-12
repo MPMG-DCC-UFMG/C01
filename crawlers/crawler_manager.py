@@ -14,16 +14,11 @@ import time
 from multiprocessing import Process
 
 # Project libs
-import crawling_utils.crawling_utils as crawling_utils
 from crawlers.constants import *
-from crawlers.file_descriptor import FileDescriptor
 from crawlers.log_writer import LogWriter
 from crawlers.command_sender import CommandSender
 
-KAFKA_HOSTS = os.getenv('KAFKA_HOSTS', 'localhost:9092')
-COMMANDS_TOPIC = os.getenv('SM_COMMAND_TOPIC', 'sm-commands')
-
-command_sender = CommandSender(KAFKA_HOSTS, COMMANDS_TOPIC)
+command_sender = CommandSender()
 
 def log_writer_process():
     """Redirects log_writer output and starts descriptor consumer loop."""

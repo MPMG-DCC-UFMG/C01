@@ -1,4 +1,3 @@
-from twisted.internet import asyncioreactor
 import os
 import subprocess
 import asyncio

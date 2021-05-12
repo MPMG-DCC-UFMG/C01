@@ -1,5 +1,3 @@
-import time
-import sys
 import os
 import datetime
 from multiprocessing import Process
@@ -13,19 +11,16 @@ from kafka import KafkaProducer
 from crawling.spiders.base_spider import BaseSpider
 from crawling.spiders.static_page import StaticPageSpider
 
-from kafka_logger import KafkaLogger
+import settings
 
 class Executor:
     def __init__(self):
         self.__processes = dict()
-        # self.__notifier = KafkaProducer(bootstrap_servers=KAFKA_HOSTS,
-        #                                 value_serializer=lambda m: ujson.dumps(m).encode('utf-8'))
+        self.__container_id = os.getpid()
 
     def __get_random_logging_name(self) -> str:
-        first_name = os.getpid()
         last_name = int(datetime.datetime.now().timestamp())
-
-        return f'{first_name}-{last_name}'
+        return f'{self.__container_id}-{last_name}'
 
     def __get_spider_base_settings(self, config: dict) -> dict:
         with open('sc_base_config.json') as f:
@@ -47,16 +42,14 @@ class Executor:
 
     def __new_spider(self, config: dict) -> None:
         base_settings = self.__get_spider_base_settings(config)
-        
-        logger_name = self.__get_random_logging_name()
         instance_id = config['instance_id']
     
         process = CrawlerProcess(settings=base_settings)
 
-        sys.stdout = KafkaLogger(instance_id, logger_name, 'out')
-        sys.stderr = KafkaLogger(instance_id, logger_name, 'err')
+        # sys.stdout = KafkaLogger(instance_id, logger_name, 'out')
+        # sys.stderr = KafkaLogger(instance_id, logger_name, 'err')
 
-        process.crawl(StaticPageSpider, name=instance_id, config=ujson.dumps(config))
+        process.crawl(StaticPageSpider, name=instance_id, container_id=self.__container_id, config=ujson.dumps(config))
 
         # process.crawlers é um set() com um único spider. Como não há como recuperar o spider
         # sem removê-lo do set() diretamente, é realizado o esquema abaixo para isso. Assim, é
@@ -73,22 +66,33 @@ class Executor:
         # Notifica o crawler manager de algum erro ou algo do tipo que aconteceu com algum spider,
         # ele, por sua vez, notificará a aplicação Django
 
-        # print('--')
-        # self.__notifier.send(STOP_NOTIFICATION_TOPIC, {'stop': instance_id})
-        # self.__notifier.flush()
-        # print('--->', e)
+        # Esse método pertencerá a outro objeto (Spider), por isso não é possível colocar notifier como
+        # um atributo dessa classe e o chamar
+        notifier = KafkaProducer(bootstrap_servers=settings.KAFKA_HOSTS,
+                                value_serializer=lambda m: ujson.dumps(m).encode('utf-8'))
+
+        message = {
+            'container_id': spider.container_id,
+            'instance_id': spider.name,
+            'reason': reason
+        }
+
+        notifier.send(settings.SPIDER_STOPPED_TOPIC, message)
+        notifier.flush()
 
         print(f'Spider "{spider.name}" closed because "{reason}"')
 
     def create_spider(self, config: dict) -> None:
-        print(f'Criando novo spider #{config["instance_id"]}...')
+        print(f'Criando novo spider "{config["instance_id"]}"...')
 
         instance_id = config['instance_id']
         self.__processes[instance_id] = Process(target=self.__new_spider, args=(config, ))  
         self.__processes[instance_id].start()
 
+        print(f'Spider "{config["instance_id"]}" criado com sucesso!')
+
     def stop_spider(self, instance_id: str) -> None:
-        print(f'Parando spider #{instance_id}...')
+        print(f'Parando spider "{instance_id}"...')
         self.__processes[instance_id].terminate()
 
     def stop_all_spider(self):

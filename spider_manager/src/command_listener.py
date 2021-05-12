@@ -1,13 +1,13 @@
-import os 
-
 import ujson
 from kafka import KafkaConsumer
 
+import settings
 from executor import Executor
 
 class CommandListener:
-    def __init__(self, kafka_hosts: list, commands_topic: str):
-        self.__consumer = KafkaConsumer(commands_topic, bootstrap_servers=kafka_hosts,
+    def __init__(self,):
+        self.__consumer = KafkaConsumer(settings.COMMANDS_TOPIC,
+                                        bootstrap_servers=settings.KAFKA_HOSTS,
                                         value_deserializer=lambda m: ujson.loads(m.decode('utf-8')))
 
         self.__executor = Executor()
@@ -30,7 +30,10 @@ class CommandListener:
             else:
                 print(f'"{command}" não é um comando válido!')
 
+        print('Esperando por novos comandos...')
+
     def run(self):
+        print('Esperando por comandos...')
         for message in self.__consumer:
             commands = message.value
             self.__process_commands(commands)
@@ -38,8 +41,6 @@ class CommandListener:
                 break
 
 if __name__ == '__main__':
-    kafka_hosts = os.getenv('KAFKA_HOSTS', 'localhost:9092')
-    kafka_topic = os.getenv('SM_COMMAND_TOPIC', 'sm-commands')
-    
-    cl = CommandListener(kafka_hosts, kafka_topic)
+
+    cl = CommandListener()
     cl.run()

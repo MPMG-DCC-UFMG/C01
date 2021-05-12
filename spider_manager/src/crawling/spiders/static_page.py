@@ -22,10 +22,11 @@ class StaticPageSpider(BaseSpider):
     # nome temporário, que será alterado no __init__
     name = 'temp_name'
 
-    def __init__(self, name: str, *args, **kwargs):
+    def __init__(self, name: str, container_id: int, *args, **kwargs):
         # nome único do spider, para que não haja conflitos entre coletores
         super(StaticPageSpider, self).__init__(*args, **kwargs)
         self.name = name
+        self.container_id = container_id
 
     def get_url_info(self, url: str) -> tuple:
         """Retrieves the type of URL content and its size"""
