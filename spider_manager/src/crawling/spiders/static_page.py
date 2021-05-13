@@ -1,14 +1,10 @@
 # Scrapy and Twister libs
-import scrapy
+from scrapy.http import Request
 from scrapy.linkextractors import LinkExtractor
 
 # Other external libs
-import logging
 import re
-import json
 import datetime
-import requests
-import time
 
 from crawling.spiders.base_spider import BaseSpider
 from crawling.items import RawResponseItem
@@ -76,13 +72,16 @@ class StaticPageSpider(BaseSpider):
         else:
             urls_found = set(urls_found)
 
-        self._logger.info(f"[Spider:  {self.config['source_name']}] +{len(urls_found)} urls found in \"{response.url}\"...")
+        if response.url in urls_found:
+            urls_found.remove(response.url)
+
+        self._logger.info(f"[{self.config['source_name']}] +{len(urls_found)} urls found in \"{response.url}\"...")
 
         return urls_found
 
     def extract_files(self, response):
         """Filter and return a set with links found in this response."""
-        self._logger.info(f"[Spider:  {self.config['source_name']}] Trying to extract urls files in \"{response.url}\"...")
+        self._logger.info(f"[{self.config['source_name']}] Trying to extract urls files in \"{response.url}\"...")
 
         links_extractor = LinkExtractor(
             allow_domains=self.config["download_files_allow_domains"],
@@ -109,7 +108,7 @@ class StaticPageSpider(BaseSpider):
         else:
             urls_found = set(urls_found)
 
-        self._logger.info(f"[Spider:  {self.config['source_name']}] +{len(urls_found)} files found in \"{response.url}\"...")
+        self._logger.info(f"[{self.config['source_name']}] +{len(urls_found)} files found in \"{response.url}\"...")
 
         return urls_found
 
@@ -123,7 +122,7 @@ class StaticPageSpider(BaseSpider):
                 img_src = url_domain + img_src[1:]
             src.append(img_src)
 
-        self._logger.info(f"[Spider:  {self.config['source_name']}] +{len(src)} imgs found at page {response.url}")
+        self._logger.info(f"[{self.config['source_name']}] +{len(src)} imgs found at page {response.url}")
         
         return set(src)
 
@@ -157,17 +156,14 @@ class StaticPageSpider(BaseSpider):
         Will try to follow links if config["explore_links"] is set.
         """
         referer = response.meta["attrs"]["referer"]
-        self._logger.info(f"[Spider:  {self.config['source_name']}] Parsing \"{response.url}\" originated from \"{referer}\"")
-
+        self._logger.info(f"[{self.config['source_name']}] Parsing \"{response.url}\" originated from \"{referer}\"")
 
         if self.config.get("explore_links", False):
             for link in self.extract_links(response):
-                yield scrapy.Request(
-                    url=link,
-                    callback=self.parse,
-                    meta={"attrs": {'referer': response.url}},
-                    errback=self.errback_httpbin
-                )
+                yield Request(url=link,
+                            callback=self.parse,
+                            meta={"attrs": {'referer': response.url}},
+                            errback=self.errback_httpbin)
 
         files_found = set()
         if self.config.get("download_files", False):

@@ -1,17 +1,20 @@
 import ujson
 from kafka import KafkaConsumer
 
-import settings
 from executor import Executor
 
 class CommandListener:
     def __init__(self,):
-        self.__consumer = KafkaConsumer(settings.COMMANDS_TOPIC,
-                                        bootstrap_servers=settings.KAFKA_HOSTS,
-                                        value_deserializer=lambda m: ujson.loads(m.decode('utf-8')))
-
         self.__executor = Executor()
         self.__stop = False
+
+        with open('base_config.json') as f:
+            config = ujson.loads(f.read())
+            
+            self.__consumer = KafkaConsumer(config['COMMANDS_TOPIC'],
+                                            bootstrap_servers=config['KAFKA_HOSTS'],
+                                            value_deserializer=lambda m: ujson.loads(m.decode('utf-8')))
+
 
     def __process_commands(self, commands: dict):
         for command, data in commands.items():

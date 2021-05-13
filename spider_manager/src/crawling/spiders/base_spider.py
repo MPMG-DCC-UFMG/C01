@@ -90,7 +90,7 @@ class BaseSpider(RedisSpider):
             return [extension]
 
         extension = self.filetype_from_filename_on_server(content_disposition)
-        if len(extensions) > 0:
+        if len(extension) > 0:
             return [extension] 
 
         return self.filetypes_from_mimetype(content_type)

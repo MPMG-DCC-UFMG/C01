@@ -9,13 +9,18 @@ class RedisSpider(Spider):
     Base Spider for doing distributed crawls coordinated through Redis
     '''
 
+    idleness = 0
+
     def _set_crawler(self, crawler):
         super(RedisSpider, self)._set_crawler(crawler)
         self.crawler.signals.connect(self.spider_idle,
                                      signal=signals.spider_idle)
 
     def spider_idle(self):
-        raise DontCloseSpider
+        # Esperar até um minuto de ociosidade até o spider fechar
+        if self.idleness <= 12:
+            self.idleness += 1
+            raise DontCloseSpider
 
     def parse(self, response):
         '''

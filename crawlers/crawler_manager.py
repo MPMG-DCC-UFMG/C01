@@ -38,7 +38,7 @@ def generate_initial_requests(config: dict):
         "url": config['base_url'],
         "appid": config['instance_id'],
         "crawlid": str(config['crawler_id']),
-        "spiderid": config['instance_id'],
+        "spiderid": str(config['crawler_id']),
         "attrs": {
             "referer": "start_requests"
         }
@@ -56,8 +56,9 @@ def start_crawler(config):
     config["crawler_id"] = config["id"]
     del config["id"]
 
-    command_sender.send_create_spider(config)
     generate_initial_requests(config)
+
+    command_sender.send_create_spider(config)
 
 def stop_crawler(instance_id, config):
     """Sets the flags of a crawler to stop."""

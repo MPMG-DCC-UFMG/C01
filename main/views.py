@@ -84,7 +84,7 @@ def process_stop_crawl(crawler_id):
     crawler_manager.update_instances_info(
         config["data_path"], str(instance_id), instance_info)
 
-    crawler_manager.stop_crawler(instance_id, config)
+    crawler_manager.stop_crawler(crawler_id, config)
 
     return instance
 
@@ -214,12 +214,12 @@ def run_crawl(request, crawler_id):
 def tail_log_file(request, instance_id):
     logs = Log.objects.filter(instance_id=instance_id).order_by('-creation_date')
 
-    log_results = logs.filter(Q(log_level="out"))[:10]
-    err_results = logs.filter(Q(log_level="err"))[:10]
+    log_results = logs.filter(Q(log_level="out"))[:100]
+    err_results = logs.filter(Q(log_level="err"))[:100]
 
-    log_text = [f"[{r.logger_name:^30}] {r.log_message}" for r in log_results]
+    log_text = [f"[{r.logger_name}] {r.log_message}" for r in log_results]
     log_text = "\n".join(log_text)
-    err_text = [f"[{r.logger_name:^30}] [{r.log_level:^5}] {r.log_message}" for r in err_results]
+    err_text = [f"[{r.logger_name}] [{r.log_level:^5}] {r.log_message}" for r in err_results]
     err_text = "\n".join(err_text)
 
     return JsonResponse({
