@@ -72,11 +72,7 @@ class StaticPageSpider(BaseSpider):
         else:
             urls_found = set(urls_found)
 
-        if response.url in urls_found:
-            urls_found.remove(response.url)
-
         self._logger.info(f"[{self.config['source_name']}] +{len(urls_found)} urls found in \"{response.url}\"...")
-
         return urls_found
 
     def extract_files(self, response):

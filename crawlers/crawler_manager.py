@@ -1,8 +1,4 @@
-# Scrapy and Twister libs
-import scrapy
-from scrapy.crawler import CrawlerProcess
 
-# Other external libs
 import json
 import logging
 import os
@@ -12,13 +8,34 @@ import shutil
 import sys
 import time
 from multiprocessing import Process
+from datetime import datetime
+
+import tldextract
+import redis
+from redis.exceptions import ConnectionError
 
 # Project libs
 from crawlers.constants import *
 from crawlers.log_writer import LogWriter
 from crawlers.command_sender import CommandSender
+from crawlers import settings
 
+extractor = tldextract.TLDExtract()
 command_sender = CommandSender()
+redis_conn = redis.Redis(host=settings.REDIS_HOST,
+                        port=settings.REDIS_PORT,
+                        db=settings.REDIS_DB,
+                        password=settings.REDIS_PASSWORD,
+                        decode_responses=True,
+                        socket_timeout=settings.REDIS_SOCKET_TIMEOUT,
+                        socket_connect_timeout=settings.REDIS_SOCKET_TIMEOUT)
+
+try:
+    redis_conn.info()
+    
+except ConnectionError:
+    sys.error("Failed to connect to Redis in ScraperHandler")
+    sys.exit(1)
 
 def log_writer_process():
     """Redirects log_writer output and starts descriptor consumer loop."""
@@ -33,6 +50,30 @@ def gen_key():
     """Generates a unique key based on time and a random seed."""
     return str(int(time.time() * 100)) + str((int(random.random() * 1000)))
 
+def format_request(config: dict) -> dict:
+    formated_request = {
+                    "url": config['base_url'],
+                    "appid":"162099279113314",
+                    "crawlid": str(config['crawler_id']),
+                    "spiderid": str(config['crawler_id']),
+                    "attrs":{
+                        "referer": "start_requests"
+                    },
+                    "priority":1,
+                    "maxdepth":0,
+                    "domain_max_pages": None,
+                    "allowed_domains": None,
+                    "allow_regex": None,
+                    "deny_regex": None,
+                    "deny_extensions": None,
+                    "expires":0,
+                    "useragent": None,
+                    "cookie": None,
+                    "ts": datetime.now().timestamp()
+                }
+
+    return formated_request
+
 def generate_initial_requests(config: dict):
     data = {
         "url": config['base_url'],
@@ -44,12 +85,17 @@ def generate_initial_requests(config: dict):
         }
     }
 
-    url = 'http://0.0.0.0:5343/feed'
-    headers = {'content-type': 'application/json'}
+    req = format_request(config)
 
-    print('\nFeeding API\n')
-    req = requests.post(url, data=json.dumps(data), headers=headers)
-    print(req.json())
+    ex_res = extractor(req['url'])
+    key = "{sid}:{dom}.{suf}:queue".format(
+        sid=req['spiderid'],
+        dom=ex_res.domain,
+        suf=ex_res.suffix)
+
+    val = json.dumps(req)
+    redis_conn.zadd(key, {val: -req['priority']})
+
 
 def start_crawler(config):
     """Create and starts a crawler as a new process."""
