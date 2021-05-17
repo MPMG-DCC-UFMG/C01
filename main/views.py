@@ -214,8 +214,8 @@ def run_crawl(request, crawler_id):
 def tail_log_file(request, instance_id):
     logs = Log.objects.filter(instance_id=instance_id).order_by('-creation_date')
 
-    log_results = logs.filter(Q(log_level="out"))[:100]
-    err_results = logs.filter(Q(log_level="err"))[:100]
+    log_results = logs.filter(Q(log_level="out"))[:20]
+    err_results = logs.filter(Q(log_level="err"))[:20]
 
     log_text = [f"[{r.logger_name}] {r.log_message}" for r in log_results]
     log_text = "\n".join(log_text)
@@ -232,7 +232,7 @@ def tail_log_file(request, instance_id):
 def raw_log(request, instance_id):
     logs = Log.objects.filter(instance_id=instance_id)\
                       .order_by('-creation_date')
-    raw_results = logs[:10]
+    raw_results = logs[:100]
     raw_text = [json.loads(r.raw_log) for r in raw_results]
 
     resp = JsonResponse({str(instance_id): raw_text},

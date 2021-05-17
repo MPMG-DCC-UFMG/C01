@@ -10,14 +10,13 @@ from django.db.utils import OperationalError
 from crawlers.crawler_manager import log_writer_process
 from step_crawler import functions_file
 from step_crawler import parameter_extractor
-from crawlers.spider_manager_handler import SpiderManagerHandler
+from crawlers.crawler_manager import sm_handler
 
 # Enable interrupt signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 class MainConfig(AppConfig):
     name = 'main'
-    sm_handler = SpiderManagerHandler()
 
     def runOnce(self):
         # Create json folder if necessary
@@ -38,13 +37,12 @@ class MainConfig(AppConfig):
             instance.running = False
             instance.save()
 
-        print('starts kafka log consumer')
        # starts kafka log consumer
         log_writer = Process(target=log_writer_process)
         log_writer.start()
         atexit.register(log_writer.join)
 
-        self.sm_handler.run()
+        sm_handler.run()
         
     def ready(self):
         try:

@@ -44,6 +44,11 @@ class SpiderManagerHandler:
     def __notify_stopped_spiders(self, crawler_id):
         requests.get(f'http://localhost:{settings.SERVER_PORT}/detail/stop_crawl/{crawler_id}')
     
+    def count_working_spiders(self, crawler_id: str):
+        if crawler_id in self.__spiders_running:
+            return len(self.__spiders_running[crawler_id])
+        return 0
+        
     def run(self):
         thread = Thread(target=self.__listener, daemon=True)
         thread.start()

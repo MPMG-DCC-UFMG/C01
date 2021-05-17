@@ -18,7 +18,9 @@ from redis.exceptions import ConnectionError
 from crawlers.constants import *
 from crawlers.log_writer import LogWriter
 from crawlers.command_sender import CommandSender
+from crawlers.spider_manager_handler import SpiderManagerHandler
 from crawlers import settings
+
 
 extractor = tldextract.TLDExtract()
 command_sender = CommandSender()
@@ -36,6 +38,8 @@ try:
 except ConnectionError:
     sys.error("Failed to connect to Redis in ScraperHandler")
     sys.exit(1)
+
+sm_handler = SpiderManagerHandler()
 
 def log_writer_process():
     """Redirects log_writer output and starts descriptor consumer loop."""
