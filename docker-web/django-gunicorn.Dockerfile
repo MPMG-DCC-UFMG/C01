@@ -1,5 +1,5 @@
 # HTTP server + Django application
-FROM python:3.7-alpine
+FROM python:3.7
 
 # Install Python and Package Libraries
 RUN apt-get update && apt-get upgrade -y && \

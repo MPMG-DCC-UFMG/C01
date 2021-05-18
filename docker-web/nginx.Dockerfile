@@ -1,5 +1,5 @@
 # Nginx application
-FROM nginx:1.19.10-alpine
+FROM nginx:1.19.10
 
 # Create nginx configuration for our Django app
 RUN rm /etc/nginx/conf.d/default.conf
