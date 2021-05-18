@@ -24,6 +24,11 @@ import crawlers.crawler_manager as crawler_manager
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
 
+import logging
+
+# Log the information to the file logger
+logger = logging.getLogger('file')
+
 # Helper methods
 
 

@@ -1,0 +1,26 @@
+version: '3.7'
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: ./docker-web/django-gunicorn.Dockerfile
+    # TODO Change to use gunicorn directly when FileDescriptor is dockerized
+    command: ./temp_run.sh
+    volumes:
+      - static_volume:/home/django/C01/staticfiles
+    expose:
+      - 8000
+  nginx:
+    build:
+      context: ..
+      dockerfile: ./docker-web/nginx.Dockerfile
+    volumes:
+      - static_volume:/home/nginx/staticfiles
+    ports:
+      - 8000:80
+    depends_on:
+      - web
+
+volumes:
+  static_volume:
