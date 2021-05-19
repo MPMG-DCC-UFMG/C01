@@ -2,7 +2,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 
 from rest_framework import viewsets
@@ -15,15 +15,12 @@ from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer
 
 from crawlers.constants import *
 
-import subprocess
 from datetime import datetime
 import json
 import time
 
 import crawlers.crawler_manager as crawler_manager
 
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.parsers import JSONParser
 
 # Helper methods
 
@@ -84,7 +81,7 @@ def process_stop_crawl(crawler_id):
     crawler_manager.update_instances_info(
         config["data_path"], str(instance_id), instance_info)
 
-    crawler_manager.stop_crawler(crawler_id, config)
+    crawler_manager.stop_crawler(crawler_id)
 
     return instance
 

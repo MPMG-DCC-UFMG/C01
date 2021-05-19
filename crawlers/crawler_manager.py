@@ -110,9 +110,9 @@ def start_crawler(config):
 
     command_sender.send_create_spider(config)
 
-def stop_crawler(instance_id, config):
+def stop_crawler(crawler_id):
     """Sets the flags of a crawler to stop."""
-    command_sender.send_stop_crawl(str(instance_id)) 
+    command_sender.send_stop_crawl(str(crawler_id))
 
 def update_instances_info(data_path: str, instance_id: str, instance: dict):
     """Updates the file with information about instances when they are created, initialized or terminated."""
