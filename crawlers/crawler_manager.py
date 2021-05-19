@@ -1,13 +1,8 @@
 
 import json
-import logging
-import os
 import random
-import requests
-import shutil
 import sys
 import time
-from multiprocessing import Process
 from datetime import datetime
 
 import tldextract

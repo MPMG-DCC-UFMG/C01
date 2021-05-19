@@ -77,18 +77,15 @@ class Executor:
 
         process.start()
 
-    def __notify_start(self, crawler_id: str):
-        notifier = KafkaProducer(bootstrap_servers=base_config['KAFKA_HOSTS'],
-                                 value_serializer=lambda m: ujson.dumps(m).encode('utf-8'))
-                                 
+    def __notify_start(self, crawler_id: str):                             
         message = {
             'container_id': self.__container_id,
             'crawler_id': crawler_id,
             'code': 'created'
         }
 
-        notifier.send(base_config['NOTIFICATIONS_TOPIC'], message)
-        notifier.flush()
+        self.__notifier.send(base_config['NOTIFICATIONS_TOPIC'], message)
+        self.__notifier.flush()
 
     def __notify_stop(self, spider: Spider, reason: str) -> None:
         # Notifica o crawler manager de algum erro ou algo do tipo que aconteceu com algum spider,

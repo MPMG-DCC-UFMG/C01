@@ -27,6 +27,3 @@ class KafkaLogger:
 
     def flush(self):
         self.__producer.flush()
-
-if __name__ == '__main__':
-    KafkaLogger()
