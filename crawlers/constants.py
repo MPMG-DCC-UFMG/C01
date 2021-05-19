@@ -1,0 +1,1 @@
+CURR_FOLDER_FROM_ROOT = "crawlers"
