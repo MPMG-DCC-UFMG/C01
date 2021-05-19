@@ -2,6 +2,41 @@
 
 Desenvolvimento de ferramentas para construção e manutenção de coletores de páginas da Web. (Em desenvolvimento)
 
+## TODO
+
+- [ ] Testes em máquinas diferentes
+- [ ] Suporte a templated URLs
+- [ ] Atualização da interface para gerir os spiders distribuídos
+- [ ] Suporte a páginas dinâmicas
+- [ ] Iniciação automáticas dos serviços
+
+## Coletas distribuídas
+
+Siga os passos abaixo para o correto funcionamento.
+
+Para iniciar a interface:
+
+- Crie um ambiente virtual com **python 3.7**: `python3.7 -m venv venv`
+- Ative o ambiente virtual: `source venv/bin/activate`
+- Instale as dependências: `python install.py`
+- Inicie o Zookeeper, Kafka e Redis (a partir da pasta corrente)
+    - Zookeeper: `kafka_2.13-2.4.0/bin/zookeeper-server-start.sh kafka_2.13-2.4.0/config/zoo.properties`
+    - Kafka: `kafka_2.13-2.4.0/bin/kafka-server-start.sh kafka_2.13-2.4.0/config/server.properties`
+    - Redis: `./redis-5.0.10/src/redis-server`
+- Inicie a interface: `python manage.py runserver --noreload`
+    - `--noreload` garantirá que o Django não criará mais de uma instâncias de objetos que precisam ser únicos (consumidores Kafka, se não as mensagens ficam duplicadas)
+
+Para iniciar os gerenciadores de spiders:
+- Vá para a pasta `spider_manager`: `cd spider_manager/`
+- Crie um ambiente virtual **python 3.6**: `python3.6 -m venv venv`
+- Inicie o ambiente virtual: `source venv/bin/activate`
+- Vá para a pasta `src`: `cd src/`
+- Instale as dependências: `pip install -U pip & pip install -r requirements.txt`
+- Execute o listener de comandos: `python command_listener.py`
+    - Para ter mais de uma instância de spider executando para uma mesma coleta, inicie mais processos de `command_listener`
+
+   
+<!-- 
 Existem 4 tipos de coletores bases, que podem ser personalizados através da interface feita em django:
 1. Coletor de páginas estáticas
 2. Coletor de páginas dinâmicas ou onde é necessário interagir com formulários.
@@ -74,4 +109,4 @@ Ao final do processo, basta acessar _http://localhost:8000/_
 
 
 ## Fluxo de interação com a interface
-![Fluxograma](fluxo_interface_coletor_20200625.png)
+![Fluxograma](fluxo_interface_coletor_20200625.png) -->
