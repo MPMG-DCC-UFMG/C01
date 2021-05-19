@@ -9,7 +9,7 @@ from kafka import KafkaConsumer
 from crawlers import settings
 
 
-class SpiderManagerHandler:
+class SpiderManagerListener:
     def __init__(self) -> None:
         self.__consumer = KafkaConsumer(settings.NOTIFICATIONS_TOPIC, 
                                         bootstrap_servers=settings.KAFKA_HOSTS,

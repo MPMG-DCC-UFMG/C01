@@ -10,7 +10,7 @@ from django.db.utils import OperationalError
 from crawlers.crawler_manager import log_writer_process
 from step_crawler import functions_file
 from step_crawler import parameter_extractor
-from crawlers.crawler_manager import sm_handler
+from crawlers.crawler_manager import sm_listener
 
 # Enable interrupt signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
@@ -42,7 +42,7 @@ class MainConfig(AppConfig):
         log_writer.start()
         atexit.register(log_writer.join)
 
-        sm_handler.run()
+        sm_listener.run()
         
     def ready(self):
         try:

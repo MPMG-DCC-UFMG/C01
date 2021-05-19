@@ -1,3 +1,5 @@
+"""This file is responsible for implementing the kafka producer to send spiders logs"""
+
 import ujson
 from kafka import KafkaProducer
 
@@ -16,6 +18,12 @@ class KafkaLogger:
                                             value_serializer=lambda m: ujson.dumps(m).encode('utf-8'))
         
     def write(self, message: str):
+        """Write the message passed as a parameter to a kafka topic.
+        
+        Args:
+            - message: Log message to be sent to the topic 
+        """
+
         message = message.strip()
         if len(message) > 0:
             self.__producer.send(self.__kafka_topic, {
@@ -26,4 +34,5 @@ class KafkaLogger:
             })
 
     def flush(self):
+        """Force sending messages that are waiting to be sent to Kafka"""
         self.__producer.flush()

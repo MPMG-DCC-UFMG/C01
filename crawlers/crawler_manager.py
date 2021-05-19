@@ -10,15 +10,15 @@ import redis
 from redis.exceptions import ConnectionError
 
 # Project libs
-from crawlers.constants import *
 from crawlers.log_writer import LogWriter
 from crawlers.command_sender import CommandSender
-from crawlers.spider_manager_handler import SpiderManagerHandler
+from crawlers.spider_manager_handler import SpiderManagerListener
 from crawlers import settings
 
-
-extractor = tldextract.TLDExtract()
 command_sender = CommandSender()
+
+# Responsible for extracting the domain and subdomain from a url
+extractor = tldextract.TLDExtract()
 redis_conn = redis.Redis(host=settings.REDIS_HOST,
                         port=settings.REDIS_PORT,
                         db=settings.REDIS_DB,
@@ -31,18 +31,13 @@ try:
     redis_conn.info()
     
 except ConnectionError:
-    sys.error("Failed to connect to Redis in ScraperHandler")
+    sys.error("Failed to connect to Redis")
     sys.exit(1)
 
-sm_handler = SpiderManagerHandler()
+sm_listener = SpiderManagerListener()
 
 def log_writer_process():
     """Redirects log_writer output and starts descriptor consumer loop."""
-
-    # crawling_utils.check_file_path("crawlers/log/")
-    # sys.stdout = open(f"crawlers/log/log_writer.out", "a", buffering=1)
-    # sys.stderr = open(f"crawlers/log/log_writer.err", "a", buffering=1)
-
     LogWriter.log_consumer()
 
 def gen_key():
@@ -50,6 +45,16 @@ def gen_key():
     return str(int(time.time() * 100)) + str((int(random.random() * 1000)))
 
 def format_request(config: dict) -> dict:
+    """Formats a collection request according to Scrapy Cluster standards
+    
+    Args:
+        - Config: Scraper configuration to be processed
+    
+    Returns:
+
+        Returns a scraping request in the Scrapy Cluster pattern
+    """
+
     formated_request = {
                     "url": config['base_url'],
                     "appid":"162099279113314",
@@ -74,6 +79,12 @@ def format_request(config: dict) -> dict:
     return formated_request
 
 def generate_initial_requests(config: dict):
+    """Generates initial requests
+    
+    Args:
+        - Config: Scraper configuration to be processed
+    
+    """
     data = {
         "url": config['base_url'],
         "appid": config['instance_id'],
@@ -95,30 +106,30 @@ def generate_initial_requests(config: dict):
     val = json.dumps(req)
     redis_conn.zadd(key, {val: -req['priority']})
 
+def start_crawler(config: dict):
+    """Send the command to the spider managers to create the spiders.
+   
+    Args:
+        - Config: Scraper configuration to be processed
+   
+    """
 
-def start_crawler(config):
-    """Create and starts a crawler as a new process."""
     config["crawler_id"] = config["id"]
     del config["id"]
-
     generate_initial_requests(config)
-
     command_sender.send_create_spider(config)
 
 def stop_crawler(crawler_id):
-    """Sets the flags of a crawler to stop."""
+    """Send the command to the spider managers to stop the spiders.
+    
+    Args:
+        - crawler_id: Uniquer crawler identifier
+
+    """
+
+
     command_sender.send_stop_crawl(str(crawler_id))
 
 def update_instances_info(data_path: str, instance_id: str, instance: dict):
     """Updates the file with information about instances when they are created, initialized or terminated."""
     pass
-    # instances = dict()
-
-    # filename = f"{data_path}/instances.json"
-    # if os.path.exists(filename):
-    #     with open(filename) as f:
-    #         instances = json.loads(f.read())
-
-    # instances[instance_id] = instance
-    # with open(filename, "w+") as f:
-    #     f.write(json.dumps(instances, indent=4))

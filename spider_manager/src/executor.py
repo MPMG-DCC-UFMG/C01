@@ -1,4 +1,7 @@
-import datetime
+"""
+This file is responsible for managing the creation and closure of spiders
+"""
+
 import os
 import sys
 from multiprocessing import Process
@@ -25,6 +28,15 @@ class Executor:
 
 
     def __get_spider_base_settings(self, config: dict) -> dict:
+        """This file is responsible for managing the creation and closure of spiders
+        
+        Args:
+            - config: Scraper configuration to be processed
+
+        Returns:
+
+        Returns the base configuration for creating a spider with collector modifications
+        """
         # base_config['SC_LOGGER_NAME'] = self.__get_random_logging_name()
 
         # autothrottle = "antiblock_autothrottle_"
@@ -41,6 +53,12 @@ class Executor:
         return base_config
 
     def __parse_config(self, config: dict):
+        """Some other Scrapy Cluster modules need a settings.py file present, this method writes it so that they can access
+        
+        Args:
+            - config: Scraper configuration to be processed
+        """
+
         with open('crawling/settings.py', 'w') as f:
             f.write('from __future__ import absolute_import\n')
             for var, value in config.items():
@@ -51,6 +69,13 @@ class Executor:
                     f.write(f'\n{var} = {value}')
 
     def __new_spider(self, config: dict) -> None:
+        """Creates a new spider instance
+
+        Args:
+            config: Scraper configuration to be processed
+
+        """
+        
         crawler_id = config['crawler_id']
         instance_id = config['instance_id']
 
@@ -66,18 +91,20 @@ class Executor:
 
         process.crawl(StaticPageSpider, name=crawler_id, container_id=self.__container_id, config=ujson.dumps(config))
 
-        # process.crawlers é um set() com um único spider. Como não há como recuperar o spider
-        # sem removê-lo do set() diretamente, é realizado o esquema abaixo para isso. Assim, é
-        # possível atribuir a chamada de uma função quando o evento de quando o spider é fechado.
         iter_crawler = iter(process.crawlers)
         crawler = next(iter_crawler)
 
-        # Quando o spider for fechado, o sistema será notificado por meio da função notify_crawler_manager;
         crawler.signals.connect(self.__notify_stop, signal=scrapy.signals.spider_closed)
 
         process.start()
 
     def __notify_start(self, crawler_id: str):                             
+        """"Sends message to Kafka that the spider for crawler_id has started
+        
+        Args:
+            - crawler: Unique crawler identifier
+        """
+        
         message = {
             'container_id': self.__container_id,
             'crawler_id': crawler_id,
@@ -87,12 +114,13 @@ class Executor:
         self.__notifier.send(base_config['NOTIFICATIONS_TOPIC'], message)
         self.__notifier.flush()
 
-    def __notify_stop(self, spider: Spider, reason: str) -> None:
-        # Notifica o crawler manager de algum erro ou algo do tipo que aconteceu com algum spider,
-        # ele, por sua vez, notificará a aplicação Django
+    def __notify_stop(self, spider: Spider, reason: str):
+        """Sends message to Kafka that the spider to crawler_id closed
 
-        # Esse método pertencerá a outro objeto (Spider), por isso não é possível colocar notifier como
-        # um atributo dessa classe e o chamar
+        Args:
+            - spider: Spider instance that was closed
+            - reason: Cause that caused the spider to close
+        """
 
         notifier = KafkaProducer(bootstrap_servers=base_config['KAFKA_HOSTS'],
                                 value_serializer=lambda m: ujson.dumps(m).encode('utf-8'))
@@ -110,7 +138,14 @@ class Executor:
         print(f'Spider "{spider.name}" from container "{spider.container_id}" closed because "{reason}"')
 
     def create_spider(self, config: dict) -> None:
-        print(f'Criando novo spider "{config["crawler_id"]}"...')
+        """Creates a sub-process with a spider instance
+
+        Args:
+            config: Scraper configuration to be processed
+
+        """
+
+        print(f'Creating new spider "{config["crawler_id"]}"...')
         
         config['crawler_id'] = str(config['crawler_id'])
         crawler_id = config['crawler_id']
@@ -120,16 +155,24 @@ class Executor:
         
         self.__notify_start(crawler_id)
 
-        print(f'Spider "{config["crawler_id"]}" criado com sucesso!')
+        print(f'Spider "{config["crawler_id"]}" successfully created!')
 
     def stop_spider(self, crawler_id: int) -> None:
+        """Ends the spider and crawler_id subprocess
+        
+        Args:
+            - crawler_id: Unique crawler identifier
+        """
+
         crawler_id = str(crawler_id)
 
-        print(f'Parando spider "{crawler_id}"...')
+        print(f'Closing "{crawler_id}"...')
         if self.__processes[crawler_id].is_alive():
             self.__processes[crawler_id].terminate()
         del self.__processes[crawler_id]
 
     def stop_all_spider(self):
+        """Ends all spiders"""
+
         for crawler_id in self.__processes:
             self.stop_spider(crawler_id)
