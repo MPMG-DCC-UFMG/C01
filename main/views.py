@@ -50,9 +50,6 @@ def process_run_crawl(crawler_id):
     crawler_manager.update_instances_info(
         data["data_path"], str(data["instance_id"]), instance_info)
 
-    with open('config.json', 'w') as f:
-        f.write(json.dumps(data, indent=4))
-
     return instance
 
 def process_stop_crawl(crawler_id):
