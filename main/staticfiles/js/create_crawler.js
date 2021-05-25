@@ -2,7 +2,7 @@
 
 function mycollapse(target){
     var el = $(target);
-    
+
     if(el.hasClass("myshow"))
         el.removeClass("myshow");
     else
@@ -220,6 +220,19 @@ function checkTemplatedURL() {
     defineIcon("templated-url", valid);
 }
 
+// ** Deactivated **
+// function checkHTMLParsing(){
+//     var valid = true;
+//     if (getCheckboxState('id_save_csv')) {
+//         valid = (
+//             valid &&
+//             validateIntegerInput('id_table_header', can_be_empty = true, can_be_negative = false) &&
+//             validateIntegerInput('id_table_index_col', can_be_empty = true, can_be_negative = false) &&
+//             validateIntegerInput('id_table_skiprows', can_be_empty = true, can_be_negative = false)
+//         );
+//     }
+// }
+
 function checkRelatedFields() {
     var input_name = $(this).attr('name');
 
@@ -230,9 +243,14 @@ function checkRelatedFields() {
         checkAntiblock();
     }
 
-    if (input_name.length >= 13 && input_name.substring(0, 13) == "templated-url") {
+    if (input_name.length >= 6 && input_name.substring(0, 6) == "templated-url") {
         checkTemplatedURL();
     }
+
+    // ** Deactivated **
+    // if (input_name.length >= 13 && input_name.substring(0, 13) == "table_") {
+    //     checkHTMLParsing();
+    // }
 
     // TODO: make all variables from same section have the same prefix and check like antiblock
     switch (input_name) {
@@ -446,12 +464,12 @@ function detailAntiblock() {
 //     for (const i in contents)
 //         contents[i].hidden = true;
 //     setHiddenState(crawler_type, false);
-    
+
 
 //     if(crawler_type == "form_page"){
 //         interface_root_element = document.getElementById("form_page");
 //         if(interface_root_element.type != "root" ){
-            
+
 //             steps_output_element = interface_root_element.children[0].children[1].children[0]
 //             load_steps_interface(interface_root_element, steps_output_element);
 //         }
@@ -465,45 +483,10 @@ function autothrottleEnabled() {
     setHiddenState("autothrottle-options-div", !getCheckboxState("id_antiblock_autothrottle_enabled"));
 }
 
-const table_input = document.querySelectorAll(".dynamic_input_table")
-
-table_input.forEach(input => input.addEventListener('change', getExtraParsingConfig));
-
-function getExtraParsingConfig(e) {
-  var table_match = document.getElementsByName("table_match")[0].value;
-  var table_flavor = document.getElementsByName("table_flavor")[0].value;
-  var table_header = document.getElementsByName("table_header")[0].value;
-  var table_index_col = document.getElementsByName("table_index_col")[0].value;
-  var table_skiprows = document.getElementsByName("table_skiprows")[0].value;
-  var table_attributes = document.getElementsByName("table_attributes")[0].value;
-  var table_parse_dates = document.getElementsByName("table_parse_dates")[0].value;
-  var table_thousands = document.getElementsByName("table_thousands")[0].value;
-  var table_enconding = document.getElementsByName("table_enconding")[0].value;
-  var table_decimal = document.getElementsByName("table_decimal")[0].value;
-  var table_na_values = document.getElementsByName("table_na_values")[0].value;
-  var table_keep_default_na = document.getElementsByName("table_keep_default_na")[0].value;
-  var table_displayed_only = document.getElementsByName("table_displayed_only")[0].value;
-
-  var dict = {
-              'table_match': table_match,
-              'table_flavor':table_flavor,
-              'table_header':table_header,
-              'table_index_col':table_index_col,
-              'table_skiprows':table_skiprows,
-              'table_attributes':table_attributes,
-              'table_parse_dates':table_parse_dates,
-              'table_thousands':table_thousands,
-              'table_enconding':table_enconding,
-              'table_decimal':table_decimal,
-              'table_na_values':table_na_values,
-              'table_keep_default_na':table_keep_default_na,
-              'table_displayed_only':table_displayed_only
-            };
-
-  var table_attrs_hidden = document.getElementById("table_attrs_hidden");
-  var dict_string = JSON.stringify(dict);
-  table_attrs_hidden.value = dict_string;
-}
+// ** Deactivated **
+// function saveCSVEnabled() {
+//     setHiddenState("save-csv-options-div", !getCheckboxState("id_save_csv"));
+// }
 
 // Import colector
 
@@ -574,38 +557,6 @@ function processParameterizedURL(data) {
     detailBaseUrl();
 }
 
-
-function processParsing(data) {
-    // When the configuration is to not save csv, the field checked below is null
-    if (!data["table_attrs"])
-        return;
-
-    let parsing_data = JSON.parse(data["table_attrs"]);
-
-    let parsing_input, parsing_input_name;
-    $('#parsing-item-block input').each(function () {
-        parsing_input = $(this);
-        parsing_input_name = parsing_input.attr('name');
-        if (parsing_input_name) {
-            if (parsing_input_name in parsing_data) {
-                if(this.type == "checkbox") {
-                    let bool_value = String(parsing_data[parsing_input_name])
-                                        .toLowerCase() == "true";
-
-                    // Use the .click() method instead of directly changing the
-                    // checked value so that the correct events are triggered
-                    if (bool_value != parsing_input.prop('checked'))
-                        parsing_input.click();
-                } else {
-                    parsing_input.val(parsing_data[parsing_input_name]);
-                }
-            }
-        }
-    });
-
-    getExtraParsingConfig();
-}
-
 function processSettings(data) {
     // Converts the settings of the json file into
     // parameters of the creation form
@@ -629,7 +580,6 @@ function parseSettings(e) {
 
         processSettings(data);
         processParameterizedURL(data);
-        processParsing(data);
 
         // checks if the settings are valid
         checkBasicInfo();
@@ -637,6 +587,9 @@ function parseSettings(e) {
         checkCaptcha();
         checkCrawlerType();
         checkTemplatedURL();
+
+        // ** Deactivated **
+        // checkHTMLParsing();
 
         // go to the option that allows the user to change the location
         // saving downloaded files

@@ -103,8 +103,9 @@ class CrawlRequest(TimeStamped):
     sound_xpath = models.CharField(max_length=100, blank=True, null=True)
 
     #Steps activation
-    dynamic_processing = models.BooleanField(blank=True, null=True)    
+    dynamic_processing = models.BooleanField(blank=True, null=True)
 
+    # DETAILS #################################################################
     explore_links = models.BooleanField(blank=True, null=True)
     link_extractor_max_depth = models.IntegerField(blank=True, null=True)
     link_extractor_allow_url = models.CharField(
@@ -142,9 +143,28 @@ class CrawlRequest(TimeStamped):
     download_files_process_value = models.TextField(
         max_length=1000, blank=True, null=True
     )
-
-
     download_imgs = models.BooleanField(default=False)
+
+
+    # ** Deactivated **
+    # PARSING #################################################################
+
+    # save_csv = models.BooleanField(default=True)
+    #
+    # table_match           = models.CharField(max_length=1000, blank=True)
+    # table_flavor          = models.CharField(max_length=1000, blank=True)
+    # table_header          = models.PositiveIntegerField(blank=True, null=True)
+    # table_index_col       = models.PositiveIntegerField(blank=True, null=True)
+    # table_skiprows        = models.PositiveIntegerField(blank=True, null=True)
+    # table_attributes      = models.CharField(max_length=1000, blank=True)
+    # table_thousands       = models.CharField(max_length=10, blank=True)
+    # table_encoding        = models.CharField(max_length=10, blank=True)
+    # table_decimal         = models.CharField(max_length=10, blank=True)
+    # table_na_values       = models.CharField(max_length=1000, blank=True)
+    # table_keep_default_na = models.BooleanField(default=False)
+    # table_displayed_only  = models.BooleanField(default=False)
+    # table_parse_dates     = models.BooleanField(default=False)
+
 
     steps = models.CharField(
         blank=True, null=True, max_length=9999999, default='{}')
@@ -198,12 +218,8 @@ class CrawlRequest(TimeStamped):
 
         config['templated_url_response_handlers'] = response_handlers
         config['parameter_handlers'] = parameter_handlers
+
         return config
-
-    # PARSING #########################################################
-    save_csv = models.BooleanField(blank=True, null=True)
-    table_attrs = models.CharField(max_length=20000, blank=True, null=True)
-
 
     @property
     def running(self):
