@@ -11,9 +11,8 @@ COPY src src
 COPY main main
 COPY interface interface
 COPY crawlers crawlers
-COPY zoo.properties zoo.properties
 
 EXPOSE 8000
 RUN python install.py
 
-ENTRYPOINT ["python", "run.py", "0.0.0.0:8000"]
+ENTRYPOINT ["python", "manage.py", "runserver", "0.0.0.0:8000", "--noreload"]
