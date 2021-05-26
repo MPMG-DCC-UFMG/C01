@@ -162,19 +162,6 @@ New Crawler
                         <span class="menu-collapsed">Configuração...</span>
                     </div>
                 </a>
-                <a onClick="showBlock(this.id)" href="#"
-                    class="button-block bg-dark list-group-item list-group-item-action" id="parsing-item">
-                    <div class="d-flex w-100 justify-content-start align-items-center">
-                        <div class="col-md-10 sidemenu-items">
-                            <span class="fa fa-wrench  fa-fw mr-3"></span>
-                            <span class="menu-collapsed">Tratamento</span>
-                        </div>
-                        <div class="col-md-2">
-                            <span id="crawler-details-valid-icon"
-                                class="fa fa-check fa-fw mr-3 crawler-details-valid-icon valid-icon"></span>
-                        </div>
-                    </div>
-                </a>
                 {% if crawler %}
                 <button id="createButton" type="submit"
                     class="bg-dark list-group-item list-group-item-valid list-group-item-action"
@@ -379,33 +366,8 @@ New Crawler
                             </div>
                         </div>
                     </div>
-
-        <!-- ** Deactivated ** -->
-        <!-- <div id="parsing-item-block" class="block" hidden=True>
-                <div class="row">
-                    <div class="col md-6">
-                        <div id="parsing-html">
-                        {{form.save_csv | as_crispy_field}}
-
-                            <div id="save-csv-options-div">
-                                    {{form.table_match | as_crispy_field}}
-                                    {{form.table_flavor | as_crispy_field}}
-                                    {{form.table_header | as_crispy_field}}
-                                    {{form.table_index_col | as_crispy_field}}
-                                    {{form.table_skiprows | as_crispy_field}}
-                                    {{form.table_attributes | as_crispy_field}}
-                                    {{form.table_thousands | as_crispy_field}}
-                                    {{form.table_encoding | as_crispy_field}}
-                                    {{form.table_decimal | as_crispy_field}}
-                                    {{form.table_na_values | as_crispy_field}}
-                                    {{form.table_keep_default_na | as_crispy_field}}
-                                    {{form.table_displayed_only | as_crispy_field}}
-                                    {{form.table_parse_dates | as_crispy_field}}
-                            </div>
-                        </div>
-                    </div>
                 </div>
-            </div> -->
+            </div>
         </div>
     </div>
 </form>

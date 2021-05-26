@@ -63,22 +63,6 @@ class CrawlRequestForm(forms.ModelForm):
             'download_imgs',
             'steps',
             'data_path',
-
-            # ** Deactivated **
-            # 'save_csv',
-            # 'table_match',
-            # 'table_flavor',
-            # 'table_header',
-            # 'table_index_col',
-            # 'table_skiprows',
-            # 'table_attributes',
-            # 'table_thousands',
-            # 'table_encoding',
-            # 'table_decimal',
-            # 'table_na_values',
-            # 'table_keep_default_na',
-            # 'table_displayed_only',
-            # 'table_parse_dates',
         ]
 
 class RawCrawlRequestForm(CrawlRequestForm):
@@ -360,57 +344,6 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     # Crawler Type - Single file
     # Crawler Type - Bundle file
-
-    # ** Deactivated **
-    # PARSING #################################################################
-
-    # save_csv = forms.BooleanField(
-    #     required=False, initial=True,
-    #     label="Salvar arquivo CSV",
-    #     widget=forms.CheckboxInput(
-    #         attrs={
-    #             "onclick": "saveCSVEnabled();",
-    #         }
-    #     ))
-    # table_match = forms.CharField(
-    #     required=False, max_length=1000,
-    #     label="Texto ou regex na tabela")
-    # table_flavor = forms.CharField(
-    #     required=False, max_length=1000,
-    #     label="Motor de extração")
-    # table_header = forms.IntegerField(
-    #     required=False,
-    #     label="Linha com o nome das colunas na tabela")
-    # table_index_col = forms.IntegerField(
-    #     required=False,
-    #     label="Coluna que contêm o index")
-    # table_skiprows = forms.IntegerField(
-    #     required=False,
-    #     label="Número de linhas após o nome da coluna")
-    # table_attributes = forms.CharField(
-    #     required=False, max_length=1000,
-    #     label="Atributos da tabela")
-    # table_thousands = forms.CharField(
-    #     required=False, max_length=10,
-    #     label="Separador de milhar")
-    # table_encoding = forms.CharField(
-    #     required=False, max_length=10,
-    #     label="Encoding da página")
-    # table_decimal = forms.CharField(
-    #     required=False, max_length=10,
-    #     label="Separador de decimal")
-    # table_na_values = forms.CharField(
-    #     required=False, max_length=1000,
-    #     label="Valores não presentes")
-    # table_keep_default_na = forms.BooleanField(
-    #     required=False,
-    #     label="Manter valores faltantes")
-    # table_displayed_only  = forms.BooleanField(
-    #     required=False,
-    #     label="Elementos não-visíveis devem ser capturados")
-    # table_parse_dates = forms.BooleanField(
-    #     required=False,
-    #     label="Decodificar datas")
 
 class ResponseHandlerForm(forms.ModelForm):
     """

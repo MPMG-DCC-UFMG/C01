@@ -220,19 +220,6 @@ function checkTemplatedURL() {
     defineIcon("templated-url", valid);
 }
 
-// ** Deactivated **
-// function checkHTMLParsing(){
-//     var valid = true;
-//     if (getCheckboxState('id_save_csv')) {
-//         valid = (
-//             valid &&
-//             validateIntegerInput('id_table_header', can_be_empty = true, can_be_negative = false) &&
-//             validateIntegerInput('id_table_index_col', can_be_empty = true, can_be_negative = false) &&
-//             validateIntegerInput('id_table_skiprows', can_be_empty = true, can_be_negative = false)
-//         );
-//     }
-// }
-
 function checkRelatedFields() {
     var input_name = $(this).attr('name');
 
@@ -246,11 +233,6 @@ function checkRelatedFields() {
     if (input_name.length >= 6 && input_name.substring(0, 6) == "templated-url") {
         checkTemplatedURL();
     }
-
-    // ** Deactivated **
-    // if (input_name.length >= 13 && input_name.substring(0, 13) == "table_") {
-    //     checkHTMLParsing();
-    // }
 
     // TODO: make all variables from same section have the same prefix and check like antiblock
     switch (input_name) {
@@ -347,7 +329,6 @@ function detailDynamicProcessing() {
         dynamic_processing_block.classList.add("disabled")
     }
 }
-
 
 function detailCaptcha() {
     var mainSelect = document.getElementById("id_captcha");
@@ -456,37 +437,9 @@ function detailAntiblock() {
     checkAntiblock();
 }
 
-// function detailCrawlerType() {
-//     var mainSelect = document.getElementById("id_crawler_type");
-//     const crawler_type = mainSelect.options[mainSelect.selectedIndex].value;
-
-//     var contents = document.getElementsByClassName("crawler-type-content-div");
-//     for (const i in contents)
-//         contents[i].hidden = true;
-//     setHiddenState(crawler_type, false);
-
-
-//     if(crawler_type == "form_page"){
-//         interface_root_element = document.getElementById("form_page");
-//         if(interface_root_element.type != "root" ){
-
-//             steps_output_element = interface_root_element.children[0].children[1].children[0]
-//             load_steps_interface(interface_root_element, steps_output_element);
-//         }
-//     }
-
-//     checkCrawlerType();
-// }
-
-
 function autothrottleEnabled() {
     setHiddenState("autothrottle-options-div", !getCheckboxState("id_antiblock_autothrottle_enabled"));
 }
-
-// ** Deactivated **
-// function saveCSVEnabled() {
-//     setHiddenState("save-csv-options-div", !getCheckboxState("id_save_csv"));
-// }
 
 // Import colector
 
@@ -587,9 +540,6 @@ function parseSettings(e) {
         checkCaptcha();
         checkCrawlerType();
         checkTemplatedURL();
-
-        // ** Deactivated **
-        // checkHTMLParsing();
 
         // go to the option that allows the user to change the location
         // saving downloaded files

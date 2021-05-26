@@ -73,8 +73,8 @@ class PageSpider(BaseSpider):
 
     def get_url_content_type_and_lenght(self, url) -> tuple:
         """Retrieves the type of URL content and its size"""
-        
-        # TODO: Use antiblock mechanisms here 
+
+        # TODO: Use antiblock mechanisms here
         headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
         response = requests.head(url, allow_redirects=True, headers=headers)
 
@@ -111,9 +111,9 @@ class PageSpider(BaseSpider):
         urls_with_type_and_lenght = [self.get_url_content_type_and_lenght(url) for url in url_list]
         urls_with_type_and_lenght_filtered = set(filter(allow_type, urls_with_type_and_lenght))
 
-        urls = set(url_type_lenght[0] for url_type_lenght in urls_with_type_and_lenght_filtered)         
+        urls = set(url_type_lenght[0] for url_type_lenght in urls_with_type_and_lenght_filtered)
         if split_large_content:
-            urls_with_small_content = set(url_type_lenght[0] 
+            urls_with_small_content = set(url_type_lenght[0]
                                             for url_type_lenght in urls_with_type_and_lenght
                                             if url_type_lenght[2] < LARGE_CONTENT_LENGTH)
 
@@ -123,7 +123,7 @@ class PageSpider(BaseSpider):
 
     def split_urls_in_small_content(self, url_list):
         def is_small_content(url):
-            # TODO: Use antiblock mechanisms here 
+            # TODO: Use antiblock mechanisms here
             headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
             response = requests.head(url, allow_redirects=True, headers=headers)
             content_lenght = int(response.headers.get('Content-Length', '0'))
@@ -224,10 +224,10 @@ class PageSpider(BaseSpider):
         if pattern is not None and pattern != "":
             urls_found = self.filter_list_of_urls(urls_found, pattern)
 
-        
+
         urls_small_content = set()
         urls_large_content = set()
-        
+
         if config["download_files_check_type"]:
             urls_small_content, urls_large_content = self.filter_type_of_urls_and_split_small_content(urls_found, False)
 
@@ -281,7 +281,6 @@ class PageSpider(BaseSpider):
         Will try to follow links if config["explore_links"] is set.
         """
         response_type = response.headers['Content-type']
-        print(f"Parsing {response.url}, type: {response_type}")
 
         config = response.request.meta['config']
 

@@ -31,10 +31,6 @@ from entry_probing import BinaryFormatProbingResponse, HTTPProbingRequest,\
 from param_injector import ParamInjector
 from range_inference import RangeInference
 
-#    ** Deactivated **
-#    from binary import Extractor
-#    import parsing_html
-
 PUNCTUATIONS = "[{}]".format(string.punctuation)
 
 class BaseSpider(scrapy.Spider):
@@ -59,10 +55,6 @@ class BaseSpider(scrapy.Spider):
             f"{self.data_folder}",
             f"{self.data_folder}/raw_pages",
             f"{self.data_folder}/files",
-
-            # ** Deactivated **
-            # f"{self.data_folder}/csv",
-            
         ]
         for f in folders:
             try:
@@ -366,11 +358,6 @@ class BaseSpider(scrapy.Spider):
             "referer": response.meta["referer"]
         }
 
-        # ** Deactivated **
-        # extracted_files = self.extract_and_store_csv(
-        #    response, description.copy())
-        # description["extracted_files"] = extracted_files
-
         self.feed_file_description(
             self.data_folder + "raw_pages", description)
 
@@ -493,10 +480,6 @@ class BaseSpider(scrapy.Spider):
             "type": extension,
         }
 
-        # ** Deactivated **
-        # extracted_files = self.convert_binary(url, extension, file_name)
-        # description["extracted_files"] = extracted_files
-
         self.feed_file_description(f"{self.data_folder}files/", description)
 
     def hash_response(self, response):
@@ -511,128 +494,3 @@ class BaseSpider(scrapy.Spider):
         # POST requests may access the same URL with different parameters, so
         # we hash the URL with the response body
         return crawling_utils.hash(response.url.encode() + response.body)
-
-
-    # ** Deactivated **
-    #
-    # def extract_and_store_csv(self, response, description):
-    #     """Try to extract a json/csv from page html."""
-    #
-    #     config = response.meta['config']
-    #
-    #     hsh = self.hash_response(response)
-    #
-    #     output_filename = f"{self.data_folder}/csv/{hsh}"
-    #     if config["save_csv"]:
-    #         output_filename += ".csv"
-    #
-    #         # success = False
-    #         try:
-    #             table_attrs = [x for attrs in list(config.keys()) if 'table_' in x]
-    #                 if table_attrs is None or table_attrs == "":
-    #                     parsing_html.content.html_detect_content(
-    #                         description["relative_path"],
-    #                         is_string=False,
-    #                         output_file=output_filename,
-    #                         to_csv=config["save_csv"]
-    #                     )
-    #                 else:
-    #                     extra_config = self.extra_config_parser(
-    #                         config["table_attrs"])
-    #                     parsing_html.content.html_detect_content(
-    #                         description["relative_path"],
-    #                         is_string=False, output_file=output_filename,
-    #                         match=extra_config['table_match'],
-    #                         flavor=extra_config['table_flavor'],
-    #                         header=extra_config['table_header'],
-    #                         index_col=extra_config['table_index_col'],
-    #                         skiprows=extra_config['table_skiprows'],
-    #                         attrs=extra_config['table_attributes'],
-    #                         parse_dates=extra_config['table_parse_dates'],
-    #                         thousands=extra_config['table_thousands'],
-    #                         encoding=extra_config['table_encoding'],
-    #                         decimal=extra_config['table_decimal'],
-    #                         na_values=extra_config['table_na_values'],
-    #                         keep_default_na=extra_config['table_default_na'],
-    #                         displayed_only=extra_config['table_displayed_only'],
-    #                         to_csv=config["save_csv"]
-    #                     )
-    #                 success = True
-    #
-    #             except Exception as e:
-    #                 print(
-    #                     f"Could not extract csv from {response.url} -",
-    #                     f"message: {str(type(e))}-{e}"
-    #                 )
-    #
-    #     if success:
-    #         description["extracted_from"] = description["relative_path"]
-    #         description["relative_path"] = output_filename
-    #         description["type"] = "csv"
-    #         self.feed_file_description(f"{self.data_folder}csv/", description)
-    #         return [output_filename]
-    #
-    #     return []
-    #
-    # def convert_binary(self, url: str, filetype: str, filename: str):
-    #     if filetype != "pdf":
-    #         return
-    #
-    #     url_hash = crawling_utils.hash(url.encode())
-    #     source_file = f"{self.data_folder}files/{filename}"
-    #
-    #     success = False
-    #     results = None
-    #     try:
-    #         # single DataFrame or list of DataFrames
-    #         results = Extractor(source_file).extra().read()
-    #     except Exception as e:
-    #         print(
-    #             f"Could not extract csv files from {source_file} -",
-    #             f"message: {str(type(e))}-{e}"
-    #         )
-    #         return []
-    #
-    #     if type(results) == pandas.DataFrame:
-    #         results = [results]
-    #
-    #     extracted_files = []
-    #     for i in range(len(results)):
-    #         relative_path = f"{self.data_folder}csv/{url_hash}_{i}.csv"
-    #         results[i].to_csv(relative_path, encoding='utf-8', index=False)
-    #
-    #         extracted_files.append(relative_path)
-    #
-    #         item_desc = {
-    #             "file_name": f"{url_hash}_{i}.csv",
-    #             "type": "csv",
-    #             "extracted_from": source_file,
-    #             "relative_path": relative_path
-    #         }
-    #
-    #         FileDescriptor.feed_description(f"{self.data_folder}csv/", item_desc)
-    #
-    #     return extracted_files
-    #
-    #
-    # def extra_config_parser(self):
-    #     # get the table configs and formats in a python proper standard
-    #
-    #     extra_config = json.loads(table_attrs)
-    #     for key in extra_config:
-    #         if extra_config[key] == "":
-    #             extra_config[key] = None
-    #     if extra_config['table_match'] is None:
-    #         extra_config['table_match'] = '.+'
-    #     if extra_config['parse_dates'] is None:
-    #         extra_config['parse_dates'] = False
-    #     if extra_config['keep_default_na'] is None:
-    #         extra_config['keep_default_na'] = True
-    #     if extra_config['displayed_only'] is None:
-    #         extra_config['displayed_only'] = True
-    #     if extra_config['table_thousands'] is None:
-    #         extra_config['table_thousands'] = '.'
-    #     if extra_config['table_decimal'] is None:
-    #         extra_config['table_decimal'] = ', '
-    #
-    #     return extra_config

@@ -145,27 +145,6 @@ class CrawlRequest(TimeStamped):
     )
     download_imgs = models.BooleanField(default=False)
 
-
-    # ** Deactivated **
-    # PARSING #################################################################
-
-    # save_csv = models.BooleanField(default=True)
-    #
-    # table_match           = models.CharField(max_length=1000, blank=True)
-    # table_flavor          = models.CharField(max_length=1000, blank=True)
-    # table_header          = models.PositiveIntegerField(blank=True, null=True)
-    # table_index_col       = models.PositiveIntegerField(blank=True, null=True)
-    # table_skiprows        = models.PositiveIntegerField(blank=True, null=True)
-    # table_attributes      = models.CharField(max_length=1000, blank=True)
-    # table_thousands       = models.CharField(max_length=10, blank=True)
-    # table_encoding        = models.CharField(max_length=10, blank=True)
-    # table_decimal         = models.CharField(max_length=10, blank=True)
-    # table_na_values       = models.CharField(max_length=1000, blank=True)
-    # table_keep_default_na = models.BooleanField(default=False)
-    # table_displayed_only  = models.BooleanField(default=False)
-    # table_parse_dates     = models.BooleanField(default=False)
-
-
     steps = models.CharField(
         blank=True, null=True, max_length=9999999, default='{}')
 
