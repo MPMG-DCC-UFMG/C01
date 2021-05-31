@@ -138,6 +138,7 @@ class StaticPageSpider(BaseSpider):
 
         else:
             if urls_info is None:
+                print("No small files detected...")
                 return urls_found, set()
 
             urls_found = set(url for url, _, _, _ in urls_info)

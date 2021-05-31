@@ -343,7 +343,8 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
 
     download_files_check_large_content = forms.BooleanField(
-        required=False, label="Checar o tamanho dos arquivos a serem baixados")
+        required=False, initial=True, 
+        label="Checar o tamanho dos arquivos a serem baixados")
 
     download_imgs = forms.BooleanField(
         required=False, label="Baixar imagens")
