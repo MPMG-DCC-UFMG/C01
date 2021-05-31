@@ -645,7 +645,7 @@ class BaseSpider(scrapy.Spider):
             value = default
 
         elif type(value) == str:
-            value = tuple(value.split(","))
+            value = tuple(value.replace(" ", "").split(","))
 
         return value
 
