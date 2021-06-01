@@ -6,6 +6,7 @@ from step_crawler import functions_file
 import json
 import os
 import signal
+import sys
 
 # Enable interrupt signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
@@ -31,12 +32,13 @@ class MainConfig(AppConfig):
         # Setting all cralwers that were running when server was shut down
         # as not running
         # have to import here, after everything is ready
-        from .models import CrawlerInstance
-        instances = CrawlerInstance.objects.filter(running=True)
+        if not ('makemigrations' in sys.argv or 'migrate' in sys.argv):
+            from .models import CrawlerInstance
+            instances = CrawlerInstance.objects.filter(running=True)
 
-        for instance in instances:
-            instance.running = False
-            instance.save()
+            for instance in instances:
+                instance.running = False
+                instance.save()
 
     def ready(self):
         try:

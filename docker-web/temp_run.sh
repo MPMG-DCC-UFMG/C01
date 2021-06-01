@@ -1,7 +1,7 @@
 #!/bin/sh
 
-python manage.py makemigrations . --check --noinput;
-python3 manage.py migrate . zero  --noinput
+python manage.py makemigrations --check --noinput;
+python3 manage.py migrate --noinput
 python3 manage.py collectstatic --no-input --clear;
 
 # # TODO Remove this file when FileDescriptor is dockerized
