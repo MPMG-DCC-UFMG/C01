@@ -51,9 +51,6 @@ COPY docker-web/gunicorn.conf.py ./gunicorn.conf.py
 COPY docker-web/temp_run.sh ./temp_run.sh
 RUN chmod +x temp_run.sh
 
-COPY docker-web/run.sh ./run.sh
-RUN chmod +x run.sh
-
 RUN chown -R django:django $APP_HOME
 # RUN chown -R django:django /tmp/tika.log
 USER django
