@@ -1,6 +1,10 @@
+#needs to be imported before scrapy
+from scrapy_puppeteer import PuppeteerRequest
+
 # Scrapy and Twister libs
 import scrapy
 from scrapy.linkextractors import LinkExtractor
+from scrapy.http import HtmlResponse
 
 # Other external libs
 import logging
@@ -18,27 +22,41 @@ HTTP_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
 
 
-class StaticPageSpider(BaseSpider):
-    name = 'static_page'
+
+class PageSpider(BaseSpider):
+    name = 'page_spider'
 
     def start_requests(self):
         print("At StaticPageSpider.start_requests")
 
         for req in self.generate_initial_requests():
+            if self.config.get("dynamic_processing", False):
+                steps = json.loads(self.config["steps"])
 
-            # Don't send an empty dict, may cause spider to be blocked
-            body_contents = None
-            if bool(req['body']):
-                body_contents = json.dumps(req['body'])
+                yield PuppeteerRequest(url=req['url'],
+                    callback=self.dynamic_parse,
+                    dont_filter=True,
+                    meta={
+                        "referer": "start_requests",
+                        "config": self.config
+                    },
+                    steps=steps)
 
-            yield scrapy.Request(url=req['url'],
-                method=req['method'],
-                body=body_contents,
-                callback=self.parse,
-                meta={
-                    "referer": "start_requests",
-                },
-                errback=self.errback_httpbin)
+            else:
+                # Don't send an empty dict, may cause spider to be blocked
+                body_contents = None
+                if bool(req['body']):
+                    body_contents = json.dumps(req['body'])
+
+                yield scrapy.Request(url=req['url'],
+                    method=req['method'],
+                    body=body_contents,
+                    callback=self.parse,
+                    meta={
+                        "referer": "start_requests",
+                        "config": self.config
+                    },
+                    errback=self.errback_httpbin)
 
     def get_url_info(self, url: str) -> tuple:
         """Retrieves the type of URL content and its size"""
@@ -152,13 +170,28 @@ class StaticPageSpider(BaseSpider):
         src = []
         for img in response.xpath("//img"):
             img_src = img.xpath('@src').extract_first()
-            if img_src[0] == '/':
-                img_src = url_domain + img_src[1:]
-            src.append(img_src)
+            if type(img_src) is str:
+                if img_src[0] == '/':
+                    img_src = url_domain + img_src[1:]
+                src.append(img_src)
 
         print(f"+{len(src)}imgs found at page {response.url}")
 
         return set(src)
+
+    def dynamic_parse(self, response):
+        for page in list(response.request.meta["pages"].values()):
+            dynamic_response = HtmlResponse(
+                response.url,
+                status=response.status,
+                headers=response.headers,
+                body=page,
+                encoding='utf-8',
+                request=response.request
+            )
+
+            for request in self.parse(dynamic_response):
+                yield request
 
     def parse(self, response):
         """
