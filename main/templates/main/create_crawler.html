@@ -350,7 +350,7 @@ New Crawler
                                     <div id="download_img" class="" style="padding: 20px 20px 0 20px; border-top: 1px solid #DCDCDC;">
                                         {{ form.download_imgs | as_crispy_field}}
                                     </div>                                    
-                                    <div class="" style="padding: 0 20px 0 20px;">
+                                    <div class="download_check_large_files" style="padding: 0 20px 0 20px;">
                                         {{ form.download_files_check_large_content | as_crispy_field}}
                                         
                                         <p class="small">Caso não haja arquivos grandes (>1GB) a serem coletados, desabilite a opção acima para ganhar desempenho. </p>
@@ -361,62 +361,61 @@ New Crawler
                             </div>
                         </div>
                     </div>
-
-                    <div id="dynamic-processing-item-block" class="block" hidden>
-                        <div class="row" style="padding:20px;">
-                            {{ form.steps | as_crispy_field }}
-                        </div>
-
+                </div>
+                <div id="dynamic-processing-item-block" class="block" hidde>
+                    <div class="row" style="padding:20px;">
+                        {{ form.steps | as_crispy_field }}
                     </div>
 
-                    <div id="templated-url-item-block" class="block" hidden>
-                        <div class="row">
-                            <div class="col md-6" id="templated-url-config">
-                                {% include "main/request_config.html" with parameter_formset=parameter_formset response_formset=response_formset %}
-                            </div>
+                </div>
+
+                <div id="templated-url-item-block" class="block" hidden>
+                    <div class="row">
+                        <div class="col md-6" id="templated-url-config">
+                            {% include "main/request_config.html" with parameter_formset=parameter_formset response_formset=response_formset %}
                         </div>
                     </div>
+                </div>
 
-                    <div id="parsing-item-block" class="block" hidden>
-                        <div class="row" style="padding:20px;">
-                            <div class="col md-6">
-                                <div class="form-row">
-                                    <div class="form-group col-md-6 mb-0">
-                                        {{ form.save_csv | as_crispy_field}}
-                                    </div>
+                <div id="parsing-item-block" class="block" hidden>
+                    <div class="row" style="padding:20px;">
+                        <div class="col md-6">
+                            <div class="form-row">
+                                <div class="form-group col-md-6 mb-0">
+                                    {{ form.save_csv | as_crispy_field}}
                                 </div>
-                                <div id="js-extra-parsing" class="form-row">
-                                <div class="form-group col-md-12 mb-0">
-                                      {{ form.table_attrs | as_crispy_field}}
+                            </div>
+                            <div id="js-extra-parsing" class="form-row">
+                            <div class="form-group col-md-12 mb-0">
+                                  {{ form.table_attrs | as_crispy_field}}
 
-                                    <label for="table_match">Texto ou regex na tabela</label><br>
-                                    <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_match"><br>
-                                    <label for="table_flavor">Motor de extração</label><br>
-                                    <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_flavor"><br>
-                                    <label for="table_header">Linha com o nome das colunas na tabela</label><br>
-                                    <input type="number" class="dynamic_input_table numberinput form-control" name="table_header"><br>
-                                    <label for="table_index_col">Coluna que contêm o index</label><br>
-                                    <input type="number" class="dynamic_input_table numberinput form-control" name="table_index_col"><br>
-                                    <label for="table_skiprows">Número de linhas após o nome da coluna</label><br>
-                                    <input type="number" class="dynamic_input_table numberinput form-control" name="table_skiprows"><br>
-                                    <label for="table_attributes">Atributos da tabela</label><br>
-                                    <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_attributes"><br>
-                                    <label for="table_thousands">Separador de milhar</label><br>
-                                    <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_thousands"><br>
-                                    <label for="table_enconding">Encoding da página</label><br>
-                                    <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_enconding"><br>
-                                    <label for="table_decimal">Separador de decimal</label><br>
-                                    <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_decimal"><br>
-                                    <label for="table_na_values">Valores não presentes</label><br>
-                                    <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_na_values"><br>
-                                    <input type="checkbox" class="dynamic_input_table" name="table_keep_default_na" value="True">
-                                    <label for="table_keep_default_na"> Manter valores faltantes</label><br>
-                                    <input type="checkbox" class="dynamic_input_table" name="table_displayed_only" value="True">
-                                    <label for="table_displayed_only"> Elementos não-visíveis devem ser capturados</label><br>
-                                    <input type="checkbox" class="dynamic_input_table" name="table_parse_dates" value="True">
-                                    <label for="table_parse_dates"> Decodificar datas</label><br>
+                                <label for="table_match">Texto ou regex na tabela</label><br>
+                                <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_match"><br>
+                                <label for="table_flavor">Motor de extração</label><br>
+                                <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_flavor"><br>
+                                <label for="table_header">Linha com o nome das colunas na tabela</label><br>
+                                <input type="number" class="dynamic_input_table numberinput form-control" name="table_header"><br>
+                                <label for="table_index_col">Coluna que contêm o index</label><br>
+                                <input type="number" class="dynamic_input_table numberinput form-control" name="table_index_col"><br>
+                                <label for="table_skiprows">Número de linhas após o nome da coluna</label><br>
+                                <input type="number" class="dynamic_input_table numberinput form-control" name="table_skiprows"><br>
+                                <label for="table_attributes">Atributos da tabela</label><br>
+                                <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_attributes"><br>
+                                <label for="table_thousands">Separador de milhar</label><br>
+                                <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_thousands"><br>
+                                <label for="table_enconding">Encoding da página</label><br>
+                                <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_enconding"><br>
+                                <label for="table_decimal">Separador de decimal</label><br>
+                                <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_decimal"><br>
+                                <label for="table_na_values">Valores não presentes</label><br>
+                                <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_na_values"><br>
+                                <input type="checkbox" class="dynamic_input_table" name="table_keep_default_na" value="True">
+                                <label for="table_keep_default_na"> Manter valores faltantes</label><br>
+                                <input type="checkbox" class="dynamic_input_table" name="table_displayed_only" value="True">
+                                <label for="table_displayed_only"> Elementos não-visíveis devem ser capturados</label><br>
+                                <input type="checkbox" class="dynamic_input_table" name="table_parse_dates" value="True">
+                                <label for="table_parse_dates"> Decodificar datas</label><br>
 
-                                    </div>
                                 </div>
                             </div>
                         </div>
