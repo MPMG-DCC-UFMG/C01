@@ -6,7 +6,7 @@ services:
       context: ..
       dockerfile: ./docker-web/django-gunicorn.Dockerfile
     # TODO Change to use gunicorn directly when FileDescriptor is dockerized
-    command: ./temp_run.sh
+    entrypoint: ./temp_run.sh
     volumes:
       - static_volume:/home/django/C01/staticfiles
     expose:

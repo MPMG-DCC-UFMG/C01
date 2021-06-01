@@ -57,5 +57,3 @@ RUN chmod +x run.sh
 RUN chown -R django:django $APP_HOME
 # RUN chown -R django:django /tmp/tika.log
 USER django
-
-ENTRYPOINT [ "./run.sh" ]
