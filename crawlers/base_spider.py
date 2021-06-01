@@ -661,10 +661,13 @@ class BaseSpider(scrapy.Spider):
             self.config[attr] = self.preprocess_listify(self.config[attr], default)
 
         deny = "download_files_deny_extensions"
-        if deny not in self.config and len(self.download_allowed_extensions) > 0:
+        if len(self.download_allowed_extensions) > 0:
             extensions = [ext for ext in scrapy.linkextractors.IGNORED_EXTENSIONS]
             self.config[deny] = [ext for ext in extensions if ext not in self.download_allowed_extensions]
-
+        
+        else:
+            self.config[deny] = []
+        
         attr = "download_files_process_value"
         if self.config[attr] is not None and len(self.config[attr]) > 0 and type(self.config[attr]) is str:
             self.config[attr] = eval(self.config[attr])

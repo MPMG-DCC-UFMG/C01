@@ -37,7 +37,7 @@ class StaticPageSpider(BaseSpider):
                 callback=self.parse,
                 meta={
                     "referer": "start_requests",
-            },
+                },
                 errback=self.errback_httpbin)
 
     def get_url_info(self, url: str) -> tuple:
@@ -113,8 +113,8 @@ class StaticPageSpider(BaseSpider):
             urls_found = self.filter_urls_by_regex(urls_found, pattern)
 
         urls_info = None
-
-        if self.config["download_files_check_type"]:
+        
+        if len(self.download_allowed_extensions) > 0:
             urls_info = list(self.get_url_info(url) for url in urls_found)
             urls_info = self.filter_urls_by_content_type(urls_info, self.download_allowed_extensions)
 
@@ -138,7 +138,7 @@ class StaticPageSpider(BaseSpider):
 
         else:
             if urls_info is None:
-                print("No small files detected...")
+                print(f"+{len(urls_found)} small files detected...")
                 return urls_found, set()
 
             urls_found = set(url for url, _, _, _ in urls_info)

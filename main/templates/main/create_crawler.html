@@ -330,13 +330,6 @@ New Crawler
                                                 {{ form.download_files_allow_domains | as_crispy_field }}
                                                 {{ form.download_files_tags | as_crispy_field }}
                                                 {{ form.download_files_attrs | as_crispy_field }}
-                                                {{ form.download_files_check_type | as_crispy_field }}
-                                                <p>Se existirem urls que apontam para arquivos mas não <strong>terminam</strong>
-                                                    em uma extensão de arquivo, o coletor pode conferir o tipo da página pra qual a url aponta.
-                                                    Nesse caso, ele irá requisitar os <i>headers</i> da url. Se o tipo for <i>'text/html'</i>,
-                                                    a página será tratada com um html; caso contrário, como um arquivo. Habilitar essa opção
-                                                    pode deixar a coleta mais lenta, então priorize filtrar urls com regex.
-                                                </p>
                                                 {{ form.download_files_process_value | as_crispy_field }}
                                             </div>
                                         </div>
