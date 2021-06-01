@@ -65,7 +65,7 @@ try:
 except Exception:
     pass
 
-print(f"Creating database...")
-subprocess.run(["python", "manage.py", "makemigrations"])
-subprocess.run(["python", "manage.py", "migrate"])
-print()
+# print(f"Creating database...")
+# subprocess.run(["python", "manage.py", "makemigrations"])
+# subprocess.run(["python", "manage.py", "migrate"])
+# print()

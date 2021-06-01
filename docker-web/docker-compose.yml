@@ -11,6 +11,8 @@ services:
       - static_volume:/home/django/C01/staticfiles
     expose:
       - 8000
+    depends_on:
+      - db
   nginx:
     build:
       context: ..
@@ -21,6 +23,20 @@ services:
       - 8000:80
     depends_on:
       - web
+    links:
+      - web
+  db:
+    image: postgres:12.0-alpine
+    hostname: localhost
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=django
+      - POSTGRES_PASSWORD=c01_password
+      - POSTGRES_DB=c01_prod
+    ports:
+      - "5432:5432"
 
 volumes:
   static_volume:
+  postgres_data:

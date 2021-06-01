@@ -7,7 +7,7 @@ RUN apt-get update && apt-get upgrade -y && \
     apt-get autoclean && \
     apt-get install -f
 
-RUN apt-get update && apt-get install -y default-jre
+RUN apt-get update && apt-get install -y default-jre postgresql postgresql-client gcc musl-dev
 
 # Don't create bytecode files
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -51,8 +51,11 @@ COPY docker-web/gunicorn.conf.py ./gunicorn.conf.py
 COPY docker-web/temp_run.sh ./temp_run.sh
 RUN chmod +x temp_run.sh
 
+COPY docker-web/run.sh ./run.sh
+RUN chmod +x run.sh
+
 RUN chown -R django:django $APP_HOME
 # RUN chown -R django:django /tmp/tika.log
 USER django
 
-RUN python3 manage.py collectstatic --no-input --clear
+ENTRYPOINT [ "./run.sh" ]
