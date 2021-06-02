@@ -1,6 +1,10 @@
+#needs to be imported before scrapy
+from scrapy_puppeteer import PuppeteerRequest
+
 # Scrapy and Twister libs
 import scrapy
 from scrapy.linkextractors import LinkExtractor
+from scrapy.http import HtmlResponse
 
 # Other external libs
 import logging
@@ -15,28 +19,40 @@ import crawling_utils
 
 LARGE_CONTENT_LENGTH = 1e9
 
-class StaticPageSpider(BaseSpider):
-    name = 'static_page'
+
+class PageSpider(BaseSpider):
+    name = 'page_spider'
 
     def start_requests(self):
         print("At StaticPageSpider.start_requests")
 
         for req in self.generate_initial_requests():
+            if self.config.get("dynamic_processing", False):
+                steps = json.loads(self.config["steps"])
 
-            # Don't send an empty dict, may cause spider to be blocked
-            body_contents = None
-            if bool(req['body']):
-                body_contents = json.dumps(req['body'])
+                yield PuppeteerRequest(url=req['url'],
+                    callback=self.dynamic_parse,
+                    dont_filter=True,
+                    meta={
+                        "referer": "start_requests",
+                        "config": self.config
+                    },
+                    steps=steps)
+            else:
+                # Don't send an empty dict, may cause spider to be blocked
+                body_contents = None
+                if bool(req['body']):
+                    body_contents = json.dumps(req['body'])
 
-            yield scrapy.Request(url=req['url'],
-                method=req['method'],
-                body=body_contents,
-                callback=self.parse,
-                meta={
-                    "referer": "start_requests",
-                    "config": self.config,
+                yield scrapy.Request(url=req['url'],
+                    method=req['method'],
+                    body=body_contents,
+                    callback=self.parse,
+                    meta={
+                        "referer": "start_requests",
+                        "config": self.config
                 },
-                errback=self.errback_httpbin)
+                    errback=self.errback_httpbin)
 
     def convert_allow_extesions(self, config):
         """Converts 'allow_extesions' configuration into 'deny_extesions'."""
@@ -222,7 +238,7 @@ class StaticPageSpider(BaseSpider):
         urls_files = urls_files.difference(urls_large_content)
 
         urls_small_content_b, urls_large_content_b = self.split_urls_in_small_content(urls_files)
-        
+
         urls_small_content = urls_small_content.union(urls_small_content_b)
         urls_large_content = urls_large_content.union(urls_large_content_b)
 
@@ -237,12 +253,27 @@ class StaticPageSpider(BaseSpider):
         src = []
         for img in response.xpath("//img"):
             img_src = img.xpath('@src').extract_first()
-            if img_src[0] == '/':
-                img_src = url_domain + img_src[1:]
-            src.append(img_src)
+            if type(img_src) is str:
+                if img_src[0] == '/':
+                    img_src = url_domain + img_src[1:]
+                src.append(img_src)
 
         print(f"imgs found at page {response.url}", src)
         return set(src)
+
+    def dynamic_parse(self, response):
+        for page in list(response.request.meta["pages"].values()):
+            dynamic_response = HtmlResponse(
+                response.url,
+                status=response.status,
+                headers=response.headers,
+                body=page,
+                encoding='utf-8',
+                request=response.request
+            )
+
+            for request in self.parse(dynamic_response):
+                yield request
 
     def parse(self, response):
         """
@@ -252,7 +283,7 @@ class StaticPageSpider(BaseSpider):
         response_type = response.headers['Content-type']
         print(f"Parsing {response.url}, type: {response_type}")
 
-        config = response.meta['config']
+        config = response.request.meta['config']
 
         if self.stop():
             return
@@ -262,7 +293,7 @@ class StaticPageSpider(BaseSpider):
             return
 
         self.store_html(response)
-        
+
         urls = set()
         urls_large_file_content = []
         if "explore_links" in config and config["explore_links"]:
@@ -280,8 +311,8 @@ class StaticPageSpider(BaseSpider):
             size = len(urls_large_file_content)
             for idx, url in enumerate(urls_large_file_content, 1):
                 print(f"Downloading large file {url} {idx} of {size}")
-                self.store_large_file(url, response.meta["referer"]) 
-                
+                self.store_large_file(url, response.meta["referer"])
+
                 # So that the interval between requests is concise between Scrapy and downloading large files
                 if self.config["antiblock_download_delay"]:
                     print(f"Waiting {self.config['antiblock_download_delay']}s for the next download...")
@@ -289,7 +320,7 @@ class StaticPageSpider(BaseSpider):
 
         for url in urls:
             yield scrapy.Request(
-                url=url, 
+                url=url,
                 callback=self.parse,
                 meta={
                     "referer": response.url,

@@ -20,8 +20,8 @@ class ProbingResponseTest(unittest.TestCase):
         """
 
         # Mock responses with 200 and 404 HTTP status codes
-        status200 = mock.MagicMock(spec=ResponseData, status_code=200)
-        status404 = mock.MagicMock(spec=ResponseData, status_code=404)
+        status200 = mock.create_autospec(ResponseData, status_code=200)
+        status404 = mock.create_autospec(ResponseData, status_code=404)
 
         # Validates the entry with an HTTP status of 200
         resp_handler = HTTPStatusProbingResponse(200)
@@ -44,9 +44,9 @@ class ProbingResponseTest(unittest.TestCase):
         """
 
         # Mock responses with different text contents
-        text_found = mock.MagicMock(spec=ResponseData,
+        text_found = mock.create_autospec(ResponseData,
                                     text="Page found in our database")
-        text_not_found = mock.MagicMock(spec=ResponseData,
+        text_not_found = mock.create_autospec(ResponseData,
                                         text="Sorry, page not found")
 
         # Validates response with a given text
@@ -76,9 +76,9 @@ class ProbingResponseTest(unittest.TestCase):
 
         # Mock text and binary responses
         text_header = {'Content-Type': 'text/json'}
-        text_resp = mock.MagicMock(spec=ResponseData, headers=text_header)
+        text_resp = mock.create_autospec(ResponseData, headers=text_header)
         binary_header = {'Content-Type': 'application/vnd.ms-excel'}
-        binary_resp = mock.MagicMock(spec=ResponseData, headers=binary_header)
+        binary_resp = mock.create_autospec(ResponseData, headers=binary_header)
 
         # Validates binary response
         resp_handler = BinaryFormatProbingResponse()
