@@ -5,11 +5,13 @@ from scrapy.linkextractors import LinkExtractor
 # Other external libs
 import re
 import datetime
+import random 
 
 from crawling.spiders.base_spider import BaseSpider
 from crawling.items import RawResponseItem
 
 import crawling_utils
+from scrapy_puppeteer import PuppeteerRequest
 
 LARGE_CONTENT_LENGTH = 1e9
 HTTP_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
@@ -151,22 +153,33 @@ class StaticPageSpider(BaseSpider):
         Parse responses of static pages.
         Will try to follow links if config["explore_links"] is set.
         """
-        referer = response.meta["attrs"]["referer"]
-        self._logger.info(f"[{self.config['source_name']}] Parsing \"{response.url}\" originated from \"{referer}\"")
 
-        if self.config.get("explore_links", False):
-            for link in self.extract_links(response):
-                yield Request(url=link,
-                            callback=self.parse,
-                            meta={"attrs": {'referer': response.url}},
-                            errback=self.errback_httpbin)
+        print('\n' * 20)
+        if type(response.request) is PuppeteerRequest:
+            for page in list(response.request.meta["pages"].values()):
+                filename = f'content_crawled_{random.randint(1, 999):03}.html' 
+                print(f'Saving {filename} with content size: {len(page)}...')
+                with open(filename, 'w+') as f:
+                    f.write(page.decode())
+        print('\n' * 20)
 
-        files_found = set()
-        if self.config.get("download_files", False):
-            files_found = self.extract_files(response)
 
-        images_found = set()
-        if self.config.get("download_imgs", False):
-            images_found = self.extract_imgs(response)
+        # referer = response.meta["attrs"]["referer"]
+        # self._logger.info(f"[{self.config['source_name']}] Parsing \"{response.url}\" originated from \"{referer}\"")
 
-        yield self.response_to_item(response, files_found, images_found)
+        # if self.config.get("explore_links", False):
+        #     for link in self.extract_links(response):
+        #         yield Request(url=link,
+        #                     callback=self.parse,
+        #                     meta={"attrs": {'referer': response.url}},
+        #                     errback=self.errback_httpbin)
+
+        # files_found = set()
+        # if self.config.get("download_files", False):
+        #     files_found = self.extract_files(response)
+
+        # images_found = set()
+        # if self.config.get("download_imgs", False):
+        #     images_found = self.extract_imgs(response)
+
+        # yield self.response_to_item(response, files_found, images_found)

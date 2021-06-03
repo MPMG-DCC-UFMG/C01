@@ -33,6 +33,7 @@ from scutils.redis_queue import RedisPriorityQueue
 from scutils.redis_throttled_queue import RedisThrottledQueue
 from scutils.log_factory import LogFactory
 
+from scrapy_puppeteer import PuppeteerRequest
 
 class DistributedScheduler(object):
     '''
@@ -554,12 +555,17 @@ class DistributedScheduler(object):
         return None
 
     def request_from_feed(self, item):
-        try:
-            req = Request(item['url'])
-        except ValueError:
-            # need absolute url
-            # need better url validation here
-            req = Request('http://' + item['url'])
+        if settings.get('DYNAMIC_PROCESSING'):
+            steps = settings.get('DYNAMIC_PROCESSING_STEPS')
+            req = PuppeteerRequest(url=item['url'], steps=steps)
+
+        else:
+            try:
+                req = Request(item['url'])
+            except ValueError:
+                # need absolute url
+                # need better url validation here
+                req = Request('http://' + item['url'])
 
         # defaults not in schema
         if 'curdepth' not in item:

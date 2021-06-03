@@ -2,6 +2,10 @@
 This file is responsible for managing the creation and closure of spiders
 """
 
+import asyncio
+from twisted.internet import asyncioreactor
+asyncioreactor.install(asyncio.get_event_loop())
+
 import os
 import sys
 from multiprocessing import Process
@@ -14,6 +18,8 @@ from scrapy.spiders import Spider
 
 from crawling.spiders.static_page import StaticPageSpider
 from kafka_logger import KafkaLogger
+
+
 
 with open('base_config.json') as f:
     base_config = ujson.loads(f.read())
@@ -43,7 +49,15 @@ class Executor:
 
         # base_config["ROBOTSTXT_OBEY"] = config['obey_robots']
         # base_config["DOWNLOAD_DELAY"] = 1
-        # # base_config["DOWNLOADER_MIDDLEWARES"] = {'scrapy_puppeteer.PuppeteerMiddleware': 800}
+        
+        base_config["DYNAMIC_PROCESSING"] = False 
+        base_config["DYNAMIC_PROCESSING_STEPS"] = {} 
+        
+        if config.get("dynamic_processing", False):
+            base_config["DOWNLOADER_MIDDLEWARES"] = {'scrapy_puppeteer.PuppeteerMiddleware': 800}
+            base_config["DYNAMIC_PROCESSING"] = True 
+            base_config["DYNAMIC_PROCESSING_STEPS"] = ujson.loads(config["steps"])
+
         # base_config["DOWNLOAD_DELAY"] = config["antiblock_download_delay"]
         # base_config["RANDOMIZE_DOWNLOAD_DELAY"] = True
         # base_config["AUTOTHROTTLE_ENABLED"] = config[f"{autothrottle}enabled"]
@@ -86,8 +100,8 @@ class Executor:
 
         process = CrawlerProcess(settings=base_settings)
 
-        sys.stdout = KafkaLogger(instance_id, logger_name, 'out')
-        sys.stderr = KafkaLogger(instance_id, logger_name, 'err')
+        # sys.stdout = KafkaLogger(instance_id, logger_name, 'out')
+        # sys.stderr = KafkaLogger(instance_id, logger_name, 'err')
 
         process.crawl(StaticPageSpider, name=crawler_id, container_id=self.__container_id, config=ujson.dumps(config))
 
