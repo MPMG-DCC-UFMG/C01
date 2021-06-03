@@ -6,7 +6,9 @@ services:
       context: ..
       dockerfile: ./docker-web/django-gunicorn.Dockerfile
     # TODO Change to use gunicorn directly when FileDescriptor is dockerized
-    entrypoint: ./temp_run.sh
+    command: ./temp_run.sh
+    environment:
+      - EXECUTION_TYPE=distributed
     volumes:
       - static_volume:/home/django/C01/staticfiles
     expose:
@@ -30,10 +32,8 @@ services:
     hostname: localhost
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-    environment:
-      - POSTGRES_USER=django
-      - POSTGRES_PASSWORD=c01_password
-      - POSTGRES_DB=c01_prod
+    env_file:
+      - .env.prod
     ports:
       - "5432:5432"
 
