@@ -281,7 +281,7 @@ class PageSpider(BaseSpider):
         Will try to follow links if config["explore_links"] is set.
         """
         response_type = response.headers['Content-type']
-
+        print(f"Parsing {response.url}, type: {response_type}")
         config = response.request.meta['config']
 
         if self.stop():

@@ -230,7 +230,7 @@ function checkRelatedFields() {
         checkAntiblock();
     }
 
-    if (input_name.length >= 6 && input_name.substring(0, 13) == "templated-url") {
+    if (input_name.length >= 13 && input_name.substring(0, 13) == "templated-url") {
         checkTemplatedURL();
     }
 
