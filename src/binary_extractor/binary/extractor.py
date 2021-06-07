@@ -5,11 +5,12 @@ This module calls the extraction of a binary file.
 
 import filetype
 
-from xlrd import open_workbook, XLRDError
+import openpyxl as xl
 
 from .excel_extractor import ExcelExtractor
 from .texts_extractor import TextsExtractor
 from .tabula_extractor import TabulaExtractor
+
 
 class Extractor():
     """
@@ -49,8 +50,8 @@ class Extractor():
         """
 
         try:
-            open_workbook(self.path)
-        except XLRDError:
+            xl.load_workbook(self.path)
+        except xl.utils.exceptions.InvalidFileException:
             return TextsExtractor(self.path)
         else:
             return ExcelExtractor(self.path)

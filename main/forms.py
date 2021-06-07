@@ -43,7 +43,7 @@ class CrawlRequestForm(forms.ModelForm):
             'webdriver_path',
             'img_xpath',
             'sound_xpath',
-            'crawler_type',
+            'dynamic_processing',
             'explore_links',
 
             'link_extractor_max_depth',
@@ -64,8 +64,6 @@ class CrawlRequestForm(forms.ModelForm):
             'download_files_allow_extensions',
 
             'download_imgs',
-            'wait_crawler_finish_to_download',
-            'time_between_downloads',
             'steps',
             'save_csv',
             'table_attrs',
@@ -235,15 +233,13 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
 
     # CRAWLER TYPE ############################################################
-    crawler_type = forms.ChoiceField(
-        required=False, choices=(
-            ('static_page', 'Página estática'),
-            ('form_page', 'Páginas com formulário'),
-            # ('single_file', 'Arquivo único'),
-            # ('bundle_file', 'Conjunto de arquivos'),
-        ),
-        widget=forms.Select(attrs={'onchange': 'detailCrawlerType();'})
+    dynamic_processing = forms.BooleanField(
+        required=False, label="Processamento dinâmico",
+        widget=forms.CheckboxInput(
+            attrs={'onchange': 'detailDynamicProcessing();'}
+        )
     )
+
     explore_links = forms.BooleanField(required=False, label="Explorar links")
 
     # Crawler Type - Static
@@ -345,14 +341,6 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     download_imgs = forms.BooleanField(
         required=False, label="Baixar imagens")
-
-    wait_crawler_finish_to_download = forms.BooleanField(
-        required=False, label="Esperar coletor finalizar para baixar arquivos")
-
-    time_between_downloads = forms.IntegerField(
-        required=False,
-        label="Tempo entre requisições de download de arquivos",
-    )
 
     # Crawler Type - Page with form
     steps = forms.CharField(required=False, label="Steps JSON",

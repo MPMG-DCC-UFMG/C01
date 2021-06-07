@@ -16,8 +16,7 @@ from multiprocessing import Process
 import crawling_utils.crawling_utils as crawling_utils
 from crawlers.constants import *
 from crawlers.file_descriptor import FileDescriptor
-from crawlers.file_downloader import FileDownloader
-from crawlers.static_page import StaticPageSpider
+
 
 # TODO: implement following antiblock options
 # antiblock_mask_type
@@ -29,15 +28,6 @@ from crawlers.static_page import StaticPageSpider
 # antiblock_user_agents_file
 # antiblock_cookies_file
 # antiblock_persist_cookies
-
-
-def file_downloader_process():
-    """Redirects downloader output and starts downloader consumer loop."""
-    crawling_utils.check_file_path("crawlers/log/")
-    sys.stdout = open(f"crawlers/log/file_downloader.out", "w+", buffering=1)
-    sys.stderr = open(f"crawlers/log/file_downloader.err", "w+", buffering=1)
-    FileDownloader.download_consumer()
-
 
 def file_descriptor_process():
     """Redirects descriptor output and starts descriptor consumer loop."""
@@ -64,21 +54,27 @@ def create_folders(data_path):
 def get_crawler_base_settings(config):
     """Returns scrapy base configurations."""
     autothrottle = "antiblock_autothrottle_"
-    return {
+    settings = {
         "BOT_NAME": "crawlers",
         "ROBOTSTXT_OBEY": config['obey_robots'],
         "DOWNLOAD_DELAY": 1,
         # "DOWNLOADER_MIDDLEWARES": {"redirect_middleware.RedirectMiddlewareC04": 0},
-        "DOWNLOADER_MIDDLEWARES": {'scrapy_puppeteer.PuppeteerMiddleware': 800},
         "DOWNLOAD_DELAY": config["antiblock_download_delay"],
         "RANDOMIZE_DOWNLOAD_DELAY": True,
         "AUTOTHROTTLE_ENABLED": config[f"{autothrottle}enabled"],
         "AUTOTHROTTLE_START_DELAY": config[f"{autothrottle}start_delay"],
         "AUTOTHROTTLE_MAX_DELAY": config[f"{autothrottle}max_delay"],
+        "DEPTH_LIMIT": config["link_extractor_max_depth"]
     }
+
+    if config.get("dynamic_processing", False):
+        settings["DOWNLOADER_MIDDLEWARES"] = {'scrapy_puppeteer.PuppeteerMiddleware': 800}
+    return settings
 
 
 def crawler_process(config):
+    import scrapy_puppeteer
+    from crawlers.page_spider import PageSpider
     """Starts crawling."""
     crawler_id = config["crawler_id"]
     instance_id = config["instance_id"]
@@ -89,18 +85,7 @@ def crawler_process(config):
     sys.stderr = open(f"{data_path}/log/{instance_id}.err", "a", buffering=1)
 
     process = CrawlerProcess(settings=get_crawler_base_settings(config))
-
-    if config["crawler_type"] == "single_file":
-        # process.crawl(StaticPageSpider, crawler_id=crawler_id)
-        raise NotImplementedError
-    elif config["crawler_type"] == "file_bundle":
-        # process.crawl(StaticPageSpider, crawler_id=crawler_id)
-        raise NotImplementedError
-    elif config["crawler_type"] == "deep_crawler":
-        # process.crawl(StaticPageSpider, crawler_id=crawler_id)
-        raise NotImplementedError
-    elif config["crawler_type"] == "static_page":
-        process.crawl(StaticPageSpider, config=json.dumps(config))
+    process.crawl(PageSpider, config=json.dumps(config))
 
     def update_database():
         # TODO: get port as variable

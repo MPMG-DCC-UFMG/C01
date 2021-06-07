@@ -94,19 +94,6 @@ class PuppeteerMiddleware:
         else:
             await page.setCookie(request.cookies)
 
-        # The headers must be set using request interception
-        await page.setRequestInterception(True)
-
-        @page.on('request')
-        async def _handle_headers(pu_request):
-            overrides = {
-                'headers': {
-                    k.decode(): ','.join(map(lambda v: v.decode(), v))
-                    for k, v in request.headers.items()
-                }
-            }
-            await pu_request.continue_(overrides=overrides)
-
         try:
             response = await page.goto(
                 request.url,
