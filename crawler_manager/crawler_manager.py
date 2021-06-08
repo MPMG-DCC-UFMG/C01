@@ -1,26 +1,20 @@
-import json
-import itertools
 import random
-import sys
 import time
-from datetime import datetime
 
 # Project libs
 from crawler_manager.log_writer import LogWriter
 from crawler_manager.message_sender import MessageSender
-from crawler_manager.spider_manager_handler import SpiderManagerListener
-from crawler_manager import settings
-
-from entry_probing import BinaryFormatProbingResponse, HTTPProbingRequest, HTTPStatusProbingResponse, TextMatchProbingResponse, EntryProbing
-from param_injector import ParamInjector
-from range_inference import RangeInference
+from crawler_manager.spider_manager_listener import SpiderManagerListener
 
 message_sender = MessageSender()
-sm_listener = SpiderManagerListener()
 
 def log_writer_process():
     """Redirects log_writer output and starts descriptor consumer loop."""
     LogWriter.log_consumer()
+
+def run_spider_manager_listener():
+    sm_listener = SpiderManagerListener()
+    sm_listener.run()
 
 def gen_key():
     """Generates a unique key based on time and a random seed."""

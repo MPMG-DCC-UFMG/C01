@@ -227,8 +227,6 @@ def generate_templated_urls(base_url, crawler_id, instance_id, req_type, req_bod
         param_generator = itertools.product(*url_injectors)
         for param_combination in param_generator:
             curr_url = base_url.format(*param_combination)
-            print(f'\t\tSent request "{curr_url}" to redis...')
-            
             if probe.check_entry(param_combination):
                 curr_url = base_url.format(*param_combination)
                 req = format_request(curr_url, crawler_id, instance_id)

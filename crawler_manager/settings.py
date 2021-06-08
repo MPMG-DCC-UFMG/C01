@@ -9,6 +9,7 @@ COMMANDS_TOPIC = 'sm_commands'
 # Transmits messages about creating or terminating spiders
 NOTIFICATIONS_TOPIC = 'sm_notifications'
 
+# Broadcast messages to generate initial crawl urls
 LINK_GENERATOR_TOPIC = 'sm_link_generator'
 
 # 

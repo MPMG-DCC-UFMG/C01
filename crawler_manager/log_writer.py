@@ -5,6 +5,8 @@ import json
 from django.apps import apps
 from kafka import KafkaConsumer
 
+from crawler_manager import settings
+
 class LogWriter():
     """
     This class consumes logs from running spiders and save them in the database.
@@ -18,7 +20,7 @@ class LogWriter():
     DEFAULT_CONSUMER_PARAMS = {
         'enable_auto_commit': True,
         'auto_offset_reset': 'latest',
-        'bootstrap_servers': ['localhost:9092'],
+        'bootstrap_servers': settings.KAFKA_HOSTS,
         'value_deserializer': lambda m: json.loads(m.decode('utf-8'))
     }
 
@@ -28,7 +30,7 @@ class LogWriter():
         This is a kafka consumer and parser for each message.
 
         """
-        consumer = KafkaConsumer('sm_logs', **params)
+        consumer = KafkaConsumer(settings.LOGGING_TOPIC, **params)
         try:
             for message in consumer:
                 log = {}
@@ -39,6 +41,7 @@ class LogWriter():
                 log['lvl'] = message.value['levelname']
 
                 LogWriter.log_writer(log)
+
         finally:
             consumer.close()
 
