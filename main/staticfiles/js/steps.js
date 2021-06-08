@@ -21,7 +21,7 @@ function load_steps_interface(interface_root_element_id, output_element_id, json
             return value;
         })
         step_list = step_list.concat(JSON.parse('{"name":"object", "mandatory_params":["ex: [1,2,3]"], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name":"for each", "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name":"para cada", "mandatory_params":[], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name":"for each page in", "mandatory_params":[], "optional_params":{}}'))
         init_steps_creation_interface(interface_root_element, output_element, step_list)
       }
@@ -120,7 +120,7 @@ function get_last_depth(){
         step_board = find_parent_with_attr_worth(this, "step_board")
         if(step_board.children.length>0){
             last_step = step_board.children[step_board.children.length-1]
-            if(last_step.step.name == "for each" || last_step.step.name == "for each page in"){
+            if(last_step.step.name == "para cada" || last_step.step.name == "for each page in"){
                 return last_step.depth + 1
             }else{
                 return last_step.depth
@@ -183,7 +183,7 @@ function get_step_json_format(block){
         step : param_name,
         depth : block.depth,
     }
-    if(param_name == "for each"){
+    if(param_name == "para cada"){
         step_dict.iterator = block.iterator_input.value
         step_dict.children = []
         step_dict.iterable = {call:{}}

@@ -314,7 +314,7 @@ function refresh_step(){
     block.step = get_step_info(this.value, block.step_list)
     block.params = []
 
-    if(this.value=="for each"){
+    if(this.value=="para cada"){
         block.turn_to_for_step()
     }else if(this.value=="for each page in"){
         block.turn_to_pagination_step()

@@ -8,12 +8,8 @@ from captcha_solver.image_solver import ImageSolver
 from pyext import RuntimeModule
 
 
-def repete(stop):
-    return [i for i in range(stop)]
-
-
-def print_(word):
-    return word
+def repete(vezes):
+    return [i for i in range(vezes)]
 
 
 def espere(segs):
