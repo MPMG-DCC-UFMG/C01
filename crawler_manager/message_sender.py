@@ -26,7 +26,7 @@ class MessageSender:
             'parameter_handlers': config['parameter_handlers']
         }
 
-        self.__producer.send(settings.LINK_GENERATOR_TOPIC, lite_config)
+        self.__producer.send(settings.LINK_GENERATOR_TOPIC, {'start': lite_config})
         self.__producer.send(settings.COMMANDS_TOPIC, {'create': config})
         self.__producer.flush()
 
@@ -36,5 +36,6 @@ class MessageSender:
         Args:
             - crawler_id: Unique crawler identifier
         """
+        self.__producer.send(settings.LINK_GENERATOR_TOPIC, {'stop': crawler_id})
         self.__producer.send(settings.COMMANDS_TOPIC, {'stop': crawler_id})
         self.__producer.flush()
