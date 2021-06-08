@@ -13,13 +13,13 @@ from .forms import CrawlRequestForm, RawCrawlRequestForm,\
 from .models import CrawlRequest, CrawlerInstance, Log
 from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer
 
-from crawlers.constants import *
+from crawler_manager.constants import *
 
 from datetime import datetime
 import json
 import time
 
-import crawlers.crawler_manager as crawler_manager
+import crawler_manager.crawler_manager as crawler_manager
 
 
 # Helper methods

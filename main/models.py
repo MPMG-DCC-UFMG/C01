@@ -2,7 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.core.validators import RegexValidator
 
-from crawlers.constants import *
+from crawler_manager.constants import *
 
 
 class TimeStamped(models.Model):

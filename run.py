@@ -7,7 +7,7 @@ import subprocess
 import sys
 import time
 
-# from crawlers.crawler_manager import file_descriptor_process
+# from crawler_manager.crawler_manager import file_descriptor_process
 
 import crawling_utils.crawling_utils as crawling_utils
 
@@ -48,18 +48,18 @@ def run_django():
     subprocess.run(["python", "manage.py", "runserver", "--noreload"] + sys.argv[1:])
 
 def run_zookeeper():
-    crawling_utils.check_file_path("crawlers/log/")
+    crawling_utils.check_file_path("crawler_manager/log/")
     os.chdir('kafka_2.13-2.4.0')
 
     # Starts zookeeper server with overriten properties
     subprocess.run(['bin/zookeeper-server-start.sh',
                     'config/zoo.properties'],
-                   stdout=open(f"../crawlers/log/zookeeper.out", "a", buffering=1),
-                   stderr=open(f"../crawlers/log/zookeeper.err", "a", buffering=1))
+                   stdout=open(f"../crawler_manager/log/zookeeper.out", "a", buffering=1),
+                   stderr=open(f"../crawler_manager/log/zookeeper.err", "a", buffering=1))
 
 def run_kafka():
     wait_for_port(2181)
-    crawling_utils.check_file_path("crawlers/log/")
+    crawling_utils.check_file_path("crawler_manager/log/")
     os.chdir('kafka_2.13-2.4.0')
 
     # Starts kafka server
@@ -67,8 +67,8 @@ def run_kafka():
                     'config/server.properties',
                     '--override',
                     'log.dirs=kafka-logs'],
-                   stdout=open(f"../crawlers/log/kafka.out", "a", buffering=1),
-                   stderr=open(f"../crawlers/log/kafka.err", "a", buffering=1))
+                   stdout=open(f"../crawler_manager/log/kafka.out", "a", buffering=1),
+                   stderr=open(f"../crawler_manager/log/kafka.err", "a", buffering=1))
 
 # def runn_file_descriptor():
 #     file_descriptor_process()

@@ -6,10 +6,10 @@ import time
 from datetime import datetime
 
 # Project libs
-from crawlers.log_writer import LogWriter
-from crawlers.message_sender import MessageSender
-from crawlers.spider_manager_handler import SpiderManagerListener
-from crawlers import settings
+from crawler_manager.log_writer import LogWriter
+from crawler_manager.message_sender import MessageSender
+from crawler_manager.spider_manager_handler import SpiderManagerListener
+from crawler_manager import settings
 
 from entry_probing import BinaryFormatProbingResponse, HTTPProbingRequest, HTTPStatusProbingResponse, TextMatchProbingResponse, EntryProbing
 from param_injector import ParamInjector

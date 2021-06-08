@@ -6,7 +6,7 @@ from threading import Thread
 import requests
 from kafka import KafkaConsumer
 
-from crawlers import settings
+from crawler_manager import settings
 
 
 class SpiderManagerListener:

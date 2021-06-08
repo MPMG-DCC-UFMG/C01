@@ -7,10 +7,10 @@ from multiprocessing import Process
 from django.apps import AppConfig
 from django.db.utils import OperationalError
 
-from crawlers.crawler_manager import log_writer_process
+from crawler_manager.crawler_manager import log_writer_process
 from step_crawler import functions_file
 from step_crawler import parameter_extractor
-from crawlers.crawler_manager import sm_listener
+from crawler_manager.crawler_manager import sm_listener
 
 # Enable interrupt signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)

@@ -3,7 +3,7 @@
 import ujson
 from kafka import KafkaProducer
 
-from crawlers import settings
+from crawler_manager import settings
 
 class MessageSender:
     def __init__(self):

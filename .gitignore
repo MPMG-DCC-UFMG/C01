@@ -151,7 +151,7 @@ cython_debug/
 kafka_*/
 temp_description_folder/
 redis-*/
-crawlers/log/
+crawler_manager/log/
 
 .vscode/
 
