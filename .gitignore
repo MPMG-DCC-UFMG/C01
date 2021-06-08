@@ -158,3 +158,4 @@ crawler_manager/log/
 main/staticfiles/json/step*_signature.json
 utils/tests/
 utils/examples/
+main/migrations/
