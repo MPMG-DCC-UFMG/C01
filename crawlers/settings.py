@@ -9,6 +9,8 @@ COMMANDS_TOPIC = 'sm_commands'
 # Transmits messages about creating or terminating spiders
 NOTIFICATIONS_TOPIC = 'sm_notifications'
 
+LINK_GENERATOR_TOPIC = 'sm_link_generator'
+
 # 
 KAFKA_HOSTS = ['localhost:9092']
 

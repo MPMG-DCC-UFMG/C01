@@ -12,9 +12,8 @@ def run() -> None:
 
     print('Waiting message...')
     for message in consumer:
-        print('Message received')
+        print('New Message received')
         config = message.value
-
         print('\tStarting a new process...')
         p = Process(target=generate_requests, args=(config,))
         p.start() 

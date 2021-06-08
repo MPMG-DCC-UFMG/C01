@@ -215,24 +215,35 @@ def generate_templated_urls(base_url, crawler_id, instance_id, req_type, req_bod
         sid=crawler_id,
         dom=ex_res.domain,
         suf=ex_res.suffix)
-
-    probe = create_probing_object(base_url, req_type, req_body, response_handlers)
     
-    # Instantiate the parameter injectors for the URL
-    url_injectors = create_parameter_generators(probe, parameter_handlers)
-    
-    # Generate the requests
-    param_generator = itertools.product(*url_injectors)
-    for param_combination in param_generator:
-        if probe.check_entry(param_combination):
+    has_placeholder = "{}" in base_url
+    if has_placeholder:
+        probe = create_probing_object(base_url, req_type, req_body, response_handlers)
+        
+        # Instantiate the parameter injectors for the URL
+        url_injectors = create_parameter_generators(probe, parameter_handlers)
+        
+        # Generate the requests
+        param_generator = itertools.product(*url_injectors)
+        for param_combination in param_generator:
             curr_url = base_url.format(*param_combination)
-            req = format_request(curr_url, crawler_id, instance_id)
-            val = json.dumps(req)
-            redis_conn.zadd(key, {val: -req['priority']})
+            print(f'\t\tSent request "{curr_url}" to redis...')
             
-            print(f'Sent request "{curr_url}" to redis...')
+            if probe.check_entry(param_combination):
+                curr_url = base_url.format(*param_combination)
+                req = format_request(curr_url, crawler_id, instance_id)
+                val = json.dumps(req)
+                redis_conn.zadd(key, {val: -req['priority']})
+                
+                print(f'\t\tSent request "{curr_url}" to redis...')
+    else:
+        req = format_request(base_url, crawler_id, instance_id)
+        val = json.dumps(req)
+        redis_conn.zadd(key, {val: -req['priority']})
+        print(f'\t\tSent request "{base_url}" to redis...')
+
+    print('\tDone')
+    redis_conn.close()
 
 def generate_requests(config: dict):
-    print(f'Starting to generate parameterized URLs for "{config["base_url"]}"...')
     generate_templated_urls(**config)
-    print('\tDone...')
