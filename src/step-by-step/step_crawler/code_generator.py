@@ -140,6 +140,7 @@ def generate_call(function_name, dict_of_arguments, is_coroutine=False):
                dict_to_arguments(dict_of_arguments) + ')'
     else:
         call = call + '(' + dict_to_arguments(dict_of_arguments) + ')'
+        # considerar se a chama é de string ou se é de variável, na vdd as aspas é para o parametro
     return call
 
 

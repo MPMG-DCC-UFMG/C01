@@ -8,7 +8,7 @@ from captcha_solver.image_solver import ImageSolver
 from pyext import RuntimeModule
 
 
-def range_(stop):
+def repete(stop):
     return [i for i in range(stop)]
 
 
