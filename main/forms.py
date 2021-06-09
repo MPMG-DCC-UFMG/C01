@@ -302,7 +302,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
             attrs={'placeholder': 'Regex para permitir urls'})
     )
     download_files_allow_extensions = forms.CharField(
-        required=True, max_length=2000,
+        required=False, max_length=2000,
         label="Extensões de arquivo permitidas (separado por vírgula):",
         widget=forms.TextInput(attrs={'placeholder': 'pdf,xml'})
     )
@@ -398,6 +398,7 @@ class ParameterHandlerForm(forms.ModelForm):
         """
         Validates form inputs which depend on other inputs' values
         """
+
         cleaned_data = super().clean()
 
         if cleaned_data.get('DELETE'):
@@ -440,6 +441,11 @@ class ParameterHandlerForm(forms.ModelForm):
                 self.add_error('start_date_date_param', msg)
                 self.add_error('end_date_date_param', msg)
                 raise ValidationError(general_error)
+
+        download_files = cleaned_data.get('download_files')
+        download_files_allow_extensions = cleaned_data.get('download_files_allow_extensions')
+        if download_files and not download_files_allow_extensions:
+            raise ValidationError('É necessário adicionar as extensões de arquivos permitidas para download')
 
         filter_range = cleaned_data.get('filter_range')
         cons_misses = cleaned_data.get('cons_misses')
@@ -525,3 +531,5 @@ ResponseHandlerFormSet = forms.inlineformset_factory(CrawlRequest,
 ParameterHandlerFormSet = forms.inlineformset_factory(CrawlRequest,
     ParameterHandler, form=ParameterHandlerForm, exclude=[], extra=0,
     min_num=0, can_delete=True)
+
+
