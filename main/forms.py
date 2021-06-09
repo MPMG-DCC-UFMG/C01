@@ -302,7 +302,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
             attrs={'placeholder': 'Regex para permitir urls'})
     )
     download_files_allow_extensions = forms.CharField(
-        required=False, max_length=2000,
+        required=True, max_length=2000,
         label="Extensões de arquivo permitidas (separado por vírgula):",
         widget=forms.TextInput(attrs={'placeholder': 'pdf,xml'})
     )
