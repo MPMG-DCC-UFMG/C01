@@ -17,6 +17,9 @@ def generate_para_cada(child, module):
     else:
         raise TypeError('This iterable is in the wrong format')
 
+
+    ## problema com a profundidade provavelmente é no python, a informação depth já existe
+    ## colocar child['depth'] * '    '  na hora de fazer passo filho 
     code += child['depth'] * '    ' + 'for ' + child['iterator']
     code += ' in ' + iterable_statement + ':' + '\n'
     code += generate_body(child, module)

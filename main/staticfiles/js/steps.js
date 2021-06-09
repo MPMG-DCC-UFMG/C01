@@ -163,13 +163,18 @@ function build_json(step_board, output_element){
             for(var i = 0; i < -indent; i++){
                 stack.pop()
             }
+            stack.pop()
+            // solucao é tratar isso
+            stack[stack.length-1].children.push(step_dict)
+            stack.push(step_dict)
+
         }else if(indent>1){
             console.log("Indentation ERROR")
         }
 
     }
     output_element.value = JSON.stringify(root_step)
-    
+
 }
 
 /**
@@ -183,7 +188,8 @@ function get_step_json_format(block){
         step : param_name,
         depth : block.depth,
     }
-    if(param_name == "para cada"){
+    if(param_name == "para_cada"){
+        // erro pode ser a falta do underline até então, e esse if não ativa, com isso o para cada é tratado como um passo normal (terceiro else)
         step_dict.iterator = block.iterator_input.value
         step_dict.children = []
         step_dict.iterable = {call:{}}
@@ -194,7 +200,7 @@ function get_step_json_format(block){
         for(param of block.params){
             step_dict.iterable.call.arguments[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
         }
-    }else if(param_name == "for each page in"){
+    }else if(param_name == "for_each_page_in"){
         step_dict.children = []
         for(param of block.params){
             step_dict[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value

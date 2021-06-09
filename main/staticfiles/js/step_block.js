@@ -292,6 +292,9 @@ function refresh_iterable(){
     block = find_parent_with_attr_worth(this, "block")
     block.iterable_step = get_step_info(this.value, block.step_list)
 
+    // deve resolver, validar dps
+    block.params = []
+
     block.delete_lines(1, block.lines.length)
     block.add_line()
 
@@ -345,6 +348,7 @@ function turn_to_for_step(){
     block.delete_lines(block.lines.length)
     block.add_line()
 
+    // defines iterator
     iterator_input_box = document.createElement("DIV")
     iterator_input_box.className = "col-sm"    
     iterator_input = document.createElement("INPUT")
@@ -361,6 +365,7 @@ function turn_to_for_step(){
     in_label.innerText = " in"
     in_label_box.appendChild(in_label)    
 
+    // defines iterable step
     iterable_select_box = document.createElement("DIV")
     iterable_select_box.className = "step-config-select"
     iterable_select = document.createElement("select")
