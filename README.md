@@ -7,7 +7,7 @@ Desenvolvimento de ferramentas para construção e manutenção de coletores de 
 - [x] Atualização da interface para gerir os spiders distribuídos
 - [x] Suporte a templated URLs
 - [ ] Testes em máquinas diferentes
-- [ ] Suporte a páginas dinâmicas
+- [x] Suporte a páginas dinâmicas
 - [ ] Iniciação automática dos serviços
 
 ## Coletas distribuídas
