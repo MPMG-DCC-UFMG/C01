@@ -26,8 +26,10 @@ class MessageSender:
             'parameter_handlers': config['parameter_handlers']
         }
 
+        self.__producer.send(settings.INDEXER_TOPIC, {'register': config})
         self.__producer.send(settings.LINK_GENERATOR_TOPIC, {'start': lite_config})
         self.__producer.send(settings.COMMANDS_TOPIC, {'create': config})
+        
         self.__producer.flush()
 
     def send_stop_crawl(self, crawler_id: str):
@@ -36,6 +38,7 @@ class MessageSender:
         Args:
             - crawler_id: Unique crawler identifier
         """
+        self.__producer.send(settings.INDEXER_TOPIC, {'stop': crawler_id})
         self.__producer.send(settings.LINK_GENERATOR_TOPIC, {'stop': crawler_id})
         self.__producer.send(settings.COMMANDS_TOPIC, {'stop': crawler_id})
         self.__producer.flush()

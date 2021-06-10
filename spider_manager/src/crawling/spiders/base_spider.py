@@ -1,27 +1,15 @@
 # Scrapy and Twister libs
-import scrapy
-from scrapy.exceptions import CloseSpider
-from scrapy.spidermiddlewares.httperror import HttpError
-from twisted.internet.error import DNSLookupError
-from twisted.internet.error import TimeoutError
-import ujson
-
-# Other external libs
-import datetime
-import itertools
-import logging
-import os
-import re
-import time
-from lxml.html.clean import Cleaner
-import urllib.parse as urlparse
 import mimetypes
-import requests
+import re
 import string
 
-# Project libs
-import crawling_utils
+import requests
+import scrapy
+import ujson
+from scrapy.spidermiddlewares.httperror import HttpError
+from twisted.internet.error import DNSLookupError, TimeoutError
 
+import crawling_utils
 from crawling.spiders.redis_spider import RedisSpider
 
 PUNCTUATIONS = "[{}]".format(string.punctuation)

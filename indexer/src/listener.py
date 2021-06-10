@@ -1,0 +1,2 @@
+from kafka import KafkaConsumer
+

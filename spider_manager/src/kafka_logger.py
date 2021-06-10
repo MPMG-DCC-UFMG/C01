@@ -12,9 +12,8 @@ class KafkaLogger:
         with open('base_config.json') as f:
             config = ujson.loads(f.read())
 
-            self.__kafka_hosts = config['KAFKA_HOSTS']
             self.__kafka_topic = config['LOGGING_TOPIC']
-            self.__producer = KafkaProducer(bootstrap_servers=self.__kafka_hosts,
+            self.__producer = KafkaProducer(bootstrap_servers=config['KAFKA_HOSTS'],
                                             value_serializer=lambda m: ujson.dumps(m).encode('utf-8'))
         
     def write(self, message: str):

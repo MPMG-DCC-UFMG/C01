@@ -43,12 +43,6 @@ class Executor:
 
         Returns the base configuration for creating a spider with collector modifications
         """
-        # base_config['SC_LOGGER_NAME'] = self.__get_random_logging_name()
-
-        # autothrottle = "antiblock_autothrottle_"
-
-        # base_config["ROBOTSTXT_OBEY"] = config['obey_robots']
-        # base_config["DOWNLOAD_DELAY"] = 1
         
         base_config["DYNAMIC_PROCESSING"] = False 
         base_config["DYNAMIC_PROCESSING_STEPS"] = {} 
@@ -57,12 +51,6 @@ class Executor:
             base_config["DOWNLOADER_MIDDLEWARES"] = {'scrapy_puppeteer.PuppeteerMiddleware': 800}
             base_config["DYNAMIC_PROCESSING"] = True 
             base_config["DYNAMIC_PROCESSING_STEPS"] = ujson.loads(config["steps"])
-
-        # base_config["DOWNLOAD_DELAY"] = config["antiblock_download_delay"]
-        # base_config["RANDOMIZE_DOWNLOAD_DELAY"] = True
-        # base_config["AUTOTHROTTLE_ENABLED"] = config[f"{autothrottle}enabled"]
-        # base_config["AUTOTHROTTLE_START_DELAY"] = config[f"{autothrottle}start_delay"]
-        # base_config["AUTOTHROTTLE_MAX_DELAY"] = config[f"{autothrottle}max_delay"]
 
         return base_config
 

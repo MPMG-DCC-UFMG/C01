@@ -10,7 +10,7 @@ COPY *.py ./
 COPY src src
 COPY main main
 COPY interface interface
-COPY crawlers crawlers
+COPY crawler_manager crawler_manager
 
 EXPOSE 8000
 RUN python install.py

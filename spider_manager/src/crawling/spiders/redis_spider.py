@@ -1,8 +1,6 @@
-from builtins import str
 from scrapy.exceptions import DontCloseSpider
 from scrapy.spiders import Spider
 from scrapy import signals
-
 
 class RedisSpider(Spider):
     '''

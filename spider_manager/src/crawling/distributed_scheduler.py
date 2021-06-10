@@ -562,6 +562,7 @@ class DistributedScheduler(object):
         else:
             try:
                 req = Request(item['url'])
+                
             except ValueError:
                 # need absolute url
                 # need better url validation here
