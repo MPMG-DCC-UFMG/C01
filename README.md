@@ -12,7 +12,9 @@ Desenvolvimento de ferramentas para construção e manutenção de coletores de 
 
 ## Coletas distribuídas
 
-Siga os passos abaixo para o correto funcionamento.
+[In progress]
+
+<!-- Siga os passos abaixo para o correto funcionamento.
 
 Para iniciar a interface:
 
@@ -36,7 +38,7 @@ Para iniciar os gerenciadores de spiders:
     - Para ter mais de uma instância de spider executando para uma mesma coleta, inicie mais processos de `command_listener`
 
 As coletas serão salvas no tópico `demo.crawled_firehose` junto com os possíveis links de arquivos descobertos. Uma forma de ver essas coletas é na pasta `kafka_2.13-2.4.0/` executar o comando: `bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic demo.crawled_firehose --from-beginning`
-
+ -->
 
 <!-- 
 Existem 4 tipos de coletores bases, que podem ser personalizados através da interface feita em django:
