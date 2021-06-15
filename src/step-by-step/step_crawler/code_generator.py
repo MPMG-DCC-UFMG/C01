@@ -17,9 +17,6 @@ def generate_para_cada(child, module):
     else:
         raise TypeError('This iterable is in the wrong format')
 
-
-    ## problema com a profundidade provavelmente é no python, a informação depth já existe
-    ## colocar child['depth'] * '    '  na hora de fazer passo filho 
     code += child['depth'] * '    ' + 'for ' + child['iterator']
     code += ' in ' + iterable_statement + ':' + '\n'
     code += generate_body(child, module)
@@ -143,7 +140,6 @@ def generate_call(function_name, dict_of_arguments, is_coroutine=False):
                dict_to_arguments(dict_of_arguments) + ')'
     else:
         call = call + '(' + dict_to_arguments(dict_of_arguments) + ')'
-        # considerar se a chama é de string ou se é de variável, na vdd as aspas é para o parametro
     return call
 
 

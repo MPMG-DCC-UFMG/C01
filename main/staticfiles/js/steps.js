@@ -164,7 +164,6 @@ function build_json(step_board, output_element){
                 stack.pop()
             }
             stack.pop()
-            // solucao é tratar isso
             stack[stack.length-1].children.push(step_dict)
             stack.push(step_dict)
 
@@ -189,7 +188,6 @@ function get_step_json_format(block){
         depth : block.depth,
     }
     if(param_name == "para_cada"){
-        // erro pode ser a falta do underline até então, e esse if não ativa, com isso o para cada é tratado como um passo normal (terceiro else)
         step_dict.iterator = block.iterator_input.value
         step_dict.children = []
         step_dict.iterable = {call:{}}
