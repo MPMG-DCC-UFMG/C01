@@ -478,6 +478,8 @@ class ParameterHandlerForm(forms.ModelForm):
                                      'separados por vírgula'),
             'origin_ids_proc_param': ('Identificadores de origens a buscar, '
                                       'separados por vírgula'),
+            'value_list_param': 'Lista de valores a gerar (separados por vírgula)',
+            'value_const_param': 'Valor a gerar',
             'filter_range': 'Filtrar limites',
         }
 

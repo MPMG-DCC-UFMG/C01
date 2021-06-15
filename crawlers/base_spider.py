@@ -310,6 +310,21 @@ class BaseSpider(scrapy.Spider):
                         end_date=end,
                         frequency=frequency,
                     )
+
+                elif param_type == 'value_list':
+                    # No filtering applied to this parameter
+                    list_values = param['value_list_param']
+
+                    param_gen = ParamInjector.generate_list(
+                        elements=list_values
+                    )
+                elif param_type == 'const_value':
+                    # No filtering applied to this parameter
+                    const_value = param['value_const_param']
+
+                    param_gen = ParamInjector.generate_constant(
+                        value=const_value
+                    )
                 else:
                     raise ValueError(f"Invalid parameter type: {param_type}")
 
