@@ -1,0 +1,80 @@
+[{
+    "function": "Clicar em",
+    "name": "clique",
+    "mandatory_params": ["xpath"],
+    "optional_params": {}
+}, {
+    "function": "CSSify",
+    "name": "cssify",
+    "mandatory_params": ["xpath"],
+    "optional_params": {}
+}, {
+    "function": "Digitar em",
+    "name": "digite",
+    "mandatory_params": ["xpath", "texto"],
+    "optional_params": {}
+}, {
+    "function": "Verificar se é clicável",
+    "name": "e_clicavel",
+    "mandatory_params": ["xpath"],
+    "optional_params": {}
+}, {
+    "function": "Verificar se elemento existe na página",
+    "name": "elemento_existe_na_pagina",
+    "mandatory_params": ["xpath"],
+    "optional_params": {}
+}, {
+    "function": "Esperar",
+    "name": "espere",
+    "mandatory_params": ["segundos"],
+    "optional_params": {}
+}, {
+    "function": "Esperar a página",
+    "name": "espere_a_pagina",
+    "mandatory_params": [],
+    "optional_params": {}
+}, {
+    "function": "Verificar se está escrito",
+    "name": "esta_escrito_em",
+    "mandatory_params": ["texto", "xpath"],
+    "optional_params": {}
+}, {
+    "function": "Gerar nome do arquivo",
+    "name": "gera_nome_do_arquivo",
+    "mandatory_params": [],
+    "optional_params": {}
+}, {
+    "function": "Intervalo",
+    "name": "intervalo",
+    "mandatory_params": ["parada"],
+    "optional_params": {}
+}, {
+    "function": "Opções em",
+    "name": "opcoes_em",
+    "mandatory_params": ["xpath"],
+    "optional_params": {
+        "exceto": null
+    }
+}, {
+    "function": "Pegar os links da paginação",
+    "name": "pegue_os_links_da_paginacao",
+    "mandatory_params": ["xpath_dos_botoes", "xpath_dos_links"],
+    "optional_params": {
+        "indice_do_botao_de_proximo": -1
+    }
+}, {
+    "function": "Imprimir",
+    "name": "imprimir",
+    "mandatory_params": ["texto"],
+    "optional_params": {}
+}, {
+    "function": "Salvar página",
+    "name": "salva_pagina",
+    "mandatory_params": [],
+    "optional_params": {}
+}, {
+    "function": "Selecionar",
+    "name": "selecione_isso_em",
+    "mandatory_params": ["option", "xpath"],
+    "optional_params": {}
+}]
