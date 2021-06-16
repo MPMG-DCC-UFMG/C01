@@ -192,7 +192,7 @@ function get_step_json_format(block){
         step_dict.children = []
         step_dict.iterable = {call:{}}
         step_dict.iterable.call = {
-            step: block.iterable_select.value,
+            step: block.iterable_select.value.replace(/ /g, "_"),
             arguments:{}
         }
         for(param of block.params){

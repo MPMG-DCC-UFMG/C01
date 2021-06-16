@@ -8,6 +8,10 @@ from captcha_solver.image_solver import ImageSolver
 from pyext import RuntimeModule
 
 
+def imprime(texto):
+    print(texto)
+    return
+
 def repete(vezes):
     return [i for i in range(vezes)]
 
@@ -27,11 +31,13 @@ async def wait_page(page):
         await page.waitFor(1)
 
 
-async def clique(page, xpath):
-    await page.waitForXPath(xpath)
-    await page.click(cssify(xpath))
-    await wait_page(page)
-
+async def clique(page, param):
+    if type(param) == str:
+        await page.waitForXPath(param)
+        await page.click(cssify(param))
+        await wait_page(page)
+    else:
+        param.click()
 
 async def selecione(page, xpath, opcao):
     await page.waitForXPath(xpath)
@@ -63,6 +69,10 @@ async def for_clicavel(page, xpath):
     except:
         return False
 
+
+async def elementos_filhos(page, xpath):
+    elements = await page.xpath(xpath)
+    return elements
 
 
 async def pegue_os_links_da_paginacao(page, xpath_dos_botoes, xpath_dos_links, indice_do_botao_proximo=-1):
