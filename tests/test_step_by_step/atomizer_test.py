@@ -92,9 +92,9 @@ class TestExtractInfo(unittest.TestCase):
                 "depth": 1,
             },
             {
-                "step": "print_",
+                "step": "imprimir",
                 "arguments": {
-                    "word": "\"teste\""
+                    "texto": "\"teste\""
                 },
                 "depth": 1
             }

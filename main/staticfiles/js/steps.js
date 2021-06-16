@@ -5,24 +5,21 @@
  * @param  {String} json_path [The path of the json with the steps information]
  */
 function load_steps_interface(interface_root_element_id, output_element_id, json_path="/static/json/steps_signature.json"){
-    interface_root_element = document.getElementById(interface_root_element_id) 
+    interface_root_element = document.getElementById(interface_root_element_id)
     if(interface_root_element.type == "root" )
         return
-    
+
     output_element = document.getElementById(output_element_id)
 
     var xmlhttp = new XMLHttpRequest();
     xmlhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
         step_list = JSON.parse(this.response, function (key, value){
-            if (typeof value == "string"){
-                return value.replace(/_/g, " ")
-            }
-            return value;
+            return value
         })
-        step_list = step_list.concat(JSON.parse('{"name":"object", "mandatory_params":["ex: [1,2,3]"], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name":"for each", "mandatory_params":[], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name":"for each page in", "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "Objeto", "function":"objeto", "mandatory_params":["ex: [1,2,3]"], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "Para cada", "function":"para_cada", "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "Para cada página em", "function":"para_cada_pagina_em", "mandatory_params":[], "optional_params":{}}'))
         init_steps_creation_interface(interface_root_element, output_element, step_list)
       }
     };
@@ -46,7 +43,7 @@ function load_steps_interface(interface_root_element_id, output_element_id, json
 function init_steps_creation_interface(interface_root_element, output_element, step_list){
     steps_creation_interface = document.createElement("div")
     steps_creation_interface.type= "steps_creation_interface"
-    
+
     step_controler = document.createElement("div")
     step_controler.type = "step_controler"
     step_board = init_step_board(step_list)
@@ -56,11 +53,11 @@ function init_steps_creation_interface(interface_root_element, output_element, s
     add_block_button.className="btn btn-primary step-controler-buttons"
     add_block_button.style.color = "white"
     add_block_button.onclick = function(){step_board.add_block(step_list)}
-    add_block_button.innerText = "Add step"
+    add_block_button.innerText = "Adicionar Passo"
 
 
     save_button = document.createElement("button")
-    save_button.innerText = "Save steps"
+    save_button.innerText = "Salvar Passos"
     save_button.className="btn btn-primary step-controler-buttons"
     save_button.style.color = "white"
     interface_root_element.save_button = save_button
@@ -104,15 +101,15 @@ function init_step_board(step_list){
         }else{
             step_board.appendChild(step_block)
         }
-    }    
+    }
     return step_board
-}    
+}
 
 /**
  * Function that will be setted to be a method of the step_board
- * This function analyses the last step in the step_board to answer what 
+ * This function analyses the last step in the step_board to answer what
  * should be the depth of the next step to be added.
- * @return {Number} The last depth or in case of the last step be a 
+ * @return {Number} The last depth or in case of the last step be a
  *                  loop step, the last depth + 1
  */
 function get_last_depth(){
@@ -120,7 +117,7 @@ function get_last_depth(){
         step_board = find_parent_with_attr_worth(this, "step_board")
         if(step_board.children.length>0){
             last_step = step_board.children[step_board.children.length-1]
-            if(last_step.step.name == "for each" || last_step.step.name == "for each page in"){
+            if(last_step.step.name == "Para cada" || last_step.step.name == "Para cada página em"){
                 return last_step.depth + 1
             }else{
                 return last_step.depth
@@ -135,7 +132,7 @@ function get_last_depth(){
 
 /**
  * This function gets the steps added by user in the step_board and builds the
- * steps json, that describes the steps to be performed on the page to be crawled. 
+ * steps json, that describes the steps to be performed on the page to be crawled.
  * @param {Node} step_board The html element with all the steps setted by user.
  * @param {Node} output_element The html element that is going to receive the steps json in its value.
  */
@@ -169,7 +166,7 @@ function build_json(step_board, output_element){
 
     }
     output_element.value = JSON.stringify(root_step)
-    
+
 }
 
 /**
@@ -178,12 +175,12 @@ function build_json(step_board, output_element){
  * @return {Dict} the step that was parameterized in the block, but now in the json steps represtation.
  */
 function get_step_json_format(block){
-    param_name = block.step.name.replace(/ /g, "_")
+    param_name = block.step.name
     step_dict={
         step : param_name,
         depth : block.depth,
     }
-    if(param_name == "for each"){
+    if(param_name == "Para cada"){
         step_dict.iterator = block.iterator_input.value
         step_dict.children = []
         step_dict.iterable = {call:{}}
@@ -194,7 +191,7 @@ function get_step_json_format(block){
         for(param of block.params){
             step_dict.iterable.call.arguments[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
         }
-    }else if(param_name == "for each page in"){
+    }else if(param_name == "Para cada página em"){
         step_dict.children = []
         for(param of block.params){
             step_dict[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
@@ -217,7 +214,7 @@ function get_step_json_format(block){
  * @retuns {List} A list with the inputs represting the mandatory parameters of the step.
  */
 function get_params_element_list(step_name, step_list){
-    if(step_name == "objeto"){
+    if(step_name == "Objeto"){
         object_div = document.createElement("DIV")
         object_div.className = "col-sm"
         object_div.innerHTML = `<input placeholder="objeto, ex: [1,2,3]" class="row form-control">`
@@ -331,4 +328,3 @@ function find_parent_with_attr_worth(element, value, attr = "type"){
         }
     }
 }
-

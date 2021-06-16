@@ -28,9 +28,9 @@
                             "depth": 2,
                             "children": [
                                 {
-                                    "step": "print_",
+                                    "step": "imprimir",
                                     "arguments": {
-                                        "word": "\"teste\""
+                                        "texto": "\"teste\""
                                     },
                                     "depth": 3
                                 },
@@ -77,9 +77,9 @@
                                                     "depth": 5,
                                                     "children": [
                                                         {
-                                                            "step": "print_",
+                                                            "step": "imprimir",
                                                             "arguments": {
-                                                                "word": "\"teste\""
+                                                                "texto": "\"teste\""
                                                             },
                                                             "depth": 6
                                                         }
@@ -88,9 +88,9 @@
                                             ]
                                         },
                                         {
-                                            "step": "print_",
+                                            "step": "imprimir",
                                             "arguments": {
-                                                "word": "\"teste\""
+                                                "texto": "\"teste\""
                                             },
                                             "depth": 4
                                         }
@@ -110,9 +110,9 @@
             "depth": 0,
             "children": [
                 {
-                    "step": "print_",
+                    "step": "imprimir",
                     "arguments": {
-                        "word": "\"teste\""
+                        "texto": "\"teste\""
                     },
                     "depth": 1
                 },
@@ -131,9 +131,9 @@
                     "depth": 1,
                     "children": [
                         {
-                            "step": "print_",
+                            "step": "imprimir",
                             "arguments": {
-                                "word": "\"teste\""
+                                "texto": "\"teste\""
                             },
                             "depth": 2
                         }
@@ -177,9 +177,9 @@
                             "depth": 2,
                             "children": [
                                 {
-                                    "step": "print_",
+                                    "step": "imprimir",
                                     "arguments": {
-                                        "word": "\"teste\""
+                                        "texto": "\"teste\""
                                     },
                                     "depth": 3
                                 }
@@ -188,9 +188,9 @@
                     ]
                 },
                 {
-                    "step": "print_",
+                    "step": "imprimir",
                     "arguments": {
-                        "word": "\"teste\""
+                        "texto": "\"teste\""
                     },
                     "depth": 1
                 }
@@ -241,9 +241,9 @@
                                     "depth": 3,
                                     "children": [
                                         {
-                                            "step": "print_",
+                                            "step": "imprimir",
                                             "arguments": {
-                                                "word": "\"teste\""
+                                                "texto": "\"teste\""
                                             },
                                             "depth": 4
                                         }
@@ -277,9 +277,9 @@
                     "depth": 1,
                     "children": [
                         {
-                            "step": "print_",
+                            "step": "imprimir",
                             "arguments": {
-                                "word": "\"teste\""
+                                "texto": "\"teste\""
                             },
                             "depth": 2
                         }
@@ -304,9 +304,9 @@
                     "depth": 1,
                     "children": [
                         {
-                            "step": "print_",
+                            "step": "imprimir",
                             "arguments": {
-                                "word": "\"teste\""
+                                "texto": "\"teste\""
                             },
                             "depth": 2
                         }
