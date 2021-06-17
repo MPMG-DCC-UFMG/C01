@@ -7,45 +7,55 @@ from PIL import Image
 #from captcha_solver.image_solver import ImageSolver
 from pyext import RuntimeModule
 
+"""
+    Attention: the comments immediately preceding the functions are their names
+    displayed in interface. Make sure to write comments before def a new func-
+    tion, if you want to customize its display at the step-by-step block.
 
+"""
+
+# Esperar
 def espere(segundos):
     time.sleep(segundos)
 
+# Intervalo
 def intervalo(parada):
     return [i for i in range(parada)]
 
+# Imprimir
 def imprimir(texto):#used for tests
     return texto
 
+# Gerar nome do arquivo
 def gera_nome_do_arquivo():
     return "./{}.html".format(uuid.uuid4().hex)
 
-
+# Esperar a página
 async def espere_a_pagina(pagina):
     jsWait = "document.readyState === 'complete' || \
               document.readyState === 'iteractive'"
     while not (await pagina.evaluate(jsWait)):
         await pagina.waitFor(1)
 
-
+# Clicar
 async def clique(pagina, xpath):
     await pagina.waitForXPath(xpath)
     await pagina.click(cssify(xpath))
     await espere_a_pagina(pagina)
 
-
+# Selecionar
 async def selecione_isso_em(pagina, opcao, xpath):
     await pagina.waitForXPath(xpath)
     await pagina.type(cssify(xpath), opcao)
     await espere_a_pagina(pagina)
 
-
+# Salvar página
 async def salva_pagina(pagina):
     content = await pagina.content()
     body = str.encode(content)
     return body
 
-
+# Opções
 async def opcoes_em(pagina, xpath, exceto=None):
     if exceto is None:
         exceto = []
@@ -56,7 +66,7 @@ async def opcoes_em(pagina, xpath, exceto=None):
         options.append(value.toString().split(":")[-1])
     return [value for value in options if value not in exceto]
 
-
+# É clicável
 async def e_clicavel(pagina, xpath):
     try:
         await clique(pagina, xpath)
@@ -64,8 +74,7 @@ async def e_clicavel(pagina, xpath):
     except:
         return False
 
-
-
+# Pegar os links da paginação
 async def pegue_os_links_da_paginacao(pagina, xpath_dos_botoes, xpath_dos_links, indice_do_botao_de_proximo=-1):
     clickable = True
     urls = []
@@ -84,12 +93,12 @@ async def pegue_os_links_da_paginacao(pagina, xpath_dos_botoes, xpath_dos_links,
         else:
             clickable = False
 
-
+# Digitar em
 async def digite(pagina, xpath, texto):
     await pagina.type(cssify(xpath), texto)
 
 
-
+# Está escrito
 async def esta_escrito_em(pagina, texto, xpath):
     elements = await pagina.xpath(xpath)
     if len(elements):
@@ -103,7 +112,6 @@ async def esta_escrito_em(pagina, texto, xpath):
         return True
     else:
         return False
-
 
 # async def quebre_o_capcha(pagina, xpath_do_input, xpath_do_output, preprocessamento=None):
 #     """This step downloads the captcha image then solves it and fills its respective form field
@@ -129,7 +137,7 @@ async def esta_escrito_em(pagina, texto, xpath):
 #     await pagina.evaluate(type_function, text)
 #     return text
 
-
+# Elemento existe na página
 async def elemento_existe_na_pagina(pagina, xpath):
     """This step returns True if there's any element given a xpath, otherwise, returns False
 

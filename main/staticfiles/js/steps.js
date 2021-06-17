@@ -17,9 +17,9 @@ function load_steps_interface(interface_root_element_id, output_element_id, json
         step_list = JSON.parse(this.response, function (key, value){
             return value
         })
-        step_list = step_list.concat(JSON.parse('{"name": "Objeto", "function":"objeto", "mandatory_params":["ex: [1,2,3]"], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name": "Para cada", "function":"para_cada", "mandatory_params":[], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name": "Para cada página em", "function":"para_cada_pagina_em", "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "objeto", "name_display" : "Objeto", "mandatory_params":["ex: [1,2,3]"], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "para_cada", "name_display" : "Para cada", "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "para_cada_pagina_em", "name_display" : "Para cada página em", "mandatory_params":[], "optional_params":{}}'))
         init_steps_creation_interface(interface_root_element, output_element, step_list)
       }
     };
@@ -117,7 +117,7 @@ function get_last_depth(){
         step_board = find_parent_with_attr_worth(this, "step_board")
         if(step_board.children.length>0){
             last_step = step_board.children[step_board.children.length-1]
-            if(last_step.step.name == "Para cada" || last_step.step.name == "Para cada página em"){
+            if(last_step.step.name == "para_cada" || last_step.step.name == "para_cada_pagina_em"){
                 return last_step.depth + 1
             }else{
                 return last_step.depth
@@ -180,7 +180,7 @@ function get_step_json_format(block){
         step : param_name,
         depth : block.depth,
     }
-    if(param_name == "Para cada"){
+    if(param_name == "para_cada"){
         step_dict.iterator = block.iterator_input.value
         step_dict.children = []
         step_dict.iterable = {call:{}}
@@ -191,7 +191,7 @@ function get_step_json_format(block){
         for(param of block.params){
             step_dict.iterable.call.arguments[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
         }
-    }else if(param_name == "Para cada página em"){
+    }else if(param_name == "para_cada_pagina_em"){
         step_dict.children = []
         for(param of block.params){
             step_dict[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
@@ -214,7 +214,7 @@ function get_step_json_format(block){
  * @retuns {List} A list with the inputs represting the mandatory parameters of the step.
  */
 function get_params_element_list(step_name, step_list){
-    if(step_name == "Objeto"){
+    if(step_name == "objeto"){
         object_div = document.createElement("DIV")
         object_div.className = "col-sm"
         object_div.innerHTML = `<input placeholder="objeto, ex: [1,2,3]" class="row form-control">`
@@ -250,18 +250,17 @@ function get_this_texts_inside_each_tag(string_list, tag){
 }
 
 /**
- * This function get the steps name inside a list of steps.
+ * This function get the steps descriptions inside a list of steps.
  * @param {List} step_list The list of steps on json steps format.
- * @retuns {List} A list with the names of all the steps inside the step_list.
+ * @retuns {List} A list with the interface names of all the steps inside the step_list.
  */
 function get_step_names(step_list){
     step_names = []
     for(step of step_list){
-        step_names.push(step.name)
+        step_names.push(step.name_display)
     }
     return step_names
 }
-
 
 /**
  * This function gets the index of an element in its parent childrens.
@@ -278,14 +277,14 @@ function get_index_in_parent(element){
 }
 
 /**
- * This function gets the information of an step inside a step_list by its name.
- * @param {String} step_name The name of the step.
+ * This function gets the information of an step inside a step_list by its name_display.
+ * @param {String} step_name The description of the step.
  * @param {List} step_list The list of steps that conteing the step named with the step_name value.
  * @retuns {Dict} A dictionary with the information of the step.
  */
 function get_step_info(step_name, step_list){
     for(step of step_list){
-        if(step.name == step_name){
+        if(step.name_display == step_name){
             return step
         }
     }
