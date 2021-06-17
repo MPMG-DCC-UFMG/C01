@@ -35,9 +35,9 @@ async def clique(page, param):
     if type(param) == str:
         await page.waitForXPath(param)
         await page.click(cssify(param))
-        await wait_page(page)
     else:
         param.click()
+    await wait_page(page)
 
 async def selecione(page, xpath, opcao):
     await page.waitForXPath(xpath)
