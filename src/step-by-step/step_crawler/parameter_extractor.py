@@ -14,7 +14,7 @@ def extract_info(func, ignore_params=None):
             The function name and parameters.
     """
     if ignore_params is None:
-        ignore_params = ['page']
+        ignore_params = ['pagina']
 
     name = func.__code__.co_name
 

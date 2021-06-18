@@ -153,7 +153,7 @@ def generate_head(module):
     code += "from " + module.__name__ + " import *\n\n"
     code += "async def execute_steps(**missing_arguments):\n"\
         + "    pages = {}\n"\
-        + "    page = missing_arguments['page']\n"
+        + "    page = missing_arguments['pagina']\n"
     return code
 
 
