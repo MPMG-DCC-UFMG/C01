@@ -237,3 +237,19 @@ a.close, a.add_form {
 }
 /* End collapse div */
 
+/* Hide instances from large list */
+.multinstancias.hidden {
+    display: none;
+}
+#show_hide_instances::before {
+    content: "<";
+    transform: rotate(90deg);
+    display: inline-block;
+}
+#show_hide_instances.hidden::before {
+    transform: rotate(-90deg);
+}
+#show_hide_instances.focus, #show_hide_instances:focus {
+    text-decoration: none;
+}
+/* End hide instances from large list */
