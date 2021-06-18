@@ -64,13 +64,23 @@ Crawler "{{ crawler.source_name }}"
                 </thead>
                 <tbody>
                     {% for instance in instances %}
+<<<<<<< HEAD
                     <tr>
+=======
+                    <tr {% if forloop.counter > 3 %} class="multinstancias hidden" {% endif %}>                        
+>>>>>>> master
                         <td>{{instance.instance_id}}</td>
                         <td>{{instance.creation_date}}</td>
                         <td>{{instance.last_modified}}</td>
                         <td><a class="btn btn-primary" href="{% url 'export_config' instance.instance_id%}">Baixar</a></td>
                     </tr>
+<<<<<<< HEAD
 
+=======
+                    {% if forloop.last and forloop.counter > 3 %}
+                        <tr><td colspan="5"><button onclick="show_hide_instances(); this.classList.toggle('hidden');" type="button" id="show_hide_instances" class="btn btn-link hidden"> Mostrar todos ({{forloop.counter}})</button></td></tr>
+                    {% endif %}
+>>>>>>> master
                     {% endfor %}
                 </tbody>
             </table>
