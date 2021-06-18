@@ -266,7 +266,7 @@ $(document).ready(function () {
 });
 
 function showBlock(clicked_id) {
-
+    console.log(clicked_id);
     var blocks = document.getElementsByClassName('block');
     for (var i = 0; i < blocks.length; i++)
         blocks[i].setAttribute('hidden', true);

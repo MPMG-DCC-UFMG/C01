@@ -33,23 +33,24 @@ from range_inference import RangeInference
 
 PUNCTUATIONS = "[{}]".format(string.punctuation)
 
+
 class BaseSpider(scrapy.Spider):
     name = 'base_spider'
+    request_session = requests.sessions.Session()
 
     def __init__(self, config, *a, **kw):
         """
         Spider init operations.
         Create folders to store files and some config and log files.
         """
-        config = json.loads(config)
 
         print("At BaseSpider.init")
         self.stop_flag = False
 
-        self.data_folder = f"{config['data_path']}/data/"
-        self.flag_folder = f"{config['data_path']}/flags/"
+        self.config = json.loads(config)
 
-        self.config = config
+        self.data_folder = f"{self.config['data_path']}/data/"
+        self.flag_folder = f"{self.config['data_path']}/flags/"
 
         folders = [
             f"{self.data_folder}",
@@ -69,6 +70,18 @@ class BaseSpider(scrapy.Spider):
             pass
 
         self.get_format = lambda i: str(i).split("/")[1][:-1].split(";")[0]
+
+
+        if bool(self.config.get("download_files_allow_extensions")):
+            normalized_allowed_extensions = self.config["download_files_allow_extensions"].replace(" ", "")
+            normalized_allowed_extensions = normalized_allowed_extensions.lower()
+            self.download_allowed_extensions = set(normalized_allowed_extensions.split(","))
+
+        else:
+            self.download_allowed_extensions = set()
+
+        self.preprocess_link_configs()
+        self.preprocess_download_configs()
 
     def start_requests(self):
         """
@@ -379,39 +392,38 @@ class BaseSpider(scrapy.Spider):
         # removes any kind of accents
         return re.sub(PUNCTUATIONS, "", extension)
 
-    def filetype_from_mimetype(self, mimetype: str) -> str:
+    def filetypes_from_mimetype(self, mimetype: str) -> str:
         """Detects the file type using its mimetype"""
-        filetype = mimetypes.guess_extension(mimetype)
-        if bool(filetype):
-            return filetype.replace(".","")
-        return ""
+        extensions = mimetypes.guess_all_extensions(mimetype)
+        if len(extensions) > 0:
+            return [ext.replace(".", "") for ext in extensions]
+        return [""]
 
-    def detect_file_extension(self, url, content_type: str, content_disposition: str) -> str:
+    def detect_file_extensions(self, url, content_type: str, content_disposition: str) -> list:
         """detects the file extension, using its mimetype, url or name on the server, if available"""
-        extension = self.filetype_from_mimetype(content_type)
-        if bool(extension) and extension != "bin":
-            return extension
+        extension = self.filetype_from_url(url)
+        if len(extension) > 0:
+            return [extension]
 
         extension = self.filetype_from_filename_on_server(content_disposition)
-        if bool(extension) and extension != "bin":
-            return extension
+        if len(extension) > 0:
+            return [extension]
 
-        return self.filetype_from_url(url)
+        return self.filetypes_from_mimetype(content_type)
 
-    def get_download_filename_and_relative_path(self, url: str, extension: str) -> tuple:
+    def get_download_filename(self, url: str, extension: str) -> tuple:
         url_hash = crawling_utils.hash(url.encode())
         file_name = url_hash
         file_name += '.' + extension if extension else ''
 
-        relative_path = f"{self.data_folder}files/{file_name}"
-
-        return file_name, relative_path
+        return file_name
 
     def store_large_file(self, url: str, referer: str):
         print(f"Saving large file {url}")
 
         # Head type request to obtain the mimetype and/or file name to be downloaded on the server
-        headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
         response = requests.head(url, allow_redirects=True, headers=headers)
 
         content_type = response.headers.get("Content-type", "")
@@ -419,8 +431,10 @@ class BaseSpider(scrapy.Spider):
 
         response.close()
 
-        extension = self.detect_file_extension(url, content_type, content_disposition)
-        file_name, relative_path = self.get_download_filename_and_relative_path(url, extension)
+        extension = self.detect_file_extensions(url, content_type, content_disposition)[0]
+
+        file_name = self.get_download_filename(url, extension)
+        relative_path = f"{self.data_folder}files/{file_name}"
 
         # The stream parameter is not to save in memory
         with requests.get(url, stream=True, allow_redirects=True, headers=headers) as req:
@@ -436,8 +450,10 @@ class BaseSpider(scrapy.Spider):
         content_type = response.headers.get("Content-Type", b"").decode()
         content_disposition = response.headers.get("Content-Disposition", b"").decode()
 
-        extension = self.detect_file_extension(response.url, content_type, content_disposition)
-        file_name, relative_path = self.get_download_filename_and_relative_path(response.url, extension)
+        extension = self.detect_file_extensions(response.url, content_type, content_disposition)[0]
+
+        file_name = self.get_download_filename(response.url, extension)
+        relative_path = f"{self.data_folder}files/{file_name}"
 
         with open(relative_path, "wb") as f:
             f.write(response.body)
@@ -494,3 +510,47 @@ class BaseSpider(scrapy.Spider):
         # POST requests may access the same URL with different parameters, so
         # we hash the URL with the response body
         return crawling_utils.hash(response.url.encode() + response.body)
+
+    def preprocess_listify(self, value, default):
+        """Converts a string of ',' separaded values into a list."""
+        if value is None or len(value) == 0:
+            value = default
+
+        elif type(value) == str:
+            value = tuple(value.replace(" ", "").split(","))
+
+        return value
+
+    def preprocess_download_configs(self):
+        """Process download_files configurations."""
+        defaults = [
+            ("download_files_tags", ('a', 'area')),
+            ("download_files_allow_domains", None),
+            ("download_files_attrs", ('href',))
+        ]
+
+        for attr, default in defaults:
+            self.config[attr] = self.preprocess_listify(self.config[attr], default)
+
+        deny = "download_files_deny_extensions"
+        if len(self.download_allowed_extensions) > 0:
+            extensions = [ext for ext in scrapy.linkextractors.IGNORED_EXTENSIONS]
+            self.config[deny] = [ext for ext in extensions if ext not in self.download_allowed_extensions]
+
+        else:
+            self.config[deny] = []
+
+        attr = "download_files_process_value"
+        if self.config[attr] is not None and len(self.config[attr]) > 0 and type(self.config[attr]) is str:
+            self.config[attr] = eval(self.config[attr])
+
+    def preprocess_link_configs(self):
+        """Process link_extractor configurations."""
+
+        defaults = [
+            ("link_extractor_tags", ('a', 'area')),
+            ("link_extractor_allow_domains", None),
+            ("link_extractor_attrs", ('href',))
+        ]
+        for attr, default in defaults:
+            self.config[attr] = self.preprocess_listify(self.config[attr], default)
