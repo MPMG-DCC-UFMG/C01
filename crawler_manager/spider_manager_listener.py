@@ -8,7 +8,6 @@ from kafka import KafkaConsumer
 
 from crawler_manager import settings
 
-
 class SpiderManagerListener:
     def __init__(self) -> None:
         self.__consumer = KafkaConsumer(settings.NOTIFICATIONS_TOPIC, 
@@ -54,7 +53,8 @@ class SpiderManagerListener:
             crawler_id: Unique crawler identifier.
         """
 
-        requests.get(f'http://localhost:{settings.SERVER_PORT}/detail/stop_crawl/{crawler_id}')
+        payload = {'from': 'sm_listener'}
+        requests.get(f'http://localhost:{settings.SERVER_PORT}/detail/stop_crawl/{crawler_id}', params=payload)
         
     def run(self):
         """Executes the thread with the kafka consumer responsible for receiving notifications of creation/termination of spiders.

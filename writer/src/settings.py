@@ -1,9 +1,9 @@
 REQUEST_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36'}
 
-FILE_DOWNLOADER_TOPIC = 'file_downloader'
+FILE_DOWNLOADER_PREFIX = 'file_downloader'
 FILE_DESCRIPTOR_TOPIC = 'file_descriptor'
 CRAWLED_TOPIC = 'demo.crawled_firehose'
-INDEXER_TOPIC = 'indexer_notifications'
+WRITER_TOPIC = 'writer'
 
 KAFKA_HOSTS = ['localhost:9092']
 

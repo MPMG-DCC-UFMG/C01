@@ -21,7 +21,7 @@ class RFPDupeFilter(BaseDupeFilter):
 
     def request_seen(self, request):
         fp = request_fingerprint(request)
-        c_id = request.meta['crawlid']
+        c_id = str(request.meta['crawlid'])
 
         added = self.server.sadd(self.key + ":" + c_id, fp)
         self.server.expire(self.key + ":" + c_id, self.timeout)

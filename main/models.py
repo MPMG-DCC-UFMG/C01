@@ -365,7 +365,21 @@ class CrawlerInstance(TimeStamped):
     crawler_id = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE,
                                    related_name='instances')
     instance_id = models.BigIntegerField(primary_key=True)
+
+    number_files_found = models.PositiveIntegerField(default=0, null=True, blank=True)
+    number_files_success_download = models.PositiveIntegerField(default=0, null=True, blank=True)
+    number_files_error_download = models.PositiveIntegerField(default=0, null=True, blank=True)
+
+    number_pages_found = models.PositiveIntegerField(default=0, null=True, blank=True)
+    number_pages_success_download = models.PositiveIntegerField(default=0, null=True, blank=True)
+    number_pages_error_download = models.PositiveIntegerField(default=0, null=True, blank=True)
+
+    page_crawling_finished = models.BooleanField(default=False, null=True, blank=True)
+
     running = models.BooleanField()
+
+    def download_files_finished(self):
+        return self.number_files_success_download + self.number_files_error_download == self.number_files_found
 
 class Log(TimeStamped):
     instance = models.ForeignKey(CrawlerInstance, on_delete=models.CASCADE,

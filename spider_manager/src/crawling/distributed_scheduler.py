@@ -10,6 +10,7 @@ from scrapy.conf import settings
 from scrapy.utils.python import to_unicode
 from scrapy.utils.reqser import request_to_dict, request_from_dict
 
+import requests
 import redis
 import random
 import time
@@ -412,6 +413,16 @@ class DistributedScheduler(object):
         redis_key = self.spider.name + ":blacklist"
         return self.redis_conn.sismember(redis_key, key_check)
 
+    def notify_server(self, instance_id: str, num_pages: int = 1):
+        server_notification_url = f'http://localhost:8000/download/pages/found/{instance_id}/{num_pages}'
+        req = requests.get(server_notification_url)
+
+        if req.status_code == 200:
+            self.logger.debug('Successful server notified of new pages')
+        
+        else:
+            self.logger.debug('Error notifying server about new pages found')
+
     def enqueue_request(self, request):
         '''
         Pushes a request from the spider into the proper throttled queue
@@ -467,6 +478,9 @@ class DistributedScheduler(object):
                     domain not in self.black_domains)) and \
                     (req_dict['meta']['expires'] == 0 or
                     curr_time < req_dict['meta']['expires']):
+                
+                self.notify_server(req_dict['meta']['attrs']['instance_id'])
+                
                 # we may already have the queue in memory
                 if key in self.queue_keys:
                     self.queue_dict[key][0].push(req_dict,
@@ -475,10 +489,12 @@ class DistributedScheduler(object):
                     # shoving into a new redis queue, negative b/c of sorted sets
                     # this will populate ourself and other schedulers when
                     # they call create_queues
+
                     self.redis_conn.zadd(key, {ujson.dumps(req_dict): -req_dict['meta']['priority']})
-                self.logger.debug("Crawlid: '{id}' Appid: '{appid}' added to queue"
-                    .format(appid=req_dict['meta']['appid'],
-                            id=req_dict['meta']['crawlid']))
+
+                # self.notify_server(req_dict['meta']['instance_id'])
+                self.logger.debug("Crawlid: '{id}' Appid: '{appid}' added to queue".format(appid=req_dict['meta']['appid'], id=req_dict['meta']['crawlid']))
+
             else:
                 self.logger.debug("Crawlid: '{id}' Appid: '{appid}' expired"
                                   .format(appid=req_dict['meta']['appid'],

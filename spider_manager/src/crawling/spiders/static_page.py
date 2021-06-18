@@ -1,5 +1,6 @@
 import datetime
 import re
+import requests
 
 from scrapy.linkextractors import LinkExtractor
 from scrapy.http import Request, HtmlResponse
@@ -146,6 +147,17 @@ class StaticPageSpider(BaseSpider):
 
         return item
     
+    def notify_server_files_found(self, num_files: int):
+        if num_files > 0:            
+            server_notification_url = f'http://localhost:8000/download/files/found/{self.config["instance_id"]}/{num_files}' 
+            req = requests.get(server_notification_url)
+
+            if req.status_code == 200:
+                print('Successful server notified of new files')
+            
+            else:
+                print('Error notifying server about new files found')
+
     def page_to_response(self, page, response) -> HtmlResponse:
         return HtmlResponse(
                     response.url,
@@ -161,17 +173,24 @@ class StaticPageSpider(BaseSpider):
         Parse responses of static pages.
         Will try to follow links if config["explore_links"] is set.
         """
+
         responses = [response]
         if type(response.request) is PuppeteerRequest:
             responses = [self.page_to_response(page, response) 
                             for page in list(response.request.meta["pages"].values())]
-                
+        
         for response in responses:
+
             if self.config.get("explore_links", False):
                 for link in self.extract_links(response):
                     yield Request(url=link,
                                 callback=self.parse,
-                                meta={"attrs": {'referer': response.url}},
+                                meta={
+                                    "attrs": {
+                                        'referer': response.url,
+                                        'instance_id': self.config["instance_id"]
+                                    }
+                                },
                                 errback=self.errback_httpbin)
 
             files_found = set()
@@ -181,5 +200,10 @@ class StaticPageSpider(BaseSpider):
             images_found = set()
             if self.config.get("download_imgs", False):
                 images_found = self.extract_imgs(response)
+            
+            self.notify_server_files_found(len(files_found) + len(images_found))
 
-            yield self.response_to_item(response, files_found, images_found)
+            item = self.response_to_item(response, files_found, images_found)
+
+            yield item 
+    

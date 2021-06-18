@@ -2,6 +2,7 @@ from datetime import datetime
 import itertools
 import json
 
+import requests
 import tldextract
 import redis
 
@@ -11,7 +12,17 @@ from range_inference import RangeInference
 
 import settings
 
-def format_request(url: str, crawler_id: int, instance_id: str) -> dict:
+def notify_server(instance_id: str, num_pages: int):
+    server_notification_url = f'http://localhost:8000/download/pages/found/{instance_id}/{num_pages}'
+    req = requests.get(server_notification_url)
+
+    if req.status_code == 200:
+        print('Successful server notified of new files')
+    
+    else:
+        print('Error notifying server about new files found')
+
+def format_request(url: str, crawler_id: str, instance_id: str) -> dict:
     """Formats a collection request according to Scrapy Cluster standards
     
     Args:
@@ -194,6 +205,9 @@ def create_parameter_generators(probe, parameter_handlers):
     return url_injectors
 
 def generate_templated_urls(base_url, crawler_id, instance_id, req_type, req_body, response_handlers, parameter_handlers):
+    crawler_id = str(crawler_id) 
+    instance_id = str(instance_id)
+    
     extractor = tldextract.TLDExtract()
 
     redis_conn = redis.Redis(host=settings.REDIS_HOST,
@@ -222,22 +236,25 @@ def generate_templated_urls(base_url, crawler_id, instance_id, req_type, req_bod
         
         # Instantiate the parameter injectors for the URL
         url_injectors = create_parameter_generators(probe, parameter_handlers)
-        
         # Generate the requests
         param_generator = itertools.product(*url_injectors)
+
         for param_combination in param_generator:
-            curr_url = base_url.format(*param_combination)
             if probe.check_entry(param_combination):
                 curr_url = base_url.format(*param_combination)
                 req = format_request(curr_url, crawler_id, instance_id)
                 val = json.dumps(req)
                 redis_conn.zadd(key, {val: -req['priority']})
-                
+
+                notify_server(instance_id, 1)                
                 print(f'\t\tSent request "{curr_url}" to redis...')
+
     else:
         req = format_request(base_url, crawler_id, instance_id)
         val = json.dumps(req)
         redis_conn.zadd(key, {val: -req['priority']})
+
+        notify_server(instance_id, 1)                
         print(f'\t\tSent request "{base_url}" to redis...')
 
     print('\tDone')

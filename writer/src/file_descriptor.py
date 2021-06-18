@@ -6,13 +6,11 @@ from kafka import KafkaProducer, KafkaConsumer
 import settings
 from description import Description
 
-import time 
-
 class FileDescriptor:
     def __init__(self) -> None:
         self.__consumer = KafkaConsumer(settings.FILE_DESCRIPTOR_TOPIC,
                                 bootstrap_servers=settings.KAFKA_HOSTS,
-                                auto_offset_reset='earliest',
+                                # auto_offset_reset='earliest',
                                 value_deserializer=lambda m: ujson.loads(m.decode('utf-8')))
 
         self.__producer =  KafkaProducer(bootstrap_servers=settings.KAFKA_HOSTS,

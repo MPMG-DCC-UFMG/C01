@@ -5,7 +5,7 @@ from django.db.models import Q
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm,\
@@ -52,7 +52,7 @@ def process_run_crawl(crawler_id):
 
     return instance
 
-def process_stop_crawl(crawler_id):
+def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
     instance = CrawlRequest.objects.filter(
         id=crawler_id).get().running_instance
     # instance = CrawlerInstance.objects.get(instance_id=instance_id)
@@ -60,6 +60,12 @@ def process_stop_crawl(crawler_id):
     # No instance running
     if instance is None:
         raise ValueError("No instance running")
+
+    if from_sm_listener and not instance.download_files_finished():
+        instance.page_crawling_finished = True
+        instance.save() 
+
+        return
 
     instance_id = instance.instance_id
     config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
@@ -82,9 +88,6 @@ def process_stop_crawl(crawler_id):
         config["data_path"], str(instance_id), instance_info)
 
     crawler_manager.stop_crawler(crawler_id)
-
-    return instance
-
 
 def getAllData():
     return CrawlRequest.objects.all().order_by('-creation_date')
@@ -199,16 +202,26 @@ def create_steps(request):
 
 
 def stop_crawl(request, crawler_id):
-    process_stop_crawl(crawler_id)
+    from_sm_listener = request.GET.get('from', '') == 'sm_listener'
+    process_stop_crawl(crawler_id, from_sm_listener)
     return redirect(detail_crawler, id=crawler_id)
-
 
 def run_crawl(request, crawler_id):
     process_run_crawl(crawler_id)
     return redirect(detail_crawler, id=crawler_id)
 
-
 def tail_log_file(request, instance_id):
+
+    instance = CrawlerInstance.objects.get(instance_id=instance_id)
+    
+    files_found = instance.number_files_found
+    download_file_success = instance.number_files_success_download
+    download_file_error = instance.number_files_error_download
+
+    pages_found = instance.number_pages_found
+    download_page_success = instance.number_pages_success_download
+    download_page_error = instance.number_pages_error_download
+
     logs = Log.objects.filter(instance_id=instance_id).order_by('-creation_date')
 
     log_results = logs.filter(Q(log_level="out"))[:20]
@@ -220,6 +233,12 @@ def tail_log_file(request, instance_id):
     err_text = "\n".join(err_text)
 
     return JsonResponse({
+        "files_found": files_found,
+        "files_success": download_file_success,
+        "files_error": download_file_error, 
+        "pages_found": pages_found,
+        "pages_success": download_page_success,
+        "pages_error": download_page_error, 
         "out": log_text,
         "err": err_text,
         "time": str(datetime.fromtimestamp(time.time())),
@@ -229,6 +248,7 @@ def tail_log_file(request, instance_id):
 def raw_log(request, instance_id):
     logs = Log.objects.filter(instance_id=instance_id)\
                       .order_by('-creation_date')
+
     raw_results = logs[:100]
     raw_text = [json.loads(r.raw_log) for r in raw_results]
 
@@ -239,6 +259,103 @@ def raw_log(request, instance_id):
         resp['Refresh'] = 5
     return resp
 
+def files_found(request, instance_id, num_files):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id = instance_id) 
+
+        instance.number_files_found += num_files
+        instance.save()
+        
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        print(e)
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+def success_download_file(request, instance_id):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id = instance_id) 
+
+        instance.number_files_success_download += 1
+        instance.save()
+
+        total = instance.number_files_success_download + instance.number_files_error_download
+
+        if instance.page_crawling_finished and total == instance.number_files_found:
+            process_stop_crawl(instance.crawler_id.id) 
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def error_download_file(request, instance_id):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id = instance_id) 
+
+        instance.number_files_error_download += 1
+        instance.save()
+
+        total = instance.number_files_success_download + instance.number_files_error_download
+
+        if instance.page_crawling_finished and total == instance.number_files_found:
+            process_stop_crawl(instance.crawler_id.id) 
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+def pages_found(request, instance_id, num_pages):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id = instance_id) 
+
+        instance.number_pages_found += num_pages
+        instance.save()
+        
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        print(e)
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def success_download_page(request, instance_id):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id = instance_id) 
+
+        instance.number_pages_success_download += 1
+        instance.save()
+
+        total = instance.number_pages_success_download + instance.number_pages_error_download
+        stats = round((total / instance.number_pages_found) * 100, 4)
+
+        print(f'[SUCCESS] Download page status: {stats} % ({total}/{instance.number_pages_found})')
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def error_download_page(request, instance_id):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id = instance_id) 
+
+        instance.number_pages_error_download += 1
+        instance.save()
+
+        total = instance.number_pages_success_download + instance.number_pages_error_download
+        stats = round((total / instance.number_pages_found) * 100, 4)
+
+        print(f'[ERROR] Download page status: {stats} % ({total}/{instance.number_pages_found})')
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+ 
 
 def downloads(request):
     return render(request, "main/downloads.html")

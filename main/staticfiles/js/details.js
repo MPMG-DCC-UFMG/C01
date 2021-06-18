@@ -21,6 +21,51 @@ function tail_logs(instance_id){
     // calls tail log view and set logs
     $.ajax("/tail_log_file/" + instance_id).done(function(data) {
             var response = data;
+
+            console.log(response);
+
+            if (response["files_found"] != 0) {
+                response["files_found"] += 19;
+                response["files_error"] += 19;
+
+                let success_rate = (response["files_success"] / response["files_found"]) * 100;
+                let error_rate = (response["files_error"] / response["files_found"]) * 100;
+                let total_processed = response["files_error"] + response["files_success"];
+
+                $('#progress-file-success').css("width", `${success_rate.toFixed(2)}%`);
+                $('#progress-file-success').text(`${success_rate.toFixed(2)}%`);
+                $('#progress-file-success').prop('title', `${success_rate.toFixed(2)}% (${response["files_success"]}/${response["files_found"]}) de sucesso ao baixar os arquivos encontrados`);
+
+                $('#progress-file-failure').css("width", `${error_rate.toFixed(2)}%`);
+                $('#progress-file-failure').text(`${error_rate.toFixed(2)}%`);
+                $('#progress-file-failure').prop('title', `${error_rate.toFixed(2)}% (${response["files_error"]}/${response["files_found"]}) de erro ao baixar os arquivos encontrados`);
+
+
+                let remaining_progress = (response['files_found'] - total_processed) / response['files_found'] * 100;
+
+                $('#remaining-progress-file').prop('title', `Faltam ${remaining_progress.toFixed(2)}% dos arquivos para coletar.`);
+                $('#progress-files-total').text(`${total_processed} de ${response["files_found"]}`);
+            }
+            
+            if (response["pages_found"] != 0) {
+                let success_rate = (response["pages_success"] / response["pages_found"]) * 100;
+                let error_rate = (response["pages_error"] / response["pages_found"]) * 100;
+                let total_processed = response["pages_error"] + response["pages_success"];
+
+                $('#progress-page-success').css("width", `${success_rate.toFixed(2)}%`);
+                $('#progress-page-success').text(`${success_rate.toFixed(2)}%`);
+                $('#progress-page-success').prop('title', `${success_rate.toFixed(2)}% (${response["pages_success"]}/${response["pages_found"]}) de sucesso ao coletar as páginas encontradas`);
+
+                $('#progress-page-failure').css("width", `${error_rate.toFixed(2)}%`);
+                $('#progress-page-failure').text(`${error_rate.toFixed(2)}%`);
+                $('#progress-page-failure').prop('title', `${error_rate.toFixed(2)}% (${response["pages_error"]}/${response["pages_found"]}) de erro ao coletar as páginas encontradas`);
+                
+                let remaining_progress = (response['pages_found'] - total_processed) / response['pages_found'] * 100;
+
+                $('#remaining-progress-page').prop('title', `Faltam ${remaining_progress.toFixed(2)}% das páginas para coletar.`);
+                $('#progress-pages-total').text(`${total_processed} de ${response["pages_found"]}`);
+            }
+
             if(response["out"].length != 0)
                 document.getElementById("stdout_tail").innerText = response["out"]
             else
@@ -28,6 +73,7 @@ function tail_logs(instance_id){
 
             if (response["err"].length != 0)
                 document.getElementById("stderr_tail").innerText = response["err"]
+            
             else
                 document.getElementById("stderr_tail").innerText = "Arquivo em branco."
 

@@ -78,8 +78,8 @@ class Executor:
 
         """
         
-        crawler_id = config['crawler_id']
-        instance_id = config['instance_id']
+        crawler_id = str(config['crawler_id'])
+        instance_id = str(config['instance_id'])
 
         logger_name = f'Worker: {self.__container_id}-{crawler_id}'
 
@@ -88,8 +88,8 @@ class Executor:
 
         process = CrawlerProcess(settings=base_settings)
 
-        # sys.stdout = KafkaLogger(instance_id, logger_name, 'out')
-        # sys.stderr = KafkaLogger(instance_id, logger_name, 'err')
+        sys.stdout = KafkaLogger(instance_id, logger_name, 'out')
+        sys.stderr = KafkaLogger(instance_id, logger_name, 'err')
 
         process.crawl(StaticPageSpider, name=crawler_id, container_id=self.__container_id, config=ujson.dumps(config))
 

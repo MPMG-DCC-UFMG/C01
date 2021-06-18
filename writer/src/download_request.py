@@ -4,12 +4,14 @@ import re
 import hashlib
 from datetime import datetime
 import requests
-import json 
-import os
+import time
 
 import settings
 
 PUNCTUATIONS = "[{}]".format(string.punctuation)
+
+MAX_ATTEMPTS = 3
+INTERVAL_BETWEEN_ATTEMPTS = 30
 
 class DownloadRequest:
     def __init__(self, 
@@ -28,11 +30,10 @@ class DownloadRequest:
         self.referer = referer
         self.filetype = filetype if bool(filetype) else self.__detect_filetype()
         self.filename = filename if bool(filename) else self.__generate_filename()
-        self.path_to_save = f'{data_path}files/{self.filename}'
+        self.path_to_save = f'{data_path}/data/files/{self.filename}'
+        self.data_path = data_path
         self.crawled_at_date = crawled_at_date
 
-        if not os.path.exists(f'{data_path}files/'):
-            os.makedirs(f'{data_path}files/')
 
     def __generate_filename(self) -> str:        
         filename = hashlib.md5(self.url.encode()).hexdigest()
@@ -84,22 +85,59 @@ class DownloadRequest:
 
         self.__filetype_from_mimetype(content_type)
     
-    def exec_download(self):
-        with requests.get(self.url, stream=True, allow_redirects=True, headers=settings.REQUEST_HEADERS) as req:
-            with open(self.path_to_save, "wb") as f:
-                for chunk in req.iter_content(chunk_size=8192):
-                    f.write(chunk)
+    def __notify_server(self, message: str):
+        server_notification_url = f'http://localhost:8000/download/file/{message}/{self.instance_id}' 
+        req = requests.get(server_notification_url)
+        
+        if req.status_code == 200:
+            print('Server notified...')
 
-        self.crawled_at_date = str(datetime.today())
+        else:
+            print('Error notifying server...')
 
-    def jsonfy(self):
-        return json.dumps({
+    def __notify_server_successful_download(self):
+        self.__notify_server('success')
+
+    def __notify_server_error_dowload(self):
+        self.__notify_server('error')
+
+    def exec_download(self) -> bool:
+        print(f"Downloading {self.url}")
+        
+        attempt = 0
+        while attempt < MAX_ATTEMPTS:
+            with requests.get(self.url, stream=True, allow_redirects=True, headers=settings.REQUEST_HEADERS) as req:
+                if req.status_code != 200:
+                    attempt += 1
+                    time.sleep(attempt * INTERVAL_BETWEEN_ATTEMPTS)
+                    continue
+
+                with open(self.path_to_save, "wb") as f:
+                    for chunk in req.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                    break 
+                
+        if attempt == MAX_ATTEMPTS:
+            self.__notify_server_error_dowload()
+            return False 
+
+        else:
+            self.crawled_at_date = str(datetime.today())
+            self.__notify_server_successful_download()
+            return True
+
+    def get_description(self) -> dict:
+        return {
             'url': self.url,
-            'path_to_save': self.path_to_save,
+            'data_path': self.data_path,
+            'relative_path': self.path_to_save,
             'crawler_id': self.crawler_id,
             'instance_id': self.instance_id,
             'referer': self.referer,
-            'filename': self.filename,
-            'filetype': self.filetype,
-            'crawled_at_date': self.crawled_at_date
-        })
+            'file_name': self.filename,
+            'type': self.filetype,
+            'crawled_at_date': self.crawled_at_date,
+            'extracted_files': [
+
+            ]
+        }

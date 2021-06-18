@@ -12,7 +12,7 @@ NOTIFICATIONS_TOPIC = 'sm_notifications'
 # Broadcast messages to generate initial crawl urls
 LINK_GENERATOR_TOPIC = 'sm_link_generator'
 
-INDEXER_TOPIC = 'indexer_notifications'
+WRITER_TOPIC = 'writer'
 
 # 
 KAFKA_HOSTS = ['localhost:9092']
