@@ -152,7 +152,7 @@ function load_steps(json_steps, step_list){
     block = step_board.add_block(step_list, depth = json_steps.depth);
 
     var i = 0;
-    while(i < block.select.length && block.select.options[i].value != json_steps.step.replace(/_/g, " "))
+    while(i < block.select.length && get_step_info(block.select.options[i].value,step_list).name != json_steps.step)
         i++;
 
     if(i == block.select.length){
