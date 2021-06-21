@@ -28,4 +28,7 @@ function setNavigation() {
             $(this).closest('li').addClass('active');
         }
     });
+
+    // Enable or disable the Templated URL section based on the URL value
+    detailBaseUrl();
 }

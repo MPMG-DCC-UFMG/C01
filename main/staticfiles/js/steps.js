@@ -40,7 +40,7 @@ function load_steps_interface(interface_root_element, output_element, json_path=
 function init_steps_creation_interface(interface_root_element, output_element, step_list){
     steps_creation_interface = document.createElement("div")
     steps_creation_interface.type= "steps_creation_interface"
-    
+
     step_controler = document.createElement("div")
     step_controler.type = "step_controler"
     step_board = init_step_board(step_list)
@@ -108,15 +108,15 @@ function init_step_board(step_list){
             step_board.appendChild(step_block);
         }
         return step_block;
-    }    
+    }
     return step_board
-}    
+}
 
 /**
  * Function that will be setted to be a method of the step_board
- * This function analyses the last step in the step_board to answer what 
+ * This function analyses the last step in the step_board to answer what
  * should be the depth of the next step to be added.
- * @return {Number} The last depth or in case of the last step be a 
+ * @return {Number} The last depth or in case of the last step be a
  *                  loop step, the last depth + 1
  */
 function get_last_depth(){
@@ -177,7 +177,7 @@ function load_steps(json_steps, step_list){
             refill_parameters(json_steps.iterable.call.arguments, block)
         }else if(json_steps.step == "for_each_page_in")
             refill_parameters(json_steps.arguments, block)
-        
+
 
         for(child of json_steps["children"]){
             this.load_steps(child, step_list);
@@ -191,7 +191,7 @@ function refill_parameters(args, block){
     params = []
     for(param_input of block.params)
         params = params.concat(param_input.children[0].placeholder.replace(/ /g, "_"))
-    
+
     optional_params = []
     for(optional_param_button of block.new_parameter_button.dropdown_menu.children)
         optional_params = optional_params.concat(optional_param_button.innerHTML.replace(/ /g, "_"))
@@ -202,7 +202,7 @@ function refill_parameters(args, block){
         arg_index = params.findIndex(function(a){return a==arg})
         alert(arg_index)
         if(arg_index!=-1){
-            block.params[arg_index].children[0].value = args[arg] 
+            block.params[arg_index].children[0].value = args[arg]
         }else{
             arg_index = optional_params.findIndex(function(a){return a==arg})
             alert(arg_index)
@@ -215,7 +215,7 @@ function refill_parameters(args, block){
 
 /**
  * This function gets the steps added by user in the step_board and builds the
- * steps json, that describes the steps to be performed on the page to be crawled. 
+ * steps json, that describes the steps to be performed on the page to be crawled.
  * @param {Node} step_board The html element with all the steps setted by user.
  * @param {Node} output_element The html element that is going to receive the steps json in its value.
  */
@@ -232,9 +232,9 @@ function build_json(step_board, output_element){
 
         step_dict = get_step_json_format(step_element);
 
-        
+
         if(indent == 1){
-            
+
             stack[stack.length-1].children.push(step_dict)
             stack.push(step_dict)
         }else if(indent == 0){
@@ -251,7 +251,7 @@ function build_json(step_board, output_element){
 
     }
     output_element.value = JSON.stringify(root_step)
-    
+
 }
 
 /**
@@ -414,4 +414,3 @@ function find_parent_with_attr_worth(element, value, attr = "type"){
         }
     }
 }
-

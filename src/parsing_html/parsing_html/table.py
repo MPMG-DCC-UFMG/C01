@@ -19,9 +19,13 @@ def html_to_df(html_file, match, flavor, header, index_col, skiprows, attrs,
 
         html_file = str(soup)
 
-        dfs = pd.read_html(html_file, match, flavor, header, index_col,
-                           skiprows, attrs, parse_dates, thousands, encoding, decimal,
-                           converters, na_values, keep_default_na, displayed_only)
+        dfs = pd.read_html(html_file, match=match, flavor=flavor, header=header,
+                           index_col=index_col, skiprows=skiprows, attrs=attrs,
+                           parse_dates=parse_dates, thousands=thousands,
+                           encoding=encoding, decimal=decimal,
+                           converters=converters, na_values=na_values,
+                           keep_default_na=keep_default_na,
+                           displayed_only=displayed_only)
     except:
         raise Exception("The table could not be found in the HTML file.")
 

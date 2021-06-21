@@ -1,0 +1,62 @@
+{% load crispy_forms_tags %}
+
+<div class="templated-url-param-step bordered-bottom-option">
+    {% for hidden_field in form.hidden_fields %}
+        {{ hidden_field }}
+    {% endfor %}
+    {% if form.instance.pk %}
+        {{ form.DELETE }}
+    {% endif %}
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger" role="alert">
+        {% for error in form.non_field_errors %}
+            {{ error }}
+        {% endfor %}
+    </div>
+    {% endif %}
+    <!-- Parameter type-->
+    {{ form.parameter_type | as_crispy_field }}
+    <!-- Parameter configuration -->
+    <div class="templated-url-param-config indented-subblock"
+         data-option-type="none" hidden></div>
+    <div class="templated-url-param-config indented-subblock"
+         data-option-type="process_code" hidden>
+        {{ form.first_year_proc_param | as_crispy_field}}
+        {{ form.last_year_proc_param | as_crispy_field}}
+        <span class="templated-url-comma-separated-lists">
+        {{ form.segment_ids_proc_param | as_crispy_field}}
+        {{ form.court_ids_proc_param | as_crispy_field}}
+        {{ form.origin_ids_proc_param | as_crispy_field}}
+        </span>
+    </div>
+    <div class="templated-url-param-config indented-subblock"
+         data-option-type="number_seq" hidden>
+        {{ form.first_num_param | as_crispy_field}}
+        {{ form.last_num_param | as_crispy_field}}
+        {{ form.step_num_param | as_crispy_field}}
+        {{ form.leading_num_param | as_crispy_field}}
+    </div>
+    <div class="templated-url-param-config indented-subblock"
+         data-option-type="alpha_seq" hidden>
+        {{ form.length_alpha_param | as_crispy_field}}
+        {{ form.num_words_alpha_param | as_crispy_field}}
+        {{ form.no_upper_alpha_param | as_crispy_field}}
+    </div>
+    <div class="templated-url-param-config indented-subblock"
+         data-option-type="date_seq" hidden>
+        <span class="templated-url-date-freq">
+        {{ form.frequency_date_param | as_crispy_field}}
+        </span>
+        {{ form.date_format_date_param | as_crispy_field}}
+        {{ form.start_date_date_param | as_crispy_field}}
+        {{ form.end_date_date_param | as_crispy_field}}
+    </div>
+    <div class="templated-url-filter-config indented-subblock"
+         hidden>
+        {{ form.filter_range | as_crispy_field }}
+        <div class="templated-url-cons-misses" hidden>
+            {{ form.cons_misses | as_crispy_field }}
+        </div>
+    </div>
+    <br>
+</div>

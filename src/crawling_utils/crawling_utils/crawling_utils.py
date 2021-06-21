@@ -3,11 +3,41 @@ from selenium.webdriver.common.keys import Keys
 import time
 import hashlib
 import os
+from urllib.parse import urlparse
+import requests
+
+
+class StopDownload(Exception):
+    """Used in func file_larger_than_giga"""
+    pass
+
+
+def file_larger_than_giga(url):
+    # Mudar user-agent para evitar ser bloqueado por usar a biblioteca requests
+    headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
+    
+    # requisição apenas para obter o cabeçalho do conteúdo a ser baixado
+    response = requests.head(url, allow_redirects=True, headers=headers)
+
+    # obtem o tamanho do arquivo e converte para inteiro
+    content_length = response.headers.get('Content-Length')
+    if content_length is None:
+        return True
+
+    content_length = int(content_length)
+
+    return content_length > 1e9
+
+
+def get_url_domain(url):
+    parsed_uri = urlparse(url)
+    result = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
+    return result
+
 
 def hash(byte_content):
     """Returns the md5 hash of a bytestring."""
     return hashlib.md5(byte_content).hexdigest()
-
 
 # leave as 'chromedriver' if driver is on path
 CHROME_WEBDRIVER_PATH = 'chromedriver'
@@ -21,19 +51,11 @@ FIREFOX_WEBDRIVER_PATH = 'geckodriver'
 
 def check_file_path(path):
     """Makes sure that folders in path exist."""
-    if path[-1] == "/":
-       path = path[:-1]
- 
-    path = path.split("/")
-    for i in range(len(path)):
-        try:
-            # treating paths from root like "/home/..."
-            if i == 0 and path[i] == "":
-                continue
-            os.mkdir("/".join(path[:i + 1]))
-        except FileExistsError:
-            pass
- 
+    try:
+        os.makedirs(path)
+    except FileExistsError:
+        pass
+
 
 def init_webdriver(
     driver_type: str = "chrome",

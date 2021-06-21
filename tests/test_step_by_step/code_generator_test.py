@@ -1,5 +1,6 @@
 from step_crawler import atomizer as atom
 from step_crawler import code_generator as cg
+import step_crawler.functions_file as ff
 from pyext import RuntimeModule
 import json
 import unittest
@@ -79,6 +80,28 @@ class TestExtractInfo(unittest.TestCase):
         expected_result += "    for j in range_(stop = 2):\n"
         expected_result += "        k = 0\n"
         expected_result += "        print_(word = \"teste\")\n"
+        self.assertEqual(expected_result, result)
+
+        result = cg.generate_body(atom.extend(
+            recipe_examples['simple_while']['recipe'])[0], ff)
+        expected_result = "    limit = 0\n"
+        expected_result += "    while True == 1 and limit < 5:\n"
+        expected_result += "        limit += 1\n"
+        expected_result += "        print_(word = \"teste\")\n"
+        self.assertEqual(expected_result, result)
+
+    def test_generate_for(self):
+        with open("tests/test_step_by_step/examples/recipe_examples.json") as file:
+            recipe_examples = json.load(file)
+
+
+        expected_result = "    for i in [1, 2, 3]:\n"
+        expected_result += "        for j in range_(stop = 2):\n"
+        expected_result += "            for k in range_(stop = 2):\n"
+        expected_result += "                print_(word = \"teste\")\n"
+
+        result = cg.generate_para_cada(recipe_examples['unbreakable_between_breakable']['recipe']['children'][0], ff)
+
         self.assertEqual(expected_result, result)
 
     # def test_generate_code(self):

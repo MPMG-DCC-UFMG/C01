@@ -2,18 +2,25 @@ from django.apps import AppConfig
 from django.db.utils import OperationalError
 from step_crawler import parameter_extractor
 from step_crawler import functions_file
+
 import json
+import os
+import signal
 
-
-from crawlers.crawler_manager import start_consumers_and_producers
-
+# Enable interrupt signal
+signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 class MainConfig(AppConfig):
     name = 'main'
     server_running = False
 
     def runOnce(self):
-        steps_signature = parameter_extractor.get_module_functions_info(functions_file)
+        # Create json folder if necessary
+        if not os.path.exists('main/staticfiles/json/'):
+            os.makedirs('main/staticfiles/json/')
+
+        steps_signature = parameter_extractor.get_module_functions_info(
+            functions_file)
         with open('main/staticfiles/json/steps_signature.json', 'w+') as file:
             json.dump(steps_signature, file)
 
@@ -31,15 +38,12 @@ class MainConfig(AppConfig):
             instance.running = False
             instance.save()
 
-        # starts file descriptor and file downloader processes
-        start_consumers_and_producers()
-
     def ready(self):
         try:
             self.runOnce()
         except OperationalError as err:
             print(
                 f"Error at MainConfig.ready(). Message:\n{err}\n"
-                f"Are you making migrations or migrating?\n" 
+                f"Are you making migrations or migrating?\n"
                 f" If so, ignore this error. Otherwise you should fix it."
             )

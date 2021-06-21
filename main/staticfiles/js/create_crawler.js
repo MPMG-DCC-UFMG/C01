@@ -1,3 +1,16 @@
+/* Collapse div */
+
+function mycollapse(target){
+    var el = $(target);
+
+    if(el.hasClass("myshow"))
+        el.removeClass("myshow");
+    else
+        el.addClass("myshow");
+}
+
+/* End collapse div */
+
 function enableCreateButton() {
     var blocks = document.getElementsByClassName('valid-icon');
     var isValid = true;
@@ -90,7 +103,7 @@ function checkAntiblock() {
     }
 
     var selected_option = getSelectedOptionValue("id_antiblock_mask_type");
-    console.log("id_antiblock_mask_type", selected_option);
+    // console.log("id_antiblock_mask_type", selected_option);
     if (selected_option == 'ip') {
         valid = (
             valid &&
@@ -134,53 +147,126 @@ function checkCaptcha() {
 function checkCrawlerType() {
 }
 
-function runValidations() {
-    /*
-    Run required validators (needed when editing a filled form)
-    */
-    detailBaseUrl(false);
+function checkTemplatedURL() {
+    var valid = true;
 
-    // Manually trigger onchange events
-    $(".templated-url-response-handling-step > .form-group select").change();
-    $(".templated-url-param-step > .form-group select").change();
+    // Validate all entries with the HTML specified rules
+
+    // Parameter configurations
+    $('.templated-url-param-step:not(.subform-deleted) input')
+        .each((index, entry) => {
+        valid = valid && entry.checkValidity();
+    });
+
+    // Response validation configurations
+    $('.templated-url-resp-step:not(.subform-deleted) input')
+        .each((index, entry) => {
+        valid = valid && entry.checkValidity();
+    });
+
+    // Validate ordering constraints between fields
+    $('.templated-url-param-step:not(.subform-deleted)')
+        .each((index, entry) => {
+        entry = $(entry);
+
+        let param_type = entry.find('select[name$="parameter_type"]').val();
+
+        let error_msg = ""
+        if (param_type == 'process_code') {
+            let first_year = entry.find('input[name$="first_year_proc_param"]');
+            let last_year = entry.find('input[name$="last_year_proc_param"]');
+
+            let first_value = parseInt(first_year.val());
+            let last_value = parseInt(last_year.val());
+
+            if (first_year.val() != "" && last_year.val() != "" &&
+                first_value > last_value) {
+                valid = false;
+                error_msg = 'O primeiro ano deve ser menor que o último.'
+            }
+            first_year[0].setCustomValidity(error_msg);
+            last_year[0].setCustomValidity(error_msg);
+        } else if (param_type == 'number_seq'){
+            let first_num = entry.find('input[name$="first_num_param"]');
+            let last_num = entry.find('input[name$="last_num_param"]');
+
+            let first_value = parseInt(first_num.val());
+            let last_value = parseInt(last_num.val());
+
+            if (first_num.val() != "" && last_num.val() != "" &&
+                first_value > last_value) {
+                valid = false;
+                error_msg = 'O primeiro número deve ser menor que o último.'
+            }
+            first_num[0].setCustomValidity(error_msg);
+            last_num[0].setCustomValidity(error_msg);
+        } else if (param_type == 'date_seq'){
+            let first_date = entry.find('input[name$="start_date_date_param"]');
+            let last_date = entry.find('input[name$="end_date_date_param"]');
+
+            let first_value = new Date(first_date.val());
+            let last_value = new Date(last_date.val());
+
+            if (first_date.val() != "" && last_date.val() != "" &&
+                first_value > last_value) {
+                valid = false;
+                error_msg = 'A primeira data deve ser menor que a última.'
+            }
+            first_date[0].setCustomValidity(error_msg);
+            last_date[0].setCustomValidity(error_msg);
+        }
+    });
+
+    defineIcon("templated-url", valid);
+}
+
+function checkRelatedFields() {
+    var input_name = $(this).attr('name');
+
+    if (input_name == "import_settings")
+        return;
+
+    if (input_name.length >= 11 && input_name.substring(0, 10) == "antiblock_") {
+        checkAntiblock();
+    }
+
+    if (input_name.length >= 13 && input_name.substring(0, 13) == "templated-url") {
+        checkTemplatedURL();
+    }
+
+    // TODO: make all variables from same section have the same prefix and check like antiblock
+    switch (input_name) {
+        case 'source_name':
+        case 'base_url':
+        case 'data_path':
+            checkBasicInfo();
+            break;
+        case 'has_webdriver':
+        case 'webdriver_path':
+        case 'img_xpath':
+        case 'sound_xpath':
+            checkCaptcha();
+            break;
+        case 'crawler_type':
+        case 'explore_links':
+        case 'link_extractor_max_depth':
+        case 'link_extractor_allow':
+        case 'link_extractor_allow_extensions':
+            checkCrawlerType();
+            break;
+    }
 }
 
 $(document).ready(function () {
     setNavigation();
-    runValidations();
+    $('input').on('blur keyup', checkRelatedFields);
+    $('#collapse-adv-links').on("click", function () { mycollapse("#adv-links");})
+    $('#collapse-adv-download').on("click", function () { mycollapse("#adv-download"); })
 
-    $('input').on('blur keyup', function () {
-        var input_name = $(this).attr('name');
-
-        if (input_name.length >= 11 && input_name.substring(0, 10) == "antiblock_") {
-            checkAntiblock();
-        }
-        // TODO: make all variables from same section have the same prefix and check like antiblock
-        switch (input_name) {
-            case 'source_name':
-            case 'base_url':
-            case 'data_path':
-                checkBasicInfo();
-                break;
-            case 'has_webdriver':
-            case 'webdriver_path':
-            case 'img_xpath':
-            case 'sound_xpath':
-                checkCaptcha();
-                break;
-            case 'crawler_type':
-            case 'explore_links':
-            case 'link_extractor_max_depth':
-            case 'link_extractor_allow':
-            case 'link_extractor_allow_extensions':
-                checkCrawlerType();
-                break;
-        }
-    });
 });
 
 function showBlock(clicked_id) {
-
+    console.log(clicked_id);
     var blocks = document.getElementsByClassName('block');
     for (var i = 0; i < blocks.length; i++)
         blocks[i].setAttribute('hidden', true);
@@ -196,40 +282,16 @@ function showBlock(clicked_id) {
     document.getElementById(clicked_id).classList.add('active');
 
 
-    //Editar aqui futuramete. É necessário uma estrutura 
-    //mais geral para as funções do tipo detail já que ao 
+    //Editar aqui futuramete. É necessário uma estrutura
+    //mais geral para as funções do tipo detail já que ao
     //editar um coletor e navegar pelas abas, o showblock
     //é chamado mostrando apenas as suas paginas iniciais.
     if (clicked_id == "crawler-type-item"){
-        detailCrawlerType();        
+        detailCrawlerType();
     }
 }
 
-function setNumParamForms(num) {
-    /*
-    Adjusts the parameter configuration formset to have the supplied number
-    of forms
-
-    :param num: number of forms to be displayed
-    */
-
-    // count number of parameter forms (subtract one to account for the
-    // template form supplied)
-    let num_forms = parseInt($('#id_params-TOTAL_FORMS').val()),
-        add_btn = $('#templated-url-param .add-form-button');
-
-    while(num_forms--) {
-        let param_forms = $('.templated-url-param-step')
-        $(param_forms[param_forms.length-1]).find('.close')
-                                            .click()
-    }
-
-    while(num--) {
-        add_btn.click()
-    }
-}
-
-function detailBaseUrl(update_param_list=true) {
+function detailBaseUrl() {
     const base_url = $("#id_base_url").val();
 
     // Check if a Templated URL is being used (if there is at least one
@@ -238,19 +300,45 @@ function detailBaseUrl(update_param_list=true) {
         $("#templated-url-item").removeClass("disabled");
         // count number of placeholders
         let num_placeholders = (base_url.match(/\{\}/g) || []).length;
-        if (update_param_list) setNumParamForms(num_placeholders)
+        $('#templated-url-param').formset('setNumForms', num_placeholders);
     } else {
         $("#templated-url-item").addClass("disabled");
 
-        // remove all parameter forms
-        if (update_param_list) setNumParamForms(0)
+        // remove all parameter and response forms
+        $('#templated-url-param').formset('setNumForms', 0);
+        $('#templated-url-response').formset('setNumForms', 0);
     }
-}
 
+    // Update information for selected parameters/response handlers
+    $('#templated-url-param .templated-url-param-step > .form-group select').each(
+        (index, entry) => detailTemplatedUrlParamType({ 'target': entry})
+    );
+
+    $('#templated-url-response .templated-url-resp-step > .form-group select').each(
+        (index, entry) => detailTemplatedUrlResponseType({ 'target': entry})
+    );
+
+    // Update range-filtering sub-parameters
+    $('.templated-url-filter-config > .form-group input').each(
+        (index, entry) => detailTemplatedURLParamFilter({'target': entry})
+    );
+
+    checkTemplatedURL();
+}
 
 function detailWebdriverType() {
     setHiddenState("webdriver_path_div", !getCheckboxState("id_has_webdriver"));
 }
+
+function detailDynamicProcessing() {
+    dynamic_processing_block = document.getElementById("dynamic-processing-item")
+    if(getCheckboxState("id_dynamic_processing")){
+        dynamic_processing_block.classList.remove("disabled")
+    }else{
+        dynamic_processing_block.classList.add("disabled")
+    }
+}
+
 
 function detailCaptcha() {
     var mainSelect = document.getElementById("id_captcha");
@@ -278,16 +366,61 @@ function hideUnselectedSiblings(input, parentPath, siblingPath) {
         parentDiv.find("[data-option-type=" + selectedVal + "]")
                  .attr('hidden', false);
     }
+
+    // Remove 'required' constraint from all inputs for this parameter
+    $(input).closest(parentPath)
+            .find(siblingPath + ' input:not([type="checkbox"])')
+            .removeAttr('required');
+
+    const paramType = input.options[input.selectedIndex].value
+
+    if (paramType != "") {
+        // Add 'required' constraint to inputs for this parameter type
+        $(input).closest(parentPath)
+                .find(siblingPath + '[data-option-type=' + paramType + '] ' +
+                                    'input:not([type="checkbox"])')
+                .attr('required', '');
+    }
 }
 
-function detailTemplatedUrlResponseParams(e) {
-    hideUnselectedSiblings(e.target, '.templated-url-response-handling-step',
+function detailTemplatedUrlResponseType(e) {
+    hideUnselectedSiblings(e.target, '.templated-url-resp-step:not(.subform-deleted)',
         '.templated-url-response-params');
+
 }
 
 function detailTemplatedUrlParamType(e) {
-    hideUnselectedSiblings(e.target, '.templated-url-param-step',
+    const input = e.target;
+    hideUnselectedSiblings(e.target, '.templated-url-param-step:not(.subform-deleted)',
         '.templated-url-param-config');
+
+    const filterDiv = $(input).closest('.templated-url-param-step')
+                              .find('.templated-url-filter-config')[0];
+
+    switch (input.options[input.selectedIndex].value) {
+        case 'process_code':
+        case 'number_seq':
+        case 'date_seq':
+            // Display filtering options
+            filterDiv.hidden = false
+            break;
+        default:
+            // Hide filtering options
+            filterDiv.hidden = true
+    }
+
+    // Update cons_misses parameter
+    const filterCheckbox = $(filterDiv).find('> .form-group input')[0]
+    detailTemplatedURLParamFilter({ 'target':  filterCheckbox })
+
+}
+
+function detailTemplatedURLParamFilter(e) {
+    const input = e.target;
+    const consMissesInput = $(input).closest(".templated-url-param-step")
+         .find('.templated-url-cons-misses')[0]
+    consMissesInput.hidden = !input.checked
+    $(consMissesInput).find('input').prop('required', input.checked)
 }
 
 function detailIpRotationType() {
@@ -314,15 +447,15 @@ function detailAntiblock() {
     checkAntiblock();
 }
 
-function detailCrawlerType() {
-    var mainSelect = document.getElementById("id_crawler_type");
-    const crawler_type = mainSelect.options[mainSelect.selectedIndex].value;
+// function detailCrawlerType() {
+//     var mainSelect = document.getElementById("id_crawler_type");
+//     const crawler_type = mainSelect.options[mainSelect.selectedIndex].value;
 
-    var contents = document.getElementsByClassName("crawler-type-content-div");
-    for (const i in contents)
-        contents[i].hidden = true;
-    setHiddenState(crawler_type, false);
-    
+//     var contents = document.getElementsByClassName("crawler-type-content-div");
+//     for (const i in contents)
+//         contents[i].hidden = true;
+//     setHiddenState(crawler_type, false);
+
 
     if(crawler_type == "form_page"){
         interface_root_element = document.getElementById("form_page");
@@ -331,13 +464,90 @@ function detailCrawlerType() {
             load_steps_interface(interface_root_element, steps_output_element);
         }
     }
+    for (let i = 0; i < num_validators; i++) {
+        let param = data["templated_url_response_handlers"][i];
+        for (let key in param) {
+            new_data["templated-url-responses-" + i + "-" + key] = param[key];
+        }
+    }
 
-    checkCrawlerType();
+    // Re-run the processing with only the parameterized URL config data
+    processSettings(new_data);
+
+    // Re-updates the parameterized URL section (used to refresh sub-options
+    // based on select values and remove/add the "required" attribute)
+    detailBaseUrl();
 }
 
-function autothrottleEnabled() {
-    setHiddenState("autothrottle-options-div", !getCheckboxState("id_antiblock_autothrottle_enabled"));
+
+function processParsing(data) {
+    // When the configuration is to not save csv, the field checked below is null
+    if (!data["table_attrs"])
+        return;
+
+    let parsing_data = JSON.parse(data["table_attrs"]);
+
+    let parsing_input, parsing_input_name;
+    $('#parsing-item-block input').each(function () {
+        parsing_input = $(this);
+        parsing_input_name = parsing_input.attr('name');
+        if (parsing_input_name) {
+            if (parsing_input_name in parsing_data) {
+                if(this.type == "checkbox") {
+                    let bool_value = String(parsing_data[parsing_input_name])
+                                        .toLowerCase() == "true";
+
+                    // Use the .click() method instead of directly changing the
+                    // checked value so that the correct events are triggered
+                    if (bool_value != parsing_input.prop('checked'))
+                        parsing_input.click();
+                } else {
+                    parsing_input.val(parsing_data[parsing_input_name]);
+                }
+            }
+        }
+    });
+
+    getExtraParsingConfig();
 }
 
+function processSettings(data) {
+    // Converts the settings of the json file into
+    // parameters of the creation form
+    processCheckBoxInput(data);
 
-// TODO add new fields to validation
+    processInput('select', data);
+    processInput('input[type=text]', data);
+    processInput('input[type=number]', data);
+    processInput('input[type=date]', data);
+    processInput('textarea', data);
+}
+
+function parseSettings(e) {
+    const file = e.files[0];
+
+    const reader = new FileReader();
+    reader.addEventListener('load', (event) => {
+        // configuratiion file parsing
+        const result = event.target.result;
+        const data = JSON.parse(result);
+
+        processSettings(data);
+        processParameterizedURL(data);
+        processParsing(data);
+
+        // checks if the settings are valid
+        checkBasicInfo();
+        checkAntiblock();
+        checkCaptcha();
+        checkCrawlerType();
+        checkTemplatedURL();
+
+        // go to the option that allows the user to change the location
+        // saving downloaded files
+        showBlock('basic-info-item');
+        $('#id_data_path').focus();
+    });
+
+    reader.readAsText(file);
+}

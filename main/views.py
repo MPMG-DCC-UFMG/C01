@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.utils import timezone
 from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
@@ -20,11 +21,17 @@ import time
 
 import crawlers.crawler_manager as crawler_manager
 
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.parsers import JSONParser
+
 # Helper methods
 
 
 def process_run_crawl(crawler_id):
     instance = None
+    instance_id = None
+    instance_info = dict()
+
     with transaction.atomic():
         # Execute DB commands atomically
         crawler_entry = CrawlRequest.objects.filter(id=crawler_id)
@@ -39,6 +46,12 @@ def process_run_crawl(crawler_id):
         data = CrawlRequest.process_config_data(crawler_entry.get(), data)
         instance_id = crawler_manager.start_crawler(data.copy())
         instance = create_instance(data['id'], instance_id)
+
+    instance_info["started_at"] = str(instance.creation_date)
+    instance_info["finished_at"] = None
+
+    crawler_manager.update_instances_info(
+        data["data_path"], str(instance_id), instance_info)
 
     return instance
 
@@ -55,13 +68,24 @@ def process_stop_crawl(crawler_id):
     instance_id = instance.instance_id
     config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
 
-    crawler_manager.stop_crawler(instance_id, config)
     instance = None
+    instance_info = {}
     with transaction.atomic():
         # Execute DB commands atomically
         instance = CrawlerInstance.objects.get(instance_id=instance_id)
         instance.running = False
+        instance.finished_at = timezone.now()
         instance.save()
+
+    # As soon as the instance is created, it starts to collect and is only modified when it stops,
+    # we use these fields to define when a collection started and ended
+    instance_info["started_at"] = str(instance.creation_date)
+    instance_info["finished_at"] = str(instance.last_modified)
+
+    crawler_manager.update_instances_info(
+        config["data_path"], str(instance_id), instance_info)
+
+    crawler_manager.stop_crawler(instance_id, config)
 
     return instance
 
@@ -76,8 +100,8 @@ def create_instance(crawler_id, instance_id):
         crawler_id=mother[0], instance_id=instance_id, running=True)
     return obj
 
-
 # Views
+
 
 def list_crawlers(request):
     context = {'allcrawlers': getAllData()}
@@ -89,9 +113,9 @@ def create_crawler(request):
     if request.method == "POST":
         my_form = RawCrawlRequestForm(request.POST)
         parameter_formset = ParameterHandlerFormSet(request.POST,
-            prefix='params')
+            prefix='templated-url-params')
         response_formset = ResponseHandlerFormSet(request.POST,
-            prefix='responses')
+            prefix='templated-url-responses')
         if my_form.is_valid() and parameter_formset.is_valid() and \
            response_formset.is_valid():
             new_crawl = CrawlRequestForm(my_form.cleaned_data)
@@ -106,8 +130,12 @@ def create_crawler(request):
             return redirect('list_crawlers')
     else:
         my_form = RawCrawlRequestForm()
-        parameter_formset = ParameterHandlerFormSet(prefix='params')
-        response_formset = ResponseHandlerFormSet(prefix='responses')
+        parameter_formset = ParameterHandlerFormSet(
+            prefix='templated-url-params'
+        )
+        response_formset = ResponseHandlerFormSet(
+            prefix='templated-url-responses'
+        )
     context['form'] = my_form
     context['response_formset'] = response_formset
     context['parameter_formset'] = parameter_formset
@@ -118,27 +146,22 @@ def edit_crawler(request, id):
     crawler = get_object_or_404(CrawlRequest, pk=id)
     form = RawCrawlRequestForm(request.POST or None, instance=crawler)
     parameter_formset = ParameterHandlerFormSet(request.POST or None,
-        instance=crawler, prefix='params')
+        instance=crawler, prefix='templated-url-params')
     response_formset = ResponseHandlerFormSet(request.POST or None,
-        instance=crawler, prefix='responses')
-
-    if (len(parameter_formset) > 1):
-        # we have at least one parameter to use as a base, no need to add an
-        # empty one
-        parameter_formset.extra=0
+        instance=crawler, prefix='templated-url-responses')
 
     if request.method == 'POST' and form.is_valid() and \
        parameter_formset.is_valid() and response_formset.is_valid():
-            form.save()
-            parameter_formset.save()
-            response_formset.save()
-            return redirect('list_crawlers')
+        form.save()
+        parameter_formset.save()
+        response_formset.save()
+        return redirect('list_crawlers')
     else:
         return render(request, 'main/create_crawler.html', {
             'form': form,
             'response_formset': response_formset,
             'parameter_formset': parameter_formset,
-            'crawler' : crawler
+            'crawler': crawler
         })
 
 
@@ -190,10 +213,9 @@ def run_crawl(request, crawler_id):
 
 
 def tail_log_file(request, instance_id):
-
     crawler_id = CrawlerInstance.objects.filter(
-                    instance_id=instance_id
-                ).values()[0]["crawler_id_id"]
+        instance_id=instance_id
+    ).values()[0]["crawler_id_id"]
 
     config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
     data_path = config["data_path"]
@@ -214,6 +236,10 @@ def tail_log_file(request, instance_id):
         "time": str(datetime.fromtimestamp(time.time())),
     })
 
+
+def downloads(request):
+    return render(request, "main/downloads.html")
+
 # API
 ########
 
@@ -232,6 +258,13 @@ GET       /api/crawlers/<id>/run    run crawler instance
 GET       /api/crawlers/<id>/stop   stop crawler instance
 GET       /api/instances/           list crawler instances
 GET       /api/instances/<id>       crawler instance detail
+GET       /api/downloads/<id>       return details about download itens
+GET       /api/downloads/           return list of download itens
+POST      /api/downloads/           create a download item
+PUT       /api/downloads/<id>       update download item
+GET       /api/downloads/queue      return list of items in download queue
+GET       /api/downloads/progress   return info about current download
+GET       /api/downloads/error      return info about download errors
 """
 
 

@@ -20,22 +20,22 @@ class ProbingResponseTest(unittest.TestCase):
         """
 
         # Mock responses with 200 and 404 HTTP status codes
-        status200 = mock.MagicMock(spec=ResponseData, status_code=200)
-        status404 = mock.MagicMock(spec=ResponseData, status_code=404)
+        status200 = mock.create_autospec(ResponseData, status_code=200)
+        status404 = mock.create_autospec(ResponseData, status_code=404)
 
         # Validates the entry with an HTTP status of 200
         resp_handler = HTTPStatusProbingResponse(200)
-        self.assertEqual(resp_handler.process(status200), True)
+        self.assertTrue(resp_handler.process(status200))
 
         # Invalidates the entry with any HTTP status besides 200
-        self.assertEqual(resp_handler.process(status404), False)
+        self.assertFalse(resp_handler.process(status404))
 
         # Validates the entry with any HTTP status besides 404
         resp_handler = HTTPStatusProbingResponse(404, opposite=True)
-        self.assertEqual(resp_handler.process(status200), True)
+        self.assertTrue(resp_handler.process(status200))
 
         # Invalidates the entry with an HTTP status of 404
-        self.assertEqual(resp_handler.process(status404), False)
+        self.assertFalse(resp_handler.process(status404))
 
 
     def test_text_match(self):
@@ -44,28 +44,28 @@ class ProbingResponseTest(unittest.TestCase):
         """
 
         # Mock responses with different text contents
-        text_found = mock.MagicMock(spec=ResponseData,
+        text_found = mock.create_autospec(ResponseData,
                                     text="Page found in our database")
-        text_not_found = mock.MagicMock(spec=ResponseData,
+        text_not_found = mock.create_autospec(ResponseData,
                                         text="Sorry, page not found")
 
         # Validates response with a given text
         resp_handler = TextMatchProbingResponse("Page found")
-        self.assertEqual(resp_handler.process(text_found), True)
+        self.assertTrue(resp_handler.process(text_found))
 
         # Invalidates response where the text is not present
-        self.assertEqual(resp_handler.process(text_not_found), False)
+        self.assertFalse(resp_handler.process(text_not_found))
 
-        # The search is case-sensitive
+        # The search is case-insensitive
         resp_handler = TextMatchProbingResponse("page found")
-        self.assertEqual(resp_handler.process(text_found), False)
+        self.assertTrue(resp_handler.process(text_found))
 
         # Validates response where text is not present
         resp_handler = TextMatchProbingResponse("page not found", opposite=True)
-        self.assertEqual(resp_handler.process(text_found), True)
+        self.assertTrue(resp_handler.process(text_found))
 
         # Invalidates response where text is present
-        self.assertEqual(resp_handler.process(text_not_found), False)
+        self.assertFalse(resp_handler.process(text_not_found))
 
 
 
@@ -76,23 +76,23 @@ class ProbingResponseTest(unittest.TestCase):
 
         # Mock text and binary responses
         text_header = {'Content-Type': 'text/json'}
-        text_resp = mock.MagicMock(spec=ResponseData, headers=text_header)
+        text_resp = mock.create_autospec(ResponseData, headers=text_header)
         binary_header = {'Content-Type': 'application/vnd.ms-excel'}
-        binary_resp = mock.MagicMock(spec=ResponseData, headers=binary_header)
+        binary_resp = mock.create_autospec(ResponseData, headers=binary_header)
 
         # Validates binary response
         resp_handler = BinaryFormatProbingResponse()
-        self.assertEqual(resp_handler.process(binary_resp), True)
+        self.assertTrue(resp_handler.process(binary_resp))
 
         # Invalidates text response
-        self.assertEqual(resp_handler.process(text_resp), False)
+        self.assertFalse(resp_handler.process(text_resp))
 
         # Validates text response
         resp_handler = BinaryFormatProbingResponse(opposite=True)
-        self.assertEqual(resp_handler.process(text_resp), True)
+        self.assertTrue(resp_handler.process(text_resp))
 
         # Invalidates binary response
-        self.assertEqual(resp_handler.process(binary_resp), False)
+        self.assertFalse(resp_handler.process(binary_resp))
 
 
     def test_invalid_params(self):

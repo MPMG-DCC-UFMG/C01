@@ -16,8 +16,7 @@ from multiprocessing import Process
 import crawling_utils.crawling_utils as crawling_utils
 from crawlers.constants import *
 from crawlers.file_descriptor import FileDescriptor
-from crawlers.file_downloader import FileDownloader
-from crawlers.static_page import StaticPageSpider
+
 
 # TODO: implement following antiblock options
 # antiblock_mask_type
@@ -30,29 +29,12 @@ from crawlers.static_page import StaticPageSpider
 # antiblock_cookies_file
 # antiblock_persist_cookies
 
-def file_downloader_process():
-    """Redirects downloader output and starts downloader consumer loop."""
-    crawling_utils.check_file_path("crawlers/log/")
-    sys.stdout = open(f"crawlers/log/file_downloader.out", "a", buffering=1)
-    sys.stderr = open(f"crawlers/log/file_downloader.err", "a", buffering=1)
-    FileDownloader.download_consumer()
-
-
 def file_descriptor_process():
     """Redirects descriptor output and starts descriptor consumer loop."""
     crawling_utils.check_file_path("crawlers/log/")
-    sys.stdout = open(f"crawlers/log/file_descriptor.out", "a", buffering=1)
-    sys.stderr = open(f"crawlers/log/file_descriptor.err", "a", buffering=1)
+    sys.stdout = open(f"crawlers/log/file_descriptor.out", "w+", buffering=1)
+    sys.stderr = open(f"crawlers/log/file_descriptor.err", "w+", buffering=1)
     FileDescriptor.description_consumer()
-
-
-def start_consumers_and_producers():
-    """Starts file_description and file_downlaoder processes."""
-    downloader = Process(target=file_downloader_process)
-    downloader.start()
-
-    descriptor = Process(target=file_descriptor_process)
-    descriptor.start()
 
 
 def create_folders(data_path):
@@ -72,25 +54,27 @@ def create_folders(data_path):
 def get_crawler_base_settings(config):
     """Returns scrapy base configurations."""
     autothrottle = "antiblock_autothrottle_"
-    return {
+    settings = {
         "BOT_NAME": "crawlers",
         "ROBOTSTXT_OBEY": config['obey_robots'],
         "DOWNLOAD_DELAY": 1,
-        # "SELENIUM_DRIVER_NAME": "chrome",
-        # "SELENIUM_DRIVER_EXECUTABLE_PATH": shutil.which(
-        #     crawling_utils.CHROME_WEBDRIVER_PATH
-        # ),
-        # "SELENIUM_DRIVER_ARGUMENTS": ["--headless"],
-        # "DOWNLOADER_MIDDLEWARES": {"scrapy_selenium.SeleniumMiddleware": 0},
+        # "DOWNLOADER_MIDDLEWARES": {"redirect_middleware.RedirectMiddlewareC04": 0},
         "DOWNLOAD_DELAY": config["antiblock_download_delay"],
         "RANDOMIZE_DOWNLOAD_DELAY": True,
         "AUTOTHROTTLE_ENABLED": config[f"{autothrottle}enabled"],
         "AUTOTHROTTLE_START_DELAY": config[f"{autothrottle}start_delay"],
         "AUTOTHROTTLE_MAX_DELAY": config[f"{autothrottle}max_delay"],
+        "DEPTH_LIMIT": config["link_extractor_max_depth"]
     }
+
+    if config.get("dynamic_processing", False):
+        settings["DOWNLOADER_MIDDLEWARES"] = {'scrapy_puppeteer.PuppeteerMiddleware': 800}
+    return settings
 
 
 def crawler_process(config):
+    import scrapy_puppeteer
+    from crawlers.page_spider import PageSpider
     """Starts crawling."""
     crawler_id = config["crawler_id"]
     instance_id = config["instance_id"]
@@ -101,18 +85,7 @@ def crawler_process(config):
     sys.stderr = open(f"{data_path}/log/{instance_id}.err", "a", buffering=1)
 
     process = CrawlerProcess(settings=get_crawler_base_settings(config))
-
-    if config["crawler_type"] == "single_file":
-        # process.crawl(StaticPageSpider, crawler_id=crawler_id)
-        raise NotImplementedError
-    elif config["crawler_type"] == "file_bundle":
-        # process.crawl(StaticPageSpider, crawler_id=crawler_id)
-        raise NotImplementedError
-    elif config["crawler_type"] == "deep_crawler":
-        # process.crawl(StaticPageSpider, crawler_id=crawler_id)
-        raise NotImplementedError
-    elif config["crawler_type"] == "static_page":
-        process.crawl(StaticPageSpider, config=json.dumps(config))
+    process.crawl(PageSpider, config=json.dumps(config))
 
     def update_database():
         # TODO: get port as variable
@@ -134,7 +107,7 @@ def gen_key():
 
 def start_crawler(config):
     """Create and starts a crawler as a new process."""
-    
+
     config["crawler_id"] = config["id"]
     del config["id"]
     config["instance_id"] = gen_key()
@@ -157,6 +130,7 @@ def start_crawler(config):
 
 def stop_crawler(instance_id, config):
     """Sets the flags of a crawler to stop."""
+
     data_path = config["data_path"]
     with open(f"{data_path}/flags/{instance_id}.json", "w+") as f:
         f.write(json.dumps({"stop": True}))
@@ -196,3 +170,18 @@ def remove_crawler(instance_id, are_you_sure=False):
             shutil.rmtree(f)
         except OSError as e:
             print("Error: %s : %s" % (f, e.strerror))
+
+
+def update_instances_info(data_path: str, instance_id: str, instance: dict):
+    """Updates the file with information about instances when they are created, initialized or terminated."""
+
+    instances = dict()
+
+    filename = f"{data_path}/instances.json"
+    if os.path.exists(filename):
+        with open(filename) as f:
+            instances = json.loads(f.read())
+
+    instances[instance_id] = instance
+    with open(filename, "w+") as f:
+        f.write(json.dumps(instances, indent=4))
