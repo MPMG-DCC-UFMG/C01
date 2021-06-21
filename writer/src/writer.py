@@ -53,10 +53,14 @@ class Writer:
 
     def __register_crawl(self, config: dict):
         crawler_id = str(config['crawler_id'])
+        
         self.__crawls_running[crawler_id] = config
         self.__create_folder_structure(config)
 
-        self.__file_downloader.new_crawler_listener(crawler_id)
+        # we just need create a thread to download files if the crawler settings is defined  
+        # to crawl files
+        if config['download_files'] or config['download_imgs']:
+            self.__file_downloader.new_crawler_listener(crawler_id)
 
     def __notify_server(self, instance_id: str, message: str):
         server_notification_url = f'http://localhost:8000/download/page/{message}/{instance_id}'
