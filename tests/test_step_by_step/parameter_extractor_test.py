@@ -9,6 +9,7 @@ class TestExtractInfo(unittest.TestCase):
     expected_results = [
         {
             "name": "mandatory_and_optional_params",
+            "name_display": "Mandatory_and_optional_params",
             "mandatory_params": [
                 "some",
                 "parameters"
@@ -20,6 +21,7 @@ class TestExtractInfo(unittest.TestCase):
         },
         {
             "name": "only_mandatory_params",
+            "name_display": "Only_mandatory_params",
             "mandatory_params": [
                 "some",
                 "parameters",
@@ -30,6 +32,7 @@ class TestExtractInfo(unittest.TestCase):
         },
         {
             "name": "only_optional_params",
+            "name_display": "Only_optional_params",
             "mandatory_params": [],
             "optional_params": {
                 "some": "some",
@@ -40,6 +43,7 @@ class TestExtractInfo(unittest.TestCase):
         },
         {
             "name": "no_params",
+            "name_display": "No_params",
             "mandatory_params": [],
             "optional_params": {}
         }

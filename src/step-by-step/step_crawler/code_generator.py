@@ -23,7 +23,7 @@ def generate_para_cada(child, module):
     return code
 
 
-def generate_if(child, module):
+def generate_se(child, module):
     code = ''
     code += child['depth'] * '    ' + 'if '
     if child['negation']:
@@ -44,7 +44,7 @@ def generate_if(child, module):
     return code
 
 
-def generate_while(child, module):
+def generate_enquanto(child, module):
     code = ''
     if 'limit' in child['condition']:
         code += child['depth'] * '    ' + 'limit = 0\n'
@@ -74,7 +74,7 @@ def generate_while(child, module):
     return code
 
 
-def generate_attribution(child, module):
+def generate_atribuicao(child, module):
     code = ""
     code += child['depth'] * '    ' + child['target']
     code += ' = ' + str(child['source']) + '\n'
@@ -87,10 +87,10 @@ def generate_para_cada_pagina_em(child, module):
         + child['depth'] * '    ' + 'while clickable:' + '\n'\
         + generate_body(child, module)\
         + (1 + child['depth']) * '    ' + "buttons = await page.xpath("\
-        + child["xpath_dos_botoes"] + ")\n"\
+        + child["buttons_xpath"] + ")\n"\
         + (1 + child['depth']) * '    ' + "if len(buttons) !=0: \n"\
         + (1 + child['depth']) * '    ' + "    next_button = buttons["\
-        + str(child["indice_do_botao_proximo"]) + "] \n"\
+        + str(child["next_button_index"]) + "] \n"\
         + (1 + child['depth']) * '    '\
         + "    before_click = await page.content()\n"\
         + (1 + child['depth']) * '    '\
@@ -108,7 +108,7 @@ def generate_para_cada_pagina_em(child, module):
 
 def generate_salva_pagina(child, module):
     code = ""
-    code += child['depth'] * '    ' + "pages[gera_nome_arquivo()] = "
+    code += child['depth'] * '    ' + "pages[gera_nome_do_arquivo()] = "
     code += "await salva_pagina(**missing_arguments)\n"
     return code
 
@@ -153,7 +153,7 @@ def generate_head(module):
     code += "from " + module.__name__ + " import *\n\n"
     code += "async def execute_steps(**missing_arguments):\n"\
         + "    pages = {}\n"\
-        + "    page = missing_arguments['page']\n"
+        + "    page = missing_arguments['pagina']\n"
     return code
 
 

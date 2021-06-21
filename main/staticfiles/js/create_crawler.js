@@ -447,14 +447,14 @@ function detailAntiblock() {
     checkAntiblock();
 }
 
-// function detailCrawlerType() {
-//     var mainSelect = document.getElementById("id_crawler_type");
-//     const crawler_type = mainSelect.options[mainSelect.selectedIndex].value;
+function detailCrawlerType() {
+    var mainSelect = document.getElementById("id_crawler_type");
+    const crawler_type = mainSelect.options[mainSelect.selectedIndex].value;
 
-//     var contents = document.getElementsByClassName("crawler-type-content-div");
-//     for (const i in contents)
-//         contents[i].hidden = true;
-//     setHiddenState(crawler_type, false);
+    var contents = document.getElementsByClassName("crawler-type-content-div");
+    for (const i in contents)
+        contents[i].hidden = true;
+    setHiddenState(crawler_type, false);
 
 
     if(crawler_type == "form_page"){

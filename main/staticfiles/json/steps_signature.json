@@ -1,1 +1,80 @@
-[{"name": "break_image_captcha", "mandatory_params": ["xpath_input", "xpath_output"], "optional_params": {"preprocessing": null}}, {"name": "clique", "mandatory_params": ["xpath"], "optional_params": {}}, {"name": "cssify", "mandatory_params": ["xpath"], "optional_params": {}}, {"name": "digite", "mandatory_params": ["xpath", "texto"], "optional_params": {}}, {"name": "element_in_page", "mandatory_params": ["xpath"], "optional_params": {}}, {"name": "espere", "mandatory_params": ["segs"], "optional_params": {}}, {"name": "for_clicavel", "mandatory_params": ["xpath"], "optional_params": {}}, {"name": "gera_nome_arquivo", "mandatory_params": [], "optional_params": {}}, {"name": "nesse_elemento_esta_escrito", "mandatory_params": ["xpath", "texto"], "optional_params": {}}, {"name": "opcoes", "mandatory_params": ["xpath"], "optional_params": {"exceto": null}}, {"name": "pegue_os_links_da_paginacao", "mandatory_params": ["xpath_dos_botoes", "xpath_dos_links"], "optional_params": {"indice_do_botao_proximo": -1}}, {"name": "print_", "mandatory_params": ["word"], "optional_params": {}}, {"name": "range_", "mandatory_params": ["stop"], "optional_params": {}}, {"name": "salva_pagina", "mandatory_params": [], "optional_params": {}}, {"name": "selecione", "mandatory_params": ["xpath", "opcao"], "optional_params": {}}, {"name": "wait_page", "mandatory_params": [], "optional_params": {}}]
+[{
+    "function": "Clicar em",
+    "name": "clique",
+    "mandatory_params": ["xpath"],
+    "optional_params": {}
+}, {
+    "function": "CSSify",
+    "name": "cssify",
+    "mandatory_params": ["xpath"],
+    "optional_params": {}
+}, {
+    "function": "Digitar em",
+    "name": "digite",
+    "mandatory_params": ["xpath", "texto"],
+    "optional_params": {}
+}, {
+    "function": "Verificar se é clicável",
+    "name": "e_clicavel",
+    "mandatory_params": ["xpath"],
+    "optional_params": {}
+}, {
+    "function": "Verificar se elemento existe na página",
+    "name": "elemento_existe_na_pagina",
+    "mandatory_params": ["xpath"],
+    "optional_params": {}
+}, {
+    "function": "Esperar",
+    "name": "espere",
+    "mandatory_params": ["segundos"],
+    "optional_params": {}
+}, {
+    "function": "Esperar a página",
+    "name": "espere_a_pagina",
+    "mandatory_params": [],
+    "optional_params": {}
+}, {
+    "function": "Verificar se está escrito",
+    "name": "esta_escrito_em",
+    "mandatory_params": ["texto", "xpath"],
+    "optional_params": {}
+}, {
+    "function": "Gerar nome do arquivo",
+    "name": "gera_nome_do_arquivo",
+    "mandatory_params": [],
+    "optional_params": {}
+}, {
+    "function": "Intervalo",
+    "name": "intervalo",
+    "mandatory_params": ["parada"],
+    "optional_params": {}
+}, {
+    "function": "Opções em",
+    "name": "opcoes_em",
+    "mandatory_params": ["xpath"],
+    "optional_params": {
+        "exceto": null
+    }
+}, {
+    "function": "Pegar os links da paginação",
+    "name": "pegue_os_links_da_paginacao",
+    "mandatory_params": ["xpath_dos_botoes", "xpath_dos_links"],
+    "optional_params": {
+        "indice_do_botao_de_proximo": -1
+    }
+}, {
+    "function": "Imprimir",
+    "name": "imprimir",
+    "mandatory_params": ["texto"],
+    "optional_params": {}
+}, {
+    "function": "Salvar página",
+    "name": "salva_pagina",
+    "mandatory_params": [],
+    "optional_params": {}
+}, {
+    "function": "Selecionar",
+    "name": "selecione_isso_em",
+    "mandatory_params": ["option", "xpath"],
+    "optional_params": {}
+}]

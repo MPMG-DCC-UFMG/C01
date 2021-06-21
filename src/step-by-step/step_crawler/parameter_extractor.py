@@ -14,8 +14,13 @@ def extract_info(func, ignore_params=None):
             The function name and parameters.
     """
     if ignore_params is None:
-        ignore_params = ['page']
+        ignore_params = ['pagina']
+
     name = func.__code__.co_name
+
+    comment = inspect.getcomments(func)
+    name_display = name.capitalize() if not comment else comment.replace('# ', '').strip()
+
     optional_params = dict()
     mandatory_params = list()
     signature = inspect.signature(func)
@@ -28,6 +33,7 @@ def extract_info(func, ignore_params=None):
 
     func_info = {
         'name': name,
+        'name_display': name_display,
         'mandatory_params': mandatory_params,
         'optional_params': optional_params
     }
