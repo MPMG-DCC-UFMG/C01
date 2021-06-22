@@ -9,9 +9,9 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm,\
-                   ResponseHandlerFormSet, ParameterHandlerFormSet
+    ResponseHandlerFormSet, ParameterHandlerFormSet
 from .models import CrawlRequest, CrawlerInstance, ParameterHandler, \
-                    ResponseHandler
+    ResponseHandler
 from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer
 
 from crawlers.constants import *
@@ -112,7 +112,7 @@ def create_instance(crawler_id, instance_id):
 
 def generate_injector_forms(*args, injection_type, filter_queryset=False,
                             crawler=None, **kwargs):
-    form_kwargs = { 'initial': { 'injection_type' : f'{injection_type}' } }
+    form_kwargs = {'initial': {'injection_type': f'{injection_type}'}}
 
     queryset = None
     crawler = None
@@ -301,6 +301,7 @@ def tail_log_file(request, instance_id):
 
 def downloads(request):
     return render(request, "main/downloads.html")
+
 
 def load_form_fields(request):
     """
