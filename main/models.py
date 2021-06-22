@@ -105,8 +105,8 @@ class CrawlRequest(TimeStamped):
     # Options for sound
     sound_xpath = models.CharField(max_length=100, blank=True, null=True)
 
-    #Steps activation
-    dynamic_processing = models.BooleanField(blank=True, null=True)    
+    # Steps activation
+    dynamic_processing = models.BooleanField(blank=True, null=True)
 
     explore_links = models.BooleanField(blank=True, null=True)
     link_extractor_max_depth = models.IntegerField(blank=True, null=True)
