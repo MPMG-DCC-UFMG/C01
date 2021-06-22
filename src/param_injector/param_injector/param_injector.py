@@ -407,7 +407,8 @@ class ParamInjector():
         :yields: the values described in the supplied string
         """
 
-        values = elements.split(",")
+        # Remove leading and trailing spaces in the list elements
+        values = [i.strip() for i in elements.split(',')]
 
         for v in values:
             yield v

@@ -538,6 +538,13 @@ class ParamInjectorTest(unittest.TestCase):
         list_gen = ParamInjector.generate_list(list_str)
         self.assertEqual(expected_output, list(list_gen))
 
+        # Leading and trailing spaces are ignored
+        list_str = "a  ,  b  ,c, d, e"
+        expected_output = ["a", "b", "c", "d", "e"]
+
+        list_gen = ParamInjector.generate_list(list_str)
+        self.assertEqual(expected_output, list(list_gen))
+
         # No elements
         list_str = ""
         expected_output = [""]

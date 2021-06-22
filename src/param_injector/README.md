@@ -78,10 +78,10 @@ list(gen) # ['2000-01-01', '2000-01-02', '2000-01-03', '2000-01-04', '2000-01-05
 ```
 
 ### Predefined list generator
-Takes in a user-supplied list of comma-separated values and generates them individually. An empty value for the input generates an empty string as its single element.
+Takes in a user-supplied list of comma-separated values and generates them individually. Leading and trailing spaces in each element are ignored. An empty value for the input generates an empty string as its single element.
 
 ```
-gen = ParamInjector.generate_list('a,b,c,d,e')
+gen = ParamInjector.generate_list('a, b, c, d, e')
 list(gen) # ['a', 'b', 'c', 'd', 'e']
 
 gen = ParamInjector.generate_list('')
