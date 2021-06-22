@@ -71,8 +71,12 @@ async def for_clicavel(page, xpath):
 
 
 async def elementos_filhos(page, xpath):
+    base_xpath = xpath
+    xpath_list = []
     elements = await page.xpath(xpath)
-    return elements
+    for i in range(len(elements)):
+        xpath_list.append(base_xpath + f"[{i+1}]")
+    return xpath_list
 
 
 async def pegue_os_links_da_paginacao(page, xpath_dos_botoes, xpath_dos_links, indice_do_botao_proximo=-1):
