@@ -59,9 +59,9 @@ class CrawlRequestForm(forms.ModelForm):
             'download_files_allow_domains',
             'download_files_tags',
             'download_files_attrs',
-            'download_files_check_type',
             'download_files_process_value',
             'download_files_allow_extensions',
+            'download_files_check_large_content',
 
             'download_imgs',
             'steps',
@@ -327,8 +327,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
         widget=forms.TextInput(
             attrs={'placeholder': 'href'})
     )
-    download_files_check_type = forms.BooleanField(
-        required=False, label="Checar tipo da página")
+
     download_files_process_value = forms.CharField(
         required=False, max_length=2000,
         label=(
@@ -338,6 +337,10 @@ class RawCrawlRequestForm(CrawlRequestForm):
         widget=forms.Textarea(
             attrs={'placeholder': 'lambda x: x'})
     )
+
+    download_files_check_large_content = forms.BooleanField(
+        required=False, initial=True, 
+        label="Checar o tamanho dos arquivos a serem baixados")
 
     download_imgs = forms.BooleanField(
         required=False, label="Baixar imagens")
