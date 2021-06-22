@@ -1,8 +1,9 @@
 {% load crispy_forms_tags %}
 
-<!-- Request configuration -->
+<!-- Injection configuration -->
 <!-- Parameter injection -->
-<div id="templated-url-param">
+
+<div id="{{ injection_type }}-param">
     <br>
     {{ parameter_formset.management_form }}
     {% for subform in parameter_formset.forms %}
@@ -15,7 +16,7 @@
 </div>
 {% with parameter_formset.empty_form as form %}
     <!-- Base template for parameters -->
-    <div class="row" id="base-param-template">
+    <div class="row" id="base-{{ injection_type }}-param-template">
         <div class="col md-6">
             {% include "main/parameter_handler_config.html" with form=form %}
         </div>
@@ -23,7 +24,7 @@
 {% endwith %}
 
 <!-- Response handling-->
-<div id="templated-url-response">
+<div id="{{ injection_type }}-response">
     {{ response_formset.management_form }}
     {% for subform in response_formset.forms %}
         <div class="row">
@@ -35,7 +36,7 @@
 </div>
 {% with response_formset.empty_form as form %}
     <!-- Base template for responses -->
-    <div class="row" id="base-response-template">
+    <div class="row" id="base-{{ injection_type }}-response-template">
         <div class="col md-6">
             {% include "main/response_handler_config.html" with form=form %}
         </div>

@@ -147,25 +147,17 @@ function checkCaptcha() {
 function checkCrawlerType() {
 }
 
-function checkTemplatedURL() {
+function checkInjectionForms(prefix) {
     var valid = true;
 
-    // Validate all entries with the HTML specified rules
-
     // Parameter configurations
-    $('.templated-url-param-step:not(.subform-deleted) input')
-        .each((index, entry) => {
-        valid = valid && entry.checkValidity();
-    });
-
-    // Response validation configurations
-    $('.templated-url-resp-step:not(.subform-deleted) input')
+    $('#' + prefix + '-param .param-step:not(.subform-deleted) input')
         .each((index, entry) => {
         valid = valid && entry.checkValidity();
     });
 
     // Validate ordering constraints between fields
-    $('.templated-url-param-step:not(.subform-deleted)')
+    $('#' + prefix + '-param .param-step:not(.subform-deleted)')
         .each((index, entry) => {
         entry = $(entry);
 
@@ -217,7 +209,55 @@ function checkTemplatedURL() {
         }
     });
 
-    defineIcon("templated-url", valid);
+    return valid;
+}
+
+function checkResponseValidationForms(prefix) {
+    var valid = true;
+
+    // Response validation configurations
+    $('#' + prefix + '-response .resp-step:not(.subform-deleted) input')
+        .each((index, entry) => {
+        valid = valid && entry.checkValidity();
+    });
+
+    return valid;
+}
+
+function checkTemplatedURL() {
+    var valid = true;
+
+    valid = checkInjectionForms('templated_url');
+
+    valid = valid && checkResponseValidationForms('templated_url')
+
+    defineIcon("templated_url", valid);
+}
+
+function checkStaticForm() {
+    var valid = true;
+
+    valid = checkInjectionForms('static_form');
+
+    valid = valid && checkResponseValidationForms('static_form')
+
+    defineIcon("static_form", valid);
+}
+
+function updateInjectionFields(prefix) {
+    // Update information for selected parameters/response handlers
+    $('#' + prefix + '-param .param-step > .form-group select').each(
+        (index, entry) => detailParamType({ 'target': entry})
+    );
+
+    $('#' + prefix + '-response .resp-step > .form-group select').each(
+        (index, entry) => detailResponseType({ 'target': entry})
+    );
+
+    // Update range-filtering sub-parameters
+    $('#' + prefix + '-param .filter-config > .form-group input').each(
+        (index, entry) => detailParamFilter({'target': entry})
+    );
 }
 
 function checkRelatedFields() {
@@ -230,8 +270,12 @@ function checkRelatedFields() {
         checkAntiblock();
     }
 
-    if (input_name.length >= 13 && input_name.substring(0, 13) == "templated-url") {
+    if (input_name.length >= 13 && input_name.substring(0, 13) == "templated_url") {
         checkTemplatedURL();
+    }
+
+    if (input_name.length >= 11 && input_name.substring(0, 11) == "static_form") {
+        checkStaticForm();
     }
 
     // TODO: make all variables from same section have the same prefix and check like antiblock
@@ -262,6 +306,7 @@ $(document).ready(function () {
     $('input').on('blur keyup', checkRelatedFields);
     $('#collapse-adv-links').on("click", function () { mycollapse("#adv-links");})
     $('#collapse-adv-download').on("click", function () { mycollapse("#adv-download"); })
+    updateInjectionFields('static_form');
 
 });
 
@@ -288,33 +333,110 @@ function detailBaseUrl() {
     // Check if a Templated URL is being used (if there is at least one
     // occurrence of the substring "{}")
     if (base_url.includes("{}")){
-        $("#templated-url-item").removeClass("disabled");
+        $("#templated_url-item").removeClass("disabled");
         // count number of placeholders
         let num_placeholders = (base_url.match(/\{\}/g) || []).length;
-        $('#templated-url-param').formset('setNumForms', num_placeholders);
+        $('#templated_url-param').formset('setNumForms', num_placeholders);
     } else {
-        $("#templated-url-item").addClass("disabled");
+        $("#templated_url-item").addClass("disabled");
 
         // remove all parameter and response forms
-        $('#templated-url-param').formset('setNumForms', 0);
-        $('#templated-url-response').formset('setNumForms', 0);
+        $('#templated_url-param').formset('setNumForms', 0);
+        $('#templated_url-response').formset('setNumForms', 0);
     }
 
-    // Update information for selected parameters/response handlers
-    $('#templated-url-param .templated-url-param-step > .form-group select').each(
-        (index, entry) => detailTemplatedUrlParamType({ 'target': entry})
-    );
-
-    $('#templated-url-response .templated-url-resp-step > .form-group select').each(
-        (index, entry) => detailTemplatedUrlResponseType({ 'target': entry})
-    );
-
-    // Update range-filtering sub-parameters
-    $('.templated-url-filter-config > .form-group input').each(
-        (index, entry) => detailTemplatedURLParamFilter({'target': entry})
-    );
+    updateInjectionFields('templated_url');
 
     checkTemplatedURL();
+}
+
+function loadStaticForm() {
+    const base_url = $("#id_base_url").val();
+    const req_type = $("#id_request_type").val();
+
+    // Clear form before updating
+    $('#static_form-param').formset('setNumForms', 0);
+
+    // Load Templated URL info
+    let url_params = $("#templated_url-param .param-step:not(.subform-deleted)")
+        .map((_, el) => {
+        let inputs = $(el).find(":input");
+        let data = {};
+
+        inputs.each((_, input) => {
+            let input_name = $(input).attr('name')
+                .replace(/templated_url-params-\d+-/, "");
+            data[input_name] = $(input).val();
+
+            if ($(input).is(':checkbox')) {
+                data[input_name] = input.checked
+            }
+        });
+
+        return data;
+    }).toArray();
+
+    let url_responses = $("#templated_url-response .resp-step:not(.subform-deleted)")
+        .map((_, el) => {
+        let inputs = $(el).find(":input");
+        let data = {};
+
+        inputs.each((_, input) => {
+            let input_name = $(input).attr('name')
+                .replace(/templated_url-responses-\d+-/, "");
+            data[input_name] = $(input).val();
+
+            if ($(input).is(':checkbox')) {
+                data[input_name] = input.checked
+            }
+        });
+
+        return data;
+    }).toArray();
+
+    // Use the field detection module to load the fields
+    $.ajax('/info/form_fields', {
+        data: {
+            'base_url': base_url,
+            'req_type': req_type,
+            'url_param_data': JSON.stringify(url_params),
+            'url_response_data': JSON.stringify(url_responses)
+        },
+        success: (data) => {
+            $('#static_form-param').formset('setNumForms', parseInt(data['length']));
+            let currLabel = 0;
+
+            for (i in data['names']) {
+                let form = $('#static_form-param .param-step:not(.subform-deleted):nth(' + i + ')');
+
+                let key_input = form.find('input[id$="parameter_key"]');
+                let label_input = form.find('input[id$="parameter_label"]');
+                let type_input = form.find('select[id$="parameter_type"]');
+
+                key_input.val(data['names'][i]);
+                if (data['types'][i] != 'hidden') {
+                    label_input.val(data['labels'][currLabel]);
+                    currLabel++;
+                }
+                switch (data['types'][i]) {
+                    case "number":
+                        type_input.val('number_seq').change();
+                        break;
+                    case "text":
+                        type_input.val('alpha_seq').change();
+                        break;
+                    case "number":
+                        type_input.val('date_seq').change();
+                        break;
+                }
+            }
+        },
+        complete: () => {
+            updateInjectionFields('static_form');
+
+            checkStaticForm();
+        }
+    });
 }
 
 function detailWebdriverType() {
@@ -374,19 +496,21 @@ function hideUnselectedSiblings(input, parentPath, siblingPath) {
     }
 }
 
-function detailTemplatedUrlResponseType(e) {
-    hideUnselectedSiblings(e.target, '.templated-url-resp-step:not(.subform-deleted)',
-        '.templated-url-response-params');
+function detailResponseType(e) {
+    hideUnselectedSiblings(e.target, '.resp-step:not(.subform-deleted)',
+        '.response-params');
 
+    // Update form validations
+    checkStaticForm(); checkTemplatedURL();
 }
 
-function detailTemplatedUrlParamType(e) {
+function detailParamType(e) {
     const input = e.target;
-    hideUnselectedSiblings(e.target, '.templated-url-param-step:not(.subform-deleted)',
-        '.templated-url-param-config');
+    hideUnselectedSiblings(e.target, '.param-step:not(.subform-deleted)',
+        '.param-config');
 
-    const filterDiv = $(input).closest('.templated-url-param-step')
-                              .find('.templated-url-filter-config')[0];
+    const filterDiv = $(input).closest('.param-step')
+                              .find('.filter-config')[0];
 
     switch (input.options[input.selectedIndex].value) {
         case 'process_code':
@@ -402,16 +526,21 @@ function detailTemplatedUrlParamType(e) {
 
     // Update cons_misses parameter
     const filterCheckbox = $(filterDiv).find('> .form-group input')[0]
-    detailTemplatedURLParamFilter({ 'target':  filterCheckbox })
+    detailParamFilter({ 'target':  filterCheckbox })
 
+    // Update form validations
+    checkStaticForm(); checkTemplatedURL();
 }
 
-function detailTemplatedURLParamFilter(e) {
+function detailParamFilter(e) {
     const input = e.target;
-    const consMissesInput = $(input).closest(".templated-url-param-step")
-         .find('.templated-url-cons-misses')[0]
+    const consMissesInput = $(input).closest(".param-step")
+         .find('.cons-misses')[0]
     consMissesInput.hidden = !input.checked
     $(consMissesInput).find('input').prop('required', input.checked)
+
+    // Update form validations
+    checkStaticForm(); checkTemplatedURL();
 }
 
 function detailIpRotationType() {
@@ -538,42 +667,63 @@ function processInput(input_selector, data) {
     });
 }
 
+function processInjectionForms(data, prefix, updateNumParams=false) {
+    // Loads the specified injector data from the configuration
+
+    let num_params = data[prefix + "_parameter_handlers"].length;
+    let num_validators = data[prefix + "_response_handlers"].length;
+
+    if (updateNumParams) {
+        // Updates the number of parameters in the form
+        $('#' + prefix + '-param').formset('setNumForms', num_params);
+    }
+    // Updates the number of validators in the form
+    $('#' + prefix + '-response').formset('setNumForms', num_validators);
+
+    // Create a new data object to match with the injector parameter ids
+    let new_data = {};
+    for (let i = 0; i < num_params; i++) {
+        let param = data[prefix + "_parameter_handlers"][i];
+        for (let key in param) {
+            new_data[prefix + "-params-" + i + "-" + key] = param[key];
+        }
+    }
+    for (let i = 0; i < num_validators; i++) {
+        let param = data[prefix + "_response_handlers"][i];
+        for (let key in param) {
+            new_data[prefix + "-responses-" + i + "-" + key] = param[key];
+        }
+    }
+
+    // Re-run the processing with only the injector config data
+    processSettings(new_data);
+}
+
 function processParameterizedURL(data) {
     // Loads the parameterized URL data from the configuration
 
     // Updates the parameterized URL section based on the URL
     detailBaseUrl();
 
-    let num_params = data["parameter_handlers"].length;
-    let num_validators = data["templated_url_response_handlers"].length;
-
-    // Updates the number of validators in the form
-    $('#templated-url-response').formset('setNumForms', num_validators);
-
-    // Create a new data object to match with the parameterized URL parameter
-    // ids
-    let new_data = {};
-    for (let i = 0; i < num_params; i++) {
-        let param = data["parameter_handlers"][i];
-        for (let key in param) {
-            new_data["templated-url-params-" + i + "-" + key] = param[key];
-        }
-    }
-    for (let i = 0; i < num_validators; i++) {
-        let param = data["templated_url_response_handlers"][i];
-        for (let key in param) {
-            new_data["templated-url-responses-" + i + "-" + key] = param[key];
-        }
-    }
-
-    // Re-run the processing with only the parameterized URL config data
-    processSettings(new_data);
+    // Process the forms
+    processInjectionForms(data, 'templated_url');
 
     // Re-updates the parameterized URL section (used to refresh sub-options
     // based on select values and remove/add the "required" attribute)
     detailBaseUrl();
 }
 
+function processStaticForms(data) {
+    // Loads the form injector data from the configuration
+
+    // Process the forms
+    processInjectionForms(data, 'static_form', true);
+
+    // Re-updates the static form section (used to refresh sub-options
+    // based on select values and remove/add the "required" attribute)
+    updateInjectionFields('static_form');
+    checkStaticForm();
+}
 
 function processParsing(data) {
     // When the configuration is to not save csv, the field checked below is null
@@ -629,6 +779,7 @@ function parseSettings(e) {
 
         processSettings(data);
         processParameterizedURL(data);
+        processStaticForms(data);
         processParsing(data);
 
         // checks if the settings are valid
@@ -637,6 +788,7 @@ function parseSettings(e) {
         checkCaptcha();
         checkCrawlerType();
         checkTemplatedURL();
+        checkStaticForm();
 
         // go to the option that allows the user to change the location
         // saving downloaded files

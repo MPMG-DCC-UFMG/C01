@@ -10,18 +10,18 @@ class CrawlRequestForm(forms.ModelForm):
     class Meta:
         model = CrawlRequest
 
-
         labels = {
             'request_type': 'Método da requisição',
+            'form_request_type': 'Método da requisição ao injetar em formulários',
         }
 
         output_filename = forms.CharField(required=False)
         save_csv = forms.BooleanField(required=False)
-
         fields = [
             'source_name',
             'base_url',
             'request_type',
+            'form_request_type',
             'obey_robots',
             'captcha',
 
@@ -385,9 +385,9 @@ class ResponseHandlerForm(forms.ModelForm):
         }
         widgets = {
             'handler_type': forms.Select(attrs={
-                'onchange': 'detailTemplatedUrlResponseType(event);'
-            }
-            ),
+                'onchange': 'detailResponseType(event);'
+            }),
+            'injection_type': forms.HiddenInput(),
         }
 
 
@@ -479,11 +479,13 @@ class ParameterHandlerForm(forms.ModelForm):
             'origin_ids_proc_param': ('Identificadores de origens a buscar, '
                                       'separados por vírgula'),
             'filter_range': 'Filtrar limites',
+            'parameter_label': 'Descrição do campo',
+            'parameter_key': 'Nome do campo',
         }
 
         widgets = {
             'parameter_type': forms.Select(attrs={
-                'onchange': 'detailTemplatedUrlParamType(event);'
+                'onchange': 'detailParamType(event);'
             }),
             'date_format_date_param': forms.TextInput(attrs={
                 'placeholder': '%m/%d/%Y'
@@ -491,7 +493,7 @@ class ParameterHandlerForm(forms.ModelForm):
             'start_date_date_param': forms.DateInput(attrs={'type': 'date'}),
             'end_date_date_param': forms.DateInput(attrs={'type': 'date'}),
             'filter_range': forms.CheckboxInput(
-                attrs={"onclick": "detailTemplatedURLParamFilter(event);", }
+                attrs={"onclick": "detailParamFilter(event);", }
             ),
 
             # Validate parameters which are lists of numbers (with possible
@@ -508,6 +510,7 @@ class ParameterHandlerForm(forms.ModelForm):
                 'pattern': ParameterHandler.LIST_REGEX,
                 'title': 'Insira uma lista de números separados por vírgula.',
             }),
+            'injection_type': forms.HiddenInput(),
         }
 
     step_num_param = forms.IntegerField(initial=1, required=False,

@@ -30,10 +30,17 @@ class PageSpider(BaseSpider):
         print("At StaticPageSpider.start_requests")
 
         for req in self.generate_initial_requests():
+            # Don't send an empty dict, may cause spider to be blocked
+            body_contents = None
+            if bool(req['body']):
+                body_contents = json.dumps(req['body'])
+
             if self.config.get("dynamic_processing", False):
                 steps = json.loads(self.config["steps"])
 
                 yield PuppeteerRequest(url=req['url'],
+                    method=req['method'],
+                    body=body_contents,
                     callback=self.dynamic_parse,
                     dont_filter=True,
                     meta={
@@ -43,11 +50,6 @@ class PageSpider(BaseSpider):
                     steps=steps)
 
             else:
-                # Don't send an empty dict, may cause spider to be blocked
-                body_contents = None
-                if bool(req['body']):
-                    body_contents = json.dumps(req['body'])
-
                 yield scrapy.Request(url=req['url'],
                     method=req['method'],
                     body=body_contents,

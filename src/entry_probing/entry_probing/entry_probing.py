@@ -66,6 +66,10 @@ class EntryProbing():
         :returns: True if entry is valid, False otherwise
         """
 
+        if len(self.__resp_handlers) == 0:
+            # If there are no response handlers, the check is true by default
+            return True
+
         response = self.__req_handler.process(url_entries=url_entries,
                                               req_entries=req_entries)
         self.__response_obj = response
