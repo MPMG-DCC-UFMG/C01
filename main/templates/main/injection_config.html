@@ -3,7 +3,7 @@
 <!-- Injection configuration -->
 <!-- Parameter injection -->
 
-<div id="{{ injection_type }}-param">
+<div id="{{ injection_type }}_param">
     <br>
     {{ parameter_formset.management_form }}
     {% for subform in parameter_formset.forms %}
@@ -16,7 +16,7 @@
 </div>
 {% with parameter_formset.empty_form as form %}
     <!-- Base template for parameters -->
-    <div class="row" id="base-{{ injection_type }}-param-template">
+    <div class="row" id="base_{{ injection_type }}_param_template">
         <div class="col md-6">
             {% include "main/parameter_handler_config.html" with form=form %}
         </div>
@@ -24,7 +24,7 @@
 {% endwith %}
 
 <!-- Response handling-->
-<div id="{{ injection_type }}-response">
+<div id="{{ injection_type }}_response">
     {{ response_formset.management_form }}
     {% for subform in response_formset.forms %}
         <div class="row">
@@ -36,7 +36,7 @@
 </div>
 {% with response_formset.empty_form as form %}
     <!-- Base template for responses -->
-    <div class="row" id="base-{{ injection_type }}-response-template">
+    <div class="row" id="base_{{ injection_type }}_response_template">
         <div class="col md-6">
             {% include "main/response_handler_config.html" with form=form %}
         </div>

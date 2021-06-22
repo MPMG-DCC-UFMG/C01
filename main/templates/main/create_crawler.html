@@ -457,15 +457,15 @@ New Crawler
 {% block js %}
 <script>
     // initialize formsets
-    $('#templated_url-param').formset({
+    $('#templated_url_param').formset({
         prefix: '{{ templated_parameter_formset.prefix }}',
-        templateId: 'base-templated_url-param-template',
+        templateId: 'base_templated_url_param_template',
         subformSelector: '.param-step',
         displayControls: false,
     });
-    $('#templated_url-response').formset({
+    $('#templated_url_response').formset({
         prefix: '{{ templated_response_formset.prefix }}',
-        templateId: 'base-templated_url-response-template',
+        templateId: 'base_templated_url_response_template',
         subformSelector: '.resp-step',
         addBtnContent: $('<a><span class="fa fa-plus"></span> ' +
                          'Adicionar validação</a>'),
@@ -475,9 +475,9 @@ New Crawler
         removed: () => checkTemplatedURL(),
     });
 
-    $('#static_form-param').formset({
+    $('#static_form_param').formset({
         prefix: '{{ static_parameter_formset.prefix }}',
-        templateId: 'base-static_form-param-template',
+        templateId: 'base_static_form_param_template',
         subformSelector: '.param-step',
         addBtnContent: $('<a><span class="fa fa-plus"></span> ' +
                          'Adicionar campo</a>'),
@@ -489,9 +489,9 @@ New Crawler
         },
         removed: () => checkStaticForm(),
     });
-    $('#static_form-response').formset({
+    $('#static_form_response').formset({
         prefix: '{{ static_response_formset.prefix }}',
-        templateId: 'base-static_form-response-template',
+        templateId: 'base_static_form_response_template',
         subformSelector: '.resp-step',
         addBtnContent: $('<a><span class="fa fa-plus"></span> ' +
                          'Adicionar validação</a>'),

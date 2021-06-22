@@ -173,7 +173,7 @@ class CrawlRequest(TimeStamped):
 
             # Convert Date parameters into iso string for serialization into
             # JSON
-            if param['end_date_date_param'] is not None:
+            if param['start_date_date_param'] is not None:
                 iso_str = param['start_date_date_param'].isoformat()
                 param['start_date_date_param'] = iso_str
             if param['end_date_date_param'] is not None:

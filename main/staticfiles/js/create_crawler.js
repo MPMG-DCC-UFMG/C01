@@ -151,13 +151,13 @@ function checkInjectionForms(prefix) {
     var valid = true;
 
     // Parameter configurations
-    $('#' + prefix + '-param .param-step:not(.subform-deleted) input')
+    $('#' + prefix + '_param .param-step:not(.subform-deleted) input')
         .each((index, entry) => {
         valid = valid && entry.checkValidity();
     });
 
     // Validate ordering constraints between fields
-    $('#' + prefix + '-param .param-step:not(.subform-deleted)')
+    $('#' + prefix + '_param .param-step:not(.subform-deleted)')
         .each((index, entry) => {
         entry = $(entry);
 
@@ -216,7 +216,7 @@ function checkResponseValidationForms(prefix) {
     var valid = true;
 
     // Response validation configurations
-    $('#' + prefix + '-response .resp-step:not(.subform-deleted) input')
+    $('#' + prefix + '_response .resp-step:not(.subform-deleted) input')
         .each((index, entry) => {
         valid = valid && entry.checkValidity();
     });
@@ -246,16 +246,16 @@ function checkStaticForm() {
 
 function updateInjectionFields(prefix) {
     // Update information for selected parameters/response handlers
-    $('#' + prefix + '-param .param-step > .form-group select').each(
+    $('#' + prefix + '_param .param-step > .form-group select').each(
         (index, entry) => detailParamType({ 'target': entry})
     );
 
-    $('#' + prefix + '-response .resp-step > .form-group select').each(
+    $('#' + prefix + '_response .resp-step > .form-group select').each(
         (index, entry) => detailResponseType({ 'target': entry})
     );
 
     // Update range-filtering sub-parameters
-    $('#' + prefix + '-param .filter-config > .form-group input').each(
+    $('#' + prefix + '_param .filter-config > .form-group input').each(
         (index, entry) => detailParamFilter({'target': entry})
     );
 }
@@ -336,13 +336,13 @@ function detailBaseUrl() {
         $("#templated_url-item").removeClass("disabled");
         // count number of placeholders
         let num_placeholders = (base_url.match(/\{\}/g) || []).length;
-        $('#templated_url-param').formset('setNumForms', num_placeholders);
+        $('#templated_url_param').formset('setNumForms', num_placeholders);
     } else {
         $("#templated_url-item").addClass("disabled");
 
         // remove all parameter and response forms
-        $('#templated_url-param').formset('setNumForms', 0);
-        $('#templated_url-response').formset('setNumForms', 0);
+        $('#templated_url_param').formset('setNumForms', 0);
+        $('#templated_url_response').formset('setNumForms', 0);
     }
 
     updateInjectionFields('templated_url');
@@ -355,10 +355,10 @@ function loadStaticForm() {
     const req_type = $("#id_request_type").val();
 
     // Clear form before updating
-    $('#static_form-param').formset('setNumForms', 0);
+    $('#static_form_param').formset('setNumForms', 0);
 
     // Load Templated URL info
-    let url_params = $("#templated_url-param .param-step:not(.subform-deleted)")
+    let url_params = $("#templated_url_param .param-step:not(.subform-deleted)")
         .map((_, el) => {
         let inputs = $(el).find(":input");
         let data = {};
@@ -376,7 +376,7 @@ function loadStaticForm() {
         return data;
     }).toArray();
 
-    let url_responses = $("#templated_url-response .resp-step:not(.subform-deleted)")
+    let url_responses = $("#templated_url_response .resp-step:not(.subform-deleted)")
         .map((_, el) => {
         let inputs = $(el).find(":input");
         let data = {};
@@ -403,11 +403,11 @@ function loadStaticForm() {
             'url_response_data': JSON.stringify(url_responses)
         },
         success: (data) => {
-            $('#static_form-param').formset('setNumForms', parseInt(data['length']));
+            $('#static_form_param').formset('setNumForms', parseInt(data['length']));
             let currLabel = 0;
 
             for (i in data['names']) {
-                let form = $('#static_form-param .param-step:not(.subform-deleted):nth(' + i + ')');
+                let form = $('#static_form_param .param-step:not(.subform-deleted):nth(' + i + ')');
 
                 let key_input = form.find('input[id$="parameter_key"]');
                 let label_input = form.find('input[id$="parameter_label"]');
@@ -675,10 +675,10 @@ function processInjectionForms(data, prefix, updateNumParams=false) {
 
     if (updateNumParams) {
         // Updates the number of parameters in the form
-        $('#' + prefix + '-param').formset('setNumForms', num_params);
+        $('#' + prefix + '_param').formset('setNumForms', num_params);
     }
     // Updates the number of validators in the form
-    $('#' + prefix + '-response').formset('setNumForms', num_validators);
+    $('#' + prefix + '_response').formset('setNumForms', num_validators);
 
     // Create a new data object to match with the injector parameter ids
     let new_data = {};
