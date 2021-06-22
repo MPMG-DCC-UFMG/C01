@@ -9,6 +9,7 @@ from range_inference import RangeInference
 import datetime
 import itertools
 
+
 def create_probing_object(base_url, req_type, resp_handlers=[]):
     """
     Loads the request data and response handlers supplied, and generates
@@ -43,6 +44,7 @@ def create_probing_object(base_url, req_type, resp_handlers=[]):
         probe.add_response_handler(resp_handler)
 
     return probe
+
 
 def create_parameter_generators(probe, parameter_handlers, filter_limits=True):
     """
@@ -173,7 +175,7 @@ def create_parameter_generators(probe, parameter_handlers, filter_limits=True):
                 param_gen = ParamInjector.generate_alpha(length=length,
                    num_words=num_words,
                    no_upper=no_upper
-                )
+                                                         )
             else:
                 raise ValueError(f"Invalid parameter type: {param_type}")
 
