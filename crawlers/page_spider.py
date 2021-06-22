@@ -1,4 +1,4 @@
-#needs to be imported before scrapy
+# needs to be imported before scrapy
 from scrapy_puppeteer import PuppeteerRequest
 
 # Scrapy and Twister libs
@@ -46,7 +46,7 @@ class PageSpider(BaseSpider):
                     meta={
                         "referer": "start_requests",
                         "config": self.config
-                    },
+                },
                     steps=steps)
 
             else:
@@ -57,7 +57,7 @@ class PageSpider(BaseSpider):
                     meta={
                         "referer": "start_requests",
                         "config": self.config
-                    },
+                },
                     errback=self.errback_httpbin)
 
     def get_url_info(self, url: str) -> tuple:
@@ -133,7 +133,7 @@ class PageSpider(BaseSpider):
             urls_found = self.filter_urls_by_regex(urls_found, pattern)
 
         urls_info = None
-        
+
         if len(self.download_allowed_extensions) > 0:
             urls_info = list(self.get_url_info(url) for url in urls_found)
             urls_info = self.filter_urls_by_content_type(urls_info, self.download_allowed_extensions)

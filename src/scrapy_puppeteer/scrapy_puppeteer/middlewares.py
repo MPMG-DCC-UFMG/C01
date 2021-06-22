@@ -14,7 +14,9 @@ except Exception:
     pass
 import logging
 import requests
-import sys, os, time
+import sys
+import os
+import time
 
 from step_crawler import code_generator as code_g
 from step_crawler import functions_file
@@ -51,7 +53,7 @@ class PuppeteerMiddleware:
         """
 
         middleware = cls()
-        middleware.browser = await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio':True, 'logLevel': crawler.settings.get('LOG_LEVEL')})
+        middleware.browser = await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio': True, 'logLevel': crawler.settings.get('LOG_LEVEL')})
         page = await middleware.browser.newPage()
         crawler.signals.connect(middleware.spider_closed, signals.spider_closed)
 
@@ -81,7 +83,7 @@ class PuppeteerMiddleware:
         try:
             page = await self.browser.newPage()
         except:
-            self.browser = await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio':True})
+            self.browser = await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio': True})
             await self.browser.newPage()
             page = await self.browser.newPage()
 
@@ -116,7 +118,7 @@ class PuppeteerMiddleware:
                     if request.body:
                         options['postData'] = request.body.decode('utf-8')
 
-                    await client.send("Network.continueInterceptedRequest",\
+                    await client.send("Network.continueInterceptedRequest",
                         options)
                 except:
                     # If everything fails we need to be sure to continue the
@@ -125,7 +127,7 @@ class PuppeteerMiddleware:
                         "interceptionId": interception_id,
                         "errorReason": "BlockedByClient"
                     }
-                    await client.send("Network.continueInterceptedRequest",\
+                    await client.send("Network.continueInterceptedRequest",
                         options)
 
 
@@ -139,7 +141,7 @@ class PuppeteerMiddleware:
             # (else it would capture requests for external resources such as
             # scripts, stylesheets, images, etc)
             patterns = [{"urlPattern": request.url}]
-            await client.send("Network.setRequestInterception", \
+            await client.send("Network.setRequestInterception",
                 {"patterns": patterns})
 
         await setup_request_interceptor(page)
