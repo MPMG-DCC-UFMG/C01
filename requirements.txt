@@ -7,3 +7,4 @@ pytest
 pytest-mock
 python3-wget
 django-environ
+psycopg2-binary==2.8.5

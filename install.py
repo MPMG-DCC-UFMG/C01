@@ -65,7 +65,8 @@ try:
 except Exception:
     pass
 
-print(f"Creating database...")
-subprocess.run(["python", "manage.py", "makemigrations"])
-subprocess.run(["python", "manage.py", "migrate"])
-print()
+if os.environ.get("EXECUTION_TYPE", "standalone") == "standalone":
+    print(f"Creating database...")
+    subprocess.run(["python", "manage.py", "makemigrations"])
+    subprocess.run(["python", "manage.py", "migrate"])
+    print()
