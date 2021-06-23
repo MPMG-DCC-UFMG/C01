@@ -36,15 +36,14 @@ class PageSpider(BaseSpider):
             if self.config.get("dynamic_processing", False):
                 steps = json.loads(self.config["steps"])
 
-                if(validators.url(req['url']) == True):
-                    yield PuppeteerRequest(url=req['url'],
-                        callback=self.dynamic_parse,
-                        dont_filter=True,
-                        meta={
-                            "referer": "start_requests",
-                            "config": self.config
-                    },
-                        steps=steps)
+                yield PuppeteerRequest(url=req['url'],
+                    callback=self.dynamic_parse,
+                    dont_filter=True,
+                    meta={
+                        "referer": "start_requests",
+                        "config": self.config
+                },
+                    steps=steps)
 
             else:
                 # Don't send an empty dict, may cause spider to be blocked
@@ -97,7 +96,13 @@ class PageSpider(BaseSpider):
         )
 
         urls_found = list(set(i.url for i in links_extractor.extract_links(response)))
+        broken_urls = urls_found
         urls_found = set(filter(lambda url: validators.url(url) == True, urls_found))
+        broken_urls = set(broken_urls) ^ set(urls_found)  # returns the difference between the two lists.
+        
+        print(f"+{len(broken_urls)} broken urls found...")
+        print(f"Broken Urls (filtered): {broken_urls}")
+        print(f"+{len(urls_found)} valid urls after filtering...")
 
         pattern = self.config["link_extractor_allow_url"]
         if bool(pattern):
@@ -134,7 +139,10 @@ class PageSpider(BaseSpider):
         broken_urls = urls_found
         urls_found = list(filter(lambda url: validators.url(url) == True, urls_found))
         broken_urls = set(broken_urls) ^ set(urls_found)  # returns the difference between the two lists.
+        
+        print(f"+{len(broken_urls)} broken urls found...")
         print(f"Broken Urls (filtered): {broken_urls}")
+        print(f"+{len(urls_found)} valid urls after filtering...")
 
         pattern = self.config["download_files_allow_url"]
         if bool(pattern):
@@ -245,7 +253,7 @@ class PageSpider(BaseSpider):
                     time.sleep(self.config["antiblock_download_delay"])
 
         for url in urls:
-            if(validators.url(url) == True):
+            if validators.url(url) == True:
                 yield scrapy.Request(
                     url=url,
                     callback=self.parse,
