@@ -99,7 +99,7 @@ class PageSpider(BaseSpider):
         broken_urls = urls_found
         urls_found = set(filter(lambda url: validators.url(url) == True, urls_found))
         broken_urls = set(broken_urls) ^ set(urls_found)  # returns the difference between the two lists.
-        
+
         print(f"+{len(broken_urls)} broken urls found...")
         print(f"Broken Urls (filtered): {broken_urls}")
         print(f"+{len(urls_found)} valid urls after filtering...")
@@ -139,7 +139,7 @@ class PageSpider(BaseSpider):
         broken_urls = urls_found
         urls_found = list(filter(lambda url: validators.url(url) == True, urls_found))
         broken_urls = set(broken_urls) ^ set(urls_found)  # returns the difference between the two lists.
-        
+
         print(f"+{len(broken_urls)} broken urls found...")
         print(f"Broken Urls (filtered): {broken_urls}")
         print(f"+{len(urls_found)} valid urls after filtering...")
