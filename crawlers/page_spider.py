@@ -101,7 +101,8 @@ class PageSpider(BaseSpider):
         broken_urls = set(broken_urls) ^ set(urls_found)  # returns the difference between the two lists.
 
         print(f"+{len(broken_urls)} broken urls found...")
-        print(f"Broken Urls (filtered): {broken_urls}")
+        if broken_urls:
+            print(f"Broken Urls (filtered): {broken_urls}")
         print(f"+{len(urls_found)} valid urls after filtering...")
 
         pattern = self.config["link_extractor_allow_url"]
@@ -141,7 +142,8 @@ class PageSpider(BaseSpider):
         broken_urls = set(broken_urls) ^ set(urls_found)  # returns the difference between the two lists.
 
         print(f"+{len(broken_urls)} broken urls found...")
-        print(f"Broken Urls (filtered): {broken_urls}")
+        if broken_urls:
+            print(f"Broken Urls (filtered): {broken_urls}")
         print(f"+{len(urls_found)} valid urls after filtering...")
 
         pattern = self.config["download_files_allow_url"]
