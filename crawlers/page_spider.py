@@ -131,7 +131,7 @@ class PageSpider(BaseSpider):
             urls_found = self.filter_urls_by_regex(urls_found, pattern)
 
         urls_info = None
-        
+
         if len(self.download_allowed_extensions) > 0:
             urls_info = list(self.get_url_info(url) for url in urls_found)
             urls_info = self.filter_urls_by_content_type(urls_info, self.download_allowed_extensions)

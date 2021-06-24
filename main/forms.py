@@ -15,9 +15,6 @@ class CrawlRequestForm(forms.ModelForm):
             'request_type': 'Método da requisição',
         }
 
-        output_filename = forms.CharField(required=False)
-        save_csv = forms.BooleanField(required=False)
-
         fields = [
             'source_name',
             'base_url',
@@ -65,13 +62,8 @@ class CrawlRequestForm(forms.ModelForm):
 
             'download_imgs',
             'steps',
-            'save_csv',
-            'table_attrs',
             'data_path',
         ]
-
-        widgets = {'table_attrs': forms.HiddenInput()}
-
 
 class RawCrawlRequestForm(CrawlRequestForm):
 
@@ -355,17 +347,6 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     # Crawler Type - Single file
     # Crawler Type - Bundle file
-
-    # PARSING #################################################################
-    save_csv = forms.BooleanField(
-        required=False, label="Salvar arquivo csv",
-        widget=forms.CheckboxInput(attrs={'checked': True})
-    )
-    table_attrs = forms.CharField(
-        required=False, max_length=2000, label="Motor de extração",
-        widget=forms.HiddenInput(attrs={'id': 'table_attrs_hidden'})
-    )
-
 
 class ResponseHandlerForm(forms.ModelForm):
     """

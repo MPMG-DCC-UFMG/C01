@@ -103,8 +103,9 @@ class CrawlRequest(TimeStamped):
     sound_xpath = models.CharField(max_length=100, blank=True, null=True)
 
     #Steps activation
-    dynamic_processing = models.BooleanField(blank=True, null=True)    
+    dynamic_processing = models.BooleanField(blank=True, null=True)
 
+    # DETAILS #################################################################
     explore_links = models.BooleanField(blank=True, null=True)
     link_extractor_max_depth = models.IntegerField(blank=True, null=True)
     link_extractor_allow_url = models.CharField(
@@ -197,12 +198,8 @@ class CrawlRequest(TimeStamped):
 
         config['templated_url_response_handlers'] = response_handlers
         config['parameter_handlers'] = parameter_handlers
+
         return config
-
-    # PARSING #########################################################
-    save_csv = models.BooleanField(blank=True, null=True)
-    table_attrs = models.CharField(max_length=20000, blank=True, null=True)
-
 
     @property
     def running(self):
