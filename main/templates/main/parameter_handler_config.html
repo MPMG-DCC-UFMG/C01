@@ -19,6 +19,17 @@
     <!-- Parameter configuration -->
     <div class="templated-url-param-config indented-subblock"
          data-option-type="none" hidden></div>
+     <div class="templated-url-param-config indented-subblock"
+          data-option-type="value_list" hidden>
+         {{form.value_list_param | as_crispy_field }}
+         <p class="small">Espaços em branco antes e depois de um elemento são ignorados. Ex: <code>teste 1, teste 2 , teste 3</code>
+            vira <code>teste 1,teste 2,teste 3</code>.
+        </p>
+     </div>
+     <div class="templated-url-param-config indented-subblock"
+          data-option-type="const_value" hidden>
+         {{form.value_const_param | as_crispy_field }}
+     </div>
     <div class="templated-url-param-config indented-subblock"
          data-option-type="process_code" hidden>
         {{ form.first_year_proc_param | as_crispy_field}}
