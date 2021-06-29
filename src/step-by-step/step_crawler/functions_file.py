@@ -25,10 +25,7 @@ def gera_nome_arquivo():
 
 
 async def wait_page(page):
-    jsWait = "document.readyState === 'complete' || \
-              document.readyState === 'iteractive'"
-    while not (await page.evaluate(jsWait)):
-        await page.waitFor(1)
+    await page.waitForSelector("html")
 
 
 async def clique(page, param):

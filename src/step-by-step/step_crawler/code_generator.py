@@ -17,8 +17,9 @@ def generate_para_cada(child, module):
     else:
         raise TypeError('This iterable is in the wrong format')
 
+    code += child['depth'] * '    ' + 'list_of_elements_iterable = ' + iterable_statement + '\n'
     code += child['depth'] * '    ' + 'for ' + child['iterator']
-    code += ' in ' + iterable_statement + ':' + '\n'
+    code += ' in list_of_elements_iterable:' + '\n'
     code += generate_body(child, module)
     return code
 
