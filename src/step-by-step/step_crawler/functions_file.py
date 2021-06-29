@@ -8,6 +8,10 @@ from captcha_solver.image_solver import ImageSolver
 from pyext import RuntimeModule
 
 
+def step(function):
+    function.is_step = True
+    return function
+
 @step
 def imprime(texto):
     print(texto)
