@@ -365,7 +365,12 @@ def load_form_fields(request):
 
                 names = list(map(field_names, fields))
 
+                method = parser.form.get('method', 'GET')
+                if method == "":
+                    method = 'GET'
+
                 return JsonResponse({
+                    'method': method,
                     'length': parser.number_of_fields(),
                     'names': names,
                     'types': parser.list_input_types(),

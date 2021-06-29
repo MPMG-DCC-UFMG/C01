@@ -403,6 +403,9 @@ function loadStaticForm() {
             'url_response_data': JSON.stringify(url_responses)
         },
         success: (data) => {
+            // Set the request method
+            $('#id_form_request_type').val(data['method'])
+
             $('#static_form_param').formset('setNumForms', parseInt(data['length']));
             let currLabel = 0;
 
