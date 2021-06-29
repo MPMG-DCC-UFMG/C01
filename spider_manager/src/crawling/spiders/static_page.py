@@ -148,10 +148,8 @@ class StaticPageSpider(BaseSpider):
         return item
     
     def notify_server_files_found(self, num_files: int):
-        return 
-        
         if num_files > 0:            
-            server_notification_url = f'http://localhost:8000/download/files/found/{self.config["instance_id"]}/{num_files}' 
+            server_notification_url = f'http://localhost:9000/download/files/found/{self.config["instance_id"]}/{num_files}' 
             req = requests.get(server_notification_url)
 
             if req.status_code == 200:
