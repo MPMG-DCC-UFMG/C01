@@ -1,6 +1,6 @@
 LINK_GENERATOR_TOPIC = 'crawler_ufmg_link_generator'
 
-KAFKA_HOSTS = ['hadoopdn-gsi-prod04.mpmg.mp.br:6667']
+KAFKA_HOSTS = ['10.21.0.130:9092']
 
 # Redis host information
 REDIS_HOST = 'localhost'
