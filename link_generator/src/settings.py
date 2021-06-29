@@ -1,4 +1,4 @@
-LINK_GENERATOR_TOPIC = 'sm_link_generator'
+LINK_GENERATOR_TOPIC = 'crawler_ufmg_link_generator'
 
 KAFKA_HOSTS = ['localhost:9092']
 

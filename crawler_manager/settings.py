@@ -1,18 +1,18 @@
 #### Kafka topics
 
 # Transmits logs from spiders
-LOGGING_TOPIC = 'sm_logs'
+LOGGING_TOPIC = 'crawler_ufmg_logs'
 
 # Transmits command to create and stop spiders
-COMMANDS_TOPIC = 'sm_commands'
+COMMANDS_TOPIC = 'crawler_ufmg_commands'
 
 # Transmits messages about creating or terminating spiders
-NOTIFICATIONS_TOPIC = 'sm_notifications'
+NOTIFICATIONS_TOPIC = 'crawler_ufmg_notifications'
 
 # Broadcast messages to generate initial crawl urls
-LINK_GENERATOR_TOPIC = 'sm_link_generator'
+LINK_GENERATOR_TOPIC = 'crawler_ufmg_link_generator'
 
-WRITER_TOPIC = 'writer'
+WRITER_TOPIC = 'crawler_ufmg_writer'
 
 # 
 KAFKA_HOSTS = ['localhost:9092']

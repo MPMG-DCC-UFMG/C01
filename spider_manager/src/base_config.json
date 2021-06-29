@@ -7,7 +7,7 @@
     "KAFKA_HOSTS": [
         "localhost:9092"
     ],
-    "KAFKA_TOPIC_PREFIX": "demo",
+    "KAFKA_TOPIC_PREFIX": "crawler_ufmg_sc",
     "KAFKA_APPID_TOPICS": false,
     "KAFKA_BASE_64_ENCODE": false,
     "KAFKA_PRODUCER_BATCH_LINGER_MS": 25,
@@ -84,8 +84,7 @@
     "RETRY_TIMES": 3,
     "DOWNLOAD_TIMEOUT": 30,
     "DNSCACHE_ENABLED": true,
-    "LOGGING_TOPIC": "sm_logs",
-    "COMMANDS_TOPIC": "sm_commands",
-    "NOTIFICATIONS_TOPIC": "sm_notifications"
-
+    "LOGGING_TOPIC": "crawler_ufmg_logs",
+    "COMMANDS_TOPIC": "crawler_ufmg_commands",
+    "NOTIFICATIONS_TOPIC": "crawler_ufmg_notifications"
 }
