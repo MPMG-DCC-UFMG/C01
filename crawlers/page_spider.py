@@ -1,4 +1,4 @@
-#needs to be imported before scrapy
+# needs to be imported before scrapy
 from scrapy_puppeteer import PuppeteerRequest
 
 # Scrapy and Twister libs
@@ -12,6 +12,9 @@ import re
 import json
 import requests
 import time
+
+# Checks if an url is valid
+import validators
 
 # Project libs
 from crawlers.base_spider import BaseSpider
@@ -39,7 +42,7 @@ class PageSpider(BaseSpider):
                     meta={
                         "referer": "start_requests",
                         "config": self.config
-                    },
+                },
                     steps=steps)
 
             else:
@@ -55,7 +58,7 @@ class PageSpider(BaseSpider):
                     meta={
                         "referer": "start_requests",
                         "config": self.config
-                    },
+                },
                     errback=self.errback_httpbin)
 
     def get_url_info(self, url: str) -> tuple:
@@ -92,7 +95,15 @@ class PageSpider(BaseSpider):
             process_value=self.config["link_extractor_process_value"],
         )
 
-        urls_found = set(i.url for i in links_extractor.extract_links(response))
+        urls_found = list(set(i.url for i in links_extractor.extract_links(response)))
+        broken_urls = urls_found
+        urls_found = set(filter(lambda url: validators.url(url) == True, urls_found))
+        broken_urls = set(broken_urls) ^ set(urls_found)  # returns the difference between the two lists.
+
+        print(f"+{len(broken_urls)} broken urls found...")
+        if broken_urls:
+            print(f"Broken Urls (filtered): {broken_urls}")
+        print(f"+{len(urls_found)} valid urls after filtering...")
 
         pattern = self.config["link_extractor_allow_url"]
         if bool(pattern):
@@ -125,6 +136,15 @@ class PageSpider(BaseSpider):
 
         exclude_html_and_php_regex_pattern = r"(.*\.[a-z]{3,4}$)(.*(?<!\.html)$)(.*(?<!\.php)$)"
         urls_found = self.filter_urls_by_regex(urls_found, exclude_html_and_php_regex_pattern)
+
+        broken_urls = urls_found
+        urls_found = list(filter(lambda url: validators.url(url) == True, urls_found))
+        broken_urls = set(broken_urls) ^ set(urls_found)  # returns the difference between the two lists.
+
+        print(f"+{len(broken_urls)} broken urls found...")
+        if broken_urls:
+            print(f"Broken Urls (filtered): {broken_urls}")
+        print(f"+{len(urls_found)} valid urls after filtering...")
 
         pattern = self.config["download_files_allow_url"]
         if bool(pattern):
@@ -235,11 +255,12 @@ class PageSpider(BaseSpider):
                     time.sleep(self.config["antiblock_download_delay"])
 
         for url in urls:
-            yield scrapy.Request(
-                url=url,
-                callback=self.parse,
-                meta={
-                    "referer": response.url,
-                },
-                errback=self.errback_httpbin
-            )
+            if validators.url(url) == True:
+                yield scrapy.Request(
+                    url=url,
+                    callback=self.parse,
+                    meta={
+                        "referer": response.url,
+                    },
+                    errback=self.errback_httpbin
+                )
