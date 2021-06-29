@@ -114,7 +114,11 @@ def create_instance(crawler_id, instance_id):
 
 def generate_injector_forms(*args, injection_type, filter_queryset=False,
                             crawler=None, **kwargs):
-    form_kwargs = {'initial': {'injection_type': f'{injection_type}'}}
+    form_kwargs = {
+        'initial': {
+            'injection_type': f'{injection_type}'
+        },
+    }
 
     queryset = None
     crawler = None

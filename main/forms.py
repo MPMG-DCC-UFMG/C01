@@ -379,6 +379,28 @@ class ParameterHandlerForm(forms.ModelForm):
     to be injected
     """
 
+    def __init__(self, *args, **kwargs):
+        super(ParameterHandlerForm, self).__init__(*args, **kwargs)
+
+        injection_type = ""
+        if self.initial:
+            injection_type = self.initial['injection_type']
+
+        def filter_option(opt):
+            if injection_type == "templated_url" and opt[0] == "const_value":
+                return False
+            return True
+
+        # Templated URL forms shouldn't have a constant injector option
+        choices = list(filter(filter_option, ParameterHandler.PARAM_TYPES))
+
+        self.fields['parameter_type'] = forms.ChoiceField(
+            choices=choices,
+            widget=forms.Select(attrs={
+                'onchange': 'detailParamType(event);'
+            })
+        )
+
     def clean(self):
         """
         Validates form inputs which depend on other inputs' values
@@ -468,9 +490,6 @@ class ParameterHandlerForm(forms.ModelForm):
         }
 
         widgets = {
-            'parameter_type': forms.Select(attrs={
-                'onchange': 'detailParamType(event);'
-            }),
             'date_format_date_param': forms.TextInput(attrs={
                 'placeholder': '%m/%d/%Y'
             }),
