@@ -16,7 +16,7 @@ class RedisSpider(Spider):
 
     def spider_idle(self):
         # Esperar até um minuto de ociosidade até o spider fechar
-        if self.idleness <= 12:
+        if self.idleness <= 60:
             self.idleness += 1
             raise DontCloseSpider
 
