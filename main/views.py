@@ -2,14 +2,15 @@ from django.conf import settings
 from django.utils import timezone
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, \
+    FileResponse, HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404, redirect
 
 from rest_framework import viewsets
 from rest_framework.decorators import action
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm,\
-                   ResponseHandlerFormSet, ParameterHandlerFormSet
+    ResponseHandlerFormSet, ParameterHandlerFormSet
 from .models import CrawlRequest, CrawlerInstance
 from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer
 
@@ -18,6 +19,7 @@ from crawlers.constants import *
 import subprocess
 from datetime import datetime
 import time
+import os
 
 import crawlers.crawler_manager as crawler_manager
 
@@ -239,6 +241,25 @@ def tail_log_file(request, instance_id):
 
 def downloads(request):
     return render(request, "main/downloads.html")
+
+
+def export_config(request, instance_id):
+    instance = get_object_or_404(CrawlerInstance, pk=instance_id)
+    data_path = instance.crawler_id.data_path
+
+    file_name = f"{instance_id}.json"
+    path = os.path.join(data_path, "config", file_name)
+
+    try:
+        response = FileResponse(open(path, 'rb'), content_type='application/json')
+    except FileNotFoundError:
+        print(f"Arquivo de Configuração Não Encontrado: {file_name}")
+        return HttpResponseNotFound("<h1>Página Não Encontrada</h1>")
+    else:
+        response['Content-Length'] = os.path.getsize(path)
+        response['Content-Disposition'] = "attachment; filename=%s" % file_name
+
+    return response
 
 # API
 ########

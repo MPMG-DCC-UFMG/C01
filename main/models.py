@@ -102,9 +102,10 @@ class CrawlRequest(TimeStamped):
     # Options for sound
     sound_xpath = models.CharField(max_length=100, blank=True, null=True)
 
-    #Steps activation
-    dynamic_processing = models.BooleanField(blank=True, null=True)    
+    # Steps activation
+    dynamic_processing = models.BooleanField(blank=True, null=True)
 
+    # DETAILS #################################################################
     explore_links = models.BooleanField(blank=True, null=True)
     link_extractor_max_depth = models.IntegerField(blank=True, null=True)
     link_extractor_allow_url = models.CharField(
@@ -197,12 +198,8 @@ class CrawlRequest(TimeStamped):
 
         config['templated_url_response_handlers'] = response_handlers
         config['parameter_handlers'] = parameter_handlers
+
         return config
-
-    # PARSING #########################################################
-    save_csv = models.BooleanField(blank=True, null=True)
-    table_attrs = models.CharField(max_length=20000, blank=True, null=True)
-
 
     @property
     def running(self):
@@ -247,6 +244,8 @@ class ParameterHandler(models.Model):
         ('number_seq', 'Sequência numérica'),
         ('date_seq', 'Sequência de datas'),
         ('alpha_seq', 'Sequência alfabética'),
+        ('value_list', 'Lista pré-definida'),
+        ('const_value', 'Valor constante'),
     ]
 
     parameter_type = models.CharField(max_length=15,
@@ -286,6 +285,9 @@ class ParameterHandler(models.Model):
     frequency_date_param = models.CharField(max_length=15,
                                  choices=DATE_FREQ,
                                  default='D')
+
+    value_const_param = models.CharField(max_length=5000, blank=True)
+    value_list_param = models.CharField(max_length=5000, blank=True)
 
 
 class ResponseHandler(models.Model):
