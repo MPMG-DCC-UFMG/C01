@@ -76,3 +76,25 @@ list(gen) # ['2000', '2001', '2002', '2003']
 gen = ParamInjector.generate_daterange('%Y-%m-%d', datetime.date(2000,1,1), datetime.date(2000,1,5), "D")
 list(gen) # ['2000-01-01', '2000-01-02', '2000-01-03', '2000-01-04', '2000-01-05']
 ```
+
+### Predefined list generator
+Takes in a user-supplied list of comma-separated values and generates them individually. Leading and trailing spaces in each element are ignored. An empty value for the input generates an empty string as its single element.
+
+```
+gen = ParamInjector.generate_list('a, b, c, d, e')
+list(gen) # ['a', 'b', 'c', 'd', 'e']
+
+gen = ParamInjector.generate_list('')
+list(gen) # ['']
+```
+
+### Constant generator
+Generates the supplied value once. Used for specific situations when filling placeholders.
+
+```
+gen = ParamInjector.generate_constant('testelement')
+list(gen) # ['testelement']
+
+gen = ParamInjector.generate_constant('')
+list(gen) # ['']
+```

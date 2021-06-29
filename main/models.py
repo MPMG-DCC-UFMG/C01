@@ -308,6 +308,8 @@ class ParameterHandler(models.Model):
         ('date_seq', 'Sequência de datas'),
         ('alpha_seq', 'Sequência alfabética'),
         ('process_code', 'Código de processo'),
+        ('value_list', 'Lista pré-definida'),
+        ('const_value', 'Valor constante'),
     ]
 
     parameter_type = models.CharField(max_length=15,
@@ -347,6 +349,9 @@ class ParameterHandler(models.Model):
     frequency_date_param = models.CharField(max_length=15,
                                  choices=DATE_FREQ,
                                  default='D')
+
+    value_const_param = models.CharField(max_length=5000, blank=True)
+    value_list_param = models.CharField(max_length=5000, blank=True)
 
 
 class ResponseHandler(models.Model):
