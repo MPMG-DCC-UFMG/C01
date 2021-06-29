@@ -414,6 +414,8 @@ class DistributedScheduler(object):
         return self.redis_conn.sismember(redis_key, key_check)
 
     def notify_server(self, instance_id: str, num_pages: int = 1):
+        return 
+        
         server_notification_url = f'http://localhost:8000/download/pages/found/{instance_id}/{num_pages}'
         req = requests.get(server_notification_url)
 
