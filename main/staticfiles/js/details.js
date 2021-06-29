@@ -25,8 +25,6 @@ function tail_logs(instance_id){
             console.log(response);
 
             if (response["files_found"] != 0) {
-                response["files_found"] += 19;
-                response["files_error"] += 19;
 
                 let success_rate = (response["files_success"] / response["files_found"]) * 100;
                 let error_rate = (response["files_error"] / response["files_found"]) * 100;
