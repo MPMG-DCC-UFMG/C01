@@ -373,6 +373,8 @@ def load_form_fields(request):
                 if method == "":
                     method = 'GET'
 
+                method = method.upper()
+
                 return JsonResponse({
                     'method': method,
                     'length': parser.number_of_fields(),
