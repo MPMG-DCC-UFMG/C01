@@ -18,9 +18,9 @@
                             "iterator": "i",
                             "iterable": {
                                 "call":{
-                                    "step": "range_",
+                                    "step": "repete",
                                     "arguments": {
-                                        "stop": 2
+                                        "vezes": 2
                                     }
                                 }
                             },
@@ -28,9 +28,9 @@
                             "depth": 2,
                             "children": [
                                 {
-                                    "step": "print_",
+                                    "step": "imprime",
                                     "arguments": {
-                                        "word": "\"teste\""
+                                        "texto": "\"teste\""
                                     },
                                     "depth": 3
                                 },
@@ -39,9 +39,9 @@
                                     "iterator": "j",
                                     "iterable": {
                                         "call":{
-                                            "step": "range_",
+                                            "step": "repete",
                                             "arguments": {
-                                                "stop": 2
+                                                "vezes": 2
                                             }
                                         }
                                     },
@@ -53,9 +53,9 @@
                                             "iterator": "k",
                                             "iterable": {
                                                 "call":{
-                                                    "step": "range_",
+                                                    "step": "repete",
                                                     "arguments": {
-                                                        "stop": 2
+                                                        "vezes": 2
                                                     }
                                                 }
                                             },
@@ -67,9 +67,9 @@
                                                     "iterator": "l",
                                                     "iterable": {
                                                         "call":{
-                                                            "step": "range_",
+                                                            "step": "repete",
                                                             "arguments": {
-                                                                "stop": 2
+                                                                "vezes": 2
                                                             }
                                                         }
                                                     },
@@ -77,9 +77,9 @@
                                                     "depth": 5,
                                                     "children": [
                                                         {
-                                                            "step": "print_",
+                                                            "step": "imprime",
                                                             "arguments": {
-                                                                "word": "\"teste\""
+                                                                "texto": "\"teste\""
                                                             },
                                                             "depth": 6
                                                         }
@@ -88,9 +88,9 @@
                                             ]
                                         },
                                         {
-                                            "step": "print_",
+                                            "step": "imprime",
                                             "arguments": {
-                                                "word": "\"teste\""
+                                                "texto": "\"teste\""
                                             },
                                             "depth": 4
                                         }
@@ -110,9 +110,9 @@
             "depth": 0,
             "children": [
                 {
-                    "step": "print_",
+                    "step": "imprime",
                     "arguments": {
-                        "word": "\"teste\""
+                        "texto": "\"teste\""
                     },
                     "depth": 1
                 },
@@ -121,9 +121,9 @@
                     "iterator": "i",
                     "iterable": {
                         "call":{
-                            "step": "range_",
+                            "step": "repete",
                             "arguments": {
-                                "stop": 2
+                                "vezes": 2
                             }
                         }
                     },
@@ -131,9 +131,9 @@
                     "depth": 1,
                     "children": [
                         {
-                            "step": "print_",
+                            "step": "imprime",
                             "arguments": {
-                                "word": "\"teste\""
+                                "texto": "\"teste\""
                             },
                             "depth": 2
                         }
@@ -153,9 +153,9 @@
                     "iterator": "i",
                     "iterable": {
                         "call":{
-                            "step": "range_",
+                            "step": "repete",
                             "arguments": {
-                                "stop": 2
+                                "vezes": 2
                             }
                         }
                     },
@@ -167,9 +167,9 @@
                             "iterator": "j",
                             "iterable": {
                                 "call":{
-                                    "step": "range_",
+                                    "step": "repete",
                                     "arguments": {
-                                        "stop": 2
+                                        "vezes": 2
                                     }
                                 }
                             },
@@ -177,9 +177,9 @@
                             "depth": 2,
                             "children": [
                                 {
-                                    "step": "print_",
+                                    "step": "imprime",
                                     "arguments": {
-                                        "word": "\"teste\""
+                                        "texto": "\"teste\""
                                     },
                                     "depth": 3
                                 }
@@ -188,9 +188,9 @@
                     ]
                 },
                 {
-                    "step": "print_",
+                    "step": "imprime",
                     "arguments": {
-                        "word": "\"teste\""
+                        "texto": "\"teste\""
                     },
                     "depth": 1
                 }
@@ -217,9 +217,9 @@
                             "iterator": "j",
                             "iterable": {
                                 "call":{
-                                    "step": "range_",
+                                    "step": "repete",
                                     "arguments": {
-                                        "stop": 2
+                                        "vezes": 2
                                     }
                                 }
                             },
@@ -231,9 +231,9 @@
                                     "iterator": "k",
                                     "iterable": {
                                         "call":{
-                                            "step": "range_",
+                                            "step": "repete",
                                             "arguments": {
-                                                "stop": 2
+                                                "vezes": 2
                                             }
                                         }
                                     },
@@ -241,9 +241,9 @@
                                     "depth": 3,
                                     "children": [
                                         {
-                                            "step": "print_",
+                                            "step": "imprime",
                                             "arguments": {
-                                                "word": "\"teste\""
+                                                "texto": "\"teste\""
                                             },
                                             "depth": 4
                                         }
@@ -267,9 +267,9 @@
                     "iterator": "i",
                     "iterable": {
                         "call":{
-                            "step": "range_",
+                            "step": "repete",
                             "arguments": {
-                                "stop": 2
+                                "vezes": 2
                             }
                         }
                     },
@@ -277,9 +277,9 @@
                     "depth": 1,
                     "children": [
                         {
-                            "step": "print_",
+                            "step": "imprime",
                             "arguments": {
-                                "word": "\"teste\""
+                                "texto": "\"teste\""
                             },
                             "depth": 2
                         }
@@ -304,9 +304,9 @@
                     "depth": 1,
                     "children": [
                         {
-                            "step": "print_",
+                            "step": "imprime",
                             "arguments": {
-                                "word": "\"teste\""
+                                "texto": "\"teste\""
                             },
                             "depth": 2
                         }
