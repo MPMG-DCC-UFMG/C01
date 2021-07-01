@@ -10,15 +10,16 @@ class CrawlRequestForm(forms.ModelForm):
     class Meta:
         model = CrawlRequest
 
-
         labels = {
             'request_type': 'Método da requisição',
+            'form_request_type': 'Método da requisição ao injetar em formulários',
         }
 
         fields = [
             'source_name',
             'base_url',
             'request_type',
+            'form_request_type',
             'obey_robots',
             'captcha',
 
@@ -366,9 +367,9 @@ class ResponseHandlerForm(forms.ModelForm):
         }
         widgets = {
             'handler_type': forms.Select(attrs={
-                'onchange': 'detailTemplatedUrlResponseType(event);'
-            }
-            ),
+                'onchange': 'detailResponseType(event);'
+            }),
+            'injection_type': forms.HiddenInput(),
         }
 
 
@@ -377,6 +378,28 @@ class ParameterHandlerForm(forms.ModelForm):
     Contains the fields related to the configuration of the request parameters
     to be injected
     """
+
+    def __init__(self, *args, **kwargs):
+        super(ParameterHandlerForm, self).__init__(*args, **kwargs)
+
+        injection_type = ""
+        if self.initial:
+            injection_type = self.initial['injection_type']
+
+        def filter_option(opt):
+            if injection_type == "templated_url" and opt[0] == "const_value":
+                return False
+            return True
+
+        # Templated URL forms shouldn't have a constant injector option
+        choices = list(filter(filter_option, ParameterHandler.PARAM_TYPES))
+
+        self.fields['parameter_type'] = forms.ChoiceField(
+            choices=choices,
+            widget=forms.Select(attrs={
+                'onchange': 'detailParamType(event);'
+            })
+        )
 
     def clean(self):
         """
@@ -462,19 +485,18 @@ class ParameterHandlerForm(forms.ModelForm):
             'value_list_param': 'Lista de valores a gerar (separados por vírgula)',
             'value_const_param': 'Valor a gerar',
             'filter_range': 'Filtrar limites',
+            'parameter_label': 'Descrição do campo',
+            'parameter_key': 'Nome do campo',
         }
 
         widgets = {
-            'parameter_type': forms.Select(attrs={
-                'onchange': 'detailTemplatedUrlParamType(event);'
-            }),
             'date_format_date_param': forms.TextInput(attrs={
                 'placeholder': '%m/%d/%Y'
             }),
             'start_date_date_param': forms.DateInput(attrs={'type': 'date'}),
             'end_date_date_param': forms.DateInput(attrs={'type': 'date'}),
             'filter_range': forms.CheckboxInput(
-                attrs={"onclick": "detailTemplatedURLParamFilter(event);", }
+                attrs={"onclick": "detailParamFilter(event);", }
             ),
 
             # Validate parameters which are lists of numbers (with possible
@@ -491,6 +513,7 @@ class ParameterHandlerForm(forms.ModelForm):
                 'pattern': ParameterHandler.LIST_REGEX,
                 'title': 'Insira uma lista de números separados por vírgula.',
             }),
+            'injection_type': forms.HiddenInput(),
         }
 
     step_num_param = forms.IntegerField(initial=1, required=False,

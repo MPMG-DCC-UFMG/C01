@@ -1,6 +1,6 @@
 {% load crispy_forms_tags %}
 
-<div class="templated-url-param-step bordered-bottom-option">
+<div class="param-step bordered-bottom-option">
     {% for hidden_field in form.hidden_fields %}
         {{ hidden_field }}
     {% endfor %}
@@ -14,60 +14,75 @@
         {% endfor %}
     </div>
     {% endif %}
+
+    {% if form.injection_type.value == "static_form" %}
+        <!-- Parameter key and label -->
+        {{ form.parameter_key | as_crispy_field }}
+        {{ form.parameter_label | as_crispy_field }}
+    {% endif %}
+
     <!-- Parameter type-->
     {{ form.parameter_type | as_crispy_field }}
     <!-- Parameter configuration -->
-    <div class="templated-url-param-config indented-subblock"
+    <div class="param-config indented-subblock"
          data-option-type="none" hidden></div>
-     <div class="templated-url-param-config indented-subblock"
-          data-option-type="value_list" hidden>
-         {{form.value_list_param | as_crispy_field }}
-         <p class="small">Espaços em branco antes e depois de um elemento são ignorados. Ex: <code>teste 1, teste 2 , teste 3</code>
-            vira <code>teste 1,teste 2,teste 3</code>.
+    <div class="param-config indented-subblock"
+         data-option-type="value_list" hidden>
+        {{form.value_list_param | as_crispy_field }}
+        <p class="small">Espaços em branco antes e depois de um elemento são ignorados. Ex: <code>teste 1, teste 2 , teste 3</code>
+           vira <code>teste 1,teste 2,teste 3</code>.
         </p>
-     </div>
-     <div class="templated-url-param-config indented-subblock"
-          data-option-type="const_value" hidden>
-         {{form.value_const_param | as_crispy_field }}
-     </div>
-    <div class="templated-url-param-config indented-subblock"
+    </div>
+    <div class="param-config indented-subblock"
+         data-option-type="const_value" hidden>
+        {{form.value_const_param | as_crispy_field }}
+    </div>
+    <div class="param-config indented-subblock"
          data-option-type="process_code" hidden>
         {{ form.first_year_proc_param | as_crispy_field}}
         {{ form.last_year_proc_param | as_crispy_field}}
-        <span class="templated-url-comma-separated-lists">
+        <span class="comma-separated-lists">
         {{ form.segment_ids_proc_param | as_crispy_field}}
         {{ form.court_ids_proc_param | as_crispy_field}}
         {{ form.origin_ids_proc_param | as_crispy_field}}
         </span>
     </div>
-    <div class="templated-url-param-config indented-subblock"
+    <div class="param-config indented-subblock"
          data-option-type="number_seq" hidden>
         {{ form.first_num_param | as_crispy_field}}
         {{ form.last_num_param | as_crispy_field}}
         {{ form.step_num_param | as_crispy_field}}
         {{ form.leading_num_param | as_crispy_field}}
     </div>
-    <div class="templated-url-param-config indented-subblock"
+    <div class="param-config indented-subblock"
          data-option-type="alpha_seq" hidden>
         {{ form.length_alpha_param | as_crispy_field}}
         {{ form.num_words_alpha_param | as_crispy_field}}
         {{ form.no_upper_alpha_param | as_crispy_field}}
     </div>
-    <div class="templated-url-param-config indented-subblock"
+    <div class="param-config indented-subblock"
          data-option-type="date_seq" hidden>
-        <span class="templated-url-date-freq">
+        <span class="date-freq">
         {{ form.frequency_date_param | as_crispy_field}}
         </span>
         {{ form.date_format_date_param | as_crispy_field}}
         {{ form.start_date_date_param | as_crispy_field}}
         {{ form.end_date_date_param | as_crispy_field}}
     </div>
-    <div class="templated-url-filter-config indented-subblock"
+    {% if form.injection_type.value == "static_form" %}
+        <!-- TODO Remove when filtering for forms is enabled -->
+        <div hidden>
+    {% endif %}
+    <div class="filter-config indented-subblock"
          hidden>
         {{ form.filter_range | as_crispy_field }}
-        <div class="templated-url-cons-misses" hidden>
+        <div class="cons-misses" hidden>
             {{ form.cons_misses | as_crispy_field }}
         </div>
     </div>
+    {% if form.injection_type.value == "static_form" %}
+        <!-- TODO Remove when filtering for forms is enabled -->
+        </div>
+    {% endif %}
     <br>
 </div>
