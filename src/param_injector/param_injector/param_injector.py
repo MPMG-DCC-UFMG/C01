@@ -392,3 +392,37 @@ class ParamInjector():
             if period_val(curr) != prev_period:
                 prev_period = period_val(curr)
                 yield curr.strftime(date_format)
+
+
+    @staticmethod
+    def generate_list(elements: str) -> Generator[str, None, None]:
+        """
+        Generates a user-specified list of values. Used when there is not a
+        large amount of values to generate and they are not uniform enough to
+        use one of the other generators
+
+        :param elements: comma-separated list of elements to generate, as a
+                         string
+
+        :yields: the values described in the supplied string
+        """
+
+        # Remove leading and trailing spaces in the list elements
+        values = [i.strip() for i in elements.split(',')]
+
+        for v in values:
+            yield v
+
+
+    @staticmethod
+    def generate_constant(value: str) -> Generator[str, None, None]:
+        """
+        Generates a single value once. Used for specific cases where you just
+        want to fill a placeholder.
+
+        :param value: value to be generated
+
+        :yields: the supplied value
+        """
+
+        yield value

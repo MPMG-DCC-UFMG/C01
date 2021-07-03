@@ -1,10 +1,11 @@
 django
 django-crispy-forms
+django-environ
 djangorestframework
-scrapy
-requests
+psycopg2-binary==2.8.5
 pytest
 pytest-mock
 python3-wget
-django-environ
-psycopg2-binary==2.8.5
+requests
+scrapy
+validators

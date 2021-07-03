@@ -125,7 +125,8 @@ class EntryProbingTest(unittest.TestCase):
         probe = EntryProbing(HTTPProbingRequest("http://test.com/",
                                                 method="GET"))
         self.assertIsNone(probe.response)
-        probe.check_entry()
+        # Set the always_request option to True so that we have a response
+        probe.check_entry(always_request=True)
         self.assertTrue(isinstance(probe.response, ResponseData))
 
 
@@ -186,7 +187,10 @@ class EntryProbingTest(unittest.TestCase):
         # check if response is stored properly
         probe = EntryProbing(PyppeteerProbingRequest(page))
         self.assertIsNone(probe.response)
-        self.loop.run_until_complete(probe.async_check_entry())
+        # Set the always_request option to True so that we have a response
+        self.loop.run_until_complete(probe.async_check_entry(
+            always_request=True
+        ))
         self.assertTrue(isinstance(probe.response, ResponseData))
 
 
@@ -302,7 +306,8 @@ class EntryProbingTest(unittest.TestCase):
         probe = EntryProbing(HTTPProbingRequest("http://test.com/",
                                                 method="GET"))
         self.assertIsNone(probe.response)
-        probe.check_entry()
+        # Set the always_request option to True so that we have a response
+        probe.check_entry(always_request=True)
         self.assertTrue(isinstance(probe.response, ResponseData))
 
 
@@ -351,7 +356,10 @@ class EntryProbingTest(unittest.TestCase):
         # check if response is stored properly
         probe = EntryProbing(PyppeteerProbingRequest(page))
         self.assertIsNone(probe.response)
-        self.loop.run_until_complete(probe.async_check_entry())
+        # Set the always_request option to True so that we have a response
+        self.loop.run_until_complete(probe.async_check_entry(
+            always_request=True
+        ))
         self.assertTrue(isinstance(probe.response, ResponseData))
 
 

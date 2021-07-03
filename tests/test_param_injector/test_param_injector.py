@@ -516,5 +516,72 @@ class ParamInjectorTest(unittest.TestCase):
         self.assertRaises(ValueError, list, date_gen)
 
 
+    # PREDEFINED LIST GENERATOR
+
+
+    def test_list_generator(self):
+        """
+        Tests general functionality of the predefined list generator
+        """
+
+        # Simple case
+        list_str = "a,b,c,d,e"
+        expected_output = ["a", "b", "c", "d", "e"]
+
+        list_gen = ParamInjector.generate_list(list_str)
+        self.assertEqual(expected_output, list(list_gen))
+
+        # Another simple case
+        list_str = "alice,bob,charlie,david,emily"
+        expected_output = ["alice", "bob", "charlie", "david", "emily"]
+
+        list_gen = ParamInjector.generate_list(list_str)
+        self.assertEqual(expected_output, list(list_gen))
+
+        # Leading and trailing spaces are ignored
+        list_str = "a  ,  b  ,c, d, e"
+        expected_output = ["a", "b", "c", "d", "e"]
+
+        list_gen = ParamInjector.generate_list(list_str)
+        self.assertEqual(expected_output, list(list_gen))
+
+        # No elements
+        list_str = ""
+        expected_output = [""]
+
+        list_gen = ParamInjector.generate_list(list_str)
+        self.assertEqual(expected_output, list(list_gen))
+
+        # Single element
+        list_str = "singletest"
+        expected_output = ["singletest"]
+
+        list_gen = ParamInjector.generate_list(list_str)
+        self.assertEqual(expected_output, list(list_gen))
+
+
+    # CONSTANT VALUE GENERATOR
+
+
+    def test_const_generator(self):
+        """
+        Tests general functionality of the constant value generator
+        """
+
+        # Simple case
+        input_data = "test"
+        expected_output = ["test"]
+
+        const_gen = ParamInjector.generate_constant(input_data)
+        self.assertEqual(expected_output, list(const_gen))
+
+        # No data
+        input_data = ""
+        expected_output = [""]
+
+        const_gen = ParamInjector.generate_constant(input_data)
+        self.assertEqual(expected_output, list(const_gen))
+
+
 if __name__ == '__main__':
     unittest.main()

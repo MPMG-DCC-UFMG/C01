@@ -162,6 +162,7 @@ jQuery widget to manage formsets used by Django on the front-end
             ++this._numActiveForms;
 
             this._updateFormCount();
+            this._trigger("added", null, { form: newForm } );
         },
 
         removeForm: function(form) {
@@ -209,10 +210,10 @@ jQuery widget to manage formsets used by Django on the front-end
 
                 // Update sequential numbers
                 let self = this;
-                this.element.find(this.subformSelector).each((index) => {
-                    $(this).find('input,select,textarea,label,div')
-                           .each(() => {
-                        self._updateElementIndex($(this), self.options.prefix,
+                this.element.find(this.options.subformSelector).each((index, form) => {
+                    $(form).find('input,select,textarea,label,div')
+                           .each((_, el) => {
+                        self._updateElementIndex($(el), self.options.prefix,
                                                  index);
                     });
                 });
