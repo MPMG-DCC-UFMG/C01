@@ -12,6 +12,7 @@ import re
 import json
 import requests
 import time
+import os 
 
 # Project libs
 from crawlers.base_spider import BaseSpider
@@ -180,6 +181,8 @@ class PageSpider(BaseSpider):
         return set(src)
 
     def dynamic_parse(self, response):
+        self.verify_dynamic_downloads(response)
+
         for page in list(response.request.meta["pages"].values()):
             dynamic_response = HtmlResponse(
                 response.url,

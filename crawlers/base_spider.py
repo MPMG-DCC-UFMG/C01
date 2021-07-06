@@ -1,5 +1,6 @@
 # Scrapy and Twister libs
 import scrapy
+from scrapy.http import Response
 from scrapy.exceptions import CloseSpider
 from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError
@@ -19,6 +20,8 @@ import urllib.parse as urlparse
 import mimetypes
 import requests
 import string
+from glob import glob
+import uuid
 
 # Project libs
 import crawling_utils
@@ -562,6 +565,31 @@ class BaseSpider(scrapy.Spider):
             f.write(response.body)
 
         self.create_and_feed_file_description(response.url, file_name, response.meta["referer"], extension)
+
+    def process_dynamic_downloads(self, downloads: list, response: Response):
+        data_path = self.config['data_path'] + '/data/files/'
+        for download in downloads:
+            ext = download.split('.')[-1]
+            filename = uuid.uuid4().hex + f'.{ext}'
+            
+            # 
+            dest = data_path + filename
+            os.replace(download, dest)
+
+            self.create_and_feed_file_description('<triggered by dynamic page click>', filename, response.request.url, ext)
+
+    def verify_dynamic_downloads(self, response: Response):
+        url_src = response.request.url 
+
+        crawler_id = self.config['crawler_id']
+        download_path = os.path.join(os.getcwd(), f'temp_dp/{crawler_id}/') #dp = dynamic processing
+ 
+        url_hash = crawling_utils.hash(url_src.encode())
+
+        downloads = glob(f'{download_path}{url_hash}_*')
+
+        if len(downloads) > 0:
+            self.process_dynamic_downloads(downloads, response)
 
     def errback_httpbin(self, failure):
         # log all errback failures,

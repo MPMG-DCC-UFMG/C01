@@ -1,5 +1,7 @@
 """This module contains the ``PuppeteerMiddleware`` scrapy middleware"""
 import asyncio
+from hashlib import new
+from crawling_utils import crawling_utils
 from twisted.internet import asyncioreactor
 
 try:
@@ -15,6 +17,8 @@ except Exception:
 import logging
 import requests
 import sys, os, time
+from glob import glob
+import shutil
 
 from step_crawler import code_generator as code_g
 from step_crawler import functions_file
@@ -23,12 +27,15 @@ from step_crawler import atomizer as atom
 from pyppeteer import launch
 from scrapy import signals
 from scrapy.http import HtmlResponse
-from twisted.internet.defer import Deferred
+from twisted.internet.defer import AlreadyCalledError, Deferred
 from promise import Promise
 from scrapy.exceptions import CloseSpider, IgnoreRequest
 
 from .http import PuppeteerRequest
 
+import crawling_utils
+
+TIMEOUT_TO_DOWNLOAD_START = 5
 
 def as_deferred(f):
     """Transform a Twisted Deffered to an Asyncio Future"""
@@ -51,8 +58,9 @@ class PuppeteerMiddleware:
         """
 
         middleware = cls()
-        middleware.browser = await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio':True, 'logLevel': crawler.settings.get('LOG_LEVEL')})
-        page = await middleware.browser.newPage()
+        middleware.browser = None#await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio':True, 'logLevel': crawler.settings.get('LOG_LEVEL')})
+        middleware.download_path = None
+        # page = await middleware.browser.newPage()
         crawler.signals.connect(middleware.spider_closed, signals.spider_closed)
 
         return middleware
@@ -71,6 +79,22 @@ class PuppeteerMiddleware:
 
         return middleware
 
+    async def block_until_complete_downloads(self):
+        if not os.path.exists(self.download_path):
+            os.makedirs(self.download_path) 
+
+        def exists_pendent_downloads():
+            pendend_downloads = glob(f'{self.download_path}*.crdownload')
+            return len(pendend_downloads) > 0  
+
+        for _ in range(TIMEOUT_TO_DOWNLOAD_START):
+            await asyncio.sleep(1)
+            if exists_pendent_downloads():
+                break
+
+        while exists_pendent_downloads():
+            await asyncio.sleep(1)
+
     async def _process_request(self, request, spider):
         """Handle the request using Puppeteer
 
@@ -80,10 +104,22 @@ class PuppeteerMiddleware:
 
         try:
             page = await self.browser.newPage()
+
         except:
-            self.browser = await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio':True})
+            crawler_id = request.meta['config']['crawler_id']
+
+            # folder where the files downloaded from this crawl will be temporarily
+            self.download_path = os.path.join(os.getcwd(), f'temp_dp/{crawler_id}/') #dp = dynamic processing
+
+            self.browser = await launch()
             await self.browser.newPage()
+
             page = await self.browser.newPage()
+
+            cdp = await page._target.createCDPSession()
+            await cdp.send('Browser.setDownloadBehavior', { 'behavior': 'allow', 'downloadPath': self.download_path })
+
+        downloads_processing = set(glob(f'{self.download_path}*'))
 
         # Cookies
         if isinstance(request.cookies, dict):
@@ -101,6 +137,7 @@ class PuppeteerMiddleware:
                     'waitUntil': request.wait_until,
                 },
             )
+
         except:
             await page.close()
             raise IgnoreRequest()
@@ -118,7 +155,19 @@ class PuppeteerMiddleware:
         content = await page.content()
         body = str.encode(content)
 
+        await self.block_until_complete_downloads()
         await page.close()
+
+        url_hash = crawling_utils.hash(request.url.encode())
+        new_downloads = set(glob(f'{self.download_path}*')) - downloads_processing
+
+        for download_path in new_downloads:
+            s_download_path = download_path.split('/')
+            
+            filename = s_download_path[-1]
+            filename_renamed =  '/'.join(s_download_path[:-1]) + f'/{url_hash}_{filename}'
+
+            os.rename(download_path, filename_renamed)
 
         # Necessary to bypass the compression middleware (?)
         response.headers.pop('content-encoding', None)
@@ -130,7 +179,7 @@ class PuppeteerMiddleware:
             headers=response.headers,
             body=body,
             encoding='utf-8',
-            request=request
+            request=request,
         )
 
     def process_request(self, request, spider):
@@ -150,5 +199,8 @@ class PuppeteerMiddleware:
 
     def spider_closed(self):
         """Shutdown the browser when spider is closed"""
+        
+        # delete the temporarily folder 
+        shutil.rmtree(self.download_path, ignore_errors=True)
 
         return as_deferred(self._spider_closed())
