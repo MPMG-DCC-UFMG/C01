@@ -91,6 +91,11 @@ async def localiza_elementos(page, xpath, sufixo=""):
     return xpath_list
 
 
+@step
+async def retorna_pagina(page):
+    await page.goBack()
+
+
 async def pegue_os_links_da_paginacao(page, xpath_dos_botoes, xpath_dos_links, indice_do_botao_proximo=-1):
     clickable = True
     urls = []
