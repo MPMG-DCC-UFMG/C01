@@ -82,12 +82,12 @@ async def for_clicavel(page, xpath):
 
 
 @step
-async def elementos_filhos(page, xpath):
+async def localiza_elementos(page, xpath, sufixo=""):
     base_xpath = xpath
     xpath_list = []
     elements = await page.xpath(xpath)
     for i in range(len(elements)):
-        xpath_list.append(base_xpath + f"[{i+1}]")
+        xpath_list.append(base_xpath + f"[{i+1}]" + sufixo)
     return xpath_list
 
 
