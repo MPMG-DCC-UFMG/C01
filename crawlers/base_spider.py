@@ -35,6 +35,7 @@ PUNCTUATIONS = "[{}]".format(string.punctuation)
 KAFKA_HOST = os.environ.get('KAFKA_HOST', 'localhost')
 KAFKA_PORT = os.environ.get('KAFKA_PORT', '9092')
 
+
 class BaseSpider(scrapy.Spider):
     name = 'base_spider'
     request_session = requests.sessions.Session()
