@@ -1,5 +1,3 @@
-import environ
-from twisted.internet import asyncioreactor
 import os
 import subprocess
 import asyncio
@@ -10,6 +8,8 @@ subprocess.run(["pip", "install", "-U", "pip"])
 subprocess.run(["pip", "install", "twisted"])
 subprocess.run(["pip", "install", "django-environ"])
 
+import environ
+from twisted.internet import asyncioreactor
 
 # Initialize Django-environ to read settings from environment variables
 env = environ.Env(
