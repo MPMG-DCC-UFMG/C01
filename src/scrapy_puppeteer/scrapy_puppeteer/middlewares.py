@@ -33,8 +33,10 @@ from scrapy.http import HtmlResponse
 from twisted.internet.defer import AlreadyCalledError, Deferred
 from promise import Promise
 from scrapy.exceptions import CloseSpider, IgnoreRequest
+from pyppeteer import __chromium_revision__
 
 from .http import PuppeteerRequest
+from .chromium_downloader import chromium_executable
 
 import crawling_utils
 
@@ -115,7 +117,7 @@ class PuppeteerMiddleware:
             # folder where the files downloaded from this crawl will be temporarily
             self.download_path = os.path.join(os.getcwd(), f'temp_dp/{crawler_id}/') #dp = dynamic processing
 
-            self.browser = await launch()
+            self.browser = await launch(executablePath=chromium_executable())
             await self.browser.newPage()
 
             page = await self.browser.newPage()
