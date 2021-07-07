@@ -44,6 +44,7 @@ def run_django():
     # Runs django repassing cli parameters
     subprocess.run(["python", "manage.py", "runserver"] + sys.argv[1:])
 
+
 def run_zookeeper():
     crawling_utils.check_file_path("crawlers/log/")
     os.chdir('kafka_2.13-2.4.0')
@@ -67,6 +68,7 @@ def run_kafka():
                     'log.dirs=kafka-logs'],
                    stdout=open(f"../crawlers/log/kafka.out", "a", buffering=1),
                    stderr=open(f"../crawlers/log/kafka.err", "a", buffering=1))
+
 
 def run_file_descriptor():
     wait_for_port(9092)

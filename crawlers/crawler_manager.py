@@ -27,6 +27,7 @@ from crawlers.constants import *
 # antiblock_cookies_file
 # antiblock_persist_cookies
 
+
 def create_folders(data_path):
     """Create essential folders for crawlers if they do not exists"""
     files = [
