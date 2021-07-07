@@ -46,7 +46,7 @@ class Parser:
 
     def number_of_fields(self) -> int:
         """Returns the number of fields in the form"""
-        return len(self.form.xpath("//input | //select"))
+        return len(self.form.xpath(".//input | .//select"))
 
     def fields(self) -> dict:
         """Returns form fields as dictionary
@@ -59,9 +59,9 @@ class Parser:
         field_types = self.unique_field_types()
         for input_type in field_types:
             if input_type == 'select':
-                inputs[input_type] = self.form.xpath("//select")
+                inputs[input_type] = self.form.xpath(".//select")
             else:
-                inputs[input_type] = self.form.xpath("//input[@type='" +
+                inputs[input_type] = self.form.xpath(".//input[@type='" +
                                                      input_type + "']")
         return inputs
 
@@ -72,7 +72,7 @@ class Parser:
     def list_input_types(self) -> list:
         """Returns input types as [`lxml.etree._ElementUnicodeResult`]"""
         input_types_list = []
-        for field_type in self.form.xpath("//input/@type | //select"):
+        for field_type in self.form.xpath(".//input/@type | .//select"):
             if not isinstance(field_type, str):
                 input_types_list.append('select')
             else:
@@ -86,7 +86,7 @@ class Parser:
             [field1, field2, ...]
             Example: [name, phone, year, ...]
         """
-        return self.form.xpath("//input | //select")
+        return self.form.xpath(".//input | .//select")
 
     def list_field_labels(self) -> list:
         """Returns list of form fields' labels
@@ -94,7 +94,7 @@ class Parser:
         Returns:
             List of field labels
         """
-        return [label.text for label in self.form.xpath("//label")]
+        return [label.text for label in self.form.xpath(".//label")]
 
     def required_fields(self, probing_element=None, submit_button_xpath=None,
                         form_url=None, fillers=None, include_hidden=False,
@@ -119,7 +119,7 @@ class Parser:
         Returns:
             Returns required fields as a list of xpaths [`str`]
         """
-        tagged_fields = self.form.xpath("//input[@required]")
+        tagged_fields = self.form.xpath(".//input[@required]")
 
         if probing_element is None:
             probing_element = 'encont'
@@ -154,11 +154,11 @@ class Parser:
 
     def select_fields(self) -> list:
         """Returns select fields as [`lxml.etree._Element`]"""
-        return self.form.xpath("//select")
+        return self.form.xpath(".//select")
 
     def option_fields(self) -> list:
         """Returns select fields' options  as [`lxml.etree._Element`]"""
-        return self.form.xpath("//select/option")
+        return self.form.xpath(".//select/option")
 
     def select_with_option_fields(self) -> defaultdict:
         """Returns select fields and options as defaultdict"""
@@ -170,15 +170,15 @@ class Parser:
 
     def void_options(self) -> list:
         """Returns select fields' void options as list"""
-        return self.form.xpath("//select/option[normalize-space(.)='']")
+        return self.form.xpath(".//select/option[normalize-space(.)='']")
 
     def submit_button(self) -> list:
         """Returns submit button"""
-        return self.form.xpath("//input[@type='submit']")
+        return self.form.xpath(".//input[@type='submit']")
 
     def page_buttons(self) -> list:
         """Returns a list of buttons"""
-        return self.form.xpath("//input[@class='button']")
+        return self.form.xpath(".//input[@class='button']")
 
     def dynamic_fields(self, form_url=None, dynamic_types=None) -> dict:
         """Returns dict of dynamic form fields. The keys show the

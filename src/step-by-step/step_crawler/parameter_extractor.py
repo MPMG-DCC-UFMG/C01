@@ -53,9 +53,10 @@ def get_module_functions(module):
             Module functions.
     """
     result = []
-    for attr in dir(module):
-        if type(getattr(module, attr)).__name__ == "function":
-            result.append(getattr(module, attr))
+    for attr_name in dir(module):
+        attr = getattr(module, attr_name)
+        if type(attr).__name__ == "function" and hasattr(attr, "is_step"):
+            result.append(attr)
     return result
 
 

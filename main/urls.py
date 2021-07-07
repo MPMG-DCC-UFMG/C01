@@ -24,6 +24,8 @@ urlpatterns = [
     path("export_config/<str:instance_id>", views.export_config, name="export_config"),
 
 
+    path("info/form_fields", views.load_form_fields, name="load_form_fields"),
+
     # Includes the API endpoints in the URLs
     url(r'^api/', include(api_router.urls)),
 ]

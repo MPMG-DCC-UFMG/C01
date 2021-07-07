@@ -69,17 +69,17 @@ class TestExtractInfo(unittest.TestCase):
         result = cg.generate_body(
             recipe_examples['unbreakable_between_breakable']['recipe'], ff)
         expected_result = "    for i in [1, 2, 3]:\n"
-        expected_result += "        for j in range_(stop = 2):\n"
-        expected_result += "            for k in range_(stop = 2):\n"
-        expected_result += "                print_(word = \"teste\")\n"
+        expected_result += "        for j in repete(vezes = 2):\n"
+        expected_result += "            for k in repete(vezes = 2):\n"
+        expected_result += "                imprime(texto = \"teste\")\n"
         self.assertEqual(expected_result, result)
 
         result = cg.generate_body(atom.extend(
             recipe_examples['unbreakable_between_breakable']['recipe'])[0], ff)
         expected_result = "    i = 1\n"
-        expected_result += "    for j in range_(stop = 2):\n"
+        expected_result += "    for j in repete(vezes = 2):\n"
         expected_result += "        k = 0\n"
-        expected_result += "        print_(word = \"teste\")\n"
+        expected_result += "        imprime(texto = \"teste\")\n"
         self.assertEqual(expected_result, result)
 
         result = cg.generate_body(atom.extend(
@@ -87,7 +87,7 @@ class TestExtractInfo(unittest.TestCase):
         expected_result = "    limit = 0\n"
         expected_result += "    while True == 1 and limit < 5:\n"
         expected_result += "        limit += 1\n"
-        expected_result += "        print_(word = \"teste\")\n"
+        expected_result += "        imprime(texto = \"teste\")\n"
         self.assertEqual(expected_result, result)
 
     def test_generate_for(self):
@@ -96,9 +96,9 @@ class TestExtractInfo(unittest.TestCase):
 
 
         expected_result = "    for i in [1, 2, 3]:\n"
-        expected_result += "        for j in range_(stop = 2):\n"
-        expected_result += "            for k in range_(stop = 2):\n"
-        expected_result += "                print_(word = \"teste\")\n"
+        expected_result += "        for j in repete(vezes = 2):\n"
+        expected_result += "            for k in repete(vezes = 2):\n"
+        expected_result += "                imprime(texto = \"teste\")\n"
 
         result = cg.generate_para_cada(recipe_examples['unbreakable_between_breakable']['recipe']['children'][0], ff)
 
@@ -116,10 +116,10 @@ class TestExtractInfo(unittest.TestCase):
     #     code += "execute_steps(**missing_arguments):\n"
     #     code += "    pages = {}\n"
     #     code += "    page = missing_arguments['page']\n"
-    #     code += "    for i in range_(stop = 2):\n"
-    #     code += "        for j in range_(stop = 2):\n"
-    #     code += "            for k in range_(stop = 2):\n"
-    #     code += "                print_(word = \"teste\")\n"
+    #     code += "    for i in repete(vezes = 2):\n"
+    #     code += "        for j in repete(vezes = 2):\n"
+    #     code += "            for k in repete(vezes = 2):\n"
+    #     code += "                imprime(texto = \"teste\")\n"
     #     code += "    return pages"
 
 

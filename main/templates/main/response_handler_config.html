@@ -1,6 +1,6 @@
 {% load crispy_forms_tags %}
 
-<div class="templated-url-resp-step bordered-bottom-option">
+<div class="resp-step bordered-bottom-option">
     {% for hidden_field in form.hidden_fields %}
         {{ hidden_field }}
     {% endfor %}
@@ -8,15 +8,15 @@
         {{ form.DELETE }}
     {% endif %}
     {{ form.handler_type | as_crispy_field }}
-    <div class="templated-url-response-params indented-subblock"
+    <div class="response-params indented-subblock"
          data-option-type="text" hidden>
         {{ form.text_match_value | as_crispy_field }}
     </div>
-    <div class="templated-url-response-params indented-subblock"
+    <div class="response-params indented-subblock"
          data-option-type="http_status" hidden>
         {{ form.http_status | as_crispy_field }}
     </div>
-    <div class="templated-url-response-params indented-subblock"
+    <div class="response-params indented-subblock"
          data-option-type="binary" hidden>
     </div>
     {{ form.opposite | as_crispy_field}}

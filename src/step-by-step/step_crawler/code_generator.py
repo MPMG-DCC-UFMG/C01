@@ -22,7 +22,6 @@ def generate_para_cada(child, module):
     code += generate_body(child, module)
     return code
 
-
 def generate_if(child, module):
     code = ''
     code += child['depth'] * '    ' + 'if '
