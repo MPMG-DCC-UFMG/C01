@@ -23,7 +23,13 @@ env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False),
     DJANGO_ALLOWED_HOSTS=(list, ['*']),
-    LOG_TO_FILE=(bool, False)
+    LOG_TO_FILE=(bool, False),
+    SQL_ENGINE=(str, "django.db.backends.sqlite3"),
+    SQL_DATABASE=(str, os.path.join(BASE_DIR, "db.sqlite3")),
+    SQL_USER=(str, "user"),
+    SQL_PASSWORD=(str, "password"),
+    SQL_HOST=(str, "localhost"),
+    SQL_PORT=(str, "5432"),
 )
 # reading .env file
 environ.Env.read_env()
@@ -91,12 +97,12 @@ WSGI_APPLICATION = 'interface.wsgi.application'
 
 DATABASES = {
     "default": {
-        "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
-        "NAME": os.environ.get("SQL_DATABASE", os.path.join(BASE_DIR, "db.sqlite3")),
-        "USER": os.environ.get("SQL_USER", "user"),
-        "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
-        "HOST": os.environ.get("SQL_HOST", "localhost"),
-        "PORT": os.environ.get("SQL_PORT", "5432"),
+        "ENGINE": env("SQL_ENGINE"),
+        "NAME": env("SQL_DATABASE"),
+        "USER": env("SQL_USER"),
+        "PASSWORD": env("SQL_PASSWORD"),
+        "HOST": env("SQL_HOST"),
+        "PORT": env("SQL_PORT"),
     }
 }
 

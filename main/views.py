@@ -285,9 +285,18 @@ def run_crawl(request, crawler_id):
 
 
 def tail_log_file(request, instance_id):
-    crawler_id = CrawlerInstance.objects.filter(
+    crawler = CrawlerInstance.objects.filter(
         instance_id=instance_id
-    ).values()[0]["crawler_id_id"]
+    ).values().first()
+
+    if not crawler:
+        return JsonResponse({
+            "out": '',
+            "err": '',
+            "time": str(datetime.fromtimestamp(time.time())),
+        })
+
+    crawler_id = crawler["crawler_id_id"]
 
     config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
     data_path = config["data_path"]

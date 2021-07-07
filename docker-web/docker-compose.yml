@@ -5,12 +5,13 @@ services:
     build:
       context: ..
       dockerfile: ./docker-web/django-gunicorn.Dockerfile
-    # TODO Change to use gunicorn directly when FileDescriptor is dockerized
-    command: ./temp_run.sh
-    environment:
-      - EXECUTION_TYPE=distributed
+    command: ./django_run.sh
     volumes:
       - static_volume:/home/django/C01/staticfiles
+      - data:/data
+    environment:
+      KAFKA_HOST: kafka
+      KAFKA_PORT: 9092
     expose:
       - 8000
     depends_on:
@@ -34,7 +35,48 @@ services:
       - .env.prod
     ports:
       - "5432:5432"
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    restart: always
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      # The following partition/replication factor values are just for testing
+      # and should be properly decided upon in the future (a replication factor
+      # > 1 requires more brokers)
+      KAFKA_CREATE_TOPICS: "file_description:1:1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - zookeeper
+    restart: always
+  file_descriptor:
+    build:
+      context: ..
+      dockerfile: ./docker-web/file-descriptor.Dockerfile
+    command: python3 -m kafka_interface.start_descriptor
+    volumes:
+      - data:/data
+    environment:
+      KAFKA_HOST: kafka
+      KAFKA_PORT: 9092
+    depends_on:
+      - kafka
+    restart: on-failure
 
 volumes:
   static_volume:
+  data:
   postgres_data:

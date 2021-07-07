@@ -15,8 +15,6 @@ from multiprocessing import Process
 # Project libs
 import crawling_utils.crawling_utils as crawling_utils
 from crawlers.constants import *
-from crawlers.file_descriptor import FileDescriptor
-
 
 # TODO: implement following antiblock options
 # antiblock_mask_type
@@ -28,14 +26,6 @@ from crawlers.file_descriptor import FileDescriptor
 # antiblock_user_agents_file
 # antiblock_cookies_file
 # antiblock_persist_cookies
-
-def file_descriptor_process():
-    """Redirects descriptor output and starts descriptor consumer loop."""
-    crawling_utils.check_file_path("crawlers/log/")
-    sys.stdout = open(f"crawlers/log/file_descriptor.out", "w+", buffering=1)
-    sys.stderr = open(f"crawlers/log/file_descriptor.err", "w+", buffering=1)
-    FileDescriptor.description_consumer()
-
 
 def create_folders(data_path):
     """Create essential folders for crawlers if they do not exists"""

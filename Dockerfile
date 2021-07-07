@@ -12,6 +12,7 @@ COPY main main
 COPY interface interface
 COPY crawlers crawlers
 COPY zoo.properties zoo.properties
+COPY kafka_interface kafka_interface
 
 EXPOSE 8000
 RUN python install.py

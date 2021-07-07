@@ -16,6 +16,7 @@ env = environ.Env(
     # set casting, default value
     INSTALL_REDIS=(bool, True),
     INSTALL_KAFKA=(bool, True),
+    EXECUTION_TYPE=(str, "standalone"),
 )
 # reading .env file
 environ.Env.read_env(env_file='interface/.env')
@@ -65,7 +66,7 @@ try:
 except Exception:
     pass
 
-if os.environ.get("EXECUTION_TYPE", "standalone") == "standalone":
+if env("EXECUTION_TYPE") == "standalone":
     print(f"Creating database...")
     subprocess.run(["python", "manage.py", "makemigrations"])
     subprocess.run(["python", "manage.py", "migrate"])

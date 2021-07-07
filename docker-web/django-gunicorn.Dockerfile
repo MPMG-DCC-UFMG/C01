@@ -31,15 +31,17 @@ COPY src src
 COPY main main
 COPY interface interface
 COPY crawlers crawlers
-# TODO Remove when FileDescriptor is dockerized
-COPY docker-web/temp_file_consumer.py ./temp_file_consumer.py
 
 RUN mkdir logs
 
 # Copy the env file for Django
 COPY docker-web/.env.prod interface/.env
 
+ENV EXECUTION_TYPE=distributed
 RUN python3 install.py
+
+RUN mkdir /data
+RUN chown django:django /data
 
 # Install gunicorn for integration with Nginx
 RUN pip install gunicorn
@@ -47,12 +49,12 @@ RUN pip install gunicorn
 # Copy the gunicorn configuration file
 COPY docker-web/gunicorn.conf.py ./gunicorn.conf.py
 
-# TODO Remove when FileDescriptor is dockerized
-COPY docker-web/temp_run.sh ./temp_run.sh
-RUN chmod +x temp_run.sh
+# Copy the kafka interface files
+COPY kafka_interface kafka_interface
+COPY docker-web/django_run.sh ./django_run.sh
+RUN chmod +x django_run.sh
 
 RUN chown -R django:django $APP_HOME
-# RUN chown -R django:django /tmp/tika.log
 USER django
 
 RUN python3 manage.py collectstatic --no-input --clear
