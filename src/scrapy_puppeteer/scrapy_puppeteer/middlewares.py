@@ -117,7 +117,7 @@ class PuppeteerMiddleware:
             # folder where the files downloaded from this crawl will be temporarily
             self.download_path = os.path.join(os.getcwd(), f'temp_dp/{crawler_id}/') #dp = dynamic processing
 
-            self.browser = await launch(executablePath=chromium_executable())
+            self.browser = await launch() #executablePath=chromium_executable())
             await self.browser.newPage()
 
             page = await self.browser.newPage()
@@ -184,7 +184,7 @@ class PuppeteerMiddleware:
             await client.send("Network.setRequestInterception",
                 {"patterns": patterns})
 
-        await setup_request_interceptor(page)
+        # await setup_request_interceptor(page)
 
         try:
             response = await page.goto(
