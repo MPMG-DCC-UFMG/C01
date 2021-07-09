@@ -12,7 +12,6 @@ import itertools
 import logging
 import os
 import re
-import pandas
 import time
 from lxml.html.clean import Cleaner
 import urllib.parse as urlparse
