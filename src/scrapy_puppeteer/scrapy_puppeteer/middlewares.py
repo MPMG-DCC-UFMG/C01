@@ -17,6 +17,7 @@ except Exception:
 import logging
 import requests
 
+import base64
 import sys
 import os
 import time
@@ -140,40 +141,41 @@ class PuppeteerMiddleware:
         # For some reason the regular method with setRequestInterception and
         # page.on('request', callback) doesn't work, I had to use this instead.
         # This directly manipulates the lower level modules in the pyppeteer
-        # page to achieve the results. Details on this workaround here:
+        # page to achieve the results. Details on this workaround here (I have
+        # changed the code so it no longer uses the deprecated 'Network'
+        # domain, using 'Fetch' instead):
         # https://github.com/pyppeteer/pyppeteer/issues/198#issuecomment-750221057
         async def setup_request_interceptor(page) -> None:
             client = page._networkManager._client
 
             async def intercept(event) -> None:
-                interception_id = event["interceptionId"]
+                request_id = event["requestId"]
 
                 try:
                     int_req = event["request"]
                     url = int_req["url"]
 
-                    options = {"interceptionId": interception_id}
+                    options = {"requestId": request_id}
                     options['method'] = request.method
 
                     if request.body:
-                        options['postData'] = request.body.decode('utf-8')
+                        # The post data must be base64 encoded
+                        b64_encoded = base64.b64encode(request.body)
+                        options['postData'] = b64_encoded.decode('utf-8')
 
-                    await client.send("Network.continueInterceptedRequest",
-                        options)
+                    await client.send("Fetch.continueRequest", options)
                 except:
                     # If everything fails we need to be sure to continue the
                     # request anyway, else the browser hangs
                     options = {
-                        "interceptionId": interception_id,
+                        "requestId": request_id,
                         "errorReason": "BlockedByClient"
                     }
-                    await client.send("Network.continueInterceptedRequest",
-                        options)
+                    await client.send("Fetch.failRequest", options)
 
 
             # Setup request interception for all requests.
-            client.on(
-                "Network.requestIntercepted",
+            client.on("Fetch.requestPaused",
                 lambda event: client._loop.create_task(intercept(event)),
             )
 
@@ -181,10 +183,12 @@ class PuppeteerMiddleware:
             # (else it would capture requests for external resources such as
             # scripts, stylesheets, images, etc)
             patterns = [{"urlPattern": request.url}]
-            await client.send("Network.setRequestInterception",
-                {"patterns": patterns})
+            await client.send("Fetch.enable", {"patterns": patterns})
 
-        # await setup_request_interceptor(page)
+        async def stop_request_interceptor(page) -> None:
+            await page._networkManager._client.send("Fetch.disable")
+
+        await setup_request_interceptor(page)
 
         try:
             response = await page.goto(
@@ -197,6 +201,9 @@ class PuppeteerMiddleware:
         except:
             await page.close()
             raise IgnoreRequest()
+
+        # Stop intercepting following requests
+        await stop_request_interceptor(page)
 
         if request.screenshot:
             request.meta['screenshot'] = await page.screenshot()
@@ -219,7 +226,7 @@ class PuppeteerMiddleware:
 
         for download_path in new_downloads:
             s_download_path = download_path.split('/')
-            
+
             filename = s_download_path[-1]
             filename_renamed =  '/'.join(s_download_path[:-1]) + f'/{url_hash}_{filename}'
 
