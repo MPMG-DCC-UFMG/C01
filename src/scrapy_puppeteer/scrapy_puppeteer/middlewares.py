@@ -229,6 +229,8 @@ class PuppeteerMiddleware:
         await self.block_until_complete_downloads()
         await page.close()
 
+        # Files downloaded from this page are renamed with the hash of the url where they were downloaded. 
+        # Thus, in the spider, it is possible to identify the origin of each file.
         url_hash = crawling_utils.hash(request.url.encode())
         new_downloads = set(glob(f'{self.download_path}*')) - downloads_processing
 

@@ -321,6 +321,7 @@ class BaseSpider(scrapy.Spider):
         self.create_and_feed_file_description(response.url, file_name, response.meta["referer"], extension)
 
     def process_dynamic_downloads(self, downloads: list, response: Response):
+        # Move files from one temporary folder to the correct one.
         data_path = self.config['data_path'] + '/data/files/'
         for download in downloads:
             ext = download.split('.')[-1]
@@ -333,6 +334,8 @@ class BaseSpider(scrapy.Spider):
             self.create_and_feed_file_description('<triggered by dynamic page click>', filename, response.request.url, ext)
 
     def verify_dynamic_downloads(self, response: Response):
+        # Checks the temporary folder for files with the prefix (hash) of the collected page. 
+        # Those found are moved to the correct collector folder, generating the appropriate description.
         url_src = response.request.url 
 
         crawler_id = self.config['crawler_id']
