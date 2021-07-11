@@ -12,7 +12,7 @@ import re
 import json
 import requests
 import time
-import os 
+import os
 
 # Checks if an url is valid
 import validators
