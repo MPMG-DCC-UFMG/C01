@@ -156,7 +156,7 @@ def download_chromium() -> None:
     """Download and extract chromium."""
     extract_zip(download_zip(get_url()), f'{DOWNLOADS_FOLDER}/{REVISION}')
 
-def chromium_executable() -> str:
+def chromium_executable() -> Path:
     """Get path of the chromium executable."""
 
     executable = chromiumExecutable[current_platform()]

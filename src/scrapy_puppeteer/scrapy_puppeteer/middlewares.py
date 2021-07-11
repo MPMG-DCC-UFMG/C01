@@ -41,7 +41,9 @@ from .chromium_downloader import chromium_executable
 
 import crawling_utils
 
-TIMEOUT_TO_DOWNLOAD_START = 5
+# For the system to wait up to TIMEOUT_TO_DOWNLOAD_START
+# seconds for a download to start. The value below is arbitrary
+TIMEOUT_TO_DOWNLOAD_START = 7
 
 def as_deferred(f):
     """Transform a Twisted Deffered to an Asyncio Future"""
@@ -87,10 +89,15 @@ class PuppeteerMiddleware:
         return middleware
 
     async def block_until_complete_downloads(self):
+        """Blocks the flow of execution until all files are downloaded.
+        """
+
         if not os.path.exists(self.download_path):
             os.makedirs(self.download_path) 
 
         def exists_pendent_downloads():
+            # Pending downloads in chrome have the .crdownload extension. 
+            # So, if any of these files exist, we know that a download is running.
             pendend_downloads = glob(f'{self.download_path}*.crdownload')
             return len(pendend_downloads) > 0  
 
@@ -115,10 +122,11 @@ class PuppeteerMiddleware:
         except:
             crawler_id = request.meta['config']['crawler_id']
 
-            # folder where the files downloaded from this crawl will be temporarily
-            self.download_path = os.path.join(os.getcwd(), f'temp_dp/{crawler_id}/') #dp = dynamic processing
+            # Folder where the files downloaded from this crawl will be temporarily
+            # dp : dynamic processing
+            self.download_path = os.path.join(os.getcwd(), f'temp_dp/{crawler_id}/') 
 
-            self.browser = await launch() #executablePath=chromium_executable())
+            self.browser = await launch(executablePath=chromium_executable())
             await self.browser.newPage()
 
             page = await self.browser.newPage()
