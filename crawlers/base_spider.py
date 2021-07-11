@@ -12,6 +12,7 @@ import json
 import itertools
 import os
 import re
+import time
 from lxml.html.clean import Cleaner
 import mimetypes
 import requests
