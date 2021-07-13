@@ -66,7 +66,7 @@ services:
     build:
       context: ..
       dockerfile: ./docker-web/file-descriptor.Dockerfile
-    command: python3 -m kafka_interface.start_descriptor
+    command: python3 -m broker_interface.start_descriptor
     volumes:
       - data:/data
     environment:

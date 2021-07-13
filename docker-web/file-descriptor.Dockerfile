@@ -12,7 +12,7 @@ RUN useradd --create-home --home-dir $HOME descriptor
 
 WORKDIR $HOME
 
-COPY kafka_interface kafka_interface
+COPY broker_interface broker_interface
 RUN chown -R descriptor:descriptor $HOME
 
 RUN mkdir /data

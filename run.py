@@ -7,7 +7,7 @@ import subprocess
 import sys
 import time
 
-from kafka_interface.start_descriptor import start_consumer_process
+from broker_interface.start_descriptor import start_consumer_process
 
 import crawling_utils.crawling_utils as crawling_utils
 

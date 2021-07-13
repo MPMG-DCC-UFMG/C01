@@ -50,7 +50,7 @@ RUN pip install gunicorn
 COPY docker-web/gunicorn.conf.py ./gunicorn.conf.py
 
 # Copy the kafka interface files
-COPY kafka_interface kafka_interface
+COPY broker_interface broker_interface
 COPY docker-web/django_run.sh ./django_run.sh
 RUN chmod +x django_run.sh
 

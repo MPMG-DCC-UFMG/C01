@@ -24,7 +24,7 @@ import crawling_utils
 
 from crawlers.constants import *
 
-from kafka_interface.file_description_producer import FileDescriptionProducer
+from broker_interface.file_description_producer import FileDescriptionProducer
 from crawlers.injector_tools import create_probing_object,\
     create_parameter_generators
 
