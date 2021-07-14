@@ -66,11 +66,19 @@ class PuppeteerMiddleware:
         :crawler(Crawler object): crawler that uses this middleware
         """
 
+        CRAWLER_ID = crawler.settings.get('CRAWLER_ID')
+
         middleware = cls()
-        # await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio':True, 'logLevel': crawler.settings.get('LOG_LEVEL')})
-        middleware.browser = None
-        middleware.download_path = None
-        # page = await middleware.browser.newPage()
+        middleware.browser = await launch(executablePath=chromium_executable())
+
+        # Folder where the files downloaded from this crawl will be temporarily
+        # dp : dynamic processing
+        middleware.download_path = os.path.join(os.getcwd(), f'temp_dp/{CRAWLER_ID}/')
+
+        page = await middleware.browser.newPage()
+
+        cdp = await page._target.createCDPSession()
+        await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allow', 'downloadPath': middleware.download_path})
 
         crawler.signals.connect(middleware.spider_closed, signals.spider_closed)
 
@@ -118,24 +126,7 @@ class PuppeteerMiddleware:
         :spider: The spider using this middleware
         """
 
-        try:
-            page = await self.browser.newPage()
-
-        except:
-            crawler_id = request.meta['config']['crawler_id']
-
-            # Folder where the files downloaded from this crawl will be temporarily
-            # dp : dynamic processing
-            self.download_path = os.path.join(os.getcwd(), f'temp_dp/{crawler_id}/')
-
-            self.browser = await launch(executablePath=chromium_executable())
-            await self.browser.newPage()
-
-            page = await self.browser.newPage()
-
-            cdp = await page._target.createCDPSession()
-            await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allow', 'downloadPath': self.download_path})
-
+        page = await self.browser.newPage()
         downloads_processing = set(glob(f'{self.download_path}*'))
 
         # Cookies
@@ -270,12 +261,12 @@ class PuppeteerMiddleware:
         return as_deferred(self._process_request(request, spider))
 
     async def _spider_closed(self):
+        # delete the temporarily folder
+        shutil.rmtree(self.download_path, ignore_errors=True)
         await self.browser.close()
 
     def spider_closed(self):
         """Shutdown the browser when spider is closed"""
 
-        # delete the temporarily folder
-        shutil.rmtree(self.download_path, ignore_errors=True)
 
         return as_deferred(self._spider_closed())

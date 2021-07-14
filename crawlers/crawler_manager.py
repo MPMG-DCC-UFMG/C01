@@ -69,6 +69,8 @@ def get_crawler_base_settings(config):
 
     if config.get("dynamic_processing", False):
         settings["DOWNLOADER_MIDDLEWARES"] = {'scrapy_puppeteer.PuppeteerMiddleware': 800}
+        settings["CRAWLER_ID"] = config["crawler_id"]
+        
     return settings
 
 
