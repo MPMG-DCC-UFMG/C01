@@ -226,7 +226,6 @@ class PuppeteerMiddleware:
         content = await page.content()
         body = str.encode(content)
 
-        await self.block_until_complete_downloads()
         await page.close()
 
         # Files downloaded from this page are renamed with the hash of the url where they were downloaded. 
@@ -268,6 +267,7 @@ class PuppeteerMiddleware:
         return as_deferred(self._process_request(request, spider))
 
     async def _spider_closed(self):
+        await self.block_until_complete_downloads()
         await self.browser.close()
 
     def spider_closed(self):
