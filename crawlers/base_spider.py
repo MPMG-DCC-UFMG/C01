@@ -12,6 +12,7 @@ import json
 import itertools
 import os
 import re
+import time
 from lxml.html.clean import Cleaner
 import mimetypes
 import requests
@@ -326,21 +327,22 @@ class BaseSpider(scrapy.Spider):
         for download in downloads:
             ext = download.split('.')[-1]
             filename = uuid.uuid4().hex + f'.{ext}'
-            
-            # 
+
+            #
             dest = data_path + filename
             os.replace(download, dest)
 
-            self.create_and_feed_file_description('<triggered by dynamic page click>', filename, response.request.url, ext)
+            self.create_and_feed_file_description('<triggered by dynamic page click>',
+                                                  filename, response.request.url, ext)
 
     def verify_dynamic_downloads(self, response: Response):
-        # Checks the temporary folder for files with the prefix (hash) of the collected page. 
+        # Checks the temporary folder for files with the prefix (hash) of the collected page.
         # Those found are moved to the correct collector folder, generating the appropriate description.
-        url_src = response.request.url 
+        url_src = response.request.url
 
         crawler_id = self.config['crawler_id']
-        download_path = os.path.join(os.getcwd(), f'temp_dp/{crawler_id}/') #dp = dynamic processing
- 
+        download_path = os.path.join(os.getcwd(), f'temp_dp/{crawler_id}/')  # dp = dynamic processing
+
         url_hash = crawling_utils.hash(url_src.encode())
 
         downloads = glob(f'{download_path}{url_hash}_*')

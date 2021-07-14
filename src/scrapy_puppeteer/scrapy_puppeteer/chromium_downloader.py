@@ -12,6 +12,9 @@ However, it is not possible to do this automatically in python.
 Pyppeteer uses chromium version incompatible 
 """
 
+
+
+
 from io import BytesIO
 import logging
 import os
@@ -20,15 +23,12 @@ import stat
 import sys
 from zipfile import ZipFile
 from pyppeteer.launcher import executablePath
-
 import urllib3
 from tqdm import tqdm
-
 from pyppeteer import __chromium_revision__, __pyppeteer_home__
-
 logger = logging.getLogger(__name__)
 
-DOWNLOADS_FOLDER = os.path.join(os.getcwd(), 'local-chromium') 
+DOWNLOADS_FOLDER = os.path.join(os.getcwd(), 'local-chromium')
 
 DOWNLOAD_HOST = 'https://storage.googleapis.com'
 
@@ -54,6 +54,7 @@ chromiumExecutable = {
     'win32': f'{DOWNLOADS_FOLDER}/{REVISION}/{windowsArchive}/chrome.exe',
     'win64': f'{DOWNLOADS_FOLDER}/{REVISION}/{windowsArchive}/chrome.exe',
 }
+
 
 def current_platform() -> str:
     """Get current platform name by short string."""
@@ -148,13 +149,15 @@ def extract_zip(data: BytesIO, path: Path) -> None:
     if not os.path.exists(exec_path):
         raise IOError('Failed to extract chromium.')
 
-    os.chmod(exec_path, os.stat(exec_path).st_mode  | stat.S_IXOTH | stat.S_IXGRP | stat.S_IXUSR)
+    os.chmod(exec_path, os.stat(exec_path).st_mode | stat.S_IXOTH | stat.S_IXGRP | stat.S_IXUSR)
 
     logger.warning(f'chromium extracted to: {path}')
+
 
 def download_chromium() -> None:
     """Download and extract chromium."""
     extract_zip(download_zip(get_url()), f'{DOWNLOADS_FOLDER}/{REVISION}')
+
 
 def chromium_executable() -> Path:
     """Get path of the chromium executable."""
@@ -162,6 +165,6 @@ def chromium_executable() -> Path:
     executable = chromiumExecutable[current_platform()]
 
     if not os.path.exists(executable):
-        download_chromium()    
+        download_chromium()
 
     return executable

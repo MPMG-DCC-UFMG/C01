@@ -45,6 +45,7 @@ import crawling_utils
 # seconds for a download to start. The value below is arbitrary
 TIMEOUT_TO_DOWNLOAD_START = 7
 
+
 def as_deferred(f):
     """Transform a Twisted Deffered to an Asyncio Future"""
 
@@ -66,7 +67,8 @@ class PuppeteerMiddleware:
         """
 
         middleware = cls()
-        middleware.browser = None#await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio':True, 'logLevel': crawler.settings.get('LOG_LEVEL')})
+        # await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio':True, 'logLevel': crawler.settings.get('LOG_LEVEL')})
+        middleware.browser = None
         middleware.download_path = None
         # page = await middleware.browser.newPage()
 
@@ -93,13 +95,13 @@ class PuppeteerMiddleware:
         """
 
         if not os.path.exists(self.download_path):
-            os.makedirs(self.download_path) 
+            os.makedirs(self.download_path)
 
         def exists_pendent_downloads():
-            # Pending downloads in chrome have the .crdownload extension. 
+            # Pending downloads in chrome have the .crdownload extension.
             # So, if any of these files exist, we know that a download is running.
             pendend_downloads = glob(f'{self.download_path}*.crdownload')
-            return len(pendend_downloads) > 0  
+            return len(pendend_downloads) > 0
 
         for _ in range(TIMEOUT_TO_DOWNLOAD_START):
             await asyncio.sleep(1)
@@ -124,7 +126,7 @@ class PuppeteerMiddleware:
 
             # Folder where the files downloaded from this crawl will be temporarily
             # dp : dynamic processing
-            self.download_path = os.path.join(os.getcwd(), f'temp_dp/{crawler_id}/') 
+            self.download_path = os.path.join(os.getcwd(), f'temp_dp/{crawler_id}/')
 
             self.browser = await launch(executablePath=chromium_executable())
             await self.browser.newPage()
@@ -132,7 +134,7 @@ class PuppeteerMiddleware:
             page = await self.browser.newPage()
 
             cdp = await page._target.createCDPSession()
-            await cdp.send('Browser.setDownloadBehavior', { 'behavior': 'allow', 'downloadPath': self.download_path })
+            await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allow', 'downloadPath': self.download_path})
 
         downloads_processing = set(glob(f'{self.download_path}*'))
 
@@ -185,7 +187,7 @@ class PuppeteerMiddleware:
             # Setup request interception for all requests.
             client.on("Fetch.requestPaused",
                 lambda event: client._loop.create_task(intercept(event)),
-            )
+                      )
 
             # Set this up so that only the initial request is intercepted
             # (else it would capture requests for external resources such as
@@ -228,7 +230,7 @@ class PuppeteerMiddleware:
 
         await page.close()
 
-        # Files downloaded from this page are renamed with the hash of the url where they were downloaded. 
+        # Files downloaded from this page are renamed with the hash of the url where they were downloaded.
         # Thus, in the spider, it is possible to identify the origin of each file.
         url_hash = crawling_utils.hash(request.url.encode())
         new_downloads = set(glob(f'{self.download_path}*')) - downloads_processing
@@ -237,7 +239,7 @@ class PuppeteerMiddleware:
             s_download_path = download_path.split('/')
 
             filename = s_download_path[-1]
-            filename_renamed =  '/'.join(s_download_path[:-1]) + f'/{url_hash}_{filename}'
+            filename_renamed = '/'.join(s_download_path[:-1]) + f'/{url_hash}_{filename}'
 
             os.rename(download_path, filename_renamed)
 
@@ -272,8 +274,8 @@ class PuppeteerMiddleware:
 
     def spider_closed(self):
         """Shutdown the browser when spider is closed"""
-        
-        # delete the temporarily folder 
+
+        # delete the temporarily folder
         shutil.rmtree(self.download_path, ignore_errors=True)
 
         return as_deferred(self._spider_closed())
