@@ -69,7 +69,9 @@ def get_crawler_base_settings(config):
 
     if config.get("dynamic_processing", False):
         settings["DOWNLOADER_MIDDLEWARES"] = {'scrapy_puppeteer.PuppeteerMiddleware': 800}
+        settings["DATA_PATH"] = config["data_path"]
         settings["CRAWLER_ID"] = config["crawler_id"]
+        settings["INSTANCE_ID"] = config["instance_id"]
         
     return settings
 

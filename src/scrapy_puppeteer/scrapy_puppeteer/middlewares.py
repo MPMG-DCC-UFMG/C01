@@ -1,6 +1,7 @@
 """This module contains the ``PuppeteerMiddleware`` scrapy middleware"""
 import asyncio
 from hashlib import new
+import json
 from crawling_utils import crawling_utils
 from twisted.internet import asyncioreactor
 
@@ -18,6 +19,7 @@ import logging
 import requests
 
 import base64
+import datetime
 import sys
 import os
 import time
@@ -39,7 +41,7 @@ from pyppeteer import __chromium_revision__
 from .http import PuppeteerRequest
 from .chromium_downloader import chromium_executable
 
-import crawling_utils
+import crawling_utils as utils
 
 # For the system to wait up to TIMEOUT_TO_DOWNLOAD_START
 # seconds for a download to start. The value below is arbitrary
@@ -66,14 +68,15 @@ class PuppeteerMiddleware:
         :crawler(Crawler object): crawler that uses this middleware
         """
 
-        CRAWLER_ID = crawler.settings.get('CRAWLER_ID')
 
         middleware = cls()
         middleware.browser = await launch(executablePath=chromium_executable())
 
-        # Folder where the files downloaded from this crawl will be temporarily
-        # dp : dynamic processing
-        middleware.download_path = os.path.join(os.getcwd(), f'temp_dp/{CRAWLER_ID}/')
+        data_path = crawler.settings.get('DATA_PATH')
+        
+        middleware.download_path = f'{data_path}/data/files/'
+        middleware.crawler_id = crawler.settings.get('CRAWLER_ID')
+        middleware.instance_id = crawler.settings.get('INSTANCE_ID') 
 
         page = await middleware.browser.newPage()
 
@@ -119,15 +122,42 @@ class PuppeteerMiddleware:
         while exists_pendent_downloads():
             await asyncio.sleep(1)
 
+    async def generate_file_descriptions(self):
+        """Generates descriptions for downloaded files."""
+       
+        # list all files in crawl data folder, except file_description.jsonl
+        files = glob(f'{self.download_path}*.[!jsonl]*')
+
+        with open(f'{self.download_path}file_description.jsonl', 'w') as f:
+            for file in files:
+                s_file = file.split('/')
+
+                path = '/'.join(s_file[:-1])
+                ext = file.split('.')[-1].lower()
+                renamed_filename = utils.hash(s_file[-1].encode()) + f'.{ext}'
+
+                renamed_file = f'{path}/{renamed_filename}'
+                os.rename(file, renamed_file)
+                
+                description = {
+                    'url': '<triggered by dynamic page click>',
+                    'file_name': renamed_filename,
+                    'crawler_id': self.crawler_id,
+                    'instance_id': self.instance_id,
+                    'crawled_at_date': str(datetime.datetime.today()),
+                    'referer': '<from unique dynamic crawl>',
+                    'type': ext,
+                }
+
+                f.write(json.dumps(description) + '\n')
+                    
     async def _process_request(self, request, spider):
         """Handle the request using Puppeteer
 
         :request: The PuppeteerRequest object sent by the spider
         :spider: The spider using this middleware
         """
-
         page = await self.browser.newPage()
-        downloads_processing = set(glob(f'{self.download_path}*'))
 
         # Cookies
         if isinstance(request.cookies, dict):
@@ -219,21 +249,7 @@ class PuppeteerMiddleware:
         content = await page.content()
         body = str.encode(content)
 
-        await self.block_until_complete_downloads()
         await page.close()
-
-        # Files downloaded from this page are renamed with the hash of the url where they were downloaded.
-        # Thus, in the spider, it is possible to identify the origin of each file.
-        url_hash = crawling_utils.hash(request.url.encode())
-        new_downloads = set(glob(f'{self.download_path}*')) - downloads_processing
-
-        for download_path in new_downloads:
-            s_download_path = download_path.split('/')
-
-            filename = s_download_path[-1]
-            filename_renamed = '/'.join(s_download_path[:-1]) + f'/{url_hash}_{filename}'
-
-            os.rename(download_path, filename_renamed)
 
         # Necessary to bypass the compression middleware (?)
         response.headers.pop('content-encoding', None)
@@ -261,12 +277,10 @@ class PuppeteerMiddleware:
         return as_deferred(self._process_request(request, spider))
 
     async def _spider_closed(self):
-        # delete the temporarily folder
-        shutil.rmtree(self.download_path, ignore_errors=True)
+        await self.block_until_complete_downloads()
+        await self.generate_file_descriptions()
         await self.browser.close()
 
     def spider_closed(self):
         """Shutdown the browser when spider is closed"""
-
-
         return as_deferred(self._spider_closed())

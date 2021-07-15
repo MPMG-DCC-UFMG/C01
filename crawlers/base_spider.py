@@ -321,35 +321,6 @@ class BaseSpider(scrapy.Spider):
 
         self.create_and_feed_file_description(response.url, file_name, response.meta["referer"], extension)
 
-    def process_dynamic_downloads(self, downloads: list, response: Response):
-        # Move files from one temporary folder to the correct one.
-        data_path = self.config['data_path'] + '/data/files/'
-        for download in downloads:
-            ext = download.split('.')[-1]
-            filename = uuid.uuid4().hex + f'.{ext}'
-
-            #
-            dest = data_path + filename
-            os.replace(download, dest)
-
-            self.create_and_feed_file_description('<triggered by dynamic page click>',
-                                                  filename, response.request.url, ext)
-
-    def verify_dynamic_downloads(self, response: Response):
-        # Checks the temporary folder for files with the prefix (hash) of the collected page.
-        # Those found are moved to the correct collector folder, generating the appropriate description.
-        url_src = response.request.url
-
-        crawler_id = self.config['crawler_id']
-        download_path = os.path.join(os.getcwd(), f'temp_dp/{crawler_id}/')  # dp = dynamic processing
-
-        url_hash = crawling_utils.hash(url_src.encode())
-
-        downloads = glob(f'{download_path}{url_hash}_*')
-
-        if len(downloads) > 0:
-            self.process_dynamic_downloads(downloads, response)
-
     def errback_httpbin(self, failure):
         # log all errback failures,
         # in case you want to do something special for some errors,
