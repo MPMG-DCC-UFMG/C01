@@ -15,16 +15,12 @@ try:
     asyncioreactor.install(loop)
 except Exception:
     pass
-import logging
-import requests
 
 import base64
 import datetime
-import sys
 import os
-import time
 from glob import glob
-import shutil
+import pathlib
 
 from step_crawler import code_generator as code_g
 from step_crawler import functions_file
@@ -130,6 +126,10 @@ class PuppeteerMiddleware:
 
         with open(f'{self.download_path}file_description.jsonl', 'w') as f:
             for file in files:
+                # Get timestamp from file download
+                fname = pathlib.Path(file)
+                creation_time = datetime.datetime.fromtimestamp(fname.stat().st_ctime)
+                
                 s_file = file.split('/')
 
                 path = '/'.join(s_file[:-1])
@@ -139,18 +139,19 @@ class PuppeteerMiddleware:
                 renamed_file = f'{path}/{renamed_filename}'
                 os.rename(file, renamed_file)
                 
+
                 description = {
                     'url': '<triggered by dynamic page click>',
                     'file_name': renamed_filename,
                     'crawler_id': self.crawler_id,
                     'instance_id': self.instance_id,
-                    'crawled_at_date': str(datetime.datetime.today()),
+                    'crawled_at_date': str(creation_time),
                     'referer': '<from unique dynamic crawl>',
                     'type': ext,
                 }
 
                 f.write(json.dumps(description) + '\n')
-                    
+
     async def _process_request(self, request, spider):
         """Handle the request using Puppeteer
 
