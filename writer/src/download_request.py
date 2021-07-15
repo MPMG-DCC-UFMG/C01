@@ -86,7 +86,7 @@ class DownloadRequest:
         self.__filetype_from_mimetype(content_type)
     
     def __notify_server(self, message: str):
-        server_notification_url = f'http://localhost:9000/download/file/{message}/{self.instance_id}' 
+        server_notification_url = f'http://localhost:8000/download/file/{message}/{self.instance_id}' 
         req = requests.get(server_notification_url)
         
         if req.status_code == 200:

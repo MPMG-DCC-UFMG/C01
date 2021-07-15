@@ -17,6 +17,13 @@ document.addEventListener('DOMContentLoaded',
     false
 );
 
+function show_hide_instances(){
+    var instances_lines = Array.prototype.slice.apply(document.querySelectorAll(".multinstancias"));
+    instances_lines.forEach((instance) => {
+        instance.classList.toggle("hidden");
+    });
+}
+
 function tail_logs(instance_id){
     // calls tail log view and set logs
     $.ajax("/tail_log_file/" + instance_id).done(function(data) {
@@ -136,3 +143,5 @@ function status_f_instance(instance_id){
         500
     );
 }
+
+

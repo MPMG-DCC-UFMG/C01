@@ -14,7 +14,9 @@ except Exception:
     pass
 import logging
 import requests
-import sys, os, time
+import sys
+import os
+import time
 
 from step_crawler import code_generator as code_g
 from step_crawler import functions_file
@@ -51,7 +53,7 @@ class PuppeteerMiddleware:
         """
 
         middleware = cls()
-        middleware.browser = await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio':True, 'logLevel': crawler.settings.get('LOG_LEVEL')})
+        middleware.browser = await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio': True, 'logLevel': crawler.settings.get('LOG_LEVEL')})
         page = await middleware.browser.newPage()
         crawler.signals.connect(middleware.spider_closed, signals.spider_closed)
 
@@ -81,7 +83,7 @@ class PuppeteerMiddleware:
         try:
             page = await self.browser.newPage()
         except:
-            self.browser = await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio':True})
+            self.browser = await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio': True})
             await self.browser.newPage()
             page = await self.browser.newPage()
 
@@ -93,6 +95,56 @@ class PuppeteerMiddleware:
             ])
         else:
             await page.setCookie(request.cookies)
+
+        # The request method and data must be set using request interception
+        # For some reason the regular method with setRequestInterception and
+        # page.on('request', callback) doesn't work, I had to use this instead.
+        # This directly manipulates the lower level modules in the pyppeteer
+        # page to achieve the results. Details on this workaround here:
+        # https://github.com/pyppeteer/pyppeteer/issues/198#issuecomment-750221057
+        async def setup_request_interceptor(page) -> None:
+            client = page._networkManager._client
+
+            async def intercept(event) -> None:
+                interception_id = event["interceptionId"]
+
+                try:
+                    int_req = event["request"]
+                    url = int_req["url"]
+
+                    options = {"interceptionId": interception_id}
+                    options['method'] = request.method
+
+                    if request.body:
+                        options['postData'] = request.body.decode('utf-8')
+
+                    await client.send("Network.continueInterceptedRequest",
+                        options)
+                except:
+                    # If everything fails we need to be sure to continue the
+                    # request anyway, else the browser hangs
+                    options = {
+                        "interceptionId": interception_id,
+                        "errorReason": "BlockedByClient"
+                    }
+                    await client.send("Network.continueInterceptedRequest",
+                        options)
+
+
+            # Setup request interception for all requests.
+            client.on(
+                "Network.requestIntercepted",
+                lambda event: client._loop.create_task(intercept(event)),
+            )
+
+            # Set this up so that only the initial request is intercepted
+            # (else it would capture requests for external resources such as
+            # scripts, stylesheets, images, etc)
+            patterns = [{"urlPattern": request.url}]
+            await client.send("Network.setRequestInterception",
+                {"patterns": patterns})
+
+        await setup_request_interceptor(page)
 
         try:
             response = await page.goto(

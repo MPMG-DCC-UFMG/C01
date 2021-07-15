@@ -7,3 +7,4 @@ pytest
 pytest-mock
 python3-wget
 kafka-python
+validators

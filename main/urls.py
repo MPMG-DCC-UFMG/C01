@@ -28,6 +28,11 @@ urlpatterns = [
     path("download/pages/found/<str:instance_id>/<int:num_pages>", views.pages_found, name="pages_found"),
     path("download/page/success/<str:instance_id>", views.success_download_page, name="success_download_page"),
     path("download/page/error/<str:instance_id>", views.error_download_page, name="error_download_page"),
+    path("export_config/<str:instance_id>", views.export_config, name="export_config"),
+
+
+    path("info/form_fields", views.load_form_fields, name="load_form_fields"),
+
     # Includes the API endpoints in the URLs
     url(r'^api/', include(api_router.urls)),
 ]

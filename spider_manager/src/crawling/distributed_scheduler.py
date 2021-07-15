@@ -415,7 +415,7 @@ class DistributedScheduler(object):
 
     def notify_server(self, instance_id: str, num_pages: int = 1):
         
-        server_notification_url = f'http://localhost:9000/download/pages/found/{instance_id}/{num_pages}'
+        server_notification_url = f'http://localhost:8000/download/pages/found/{instance_id}/{num_pages}'
         req = requests.get(server_notification_url)
 
         if req.status_code == 200:
