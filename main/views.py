@@ -32,8 +32,9 @@ from crawlers.injector_tools import create_probing_object,\
 
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
+from requests.exceptions import MissingSchema
 
-from formparser.html import HTMLParser
+from formparser.html import HTMLExtractor, HTMLParser
 
 # Helper methods
 
@@ -334,8 +335,15 @@ def load_form_fields(request):
 
     probe = create_probing_object(base_url, req_type, responses)
 
-    # Instantiate the parameter injectors for the URL
-    injectors = create_parameter_generators(probe, params, False)
+    try:
+        # Instantiate the parameter injectors for the URL
+        injectors = create_parameter_generators(probe, params, False)
+    except:
+        # Invalid templated URL configuration
+        return JsonResponse({
+            'error': 'Erro ao gerar URLs parametrizadas. Verifique se a ' +
+                     'injeção foi configurada corretamente.'
+        }, status=404)
 
     # Generate the requests
     generator = itertools.product(*injectors)
@@ -347,43 +355,75 @@ def load_form_fields(request):
             values = next(generator)
         except:
             # No more values to generate
-            return JsonResponse({}, status=404)
+            return JsonResponse({
+                'error': 'Nenhuma página válida encontrada com os valores ' +
+                         'gerados.'
+            }, status=404)
 
-        is_valid = probe.check_entry(url_entries=values)
+        try:
+            is_valid = probe.check_entry(url_entries=values)
+        except MissingSchema as e:
+            # URL schema error
+            return JsonResponse({
+                'error': 'URL inválida, o protocolo foi especificado? (ex: '+
+                         'http://, https://)'
+            }, status=404)
 
         if is_valid:
             curr_url = base_url.format(*values)
             parser = None
 
             try:
-                parser = HTMLParser(url=curr_url)
-            except:
-                # Failed to find a form in a valid page
-                return JsonResponse({}, status=404)
-
-            if parser is not None:
-                fields = parser.list_fields()
-
-                def field_names(field):
-                    return parser.field_attributes(field).get('name', '')
-
-                names = list(map(field_names, fields))
-
-                method = parser.form.get('method', 'GET')
-                if method == "":
-                    method = 'GET'
-
-                method = method.upper()
-
+                forms = HTMLExtractor(url=curr_url).get_forms()
+            except MissingSchema as e:
+                # URL schema error
                 return JsonResponse({
-                    'method': method,
-                    'length': parser.number_of_fields(),
-                    'names': names,
-                    'types': parser.list_input_types(),
-                    'labels': parser.list_field_labels()
-                })
+                    'error': 'URL inválida, o protocolo foi especificado? '+
+                             '(ex: http://, https://)'
+                }, status=404)
 
-    return JsonResponse({}, status=404)
+            if len(forms) == 0:
+                # Failed to find a form in a valid page
+                return JsonResponse({
+                    'error': 'Nenhum formulário encontrado na página.'
+                }, status=404)
+
+            result = []
+            for form in forms:
+                current_data = {}
+                parser = HTMLParser(form=form)
+
+                if parser is not None:
+                    fields = parser.list_fields()
+
+                    def field_names(field):
+                        return parser.field_attributes(field).get('name', '')
+
+                    names = list(map(field_names, fields))
+
+                    method = parser.form.get('method', 'GET')
+                    if method == "":
+                        method = 'GET'
+
+                    method = method.upper()
+
+                    # Filter leading or trailing whitespace
+                    labels = [x.strip() for x in parser.list_field_labels()]
+
+                    result.append({
+                        'method': method,
+                        'length': parser.number_of_fields(),
+                        'names': names,
+                        'types': parser.list_input_types(),
+                        'labels': labels
+                    })
+
+            return JsonResponse({'forms': result})
+
+    return JsonResponse({
+        'error': f'Nenhuma página válida encontrada com os {MAX_TRIES} ' +
+                  'primeiros valores gerados.'
+    }, status=404)
 
 
 def export_config(request, instance_id):

@@ -394,6 +394,11 @@ function loadStaticForm() {
         return data;
     }).toArray();
 
+    // Display the form selection modal
+    $("#form_detection_modal").modal('show');
+    $("#form_detection_modal .modal-body .spinner-border").parent().show();
+    $("#form_detection_modal .modal-body .form_list").hide();
+
     // Use the field detection module to load the fields
     $.ajax('/info/form_fields', {
         data: {
@@ -403,42 +408,175 @@ function loadStaticForm() {
             'url_response_data': JSON.stringify(url_responses)
         },
         success: (data) => {
-            // Set the request method
-            $('#id_form_request_type').val(data['method'])
-
-            $('#static_form_param').formset('setNumForms', parseInt(data['length']));
-            let currLabel = 0;
-
-            for (i in data['names']) {
-                let form = $('#static_form_param .param-step:not(.subform-deleted):nth(' + i + ')');
-
-                let key_input = form.find('input[id$="parameter_key"]');
-                let label_input = form.find('input[id$="parameter_label"]');
-                let type_input = form.find('select[id$="parameter_type"]');
-
-                key_input.val(data['names'][i]);
-                if (data['types'][i] != 'hidden') {
-                    label_input.val(data['labels'][currLabel]);
-                    currLabel++;
-                }
-                switch (data['types'][i]) {
-                    case "number":
-                        type_input.val('number_seq').change();
-                        break;
-                    case "text":
-                        type_input.val('alpha_seq').change();
-                        break;
-                    case "number":
-                        type_input.val('date_seq').change();
-                        break;
-                }
-            }
+            displayDetectedForms(data['forms']);
+        },
+        error: (xhr) => {
+            displayFormsError(xhr.responseJSON['error']);
         },
         complete: () => {
             updateInjectionFields('static_form');
 
             checkStaticForm();
         }
+    });
+}
+
+function fillFormFields(form_data) {
+    // Set the request method
+    $('#id_form_request_type').val(form_data['method'])
+
+    $('#static_form_param').formset('setNumForms',
+        parseInt(form_data['length']));
+
+    for (i in form_data['names']) {
+        let form = $(`#static_form_param ` +
+            `.param-step:not(.subform-deleted):nth(${i})`);
+
+        let key_input = form.find('input[id$="parameter_key"]');
+        let label_input = form.find('input[id$="parameter_label"]');
+        let type_input = form.find('select[id$="parameter_type"]');
+
+        key_input.val(form_data['names'][i]);
+        if (form_data['types'][i] != 'hidden') {
+            label_input.val(form_data['labels'][i]);
+        }
+        switch (form_data['types'][i]) {
+            case "number":
+                type_input.val('number_seq').change();
+                break;
+            case "text":
+                type_input.val('alpha_seq').change();
+                break;
+            case "number":
+                type_input.val('date_seq').change();
+                break;
+        }
+    }
+}
+
+function displayFormsError(error) {
+    let modal_body = $("#form_detection_modal .modal-body");
+
+    // Hide confirmation button
+    $('#form_detection_modal .include_fields').hide();
+
+    // Hide spinner
+    modal_body.find(".spinner-border").parent().hide();
+
+    // Display error
+    let form_list_el = modal_body.find(".form_list");
+    form_list_el.empty();
+    modal_body.find(".form_list").append(
+        $(`<div class="text-center col"><p>${error}</p></div>`)
+    );
+    form_list_el.show();
+}
+
+function displayDetectedForms(forms_list) {
+
+    let modal_body = $("#form_detection_modal .modal-body");
+    modal_body.find(".spinner-border").parent().hide();
+
+    let form_list_el = modal_body.find(".form_list");
+    form_list_el.empty();
+    form_list_el.show();
+
+    // Display confirmation button
+    $('#form_detection_modal .include_fields').show();
+
+    for (let i in forms_list) {
+        let form = forms_list[i];
+
+        let form_element = $("<div class='form_detection_el'></div>");
+
+        form_element.append($(`<input type='radio' id='form${i}' value='${i}'
+            name='form_choice'>
+            </input>`));
+        form_element.append($(`<label for='form${i}'>
+            Formulário ${parseInt(i) + 1} <i>(método: `+
+            `${form['method'].toUpperCase()})</i>
+        </label>`));
+
+        // Add radio button change event
+        form_element.find(`#form${i}`).change(function (e) {
+            let form_index = parseInt(e.target.value);
+
+            // Uncheck and disable fields from other forms
+            $(`#form_detection_modal input[type="checkbox"]`+
+            `:not([data-form-index="${form_index}"])`)
+                .prop('checked', false)
+                .prop( "disabled", true);
+
+            // Check and enable fields from this form
+            $(`#form_detection_modal input[type="checkbox"]`+
+            `[data-form-index="${form_index}"]`)
+                .prop('checked', true)
+                .prop( "disabled", false);
+        });
+
+        for (let j = 0; j < parseInt(form['length']); j++) {
+            let field_element = $(`<div class='form_input_el
+                form_indented row'></div>`);
+            let field = {
+                'name': form['names'][j],
+                'type': form['types'][j],
+                'label': form['labels'][j]
+            };
+
+            let field_description = `${field['name']} <i>(`;
+            field_description += `tipo: ${field['type']}`;
+            if (field['label'] && field['label'].length > 0) {
+                field_description += `, descrição: ${field['label']}`;
+            }
+            field_description += ')</i>'
+
+            field_element.append($(`<input type='checkbox'
+                id='form${i}_field${j}' data-form-index='${i}'
+                data-field-index='${j}'>
+                </input>`));
+            field_element.append($(`<label for='form${i}_field${j}'
+                class='form_field_label'>
+                ${field_description}
+            </label>`));
+
+            form_element.append(field_element)
+        }
+
+        form_list_el.append(form_element);
+    }
+
+    // Select the first radio button to avoid an undefined state
+    $('#form_detection_modal input#form0').prop('checked', true).change();
+
+    // Enable the button to include the fields
+    $('#form_detection_modal .include_fields').click(function() {
+        let el = $('#form_detection_modal input[name="form_choice"]:checked');
+        let form_index = 0;
+        if (el) form_index = parseInt(el.val());
+
+        let selected_form = forms_list[form_index];
+
+        let field_indices = $(`#form_detection_modal input[type="checkbox"]`+
+            `[data-form-index="${form_index}"]:checked`)
+        .map((_, el) =>
+            parseInt(el.getAttribute('data-field-index'))
+        ).toArray();
+
+        // Filter selected fields only
+        selected_form['length'] = field_indices.length;
+        selected_form['names'] = selected_form['names'].filter((_, i) =>
+            field_indices.includes(i)
+        );
+        selected_form['types'] = selected_form['types'].filter((_, i) =>
+            field_indices.includes(i)
+        );
+        selected_form['labels'] = selected_form['labels'].filter((_, i) =>
+            field_indices.includes(i)
+        );
+
+        fillFormFields(selected_form);
+
+        $('#form_detection_modal').modal('hide');
     });
 }
 
