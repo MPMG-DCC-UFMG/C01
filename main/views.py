@@ -365,7 +365,7 @@ def load_form_fields(request):
         except MissingSchema as e:
             # URL schema error
             return JsonResponse({
-                'error': 'URL inválida, o protocolo foi especificado? (ex: '+
+                'error': 'URL inválida, o protocolo foi especificado? (ex: ' +
                          'http://, https://)'
             }, status=404)
 
@@ -378,7 +378,7 @@ def load_form_fields(request):
             except MissingSchema as e:
                 # URL schema error
                 return JsonResponse({
-                    'error': 'URL inválida, o protocolo foi especificado? '+
+                    'error': 'URL inválida, o protocolo foi especificado? ' +
                              '(ex: http://, https://)'
                 }, status=404)
 
@@ -422,7 +422,7 @@ def load_form_fields(request):
 
     return JsonResponse({
         'error': f'Nenhuma página válida encontrada com os {MAX_TRIES} ' +
-                  'primeiros valores gerados.'
+        'primeiros valores gerados.'
     }, status=404)
 
 
