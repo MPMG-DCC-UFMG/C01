@@ -21,6 +21,7 @@ import datetime
 import os
 from glob import glob
 import pathlib
+import time
 
 from step_crawler import code_generator as code_g
 from step_crawler import functions_file
@@ -76,8 +77,15 @@ class PuppeteerMiddleware:
 
         page = await middleware.browser.newPage()
 
-        cdp = await page._target.createCDPSession()
-        await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allow', 'downloadPath': middleware.download_path})
+        # Attempts to change the default file save location.
+        try:
+            cdp = await page._target.createCDPSession()
+            await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allow', 'downloadPath': middleware.download_path})
+        
+        # An exception is expected to occur only in tests, since the instance of the "Page" class, 
+        # which would be a mock, does not have all the attributes, such as context, to create a session.
+        except:
+            pass 
 
         crawler.signals.connect(middleware.spider_closed, signals.spider_closed)
 
@@ -97,7 +105,7 @@ class PuppeteerMiddleware:
 
         return middleware
 
-    async def block_until_complete_downloads(self):
+    def block_until_complete_downloads(self):
         """Blocks the flow of execution until all files are downloaded.
         """
 
@@ -111,14 +119,14 @@ class PuppeteerMiddleware:
             return len(pendend_downloads) > 0
 
         for _ in range(TIMEOUT_TO_DOWNLOAD_START):
-            await asyncio.sleep(1)
+            time.sleep(1)
             if exists_pendent_downloads():
                 break
 
         while exists_pendent_downloads():
-            await asyncio.sleep(1)
+            time.sleep(1)
 
-    async def generate_file_descriptions(self):
+    def generate_file_descriptions(self):
         """Generates descriptions for downloaded files."""
        
         # list all files in crawl data folder, except file_description.jsonl
@@ -158,7 +166,14 @@ class PuppeteerMiddleware:
         :request: The PuppeteerRequest object sent by the spider
         :spider: The spider using this middleware
         """
-        page = await self.browser.newPage()
+
+        try:
+            page = await self.browser.newPage()
+
+        except:
+            self.browser = await launch(executablePath=chromium_executable())
+            await self.browser.newPage()
+            page = await self.browser.newPage()
 
         # Cookies
         if isinstance(request.cookies, dict):
@@ -278,10 +293,10 @@ class PuppeteerMiddleware:
         return as_deferred(self._process_request(request, spider))
 
     async def _spider_closed(self):
-        await self.block_until_complete_downloads()
-        await self.generate_file_descriptions()
         await self.browser.close()
 
     def spider_closed(self):
         """Shutdown the browser when spider is closed"""
+        self.block_until_complete_downloads()
+        self.generate_file_descriptions()
         return as_deferred(self._spider_closed())
