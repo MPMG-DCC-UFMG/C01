@@ -78,15 +78,9 @@ class PuppeteerMiddleware:
 
         page = await middleware.browser.newPage()
 
-        # Attempts to change the default file save location.
-        try:
-            cdp = await page._target.createCDPSession()
-            await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allow', 'downloadPath': middleware.download_path})
-        
-        # An exception is expected to occur only in tests, since the instance of the "Page" class, 
-        # which would be a mock, does not have all the attributes, such as context, to create a session.
-        except:
-            pass 
+        # Changes the default file save location.
+        cdp = await page._target.createCDPSession()
+        await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allow', 'downloadPath': middleware.download_path})
 
         crawler.signals.connect(middleware.spider_closed, signals.spider_closed)
 
