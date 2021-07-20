@@ -9,18 +9,9 @@ import redis
 from entry_probing import BinaryFormatProbingResponse, HTTPProbingRequest, HTTPStatusProbingResponse, TextMatchProbingResponse, EntryProbing
 from param_injector import ParamInjector
 from range_inference import RangeInference
+from crawling_utils import notify_new_page_found
 
 import settings
-
-def notify_server(instance_id: str, num_pages: int):
-    server_notification_url = f'http://localhost:8000/download/pages/found/{instance_id}/{num_pages}'
-    req = requests.get(server_notification_url)
-
-    if req.status_code == 200:
-        print('Successful server notified of new files')
-    
-    else:
-        print('Error notifying server about new files found')
 
 def format_request(url: str, crawler_id: str, instance_id: str) -> dict:
     """Formats a collection request according to Scrapy Cluster standards
@@ -246,7 +237,7 @@ def generate_templated_urls(base_url, crawler_id, instance_id, req_type, req_bod
                 val = json.dumps(req)
                 redis_conn.zadd(key, {val: -req['priority']})
 
-                notify_server(instance_id, 1)                
+                notify_new_page_found(instance_id)                
                 print(f'\t\tSent request "{curr_url}" to redis...')
 
     else:
@@ -254,7 +245,8 @@ def generate_templated_urls(base_url, crawler_id, instance_id, req_type, req_bod
         val = json.dumps(req)
         redis_conn.zadd(key, {val: -req['priority']})
 
-        notify_server(instance_id, 1)                
+        notify_new_page_found(instance_id)
+        
         print(f'\t\tSent request "{base_url}" to redis...')
 
     print('\tDone')

@@ -13,6 +13,8 @@ import settings
 from file_downloader import FileDownloader
 from file_descriptor import FileDescriptor
 
+from crawling_utils import notify_page_crawled_successfully
+
 class Writer:
     def __init__(self) -> None:
         self.__crawls_running = dict()
@@ -62,16 +64,6 @@ class Writer:
         if config['download_files'] or config['download_imgs']:
             self.__file_downloader.new_crawler_listener(crawler_id)
 
-    def __notify_server(self, instance_id: str, message: str):
-        server_notification_url = f'http://localhost:8000/download/page/{message}/{instance_id}'
-        req = requests.get(server_notification_url)
-
-        if req.status_code == 200:
-            print('Server notified...')
-
-        else:
-            print('Error notifying server...')
-
     def __persist_html(self, crawled_data: dict):
         print('Persisting crawled data')
         crawler_id = str(crawled_data['crawler_id']) 
@@ -103,7 +95,7 @@ class Writer:
             "referer": crawled_data['referer']
         }
 
-        self.__notify_server(crawled_data['instance_id'], 'success')
+        notify_page_crawled_successfully(crawled_data['instance_id'])
         self.__file_descriptor.feed(f'{data_path}/data/raw_pages/', description)
 
     def __process_crawled_data(self, crawled_data: dict):

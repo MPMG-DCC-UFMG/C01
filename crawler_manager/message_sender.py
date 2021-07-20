@@ -23,7 +23,7 @@ class MessageSender:
             'req_type': config['request_type'], 
             'req_body': {}, 
             'response_handlers':  config['templated_url_response_handlers'],
-            'parameter_handlers': config['parameter_handlers']
+            'parameter_handlers': config.get('parameter_handlers')
         }
 
         self.__producer.send(settings.WRITER_TOPIC, {'register': config})

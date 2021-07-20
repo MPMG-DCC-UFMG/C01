@@ -35,6 +35,7 @@ from scutils.redis_throttled_queue import RedisThrottledQueue
 from scutils.log_factory import LogFactory
 
 from scrapy_puppeteer import PuppeteerRequest
+from crawling_utils import notify_new_page_found
 
 class DistributedScheduler(object):
     '''
@@ -413,17 +414,6 @@ class DistributedScheduler(object):
         redis_key = self.spider.name + ":blacklist"
         return self.redis_conn.sismember(redis_key, key_check)
 
-    def notify_server(self, instance_id: str, num_pages: int = 1):
-        
-        server_notification_url = f'http://localhost:8000/download/pages/found/{instance_id}/{num_pages}'
-        req = requests.get(server_notification_url)
-
-        if req.status_code == 200:
-            self.logger.debug('Successful server notified of new pages')
-        
-        else:
-            self.logger.debug('Error notifying server about new pages found')
-
     def enqueue_request(self, request):
         '''
         Pushes a request from the spider into the proper throttled queue
@@ -480,7 +470,7 @@ class DistributedScheduler(object):
                     (req_dict['meta']['expires'] == 0 or
                     curr_time < req_dict['meta']['expires']):
                 
-                self.notify_server(req_dict['meta']['attrs']['instance_id'])
+                notify_new_page_found(req_dict['meta']['attrs']['instance_id'])
                 
                 # we may already have the queue in memory
                 if key in self.queue_keys:
@@ -493,7 +483,6 @@ class DistributedScheduler(object):
 
                     self.redis_conn.zadd(key, {ujson.dumps(req_dict): -req_dict['meta']['priority']})
 
-                # self.notify_server(req_dict['meta']['instance_id'])
                 self.logger.debug("Crawlid: '{id}' Appid: '{appid}' added to queue".format(appid=req_dict['meta']['appid'], id=req_dict['meta']['crawlid']))
 
             else:

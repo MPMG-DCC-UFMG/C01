@@ -6,6 +6,15 @@ import os
 from urllib.parse import urlparse
 import requests
 
+SERVER_ADDRESS = 'http://localhost:8000'
+
+SERVER_NEW_PAGE_FOUND_API = SERVER_ADDRESS + '/download/pages/found/{instance_id}/{num_pages}'
+SERVER_PAGE_CRAWLED_API = SERVER_ADDRESS + '/download/page/{message}/{instance_id}'
+
+SERVER_FILES_FOUND_API = SERVER_ADDRESS + '/download/files/found/{instance_id}/{num_files}'
+SERVER_FILE_DOWNLOADED_API = SERVER_ADDRESS + '/download/file/{message}/{instance_id}'
+
+SERVER_SESSION = requests.sessions.Session()
 
 class StopDownload(Exception):
     """Used in func file_larger_than_giga"""
@@ -38,6 +47,45 @@ def get_url_domain(url):
 def hash(byte_content):
     """Returns the md5 hash of a bytestring."""
     return hashlib.md5(byte_content).hexdigest()
+
+def notify_server(notification_url: str):
+    req = SERVER_SESSION.get(notification_url)
+
+    if req.status_code == 200:
+        print('Server notified successfully')
+
+    else:
+        print('Error notifying server')
+
+def notify_new_page_found(instance_id: str, num_pages: int = 1):
+    server_notification_url = SERVER_NEW_PAGE_FOUND_API.format(
+        instance_id=instance_id,num_pages=num_pages)
+    notify_server(server_notification_url)
+
+def notify_page_crawled_successfully(instance_id: str):
+    server_notification_url = SERVER_PAGE_CRAWLED_API.format(
+        message='success', instance_id=instance_id)
+    notify_server(server_notification_url)
+
+def notify_page_crawled_with_error(instance_id: str):
+    server_notification_url = SERVER_PAGE_CRAWLED_API.format(
+        message='error', instance_id=instance_id)
+    notify_server(server_notification_url)
+
+def notify_files_found(instance_id: str, num_files: int):
+    server_notification_url = SERVER_FILES_FOUND_API.format(
+        instance_id=instance_id, num_files=num_files)
+    notify_server(server_notification_url)
+
+def notify_file_downloaded_successfully(instance_id: str):
+    server_notification_url = SERVER_FILE_DOWNLOADED_API.format(
+        message='success', instance_id=instance_id)
+    notify_server(server_notification_url)
+
+def notify_file_downloaded_with_error(instance_id: str):
+    server_notification_url = SERVER_FILE_DOWNLOADED_API.format(
+        message='error', instance_id=instance_id)
+    notify_server(server_notification_url)
 
 # leave as 'chromedriver' if driver is on path
 CHROME_WEBDRIVER_PATH = 'chromedriver'

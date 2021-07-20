@@ -6,7 +6,11 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.http import Request, HtmlResponse
 from scrapy_puppeteer import PuppeteerRequest
 
+# Checks if an url is valid
+import validators
+
 import crawling_utils
+from crawling_utils import notify_files_found
 
 from crawling.items import RawResponseItem
 from crawling.spiders.base_spider import BaseSpider
@@ -40,7 +44,7 @@ class StaticPageSpider(BaseSpider):
         def allow(url):
             search_results = re.search(pattern, url)
             return bool(search_results)
-        return list(filter(allow, urls))
+        return list(filter(allow, urls)) 
 
     def filter_urls_by_content_type(self, urls_info: list, content_types: set) -> list:
         def allow(url_info: tuple):
@@ -59,7 +63,18 @@ class StaticPageSpider(BaseSpider):
             process_value=self.config["link_extractor_process_value"],
         )
 
-        urls_found = set(i.url for i in links_extractor.extract_links(response))
+        urls_found = list(
+            set(i.url for i in links_extractor.extract_links(response)))
+        broken_urls = urls_found
+        urls_found = set(
+            filter(lambda url: validators.url(url) == True, urls_found))
+        # returns the difference between the two lists.
+        broken_urls = set(broken_urls) ^ set(urls_found)
+
+        print(f"+{len(broken_urls)} broken urls found...")
+        if broken_urls:
+            print(f"Broken Urls (filtered): {broken_urls}")
+        print(f"+{len(urls_found)} valid urls after filtering...")
 
         pattern = self.config["link_extractor_allow_url"]
         if bool(pattern):
@@ -89,15 +104,23 @@ class StaticPageSpider(BaseSpider):
         )
 
         urls_found = set(link.url for link in links_extractor.extract_links(response))
-
         exclude_html_and_php_regex_pattern = r"(.*\.[a-z]{3,4}$)(.*(?<!\.html)$)(.*(?<!\.php)$)" 
         urls_found = self.filter_urls_by_regex(urls_found, exclude_html_and_php_regex_pattern)
+
+        broken_urls = urls_found
+        urls_found = list(filter(lambda url: validators.url(url) == True, urls_found))
+        broken_urls = set(broken_urls) ^ set(urls_found)  # returns the difference between the two lists.
+
+        print(f"+{len(broken_urls)} broken urls found...")
+        if broken_urls:
+            print(f"Broken Urls (filtered): {broken_urls}")
+        print(f"+{len(urls_found)} valid urls after filtering...")
 
         pattern = self.config["download_files_allow_url"]
         if bool(pattern):
             urls_found = self.filter_urls_by_regex(urls_found, pattern)
 
-        if self.config["download_files_check_type"]:
+        if len(self.download_allowed_extensions) > 0:
             urls_info = list(self.get_url_info(url) for url in urls_found)
             urls_info_filtered = self.filter_urls_by_content_type(urls_info, self.download_allowed_extensions)
             urls_found = set(url for url, _, _, _ in urls_info_filtered)
@@ -147,17 +170,6 @@ class StaticPageSpider(BaseSpider):
 
         return item
     
-    def notify_server_files_found(self, num_files: int):
-        if num_files > 0:            
-            server_notification_url = f'http://localhost:8000/download/files/found/{self.config["instance_id"]}/{num_files}' 
-            req = requests.get(server_notification_url)
-
-            if req.status_code == 200:
-                print('Successful server notified of new files')
-            
-            else:
-                print('Error notifying server about new files found')
-
     def page_to_response(self, page, response) -> HtmlResponse:
         return HtmlResponse(
                     response.url,
@@ -201,7 +213,8 @@ class StaticPageSpider(BaseSpider):
             if self.config.get("download_imgs", False):
                 images_found = self.extract_imgs(response)
             
-            self.notify_server_files_found(len(files_found) + len(images_found))
+            num_files = len(files_found) + len(images_found)
+            notify_files_found(self.config["instance_id"], num_files)
 
             item = self.response_to_item(response, files_found, images_found)
 

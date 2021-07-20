@@ -7,6 +7,7 @@ import requests
 import time
 
 import settings
+from crawling_utils import notify_file_downloaded_successfully, notify_file_downloaded_with_error
 
 PUNCTUATIONS = "[{}]".format(string.punctuation)
 
@@ -84,22 +85,6 @@ class DownloadRequest:
             return filetype
 
         self.__filetype_from_mimetype(content_type)
-    
-    def __notify_server(self, message: str):
-        server_notification_url = f'http://localhost:8000/download/file/{message}/{self.instance_id}' 
-        req = requests.get(server_notification_url)
-        
-        if req.status_code == 200:
-            print('Server notified...')
-
-        else:
-            print('Error notifying server...')
-
-    def __notify_server_successful_download(self):
-        self.__notify_server('success')
-
-    def __notify_server_error_dowload(self):
-        self.__notify_server('error')
 
     def exec_download(self) -> bool:
         print(f"Downloading {self.url}")
@@ -118,12 +103,12 @@ class DownloadRequest:
                     break 
                 
         if attempt == MAX_ATTEMPTS:
-            self.__notify_server_error_dowload()
+            notify_file_downloaded_with_error(self.instance_id)
             return False 
 
         else:
             self.crawled_at_date = str(datetime.today())
-            self.__notify_server_successful_download()
+            notify_file_downloaded_successfully(self.instance_id)
             return True
 
     def get_description(self) -> dict:

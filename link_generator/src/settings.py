@@ -10,4 +10,4 @@ REDIS_PASSWORD = None
 REDIS_SOCKET_TIMEOUT = 10
 
 #django application port
-SERVER_PORT = 8000
+SERVER_NEW_PAGE_FOUND_URL = 'http://localhost:8000/download/pages/found/{instance_id}/{num_pages}'
