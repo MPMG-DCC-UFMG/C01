@@ -18,8 +18,6 @@ env = environ.Env(
     INSTALL_KAFKA=(bool, True),
     EXECUTION_TYPE=(str, "standalone"),
 )
-# reading .env file
-environ.Env.read_env(env_file='interface/.env')
 
 if env('INSTALL_REDIS'):
     # Install Redis

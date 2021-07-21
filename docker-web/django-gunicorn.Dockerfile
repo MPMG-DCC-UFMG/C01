@@ -34,10 +34,11 @@ COPY crawlers crawlers
 
 RUN mkdir logs
 
-# Copy the env file for Django
-COPY docker-web/.env.prod interface/.env
+# Get variables from build args
+ENV EXECUTION_TYPE=$EXECUTION_TYPE
+ENV INSTALL_REDIS=$INSTALL_REDIS
+ENV INSTALL_KAFKA=$INSTALL_KAFKA
 
-ENV EXECUTION_TYPE=distributed
 RUN python3 install.py
 
 RUN mkdir /data
