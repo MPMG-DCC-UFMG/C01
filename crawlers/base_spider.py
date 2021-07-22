@@ -1,6 +1,5 @@
 # Scrapy and Twister libs
 import scrapy
-from scrapy.http import Response
 from scrapy.exceptions import CloseSpider
 from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError
@@ -12,13 +11,10 @@ import json
 import itertools
 import os
 import re
-import time
 from lxml.html.clean import Cleaner
 import mimetypes
 import requests
 import string
-from glob import glob
-import uuid
 
 # Project libs
 import crawling_utils

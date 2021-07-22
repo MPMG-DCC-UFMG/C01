@@ -7,12 +7,9 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.http import HtmlResponse
 
 # Other external libs
-import logging
 import re
 import json
-import requests
 import time
-import os
 
 # Checks if an url is valid
 import validators
