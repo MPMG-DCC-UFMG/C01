@@ -12,11 +12,7 @@ try:
     asyncioreactor.install(loop)
 except Exception:
     pass
-import logging
-import requests
-import sys
-import os
-import time
+import cgi
 
 from step_crawler import code_generator as code_g
 from step_crawler import functions_file
@@ -172,6 +168,10 @@ class PuppeteerMiddleware:
 
         await page.close()
 
+        content_type = response.headers['content-type']
+        _, params = cgi.parse_header(content_type)
+        encoding = params['charset']
+
         # Necessary to bypass the compression middleware (?)
         response.headers.pop('content-encoding', None)
         response.headers.pop('Content-Encoding', None)
@@ -181,7 +181,7 @@ class PuppeteerMiddleware:
             status=response.status,
             headers=response.headers,
             body=body,
-            encoding='utf-8',
+            encoding=encoding,
             request=request
         )
 

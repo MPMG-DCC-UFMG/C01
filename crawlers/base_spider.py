@@ -1,7 +1,9 @@
 # Scrapy and Twister libs
+from io import RawIOBase
 import scrapy
 from scrapy.exceptions import CloseSpider
 from scrapy.spidermiddlewares.httperror import HttpError
+from scrapy.http import Response
 from twisted.internet.error import DNSLookupError
 from twisted.internet.error import TimeoutError
 
@@ -9,15 +11,14 @@ from twisted.internet.error import TimeoutError
 import datetime
 import json
 import itertools
-import logging
 import os
 import re
-import time
 from lxml.html.clean import Cleaner
 import urllib.parse as urlparse
 import mimetypes
 import requests
 import string
+import cgi
 
 # Project libs
 import crawling_utils
@@ -202,26 +203,30 @@ class BaseSpider(scrapy.Spider):
 
         return self.stop_flag
 
-    def store_html(self, response):
+    def store_html(self, response: Response):
         """Stores html and adds its description to file_description file."""
         print(f'Saving html page {response.url}')
+        
+        content_type = response.headers['Content-type'].decode()
+        _, params = cgi.parse_header(content_type)
+        encoding = params['charset']
 
         cleaner = Cleaner(
             style=True, links=False, scripts=True,
             comments=True, page_structure=False
         )
-        body = cleaner.clean_html(
-            response.body.decode('utf-8', errors='ignore'))
 
+        raw_body = response.body
+        body = cleaner.clean_html(raw_body.decode(encoding))        
         hsh = self.hash_response(response)
-
         relative_path = f"{self.data_folder}raw_pages/{hsh}.html"
 
-        with open(file=relative_path, mode="w+", errors='ignore') as f:
+        with open(file=relative_path, mode="w+", encoding=encoding, errors='ignore') as f:
             f.write(body)
 
         description = {
             "file_name": f"{hsh}.html",
+            "encoding": encoding,
             "relative_path": relative_path,
             "url": response.url,
             "crawler_id": self.config["crawler_id"],
