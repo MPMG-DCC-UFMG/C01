@@ -49,6 +49,10 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
 
         # Response mock
         mockResponse = mock.create_autospec(pyppeteer.network_manager.Response)
+        mockResponse.headers = {
+            'content-type': 'text/html; charset=iso-8859-1'
+        }
+
         self.mockResponse = mockResponse
 
         # Page mock
