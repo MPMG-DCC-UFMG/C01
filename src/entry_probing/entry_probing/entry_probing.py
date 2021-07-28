@@ -56,28 +56,46 @@ class EntryProbing():
 
     def check_entry(self,
                     url_entries=[],
-                    req_entries={}) -> bool:
+                    req_entries={},
+                    always_request=False) -> bool:
         """
         Uses the request and response handlers to check for an entry's
         existence
-        :param url_entries: entry parameters to be inserted in the URL in the
-                            request
-        :param req_entries: entry parameters to be inserted in the request body
+        :param url_entries:    entry parameters to be inserted in the URL in
+                               the request
+        :param req_entries:    entry parameters to be inserted in the request
+                               body
+        :param always_request: if set to True, the request will always be
+                               submitted, even if there is no validation to be
+                               done
         :returns: True if entry is valid, False otherwise
         """
+
+        if not always_request and len(self.__resp_handlers) == 0:
+            # If there are no response handlers, the check is true by default
+            return True
 
         response = self.__req_handler.process(url_entries=url_entries,
                                               req_entries=req_entries)
         self.__response_obj = response
         return all([h.process(response) for h in self.__resp_handlers])
 
-    async def async_check_entry(self, entry=None) -> bool:
+    async def async_check_entry(self, entry=None,
+                                always_request=False) -> bool:
         """
         Async version of the check_entry() method, to be used in an async
         context
-        :param entry: entry parameter to be used by the request, if necessary
+        :param entry:          entry parameter to be used by the request, if
+                               necessary
+        :param always_request: if set to True, the request will always be
+                               submitted, even if there is no validation to be
+                               done
         :returns: True if entry is valid, False otherwise
         """
+
+        if not always_request and len(self.__resp_handlers) == 0:
+            # If there are no response handlers, the check is true by default
+            return True
 
         response = await self.__req_handler.process(entry)
         self.__response_obj = response

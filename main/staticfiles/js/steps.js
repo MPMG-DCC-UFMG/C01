@@ -19,7 +19,6 @@ function load_steps_interface(interface_root_element_id, output_element_id, json
         })
         step_list = step_list.concat(JSON.parse('{"name": "objeto", "name_display" : "Objeto", "mandatory_params":["ex: [1,2,3]"], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name": "para_cada", "name_display" : "Para cada", "mandatory_params":[], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name": "para_cada_pagina_em", "name_display" : "Para cada página em", "mandatory_params":[], "optional_params":{}}'))
         init_steps_creation_interface(interface_root_element, output_element, step_list)
       }
     };
@@ -117,7 +116,7 @@ function get_last_depth(){
         step_board = find_parent_with_attr_worth(this, "step_board")
         if(step_board.children.length>0){
             last_step = step_board.children[step_board.children.length-1]
-            if(last_step.step.name == "para_cada" || last_step.step.name == "para_cada_pagina_em"){
+            if(last_step.step.name == "para_cada"){
                 return last_step.depth + 1
             }else{
                 return last_step.depth
@@ -160,11 +159,16 @@ function build_json(step_board, output_element){
             for(var i = 0; i < -indent; i++){
                 stack.pop()
             }
+            stack.pop()
+            stack[stack.length-1].children.push(step_dict)
+            stack.push(step_dict)
+
         }else if(indent>1){
             console.log("Indentation ERROR")
         }
 
     }
+    debugger
     output_element.value = JSON.stringify(root_step)
 
 }
@@ -180,32 +184,65 @@ function get_step_json_format(block){
         step : param_name,
         depth : block.depth,
     }
+
     if(param_name == "para_cada"){
         step_dict.iterator = block.iterator_input.value
         step_dict.children = []
         step_dict.iterable = {call:{}}
         step_dict.iterable.call = {
-            step: block.iterable_select.value,
+            step: steps_names[block.iterable_select.value],
             arguments:{}
         }
-        for(param of block.params){
-            step_dict.iterable.call.arguments[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
-        }
-    }else if(param_name == "para_cada_pagina_em"){
-        step_dict.children = []
-        for(param of block.params){
-            step_dict[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
-        }
-    }else {
+        placeholders_to_params(block, step_dict.iterable.call.arguments)
+    }else{
         step_dict.arguments = {}
-        for(param of block.params){
-            step_dict.arguments[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
-        }
+        placeholders_to_params(block, step_dict.arguments)
     }
+
     return step_dict
 }
 
 //-------------- util -------------------------------
+
+/**
+ * This function turns placeholders of a block into parameters names. These para-
+ * meters will be keys in a dict, whose values are the user's input in that field.
+ * @param {Node} block The html element that represents a step and was parameterized by the user.
+ * @param {Dict} the dict to be parameterized with user's arguments.
+ * @return {Dict} the parameterized dict.
+ */
+function placeholders_to_params(block, dict){
+    for(param of block.params){
+        console.log(param)
+        ph = param.children[0].placeholder
+        if(ph == "opção"){
+            param_name = "opcao"
+        }else if(ph == "xpath dos botões"){
+            param_name = "xpath_dos_botoes"
+        }else{
+            param_name = String(ph).replaceAll(" ", "_")
+        }
+
+        dict[param_name] = param.children[0].value
+    }
+    return dict
+}
+
+/**
+ * This function gets a function's parameter and returns its corresponding display name.
+ * @param {String} the parameter's name.
+ * @retuns {String} the parameter's placeholder name.
+ */
+function param_to_placeholder(param){
+    if(param == "opcao"){
+        param_display = "opção"
+    }else if(param == "xpath_dos_botoes"){
+        param_display = "xpath dos botões"
+    }else{
+        param_display = String(param).replaceAll("_", " ")
+    }
+    return param_display
+}
 
 /**
  * This function get all the mandatory parameters of a step, and return them but in input format in a list.
@@ -213,21 +250,23 @@ function get_step_json_format(block){
  * @param {List} step_list The list of steps that conteing the step named with the step_name value.
  * @retuns {List} A list with the inputs represting the mandatory parameters of the step.
  */
-function get_params_element_list(step_name, step_list){
-    if(step_name == "objeto"){
+function get_params_element_list(step_name_display, step_list){
+    if(step_name_display == "Objeto"){
         object_div = document.createElement("DIV")
         object_div.className = "col-sm"
         object_div.innerHTML = `<input placeholder="objeto, ex: [1,2,3]" class="row form-control">`
         return [object_div.children[0]]
     }else{
-        var step = get_step_info(step_name, step_list)
+        var step = get_step_info(step_name_display, step_list)
         var param_element_list = []
 
         for(param of step.mandatory_params){
-            var parameter = document.createElement("DIV")
+            parameter = document.createElement("DIV")
             parameter.className = "col-sm"
-            parameter.innerHTML = `<input placeholder="` + String(param) + `" class="row form-control">`
-            parameter.children[0].placeholder = param
+
+            param_display = param_to_placeholder(param)
+            parameter.innerHTML = `<input placeholder="` + param_display  + `" class="row form-control">`
+            parameter.children[0].placeholder = param_display
             param_element_list.push(parameter)
         }
         return param_element_list
@@ -244,7 +283,7 @@ function get_params_element_list(step_name, step_list){
 function get_this_texts_inside_each_tag(string_list, tag){
     html_tags=""
     for (var i = 0; i < string_list.length; i++) {
-        html_tags = html_tags + tag + string_list[i] + tag.split(" ")[0].replace('<', '</')+">\n"
+        html_tags = html_tags + tag + string_list[i] + tag.split(" ")[0].replace('<', '</')+"\n"
     }
     return html_tags
 }
@@ -252,15 +291,16 @@ function get_this_texts_inside_each_tag(string_list, tag){
 /**
  * This function get the steps descriptions inside a list of steps.
  * @param {List} step_list The list of steps on json steps format.
- * @retuns {List} A list with the interface names of all the steps inside the step_list.
+ * @retuns {Dict} keys: the displayed names; values: the step names.
  */
-function get_step_names(step_list){
-    step_names = []
-    for(step of step_list){
-        step_names.push(step.name_display)
-    }
-    return step_names
-}
+ function get_step_names(step_list){
+   steps_names = {}
+   for(step of step_list){
+     steps_names[step.name_display] = step.name
+     }
+
+   return steps_names
+ }
 
 /**
  * This function gets the index of an element in its parent childrens.
@@ -282,13 +322,13 @@ function get_index_in_parent(element){
  * @param {List} step_list The list of steps that conteing the step named with the step_name value.
  * @retuns {Dict} A dictionary with the information of the step.
  */
-function get_step_info(step_name, step_list){
+function get_step_info(step_name_display, step_list){
     for(step of step_list){
-        if(step.name_display == step_name){
+        if(step.name_display == step_name_display){
             return step
         }
     }
-    console.log(step_name + " não está entre os passos do json passado no init.")
+    console.log(step_name_display + " não está entre os passos do json passado no init.")
 }
 
 /**

@@ -21,6 +21,10 @@ urlpatterns = [
     path("detail/run_crawl/<int:crawler_id>", views.run_crawl, name="run_crawl"),
     path("detail/stop_crawl/<int:crawler_id>", views.stop_crawl, name="stop_crawl"),
     path("tail_log_file/<str:instance_id>", views.tail_log_file, name="tail_log_file"),
+    path("export_config/<str:instance_id>", views.export_config, name="export_config"),
+
+
+    path("info/form_fields", views.load_form_fields, name="load_form_fields"),
 
     # Includes the API endpoints in the URLs
     url(r'^api/', include(api_router.urls)),

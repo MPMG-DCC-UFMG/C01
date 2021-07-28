@@ -17,9 +17,7 @@ def extract_info(func, ignore_params=None):
         ignore_params = ['pagina']
 
     name = func.__code__.co_name
-
-    comment = inspect.getcomments(func)
-    name_display = name.capitalize() if not comment else comment.replace('# ', '').strip()
+    name_display = name.capitalize().replace('_', '') if not func.display else func.display
 
     optional_params = dict()
     mandatory_params = list()
@@ -59,9 +57,10 @@ def get_module_functions(module):
             Module functions.
     """
     result = []
-    for attr in dir(module):
-        if type(getattr(module, attr)).__name__ == "function":
-            result.append(getattr(module, attr))
+    for attr_name in dir(module):
+        attr = getattr(module, attr_name)
+        if type(attr).__name__ == "function" and hasattr(attr, "is_step"):
+            result.append(attr)
     return result
 
 
