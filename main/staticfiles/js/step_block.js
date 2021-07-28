@@ -56,7 +56,7 @@ function init_block(step_list, depth){
 
 
     //Setting the estrutural steps builders
-    block.turn_to_for_step = turn_to_for_step
+    block.turn_to_para_cada = turn_to_para_cada
 
     //Setting the border functions
     block.onmouseout = function(){
@@ -314,7 +314,7 @@ function refresh_step(){
     block.params = []
 
     if(this.value=="Para cada"){
-        block.turn_to_for_step()
+        block.turn_to_para_cada()
     }else{
         block.delete_lines(block.lines.length)
         block.add_line()
@@ -337,7 +337,7 @@ function refresh_step(){
  * Sets the block to the for each step.
  * This function is a method of the block.
  */
-function turn_to_for_step(){
+function turn_to_para_cada(){
     block = find_parent_with_attr_worth(this, "block")
     block.delete_lines(block.lines.length)
     block.add_line()
