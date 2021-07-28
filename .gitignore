@@ -156,3 +156,8 @@ crawlers/log/
 .vscode/
 
 main/staticfiles/json/step*_signature.json
+<<<<<<< HEAD
+=======
+
+local-chromium/
+>>>>>>> master

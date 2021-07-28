@@ -19,7 +19,7 @@ class BrowserMock(pyppeteer.browser.Browser):
         pass
 
 
-def gen_async(result: Any):
+def gen_async(result: Any = None):
     """
     Helper function to generate an async function returning the supplied
     argument
@@ -51,6 +51,17 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
         mockResponse = mock.create_autospec(pyppeteer.network_manager.Response)
         self.mockResponse = mockResponse
 
+        # CDP mock
+        mockCDP = mock.create_autospec(pyppeteer.connection.CDPSession)
+        mockCDP.send = mock.MagicMock(side_effect=gen_async())
+        self.mockCDP = mockCDP
+
+        # Target mock
+        mockTarget = mock.create_autospec(pyppeteer.browser.Target)
+        mockTarget.createCDPSession = mock.MagicMock(
+            side_effect=gen_async(mockCDP))
+        self.mockTarget = mockTarget
+
         # Page mock
         mockPage = mock.create_autospec(pyppeteer.page.Page)
         mockPage.goto = mock.MagicMock(side_effect=gen_async(mockResponse))
@@ -60,6 +71,7 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
         mockPage.screenshot = mock.MagicMock(side_effect=gen_async(None))
         mockPage.waitFor = mock.MagicMock(side_effect=gen_async(None))
         mockPage.url = "http://example.com"
+        mockPage._target = mockTarget
         self.mockPage = mockPage
 
         # Create the network manager client, which is used internally

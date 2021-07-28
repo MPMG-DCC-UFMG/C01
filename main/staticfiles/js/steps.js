@@ -184,7 +184,6 @@ function get_step_json_format(block){
         step : param_name,
         depth : block.depth,
     }
-
     if(param_name == "para_cada"){
         step_dict.iterator = block.iterator_input.value
         step_dict.children = []
@@ -219,6 +218,8 @@ function placeholders_to_params(block, dict){
             param_name = "opcao"
         }else if(ph == "xpath dos botões"){
             param_name = "xpath_dos_botoes"
+        }else if(ph == "índice do último elemento"){
+            param_name = "indice_ultimo_elemento"
         }else{
             param_name = String(ph).replaceAll(" ", "_")
         }
@@ -238,6 +239,8 @@ function param_to_placeholder(param){
         param_display = "opção"
     }else if(param == "xpath_dos_botoes"){
         param_display = "xpath dos botões"
+    }else if(param == "indice_ultimo_elemento"){
+        param_display = "índice do último elemento"
     }else{
         param_display = String(param).replaceAll("_", " ")
     }

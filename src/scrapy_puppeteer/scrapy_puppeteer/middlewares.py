@@ -1,5 +1,7 @@
 """This module contains the ``PuppeteerMiddleware`` scrapy middleware"""
 import asyncio
+import json
+
 from twisted.internet import asyncioreactor
 
 try:
@@ -12,24 +14,30 @@ try:
     asyncioreactor.install(loop)
 except Exception:
     pass
-import logging
-import requests
-import sys
-import os
-import time
 
+import base64
+import datetime
+import os
+import pathlib
+import time
+from glob import glob
+
+import crawling_utils as utils
+from pyppeteer import __chromium_revision__, launch
+from scrapy import signals
+from scrapy.exceptions import IgnoreRequest
+from scrapy.http import HtmlResponse
 from step_crawler import code_generator as code_g
 from step_crawler import functions_file
 from step_crawler.functions_file import *
-from step_crawler import atomizer as atom
-from pyppeteer import launch
-from scrapy import signals
-from scrapy.http import HtmlResponse
 from twisted.internet.defer import Deferred
-from promise import Promise
-from scrapy.exceptions import CloseSpider, IgnoreRequest
 
+from .chromium_downloader import chromium_executable
 from .http import PuppeteerRequest
+
+# For the system to wait up to TIMEOUT_TO_DOWNLOAD_START
+# seconds for a download to start. The value below is arbitrary
+TIMEOUT_TO_DOWNLOAD_START = 7
 
 
 def as_deferred(f):
@@ -52,9 +60,28 @@ class PuppeteerMiddleware:
         :crawler(Crawler object): crawler that uses this middleware
         """
 
+
         middleware = cls()
-        middleware.browser = await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio': True, 'logLevel': crawler.settings.get('LOG_LEVEL')})
+        middleware.browser = await launch({
+                                        'executablePath': chromium_executable(),
+                                        'headless': True,
+                                        'args': ['--no-sandbox'],
+                                        'dumpio': True,
+                                        'logLevel': crawler.settings.get('LOG_LEVEL')
+                                    })
+
+        data_path = crawler.settings.get('DATA_PATH')
+
+        middleware.download_path = f'{data_path}/data/files/'
+        middleware.crawler_id = crawler.settings.get('CRAWLER_ID')
+        middleware.instance_id = crawler.settings.get('INSTANCE_ID')
+
         page = await middleware.browser.newPage()
+
+        # Changes the default file save location.
+        cdp = await page._target.createCDPSession()
+        await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allow', 'downloadPath': middleware.download_path})
+
         crawler.signals.connect(middleware.spider_closed, signals.spider_closed)
 
         return middleware
@@ -82,8 +109,14 @@ class PuppeteerMiddleware:
 
         try:
             page = await self.browser.newPage()
+
         except:
-            self.browser = await launch({"headless": True, 'args': ['--no-sandbox'], 'dumpio': True})
+            self.browser = await launch({
+                                        'executablePath': chromium_executable(),
+                                        'headless': True,
+                                        'args': ['--no-sandbox'],
+                                        'dumpio': True
+                                    })
             await self.browser.newPage()
             page = await self.browser.newPage()
 
@@ -100,49 +133,52 @@ class PuppeteerMiddleware:
         # For some reason the regular method with setRequestInterception and
         # page.on('request', callback) doesn't work, I had to use this instead.
         # This directly manipulates the lower level modules in the pyppeteer
-        # page to achieve the results. Details on this workaround here:
+        # page to achieve the results. Details on this workaround here (I have
+        # changed the code so it no longer uses the deprecated 'Network'
+        # domain, using 'Fetch' instead):
         # https://github.com/pyppeteer/pyppeteer/issues/198#issuecomment-750221057
         async def setup_request_interceptor(page) -> None:
             client = page._networkManager._client
 
             async def intercept(event) -> None:
-                interception_id = event["interceptionId"]
+                request_id = event["requestId"]
 
                 try:
                     int_req = event["request"]
                     url = int_req["url"]
 
-                    options = {"interceptionId": interception_id}
+                    options = {"requestId": request_id}
                     options['method'] = request.method
 
                     if request.body:
-                        options['postData'] = request.body.decode('utf-8')
+                        # The post data must be base64 encoded
+                        b64_encoded = base64.b64encode(request.body)
+                        options['postData'] = b64_encoded.decode('utf-8')
 
-                    await client.send("Network.continueInterceptedRequest",
-                        options)
+                    await client.send("Fetch.continueRequest", options)
                 except:
                     # If everything fails we need to be sure to continue the
                     # request anyway, else the browser hangs
                     options = {
-                        "interceptionId": interception_id,
+                        "requestId": request_id,
                         "errorReason": "BlockedByClient"
                     }
-                    await client.send("Network.continueInterceptedRequest",
-                        options)
+                    await client.send("Fetch.failRequest", options)
 
 
             # Setup request interception for all requests.
-            client.on(
-                "Network.requestIntercepted",
+            client.on("Fetch.requestPaused",
                 lambda event: client._loop.create_task(intercept(event)),
-            )
+                      )
 
             # Set this up so that only the initial request is intercepted
             # (else it would capture requests for external resources such as
             # scripts, stylesheets, images, etc)
             patterns = [{"urlPattern": request.url}]
-            await client.send("Network.setRequestInterception",
-                {"patterns": patterns})
+            await client.send("Fetch.enable", {"patterns": patterns})
+
+        async def stop_request_interceptor(page) -> None:
+            await page._networkManager._client.send("Fetch.disable")
 
         await setup_request_interceptor(page)
 
@@ -153,9 +189,13 @@ class PuppeteerMiddleware:
                     'waitUntil': request.wait_until,
                 },
             )
+
         except:
             await page.close()
             raise IgnoreRequest()
+
+        # Stop intercepting following requests
+        await stop_request_interceptor(page)
 
         if request.screenshot:
             request.meta['screenshot'] = await page.screenshot()
@@ -182,7 +222,7 @@ class PuppeteerMiddleware:
             headers=response.headers,
             body=body,
             encoding='utf-8',
-            request=request
+            request=request,
         )
 
     def process_request(self, request, spider):
@@ -197,10 +237,66 @@ class PuppeteerMiddleware:
 
         return as_deferred(self._process_request(request, spider))
 
+    def block_until_complete_downloads(self):
+        """Blocks the flow of execution until all files are downloaded.
+        """
+
+        if not os.path.exists(self.download_path):
+            os.makedirs(self.download_path)
+
+        def exists_pendent_downloads():
+            # Pending downloads in chrome have the .crdownload extension.
+            # So, if any of these files exist, we know that a download is running.
+            pendend_downloads = glob(f'{self.download_path}*.crdownload')
+            return len(pendend_downloads) > 0
+
+        for _ in range(TIMEOUT_TO_DOWNLOAD_START):
+            time.sleep(1)
+            if exists_pendent_downloads():
+                break
+
+        while exists_pendent_downloads():
+            time.sleep(1)
+
+    def generate_file_descriptions(self):
+        """Generates descriptions for downloaded files."""
+
+        # list all files in crawl data folder, except file_description.jsonl
+        files = glob(f'{self.download_path}*.[!jsonl]*')
+
+        with open(f'{self.download_path}file_description.jsonl', 'w') as f:
+            for file in files:
+                # Get timestamp from file download
+                fname = pathlib.Path(file)
+                creation_time = datetime.datetime.fromtimestamp(fname.stat().st_ctime)
+
+                s_file = file.split('/')
+
+                path = '/'.join(s_file[:-1])
+                ext = file.split('.')[-1].lower()
+                renamed_filename = utils.hash(s_file[-1].encode()) + f'.{ext}'
+
+                renamed_file = f'{path}/{renamed_filename}'
+                os.rename(file, renamed_file)
+
+
+                description = {
+                    'url': '<triggered by dynamic page click>',
+                    'file_name': renamed_filename,
+                    'crawler_id': self.crawler_id,
+                    'instance_id': self.instance_id,
+                    'crawled_at_date': str(creation_time),
+                    'referer': '<from unique dynamic crawl>',
+                    'type': ext,
+                }
+
+                f.write(json.dumps(description) + '\n')
+
     async def _spider_closed(self):
         await self.browser.close()
 
     def spider_closed(self):
         """Shutdown the browser when spider is closed"""
-
+        self.block_until_complete_downloads()
+        self.generate_file_descriptions()
         return as_deferred(self._spider_closed())
