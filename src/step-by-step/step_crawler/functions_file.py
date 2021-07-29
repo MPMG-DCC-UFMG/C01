@@ -40,7 +40,11 @@ async def wait_page(page):
 async def clique(page, param):
     if type(param) == str:
         await page.waitForXPath(param)
-        await page.click(cssify(param))
+        elements = await page.xpath(param)
+        if len(elements) == 1:
+            await elements[0].click()
+        else:
+            raise Exception('XPath points to non existent element, or multiple elements!')
     else:
         param.click()
     await wait_page(page)
