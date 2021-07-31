@@ -253,7 +253,7 @@ function param_to_placeholder(param){
 function get_this_texts_inside_each_tag(string_list, tag){
     html_tags=""
     for (var i = 0; i < string_list.length; i++) {
-        html_tags = html_tags + tag + string_list[i] + tag.split(" ")[0].replace('<', '</')+"\n"
+        html_tags = html_tags + tag + string_list[i] + tag.split(" ")[0].replace('<', '</')+">\n"
     }
     return html_tags
 }
