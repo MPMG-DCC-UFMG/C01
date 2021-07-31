@@ -168,7 +168,6 @@ function build_json(step_board, output_element){
         }
 
     }
-    debugger
     output_element.value = JSON.stringify(root_step)
 
 }
@@ -190,12 +189,10 @@ function get_step_json_format(block){
         step_dict.iterable = {call:{}}
         step_dict.iterable.call = {
             step: steps_names[block.iterable_select.value],
-            arguments:{}
+            arguments: load_param_dict(block)
         }
-        placeholders_to_params(block, step_dict.iterable.call.arguments)
     }else{
-        step_dict.arguments = {}
-        placeholders_to_params(block, step_dict.arguments)
+        step_dict.arguments = load_param_dict(block)
     }
 
     return step_dict
@@ -204,26 +201,15 @@ function get_step_json_format(block){
 //-------------- util -------------------------------
 
 /**
- * This function turns placeholders of a block into parameters names. These para-
- * meters will be keys in a dict, whose values are the user's input in that field.
- * @param {Node} block The html element that represents a step and was parameterized by the user.
- * @param {Dict} the dict to be parameterized with user's arguments.
- * @return {Dict} the parameterized dict.
+*
+ * This function loads the user's input to instantiate the step object
+ * @param {Node} block The html element that represents a step and was configured by the user.
+ * @return {Dict} dict The step object filled with configured parameters.
  */
-function placeholders_to_params(block, dict){
-    for(param of block.params){
-        console.log(param)
-        ph = param.children[0].placeholder
-        if(ph == "opção"){
-            param_name = "opcao"
-        }else if(ph == "xpath dos botões"){
-            param_name = "xpath_dos_botoes"
-        }else if(ph == "índice do último elemento"){
-            param_name = "indice_ultimo_elemento"
-        }else{
-            param_name = String(ph).replaceAll(" ", "_")
-        }
-
+function load_param_dict(block){
+    let dict = {}
+    for(let param of block.params){
+        let param_name = param.children[0].dataset.param
         dict[param_name] = param.children[0].value
     }
     return dict
@@ -235,47 +221,28 @@ function placeholders_to_params(block, dict){
  * @retuns {String} the parameter's placeholder name.
  */
 function param_to_placeholder(param){
-    if(param == "opcao"){
-        param_display = "opção"
-    }else if(param == "xpath_dos_botoes"){
-        param_display = "xpath dos botões"
-    }else if(param == "indice_ultimo_elemento"){
-        param_display = "índice do último elemento"
-    }else{
-        param_display = String(param).replaceAll("_", " ")
+    switch(param){
+        case "opcao":
+            param_display = "opção"
+            break;
+        case "xpath_dos_botoes":
+            param_display = "xpath dos botões"
+            break;
+        case "numero_xpaths":
+            param_display = "número de xpaths"
+            break;
+        case "funcao_preprocessamento":
+            param_display = "função de pré-processamento"
+            break;
+        case "numero_xpaths":
+            param_display = "número de xpaths"
+        default:
+            param_display = String(param).replaceAll("_", " ")
+            break;
     }
+
     return param_display
 }
-
-/**
- * This function get all the mandatory parameters of a step, and return them but in input format in a list.
- * @param {String} step_name The name of the step to get the inputs representing the parameters.
- * @param {List} step_list The list of steps that conteing the step named with the step_name value.
- * @retuns {List} A list with the inputs represting the mandatory parameters of the step.
- */
-function get_params_element_list(step_name_display, step_list){
-    if(step_name_display == "Objeto"){
-        object_div = document.createElement("DIV")
-        object_div.className = "col-sm"
-        object_div.innerHTML = `<input placeholder="objeto, ex: [1,2,3]" class="row form-control">`
-        return [object_div.children[0]]
-    }else{
-        var step = get_step_info(step_name_display, step_list)
-        var param_element_list = []
-
-        for(param of step.mandatory_params){
-            parameter = document.createElement("DIV")
-            parameter.className = "col-sm"
-
-            param_display = param_to_placeholder(param)
-            parameter.innerHTML = `<input placeholder="` + param_display  + `" class="row form-control">`
-            parameter.children[0].placeholder = param_display
-            param_element_list.push(parameter)
-        }
-        return param_element_list
-    }
-}
-
 
 /**
  * This function puts one by one the strings of a list inside a tag.
@@ -292,9 +259,9 @@ function get_this_texts_inside_each_tag(string_list, tag){
 }
 
 /**
- * This function get the steps descriptions inside a list of steps.
- * @param {List} step_list The list of steps on json steps format.
- * @retuns {Dict} keys: the displayed names; values: the step names.
+ * This function get the steps' names inside a list of steps.
+ * @param {List} step_list The list of steps.
+ * @retuns {Dict} keys: displayed names; values: step names.
  */
  function get_step_names(step_list){
    steps_names = {}

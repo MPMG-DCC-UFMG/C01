@@ -53,8 +53,6 @@ function init_block(step_list, depth){
     block.hide_show_params = hide_show_params
     block.hide_show_params()
 
-
-
     //Setting the estrutural steps builders
     block.turn_to_para_cada = turn_to_para_cada
 
@@ -87,7 +85,6 @@ function init_block(step_list, depth){
     block.select.onchange()
 
     block.step = get_step_info(block.select.value, step_list)
-
 
     //Setting controler functions
     block.unindent_step = unindent_step
@@ -147,7 +144,7 @@ function init_optional_params_button(step){
         step = block.step
     }
 
-    optional_params = Object.keys(step.optional_params)
+    optional_params = Object.keys(step.optional_params).map(param_to_placeholder)
     dropdown_menu.innerHTML = get_this_texts_inside_each_tag(optional_params, '<a class="dropdown-item" style="cursor:pointer">')
     for(child of dropdown_menu.children){
         child.onclick = function(){
@@ -184,7 +181,7 @@ function add_param(param_name, optional_param = false){
     param_element = document.createElement("DIV")
     param_element.className = "col-sm"
     param_display = param_to_placeholder(param_name)
-    param_element.innerHTML = `<input placeholder="` + param_display  + `" class="row form-control">`
+    param_element.innerHTML = `<input placeholder="${param_display}" class="row form-control" data-param="${param_name}">`
     if(optional_param){
         remove_button = document.createElement("A")
         remove_img = document.createElement("IMG")

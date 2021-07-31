@@ -92,7 +92,7 @@ async def for_clicavel(pagina, xpath):
 
 
 @step("Localizar elementos")
-async def localiza_elementos(pagina, xpath, indice_ultimo_elemento=None):
+async def localiza_elementos(pagina, xpath, numero_xpaths=None):
     base_xpath = xpath.split("[*]")[0]
 
     xpath_list = []
@@ -101,33 +101,14 @@ async def localiza_elementos(pagina, xpath, indice_ultimo_elemento=None):
         if await elemento_existe_na_pagina(pagina, candidate_xpath):
             xpath_list.append(candidate_xpath)
 
-    indice_ultimo_elemento = len(xpath_list) if not indice_ultimo_elemento else indice_ultimo_elemento
-    return xpath_list[:indice_ultimo_elemento]
+    numero_xpaths = len(xpath_list) if not numero_xpaths else numero_xpaths
+    return xpath_list[:numero_xpaths]
 
 
 @step("Voltar")
 async def retorna_pagina(pagina):
     await pagina.goBack()
-
-
-async def pegue_os_links_da_paginacao(pagina, xpath_dos_botoes, xpath_dos_links, indice_do_botao_proximo=-1):
-    clickable = True
-    urls = []
-    while clickable:
-        urls += [await (await link.getProperty('href')).jsonValue() for link in await pagina.xpath(xpath_dos_links)]
-
-
-        buttons = await pagina.xpath(xpath_dos_botoes)
-        if len(buttons) != 0:
-            next_button = buttons[indice_do_botao_de_proximo]
-            before_click = await pagina.content()
-            await next_button.click()
-            after_click = await pagina.content()
-            if before_click == after_click:
-                clickable = False
-        else:
-            clickable = False
-
+    
 
 @step("Digitar em")
 async def digite(pagina, xpath, texto):
