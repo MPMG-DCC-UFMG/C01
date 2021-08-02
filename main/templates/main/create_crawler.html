@@ -118,19 +118,6 @@ New Crawler
                 </li>
 
                 <!-- /END Separator -->
-                <a onClick="showBlock(this.id)" href="#"
-                    class="button-block bg-dark list-group-item list-group-item-action" id="crawler-details-item">
-                    <div class="d-flex w-100 justify-content-start align-items-center">
-                        <div class="col-md-10 sidemenu-items">
-                            <span class="fa fa-gear fa-fw mr-3"></span>
-                            <span class="menu-collapsed">Detalhes do coletor</span>
-                        </div>
-                        <div class="col-md-2">
-                            <span id="crawler-details-valid-icon"
-                                class="fa fa-check fa-fw mr-3 crawler-details-valid-icon valid-icon"></span>
-                        </div>
-                    </div>
-                </a>
 
                 <!-- implementation local begin -->
                 <a onClick="showBlock(this.id); load_steps_interface(this.id + '-block', 'id_steps');" href="#"
@@ -148,6 +135,19 @@ New Crawler
                 </a>
                 <!-- implementation local end -->
 
+                <a onClick="showBlock(this.id)" href="#"
+                    class="button-block bg-dark list-group-item list-group-item-action" id="crawler-details-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-gear fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Detalhes do coletor</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span id="crawler-details-valid-icon"
+                                class="fa fa-check fa-fw mr-3 crawler-details-valid-icon valid-icon"></span>
+                        </div>
+                    </div>
+                </a>
 
                 <a href="#" class="disabled bg-dark list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-start align-items-center">
