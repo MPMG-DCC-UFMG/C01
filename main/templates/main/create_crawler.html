@@ -315,11 +315,18 @@ New Crawler
                                         </div>
                                         <div class="mycollapse" id="adv-links">
                                             <div class="mycollapse-block  p-4 pb-0 rounded mt-3">
+                                                {{ form.encoding_detection_method | as_crispy_field }}
+                                                <p class="small">Essa configuração permite escolher como será obtido a codificação para salvamento das páginas salvas. 
+                                                    O padrão é via cabeçalho das respostas do servidor, que devem funcionar para a maiorias dos casos e é mais rápido. 
+                                                    O método automático tentará detectar a codificação automaticamente, o que é mais lento mas pode resolver caso de 
+                                                    respostas incorretas do servidor. A detecção de codificação não é perfeita, portanto, o nível de confidência de <strong>85%</strong> é adotado.
+                                                </p>
+
                                                 {{ form.link_extractor_allow_domains | as_crispy_field }}
                                                 {{ form.link_extractor_tags | as_crispy_field }}
                                                 {{ form.link_extractor_attrs | as_crispy_field }}
                                                 {{ form.link_extractor_check_type | as_crispy_field }}
-                                                <p>Se existirem urls que apontam para arquivos mas não <strong>terminam</strong>
+                                                <p class="small">Se existirem urls que apontam para arquivos mas não <strong>terminam</strong>
                                                     em uma extensão de arquivo, o coletor pode conferir o tipo da página pra qual a url aponta.
                                                     Nesse caso, ele irá requisitar os <i>headers</i> da url. Se o tipo for <i>'text/html'</i>,
                                                     a página será tratada com um html; caso contrário, como um arquivo. Habilitar essa opção
@@ -355,10 +362,10 @@ New Crawler
                                         {{ form.download_files_check_large_content | as_crispy_field}}
 
                                         <p class="small">Caso não haja arquivos grandes (>1GB) a serem coletados, desabilite a opção acima para ganhar desempenho. </p>
-                                    <div id="dynamic_processing" class="">
+                                    </div>
+                                    <div id="dynamic_processing" class="" style="padding: 0 20px 0 20px;">
                                         {{ form.dynamic_processing | as_crispy_field}}
                                     </div>
-                                </div>
                             </div>
                         </div>
                     </div>

@@ -6,6 +6,7 @@ from scrapy.spidermiddlewares.httperror import HttpError
 from scrapy.http import Response
 from twisted.internet.error import DNSLookupError
 from twisted.internet.error import TimeoutError
+import cchardet as chardet
 
 # Other external libs
 import datetime
@@ -27,6 +28,9 @@ from crawlers.constants import *
 from crawlers.file_descriptor import FileDescriptor
 from crawlers.injector_tools import create_probing_object,\
     create_parameter_generators
+
+from main.models import HEADER_ENCODE_DETECTION, AUTO_ENCODE_DETECTION
+from crawlers.constants import AUTO_ENCODE_DETECTION_CONFIDENCE_THRESHOLD
 
 PUNCTUATIONS = "[{}]".format(string.punctuation)
 
@@ -68,11 +72,12 @@ class BaseSpider(scrapy.Spider):
 
         self.get_format = lambda i: str(i).split("/")[1][:-1].split(";")[0]
 
-
         if bool(self.config.get("download_files_allow_extensions")):
-            normalized_allowed_extensions = self.config["download_files_allow_extensions"].replace(" ", "")
+            normalized_allowed_extensions = self.config["download_files_allow_extensions"].replace(
+                " ", "")
             normalized_allowed_extensions = normalized_allowed_extensions.lower()
-            self.download_allowed_extensions = set(normalized_allowed_extensions.split(","))
+            self.download_allowed_extensions = set(
+                normalized_allowed_extensions.split(","))
 
         else:
             self.download_allowed_extensions = set()
@@ -112,13 +117,13 @@ class BaseSpider(scrapy.Spider):
         if has_placeholder:
             # Configure the probing process
             templated_url_probe = create_probing_object(base_url, req_type,
-                self.config['templated_url_response_handlers']
-            )
+                                                        self.config['templated_url_response_handlers']
+                                                        )
 
             # Instantiate the parameter injectors for the URL
             url_injectors = create_parameter_generators(templated_url_probe,
-                self.config['templated_url_parameter_handlers']
-            )
+                                                        self.config['templated_url_parameter_handlers']
+                                                        )
 
             # Generate the requests
             templated_url_generator = itertools.product(*url_injectors)
@@ -130,19 +135,19 @@ class BaseSpider(scrapy.Spider):
         if use_static_forms:
             # Configure the probing process
             static_form_probe = create_probing_object(base_url, form_req_type,
-                self.config['static_form_response_handlers']
-            )
+                                                      self.config['static_form_response_handlers']
+                                                      )
 
             # Instantiate the parameter injectors for the forms
             static_injectors = create_parameter_generators(static_form_probe,
-                self.config['static_form_parameter_handlers']
-            )
+                                                           self.config['static_form_parameter_handlers']
+                                                           )
 
             # Generate the requests
             static_form_generator = itertools.product(*static_injectors)
 
         parameter_keys = list(map(lambda x: x['parameter_key'],
-            self.config['static_form_parameter_handlers']))
+                                  self.config['static_form_parameter_handlers']))
         for templated_param_combination in templated_url_generator:
             # Check if this entry hits a valid page
 
@@ -160,7 +165,7 @@ class BaseSpider(scrapy.Spider):
                 for form_param_combination in static_form_generator_cp:
 
                     req_entries = dict(zip(parameter_keys,
-                        form_param_combination))
+                                           form_param_combination))
 
                     # Check if once again we hit a valid page
                     is_valid = static_form_probe.check_entry(
@@ -206,23 +211,37 @@ class BaseSpider(scrapy.Spider):
     def store_html(self, response: Response):
         """Stores html and adds its description to file_description file."""
         print(f'Saving html page {response.url}')
-        
-        content_type = response.headers['Content-type'].decode()
-        _, params = cgi.parse_header(content_type)
-        encoding = params['charset']
 
-        cleaner = Cleaner(
-            style=True, links=False, scripts=True,
-            comments=True, page_structure=False
-        )
+        encoding = None
+        encoding_detection_method = self.config.get(
+            'encoding_detection_method', HEADER_ENCODE_DETECTION)
+
+        if encoding_detection_method == HEADER_ENCODE_DETECTION:
+            content_type = response.headers['Content-type'].decode()
+            _, params = cgi.parse_header(content_type)
+            encoding = params['charset']
+
+        elif encoding_detection_method == AUTO_ENCODE_DETECTION:
+            detection = chardet.detect(response.body)
+
+            detected_encoding = detection['encoding']
+            confidence = detection['confidence']
+
+            if confidence >= AUTO_ENCODE_DETECTION_CONFIDENCE_THRESHOLD:
+                encoding = detected_encoding
+
+            else:
+                msg = f'Could not detect page encoding "{response.url}" at the level of confidence "{AUTO_ENCODE_DETECTION_CONFIDENCE_THRESHOLD}"".' + \
+                    f'The predicted encoding was "{detected_encoding}" with "{confidence}" confidence. THE PAGE WILL BE SAVED AS BINARY.'
+                self.logger.warn(msg)
+
+        else:
+            ValueError(
+                f'"{encoding_detection_method}" is not a valid encoding detection method.')
 
         raw_body = response.body
-        body = cleaner.clean_html(raw_body.decode(encoding))        
         hsh = self.hash_response(response)
         relative_path = f"{self.data_folder}raw_pages/{hsh}.html"
-
-        with open(file=relative_path, mode="w+", encoding=encoding, errors='ignore') as f:
-            f.write(body)
 
         description = {
             "file_name": f"{hsh}.html",
@@ -231,10 +250,27 @@ class BaseSpider(scrapy.Spider):
             "url": response.url,
             "crawler_id": self.config["crawler_id"],
             "instance_id": self.config["instance_id"],
-            "type": str(response.headers['Content-type']),
+            "type": response.headers['Content-type'].decode(),
             "crawled_at_date": str(datetime.datetime.today()),
             "referer": response.meta["referer"]
         }
+
+        if encoding is None:
+            description['encoding'] = 'unknown'
+            description["type"] = 'binary'
+            with open(file=relative_path, mode="wb") as f:
+                f.write(raw_body)
+
+        else:
+            cleaner = Cleaner(
+                style=True, links=False, scripts=True,
+                comments=True, page_structure=False
+            )
+
+            body = cleaner.clean_html(raw_body.decode(encoding))
+            with open(file=relative_path, mode="w+", encoding=encoding, errors='ignore') as f:
+                f.write(body)
+
 
         self.feed_file_description(
             self.data_folder + "raw_pages", description)
@@ -296,7 +332,8 @@ class BaseSpider(scrapy.Spider):
 
         response.close()
 
-        extension = self.detect_file_extensions(url, content_type, content_disposition)[0]
+        extension = self.detect_file_extensions(
+            url, content_type, content_disposition)[0]
 
         file_name = self.get_download_filename(url, extension)
         relative_path = f"{self.data_folder}files/{file_name}"
@@ -307,15 +344,18 @@ class BaseSpider(scrapy.Spider):
                 for chunk in req.iter_content(chunk_size=8192):
                     f.write(chunk)
 
-        self.create_and_feed_file_description(url, file_name, referer, extension)
+        self.create_and_feed_file_description(
+            url, file_name, referer, extension)
 
     def store_small_file(self, response):
         print(f"Saving small file {response.url}")
 
         content_type = response.headers.get("Content-Type", b"").decode()
-        content_disposition = response.headers.get("Content-Disposition", b"").decode()
+        content_disposition = response.headers.get(
+            "Content-Disposition", b"").decode()
 
-        extension = self.detect_file_extensions(response.url, content_type, content_disposition)[0]
+        extension = self.detect_file_extensions(
+            response.url, content_type, content_disposition)[0]
 
         file_name = self.get_download_filename(response.url, extension)
         relative_path = f"{self.data_folder}files/{file_name}"
@@ -323,7 +363,8 @@ class BaseSpider(scrapy.Spider):
         with open(relative_path, "wb") as f:
             f.write(response.body)
 
-        self.create_and_feed_file_description(response.url, file_name, response.meta["referer"], extension)
+        self.create_and_feed_file_description(
+            response.url, file_name, response.meta["referer"], extension)
 
     def errback_httpbin(self, failure):
         # log all errback failures,
@@ -395,12 +436,15 @@ class BaseSpider(scrapy.Spider):
         ]
 
         for attr, default in defaults:
-            self.config[attr] = self.preprocess_listify(self.config[attr], default)
+            self.config[attr] = self.preprocess_listify(
+                self.config[attr], default)
 
         deny = "download_files_deny_extensions"
         if len(self.download_allowed_extensions) > 0:
-            extensions = [ext for ext in scrapy.linkextractors.IGNORED_EXTENSIONS]
-            self.config[deny] = [ext for ext in extensions if ext not in self.download_allowed_extensions]
+            extensions = [
+                ext for ext in scrapy.linkextractors.IGNORED_EXTENSIONS]
+            self.config[deny] = [
+                ext for ext in extensions if ext not in self.download_allowed_extensions]
 
         else:
             self.config[deny] = []
@@ -418,4 +462,5 @@ class BaseSpider(scrapy.Spider):
             ("link_extractor_attrs", ('href',))
         ]
         for attr, default in defaults:
-            self.config[attr] = self.preprocess_listify(self.config[attr], default)
+            self.config[attr] = self.preprocess_listify(
+                self.config[attr], default)

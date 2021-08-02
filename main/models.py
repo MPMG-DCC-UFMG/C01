@@ -4,6 +4,13 @@ from django.core.validators import RegexValidator
 
 from crawlers.constants import *
 
+HEADER_ENCODE_DETECTION = 1
+AUTO_ENCODE_DETECTION = 2
+
+ENCODE_DETECTION_CHOICES = [
+    (HEADER_ENCODE_DETECTION, 'Via cabeçalho da resposta'),
+    (AUTO_ENCODE_DETECTION, 'Automático'),
+]
 
 class TimeStamped(models.Model):
     creation_date = models.DateTimeField()
@@ -151,6 +158,8 @@ class CrawlRequest(TimeStamped):
 
     steps = models.CharField(
         blank=True, null=True, max_length=9999999, default='{}')
+    
+    encoding_detection_method = models.IntegerField(choices=ENCODE_DETECTION_CHOICES, default=HEADER_ENCODE_DETECTION)
 
     @staticmethod
     def process_parameter_data(param_list):
