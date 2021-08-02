@@ -82,13 +82,22 @@ async def for_clicavel(page, xpath):
 
 
 @step
-async def elementos_filhos(page, xpath):
-    base_xpath = xpath
+async def localiza_elementos(page, xpath, num=None):
+    base_xpath = xpath.split("[*]")[0]
+
     xpath_list = []
-    elements = await page.xpath(xpath)
-    for i in range(len(elements)):
-        xpath_list.append(base_xpath + f"[{i+1}]")
-    return xpath_list
+    for i in range(len(await page.xpath(base_xpath))):
+        candidate_xpath = xpath.replace("*", str(i+1))
+        if await element_in_page(page, candidate_xpath):
+            xpath_list.append(candidate_xpath)
+
+    num = len(xpath_list) if not num else num
+    return xpath_list[:num]
+
+
+@step
+async def retorna_pagina(page):
+    await page.goBack()
 
 
 async def pegue_os_links_da_paginacao(page, xpath_dos_botoes, xpath_dos_links, indice_do_botao_proximo=-1):

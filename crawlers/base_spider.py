@@ -15,7 +15,6 @@ import itertools
 import os
 import re
 from lxml.html.clean import Cleaner
-import urllib.parse as urlparse
 import mimetypes
 import requests
 import string
