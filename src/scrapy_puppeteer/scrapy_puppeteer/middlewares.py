@@ -15,7 +15,7 @@ try:
 except Exception:
     pass
 
-  import cgi
+import cgi
 
 import base64
 import datetime
