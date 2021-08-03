@@ -2,7 +2,6 @@ from datetime import datetime
 import itertools
 import json
 
-import requests
 import tldextract
 import redis
 
@@ -30,7 +29,8 @@ def format_request(url: str, crawler_id: str, instance_id: str) -> dict:
             "crawlid": crawler_id,
             "spiderid": crawler_id,
             "attrs":{
-                "referer": "start_requests"
+                "referer": "start_requests",
+                "instance_id": instance_id,
             },
             "priority":1,
             "maxdepth":0,

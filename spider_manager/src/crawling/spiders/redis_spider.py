@@ -2,6 +2,7 @@ from scrapy.exceptions import DontCloseSpider
 from scrapy.spiders import Spider
 from scrapy import signals
 
+MAX_IDLENESS = 30
 class RedisSpider(Spider):
     '''
     Base Spider for doing distributed crawls coordinated through Redis
@@ -15,8 +16,7 @@ class RedisSpider(Spider):
                                      signal=signals.spider_idle)
 
     def spider_idle(self):
-        # Esperar até um minuto de ociosidade até o spider fechar
-        if self.idleness <= 60:
+        if self.idleness <= MAX_IDLENESS:
             self.idleness += 1
             raise DontCloseSpider
 

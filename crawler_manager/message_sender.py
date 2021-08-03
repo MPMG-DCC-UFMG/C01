@@ -23,11 +23,16 @@ class MessageSender:
             'req_type': config['request_type'], 
             'req_body': {}, 
             'response_handlers':  config['templated_url_response_handlers'],
-            'parameter_handlers': config.get('parameter_handlers')
+            'parameter_handlers': config['templated_url_parameter_handlers']
         }
 
+        # writer module
         self.__producer.send(settings.WRITER_TOPIC, {'register': config})
+        
+        # link generator module 
         self.__producer.send(settings.LINK_GENERATOR_TOPIC, {'start': lite_config})
+        
+        # spider manager(s) modules
         self.__producer.send(settings.COMMANDS_TOPIC, {'create': config})
         
         self.__producer.flush()
@@ -38,7 +43,14 @@ class MessageSender:
         Args:
             - crawler_id: Unique crawler identifier
         """
+
+        # writer module
         self.__producer.send(settings.WRITER_TOPIC, {'stop': crawler_id})
+        
+        # link generator module
         self.__producer.send(settings.LINK_GENERATOR_TOPIC, {'stop': crawler_id})
+        
+        # spider manager module
         self.__producer.send(settings.COMMANDS_TOPIC, {'stop': crawler_id})
+        
         self.__producer.flush()
