@@ -234,8 +234,6 @@ function param_to_placeholder(param){
         case "funcao_preprocessamento":
             param_display = "função de pré-processamento"
             break;
-        case "numero_xpaths":
-            param_display = "número de xpaths"
         default:
             param_display = String(param).replaceAll("_", " ")
             break;

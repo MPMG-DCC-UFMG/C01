@@ -144,12 +144,17 @@ function init_optional_params_button(step){
         step = block.step
     }
 
-    optional_params = Object.keys(step.optional_params).map(param_to_placeholder)
-    dropdown_menu.innerHTML = get_this_texts_inside_each_tag(optional_params, '<a class="dropdown-item" style="cursor:pointer">')
+    optional_params = Object.keys(step.optional_params)
+    dropdown_menu.innerHTML = optional_params.map(
+        function(param){
+            text = param_to_placeholder(param)
+            return `<a class="dropdown-item" style="cursor:pointer" data-param="${param}">${text}<\a>`
+        }
+    )
     for(child of dropdown_menu.children){
         child.onclick = function(){
             block = find_parent_with_attr_worth(this, "block")
-            block.add_param(this.innerText, true)
+            block.add_param(this.dataset.param, true)
             hide(this)
         }
     }
@@ -182,6 +187,7 @@ function add_param(param_name, optional_param = false){
     param_element.className = "col-sm"
     param_display = param_to_placeholder(param_name)
     param_element.innerHTML = `<input placeholder="${param_display}" class="row form-control" data-param="${param_name}">`
+
     if(optional_param){
         remove_button = document.createElement("A")
         remove_img = document.createElement("IMG")
