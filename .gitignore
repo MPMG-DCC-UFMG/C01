@@ -156,6 +156,9 @@ crawler_manager/log/
 .vscode/
 
 main/staticfiles/json/step*_signature.json
+
 utils/tests/
 utils/examples/
 main/migrations/
+
+local-chromium/

@@ -9,12 +9,9 @@ from twisted.internet.error import TimeoutError
 import datetime
 import json
 import itertools
-import logging
 import os
 import re
-import time
 from lxml.html.clean import Cleaner
-import urllib.parse as urlparse
 import mimetypes
 import requests
 import string
