@@ -2,13 +2,29 @@
 
 Desenvolvimento de ferramentas para construção e manutenção de coletores de páginas da Web. (Em desenvolvimento)
 
-## TODO
+## Status atual
 
-- [x] Atualização da interface para gerir os spiders distribuídos
-- [x] Suporte a templated URLs
-- [ ] Testes em máquinas diferentes
-- [x] Suporte a páginas dinâmicas
-- [ ] Iniciação automática dos serviços
+- Distribuição de spiders (funcionam cooperativamente em máquinas distintas)
+- Problemas de escalabilidade no módulo de salvamento de coletas/arquivos
+- Suporte a páginas estáticas e downloads de arquivos
+- Suporte parcial a páginas dinâmicas (com bugs)
+- Sem suporte a download de arquivos em páginas dinâmicas
+- Logs são transmitidos distribuidamente via Kafka
+- Monitoramento parcial de coletas/coletores
+    - É possível acompanhar o andamento da coleta de páginas/arquivos
+    - Não é possível acompanhar a "saúde" dos `workers`/`spiders`
+    
+## TODOs
+
+A lista atualizada pode ser vista [aqui](https://github.com/MPMG-DCC-UFMG/C01/issues?q=is%3Aissue+is%3Aopen+label%3A%22sistema+distribu%C3%ADdo%22): 
+
+- [ ] Suporte total a páginas dinâmicas
+- [ ] Download de arquivos em páginas dinâmicas
+- [ ] Suporte a mecânismos de passos (páginas dinâmicas)
+- [ ] Resolver problemas de escalabilidade (módulos `writer` e `link_generator`)
+- [ ] Melhorias no sistema de acompanhamento de andamento de coletas (o atual não esté "calibrado")
+- [ ] Tela de monitoramento de coletas, como saúde dos `workers`/`spiders`
+- [ ] Realização de testes, inclusive de robustez 
 
 ## Arquitetura atual da solução distribuída
 
