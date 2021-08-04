@@ -374,13 +374,25 @@ def load_form_fields(request):
             parser = None
 
             try:
-                forms = HTMLExtractor(url=curr_url).get_forms()
+                extractor = HTMLExtractor(url=curr_url)
             except MissingSchema as e:
                 # URL schema error
                 return JsonResponse({
                     'error': 'URL inválida, o protocolo foi especificado? ' +
                              '(ex: http://, https://)'
                 }, status=404)
+
+            if not extractor.html_response.ok:
+                # Error during form extractor request
+                status_code = extractor.html_response.status_code
+                return JsonResponse({
+                    'error': 'Erro ao acessar a página (HTTP ' +
+                        str(status_code) + '). Verifique se a URL inicial ' +
+                        'está correta e se a página de interesse está ' +
+                        'funcionando.'
+                }, status=404)
+
+            forms = extractor.get_forms()
 
             if len(forms) == 0:
                 # Failed to find a form in a valid page
