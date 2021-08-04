@@ -7,7 +7,7 @@ import subprocess
 import sys
 import time
 
-from crawlers.crawler_manager import file_descriptor_process
+from broker_interface.start_descriptor import start_consumer_process
 
 import crawling_utils.crawling_utils as crawling_utils
 
@@ -44,6 +44,7 @@ def run_django():
     # Runs django repassing cli parameters
     subprocess.run(["python", "manage.py", "runserver"] + sys.argv[1:])
 
+
 def run_zookeeper():
     crawling_utils.check_file_path("crawlers/log/")
     os.chdir('kafka_2.13-2.4.0')
@@ -68,8 +69,10 @@ def run_kafka():
                    stdout=open(f"../crawlers/log/kafka.out", "a", buffering=1),
                    stderr=open(f"../crawlers/log/kafka.err", "a", buffering=1))
 
-def runn_file_descriptor():
-    file_descriptor_process()
+
+def run_file_descriptor():
+    wait_for_port(9092)
+    start_consumer_process()
 
 
 # END FUNCTIONS THAT SHOULD BE EXECUTED BY PROCESSES
@@ -104,7 +107,7 @@ def run():
         [run_zookeeper, []],
         [run_kafka, []],
         [run_django, []],
-        [runn_file_descriptor, []],
+        [run_file_descriptor, []],
         # [run_file_downloader, []],
     ]
 

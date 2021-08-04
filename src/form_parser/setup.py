@@ -14,6 +14,7 @@ setup(
     author='Rubia Guerra',
     author_email='rubia-rg@users.noreply.github.com',
     packages=find_packages(),
-    install_requires=['lxml', 'requests', 'entry_probing', 'asyncio',
+    # TODO add entry_probing as a requirement in a reliable manner
+    install_requires=['lxml', 'requests', 'asyncio',
                       'pyppeteer', 'syncer']
 )

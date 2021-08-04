@@ -5,16 +5,21 @@ services:
     build:
       context: ..
       dockerfile: ./docker-web/django-gunicorn.Dockerfile
-    # TODO Change to use gunicorn directly when FileDescriptor is dockerized
-    command: ./temp_run.sh
-    environment:
-      - EXECUTION_TYPE=distributed
+      args:
+        EXECUTION_TYPE: distributed
+        INSTALL_REDIS: "False"
+        INSTALL_KAFKA: "False"
+    command: ./django_run.sh
     volumes:
       - static_volume:/home/django/C01/staticfiles
+      - data:/data
     expose:
       - 8000
+    env_file:
+      - .env.prod
     depends_on:
       - db
+    restart: on-failure
   nginx:
     build:
       context: ..
@@ -34,7 +39,38 @@ services:
       - .env.prod
     ports:
       - "5432:5432"
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+    env_file:
+      - .env.prod
+    restart: always
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    env_file:
+      - .env.prod
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - zookeeper
+    restart: always
+  file_descriptor:
+    build:
+      context: ..
+      dockerfile: ./docker-web/file-descriptor.Dockerfile
+    command: python3 -m broker_interface.start_descriptor
+    volumes:
+      - data:/data
+    env_file:
+      - .env.prod
+    depends_on:
+      - kafka
+    restart: on-failure
 
 volumes:
   static_volume:
+  data:
   postgres_data:

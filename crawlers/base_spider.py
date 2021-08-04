@@ -12,7 +12,6 @@ import itertools
 import logging
 import os
 import re
-import pandas
 import time
 from lxml.html.clean import Cleaner
 import urllib.parse as urlparse
@@ -24,11 +23,17 @@ import string
 import crawling_utils
 
 from crawlers.constants import *
-from crawlers.file_descriptor import FileDescriptor
+
+from broker_interface.file_description_producer import FileDescriptionProducer
 from crawlers.injector_tools import create_probing_object,\
     create_parameter_generators
 
 PUNCTUATIONS = "[{}]".format(string.punctuation)
+
+# The Kafka instance host and port are loaded from the environment
+# variables
+KAFKA_HOST = os.environ.get('KAFKA_HOST', 'localhost')
+KAFKA_PORT = os.environ.get('KAFKA_PORT', '9092')
 
 
 class BaseSpider(scrapy.Spider):
@@ -68,7 +73,6 @@ class BaseSpider(scrapy.Spider):
 
         self.get_format = lambda i: str(i).split("/")[1][:-1].split(";")[0]
 
-
         if bool(self.config.get("download_files_allow_extensions")):
             normalized_allowed_extensions = self.config["download_files_allow_extensions"].replace(" ", "")
             normalized_allowed_extensions = normalized_allowed_extensions.lower()
@@ -79,6 +83,9 @@ class BaseSpider(scrapy.Spider):
 
         self.preprocess_link_configs()
         self.preprocess_download_configs()
+
+        # Create a file description producer instance
+        self.file_descriptor = FileDescriptionProducer(KAFKA_HOST, KAFKA_PORT)
 
     def start_requests(self):
         """
@@ -342,7 +349,7 @@ class BaseSpider(scrapy.Spider):
             self.logger.error('TimeoutError on %s', request.url)
 
     def feed_file_description(self, destination: str, content: dict):
-        FileDescriptor.feed_description(destination, content)
+        self.file_descriptor.feed_description(destination, content)
 
     def create_and_feed_file_description(self, url: str, file_name: str, referer: str, extension: str):
         """Creates the description file of the downloaded files and saves them"""
@@ -358,6 +365,7 @@ class BaseSpider(scrapy.Spider):
         }
 
         self.feed_file_description(f"{self.data_folder}files/", description)
+
 
     def hash_response(self, response):
         """

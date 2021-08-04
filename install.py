@@ -8,17 +8,16 @@ subprocess.run(["pip", "install", "-U", "pip"])
 subprocess.run(["pip", "install", "twisted"])
 subprocess.run(["pip", "install", "django-environ"])
 
-from twisted.internet import asyncioreactor
 import environ
+from twisted.internet import asyncioreactor
 
 # Initialize Django-environ to read settings from environment variables
 env = environ.Env(
     # set casting, default value
     INSTALL_REDIS=(bool, True),
     INSTALL_KAFKA=(bool, True),
+    EXECUTION_TYPE=(str, "standalone"),
 )
-# reading .env file
-environ.Env.read_env(env_file='interface/.env')
 
 if env('INSTALL_REDIS'):
     # Install Redis
@@ -65,7 +64,7 @@ try:
 except Exception:
     pass
 
-if os.environ.get("EXECUTION_TYPE", "standalone") == "standalone":
+if env("EXECUTION_TYPE") == "standalone":
     print(f"Creating database...")
     subprocess.run(["python", "manage.py", "makemigrations"])
     subprocess.run(["python", "manage.py", "migrate"])
