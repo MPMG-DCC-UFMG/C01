@@ -91,7 +91,7 @@ class Executor:
         # sys.stdout = KafkaLogger(instance_id, logger_name, 'out')
         # sys.stderr = KafkaLogger(instance_id, logger_name, 'err')
 
-        process.crawl(StaticPageSpider, name=crawler_id, container_id=self.__container_id, config=ujson.dumps(config))
+        process.crawl(StaticPageSpider, name=crawler_id, spider_manager_id=self.__container_id, config=ujson.dumps(config))
 
         iter_crawler = iter(process.crawlers)
         crawler = next(iter_crawler)
@@ -108,7 +108,7 @@ class Executor:
         """
         
         message = {
-            'container_id': self.__container_id,
+            'spider_manager_id': self.__container_id,
             'crawler_id': crawler_id,
             'code': 'created'
         }
@@ -128,7 +128,7 @@ class Executor:
                                 value_serializer=lambda m: ujson.dumps(m).encode('utf-8'))
 
         message = {
-            'container_id': spider.container_id,
+            'spider_manager_id': spider.spider_manager_id,
             'crawler_id': spider.name,
             'code': 'closed',
             'reason': reason
@@ -137,7 +137,7 @@ class Executor:
         notifier.send(base_config['NOTIFICATIONS_TOPIC'], message)
         notifier.flush()
 
-        print(f'Spider "{spider.name}" from container "{spider.container_id}" closed because "{reason}"')
+        print(f'Spider "{spider.name}" from container "{spider.spider_manager_id}" closed because "{reason}"')
 
     def create_spider(self, config: dict) -> None:
         """Creates a sub-process with a spider instance

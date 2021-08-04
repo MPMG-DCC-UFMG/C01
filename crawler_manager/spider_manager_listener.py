@@ -19,19 +19,19 @@ class SpiderManagerListener:
     def __parse_notification(self, notification: dict):
         """Processes notifications for creating and closing spiders and notifies the django application that the scraping has ended."""
 
-        container_id = notification['container_id']
+        spider_manager_id = notification['spider_manager_id']
         crawler_id = notification['crawler_id']
 
         if notification['code'] == 'created':
             if crawler_id not in self.__spiders_running:
                 self.__spiders_running[crawler_id] = set()
-            self.__spiders_running[crawler_id].add(container_id)
+            self.__spiders_running[crawler_id].add(spider_manager_id)
 
         elif notification['code'] == 'closed':
             if crawler_id not in self.__spiders_running:
                 return
 
-            self.__spiders_running[crawler_id].remove(container_id) 
+            self.__spiders_running[crawler_id].remove(spider_manager_id) 
 
             if len(self.__spiders_running[crawler_id]) == 0:
                 self.__notify_stopped_spiders(crawler_id)
@@ -54,7 +54,8 @@ class SpiderManagerListener:
         """
 
         payload = {'from': 'sm_listener'}
-        requests.get(f'http://localhost:{settings.SERVER_PORT}/detail/stop_crawl/{crawler_id}', params=payload)
+        requests.get(settings.STOPPED_CRAWLER_SPIDER_ADDRESS.format(
+            crawler_id = crawler_id), params=payload)
         
     def run(self):
         """Executes the thread with the kafka consumer responsible for receiving notifications of creation/termination of spiders.

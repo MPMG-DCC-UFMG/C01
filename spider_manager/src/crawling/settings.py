@@ -57,6 +57,7 @@ HTTPERROR_ALLOW_ALL = True
 RETRY_TIMES = 3
 DOWNLOAD_TIMEOUT = 30
 DNSCACHE_ENABLED = True
+USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36"
 LOGGING_TOPIC = "crawler_ufmg_logs"
 COMMANDS_TOPIC = "crawler_ufmg_commands"
 NOTIFICATIONS_TOPIC = "crawler_ufmg_notifications"

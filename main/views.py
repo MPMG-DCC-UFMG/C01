@@ -351,9 +351,7 @@ def success_download_file(request, instance_id):
         instance.number_files_success_download += 1
         instance.save()
 
-        total = instance.number_files_success_download + instance.number_files_error_download
-
-        if instance.page_crawling_finished and total == instance.number_files_found:
+        if instance.page_crawling_finished and instance.download_files_finished():
             process_stop_crawl(instance.crawler_id.id) 
 
         return JsonResponse({}, status=status.HTTP_200_OK)
@@ -369,9 +367,7 @@ def error_download_file(request, instance_id):
         instance.number_files_error_download += 1
         instance.save()
 
-        total = instance.number_files_success_download + instance.number_files_error_download
-
-        if instance.page_crawling_finished and total == instance.number_files_found:
+        if instance.page_crawling_finished and instance.download_files_finished():
             process_stop_crawl(instance.crawler_id.id) 
 
         return JsonResponse({}, status=status.HTTP_200_OK)
@@ -400,11 +396,6 @@ def success_download_page(request, instance_id):
         instance.number_pages_success_download += 1
         instance.save()
 
-        total = instance.number_pages_success_download + instance.number_pages_error_download
-        stats = round((total / instance.number_pages_found) * 100, 4)
-
-        print(f'[SUCCESS] Download page status: {stats} % ({total}/{instance.number_pages_found})')
-
         return JsonResponse({}, status=status.HTTP_200_OK)
 
     except:
@@ -417,11 +408,6 @@ def error_download_page(request, instance_id):
 
         instance.number_pages_error_download += 1
         instance.save()
-
-        total = instance.number_pages_success_download + instance.number_pages_error_download
-        stats = round((total / instance.number_pages_found) * 100, 4)
-
-        print(f'[ERROR] Download page status: {stats} % ({total}/{instance.number_pages_found})')
 
         return JsonResponse({}, status=status.HTTP_200_OK)
 
