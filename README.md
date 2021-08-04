@@ -26,6 +26,95 @@ A lista atualizada pode ser vista [aqui](https://github.com/MPMG-DCC-UFMG/C01/is
 - [ ] Tela de monitoramento de coletas, como saúde dos `workers`/`spiders`
 - [ ] Realização de testes, inclusive de robustez 
 
+## Como executar
+
+Temos 4 módulos que devem funcionar de maneira independente: `Crawler Manager (CM)` (que inicia junto com o servidor), `Link Generator (LG)`, `Spider Manager (SM)` e `Writer (W)`. 
+
+Esses módulos, devidademente configurado os `hosts` do `Zookeeper`, `Kafka` e `Redis`, em um arquivo `settings.py` na respectiva pasta deles, podem ser executados em máquinas diferentes com as seguintes condições:
+
+- Cada um devem ser iniciados manualmente, ainda não foram dockerizados.
+- Deve haver apenas uma instância em execução dos seguintes módulos:
+    - `Crawler Manager`: Naturalmente terá apenas uma instância em execução, pois é um processo filho do servidor.
+    - `Link Generator`: Mais de uma instância em execução resultará em duplicação de requisições de coletas. Isso porque cada instância irá ler o comando de geração de requisições, então **é necessário adaptar a leitura de mensagens do Kafka para que apenas um consumer leia cada mensagem**.
+    - `Writer`: Esse módulo tem o problema de escalabilidade de `Link Generator` (Kafka consumers lendo a mesma mensagem, portanto, gerando processamento duplicado), mas mais que isso, ter mais de uma instância em execução resultará em `fragmentação da coleta`. Isso pois cada módulo escreve dados no sistema de arquivos local de cada máquina. Portando, é `necessário suporte a sistema de arquivos distribuídos`.  
+- Podem haver várias instâncias de `Spider Managers` em execução, inclusive na mesma máquina. Ao contrário dos problemas de escalabilidade relatado nos outros módulos que se comunicam via `Kafka`, a fila de coletas é gerenciado via `Redis`, de modo que não há processamento de uma mesma mensagem por consumidores diferentes.
+    - No momento, um `Spider Manager` por gerir apenas um spider de uma mesma coleta.
+
+> **Obs.**: Zookeeper, Kafka e Redis devem estar em execução e seus hosts e portas configuradas nos arquivos settings.py dos módulos. 
+### Interface/servidor Django
+
+
+Instale as dependências:
+
+```bash
+
+python3.7 -m venv venv
+source venv/bin/activate
+python install.py
+
+```
+
+Coloque-o para rodar:
+
+```bash
+python manage.py runserver --noreload
+```
+
+> Note a flag `--noreload`, ela é importante para que o servidor não reinicie durante sua execução e crie mais consumidores Kafka que o necessário (gerando duplicação de `logs`, por exemplo)
+
+### Link Generator
+
+Vá para a pasta do módulo e instale suas dependências:
+
+```bash
+cd link_generator/
+python3.7 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+Execute-o:
+
+```bash
+cd src/
+python main.py
+```
+
+### Spider Manager
+
+Vá para a pasta do módulo e instale suas dependências:
+
+```bash
+cd spider_manager/
+python3.6 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+```
+
+> Note que é usado python3.6. Isso é um requisito necessário, pois o módulo utiliza recursos do Scrapy-Cluster que só a suporte a essa versão do python.
+
+Crie quandos processos desejar de Spider Managers, repetindo o comando abaixo:
+
+```
+cd src/
+python comand_listener.py
+```
+### Writer
+
+Vá para a pasta do módulo e instale suas dependências:
+
+```
+cd writer/
+python3.7 -m venv venv
+source venv/bin/activate
+```
+
+Execute-o:
+
+```bash
+cd src/
+python writer.py
+```
 ## Arquitetura atual da solução distribuída
 
 ![Arquitetura](sist_dist_diagram.png) 
@@ -41,7 +130,7 @@ O sistema possui 4 módulos principais:
 
     - Também repassa os logs das coletas ao servidor, bem como o atualiza sobre o andamento das coletas, em geral.
 
-- **Gerador de requisições de coletas** (`link_generator`)
+- **Gerador de requisições de coletas** (`link_generator`, *um melhor nome pode ser atribuído)
     - Responsável por gerar as requisições iniciais de coletas. 
 
     - Útil para o caso de URLs parametrizadas não sobrecarreguem o servidor.
