@@ -164,6 +164,11 @@ table.dataTable thead .sorting_desc_disabled:before {
 
 /* Step styles -----------*/
 
+#dynamic-processing-item-wrap.disabled {
+    opacity: .5;
+    pointer-events: none;
+}
+
 .step-block {
     margin-top: 0em;
 }

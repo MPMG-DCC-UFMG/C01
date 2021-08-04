@@ -120,16 +120,16 @@ New Crawler
                 <!-- /END Separator -->
 
                 <!-- implementation local begin -->
-                <a onClick="showBlock(this.id); load_steps_interface(this.id + '-block', 'id_steps');" href="#"
-                    class="disabled button-block bg-dark list-group-item list-group-item-action" id="dynamic-processing-item">
+                <a onClick="showBlock(this.id); load_steps_interface(this.id + '-wrap', 'id_steps');" href="#"
+                    class="button-block bg-dark list-group-item list-group-item-action" id="dynamic-processing-item">
                     <div class="d-flex w-100 justify-content-start align-items-center">
                         <div class="col-md-10 sidemenu-items">
                             <span class="fa fa-code fa-fw mr-3"></span>
                             <span class="menu-collapsed">Processamento dinâmico</span>
                         </div>
                         <div class="col-md-2">
-                            <span id="crawler-details-valid-icon"
-                                class="fa fa-check fa-fw mr-3 crawler-details-valid-icon valid-icon"></span>
+                            <span id="dynamic-processing-valid-icon"
+                                class="fa fa-check fa-fw mr-3 crawler-details-valid-icon valid-icon disabled"></span>
                         </div>
                     </div>
                 </a>
@@ -301,6 +301,16 @@ New Crawler
                         </div>
                     </div>
 
+
+                    <div id="dynamic-processing-item-block" class="block" hidden>
+                        <div id="dynamic_processing" class="">
+                            {{ form.dynamic_processing | as_crispy_field}}
+                        </div>
+                        <div id="dynamic-processing-item-wrap" class="" style="padding:20px;" class="hidden">
+                            {{ form.steps | as_crispy_field }}
+                        </div>
+                    </div>
+
                     <div id="crawler-details-item-block" class="block" hidden>
                         <div class="row">
                             <div class="col md-6">
@@ -355,17 +365,10 @@ New Crawler
                                         {{ form.download_files_check_large_content | as_crispy_field}}
 
                                         <p class="small">Caso não haja arquivos grandes (>1GB) a serem coletados, desabilite a opção acima para ganhar desempenho. </p>
-                                    <div id="dynamic_processing" class="">
-                                        {{ form.dynamic_processing | as_crispy_field}}
-                                    </div>
+                            
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-                <div id="dynamic-processing-item-block" class="block" hidden>
-                    <div class="row" style="padding:20px;">
-                        {{ form.steps | as_crispy_field }}
                     </div>
                 </div>
 
