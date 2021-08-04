@@ -22,6 +22,7 @@ from datetime import datetime
 import json
 import itertools
 import json
+import logging
 import time
 import os
 
@@ -36,6 +37,9 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
 
 from formparser.html import HTMLParser
+
+# Log the information to the file logger
+logger = logging.getLogger('file')
 
 # Helper methods
 
@@ -283,7 +287,6 @@ def run_crawl(request, crawler_id):
     return redirect(detail_crawler, id=crawler_id)
 
 def tail_log_file(request, instance_id):
-
     instance = CrawlerInstance.objects.get(instance_id=instance_id)
     
     files_found = instance.number_files_found

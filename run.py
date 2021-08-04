@@ -7,9 +7,8 @@ import subprocess
 import sys
 import time
 
-# from crawler_manager.crawler_manager import file_descriptor_process
-
 import crawling_utils.crawling_utils as crawling_utils
+from broker_interface.start_descriptor import start_consumer_process
 
 import crawling_utils.crawling_utils as crawling_utils
 
@@ -47,6 +46,7 @@ def run_django():
     # --no-reload Avoid calling MainConfig twice, not creating more processes than necessary
     subprocess.run(["python", "manage.py", "runserver", "--noreload"] + sys.argv[1:])
 
+
 def run_zookeeper():
     crawling_utils.check_file_path("crawler_manager/log/")
     os.chdir('kafka_2.13-2.4.0')
@@ -70,9 +70,9 @@ def run_kafka():
                    stdout=open(f"../crawler_manager/log/kafka.out", "a", buffering=1),
                    stderr=open(f"../crawler_manager/log/kafka.err", "a", buffering=1))
 
-# def runn_file_descriptor():
-#     file_descriptor_process()
-
+def run_file_descriptor():
+    wait_for_port(9092)
+    start_consumer_process()
 
 # END FUNCTIONS THAT SHOULD BE EXECUTED BY PROCESSES
 
@@ -100,6 +100,7 @@ def run():
         # [run_zookeeper, []],
         # [run_kafka, []],
         [run_django, []],
+        [run_file_descriptor, []],
         # [run_file_downloader, []],
     ]
 

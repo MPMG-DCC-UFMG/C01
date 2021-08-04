@@ -162,3 +162,5 @@ utils/examples/
 main/migrations/
 
 local-chromium/
+# Kafka interface log files
+broker_interface/log

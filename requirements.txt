@@ -1,10 +1,13 @@
 django
 django-crispy-forms
+django-environ
 djangorestframework
-scrapy
-requests
+kafka-python
+psycopg2-binary==2.8.5
 pytest
 pytest-mock
 python3-wget
 kafka-python
+requests
+scrapy
 validators

@@ -12,6 +12,11 @@ from step_crawler import functions_file
 from step_crawler import parameter_extractor
 from crawler_manager.crawler_manager import run_spider_manager_listener
 
+import json
+import os
+import signal
+import sys
+
 # Enable interrupt signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
@@ -30,12 +35,13 @@ class MainConfig(AppConfig):
         # Setting all cralwers that were running when server was shut down
         # as not running
         # have to import here, after everything is ready
-        from .models import CrawlerInstance
-        instances = CrawlerInstance.objects.filter(running=True)
+        if not ('makemigrations' in sys.argv or 'migrate' in sys.argv):
+            from .models import CrawlerInstance
+            instances = CrawlerInstance.objects.filter(running=True)
 
-        for instance in instances:
-            instance.running = False
-            instance.save()
+            for instance in instances:
+                instance.running = False
+                instance.save()
 
        # starts kafka log consumer
         log_writer = Process(target=log_writer_process)

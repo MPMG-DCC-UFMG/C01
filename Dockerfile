@@ -10,7 +10,10 @@ COPY *.py ./
 COPY src src
 COPY main main
 COPY interface interface
-COPY crawler_manager crawler_manager
+
+COPY crawlers crawlers
+COPY zoo.properties zoo.properties
+COPY broker_interface broker_interface
 
 EXPOSE 8000
 RUN python install.py
