@@ -127,6 +127,9 @@ async def pegue_os_links_da_paginacao(page, xpath_dos_botoes, xpath_dos_links, i
 async def digite(page, xpath, texto):
     await page.type(cssify(xpath), texto)
 
+@step
+async def object(page, param):
+    return param
 
 @step
 async def nesse_elemento_esta_escrito(page, xpath, texto):
