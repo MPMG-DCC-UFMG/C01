@@ -57,6 +57,7 @@ function init_block(step_list, depth){
 
     //Setting the estrutural steps builders
     block.turn_to_for_step = turn_to_for_step
+    block.turn_to_attribution_step = turn_to_attribution_step
     block.turn_to_pagination_step = turn_to_pagination_step
 
     //Setting the border functions
@@ -307,6 +308,28 @@ function refresh_iterable(){
 }
 
 /**
+ * Refreshes the parameter inputs of an source when it is changed.
+ * This function is a method of the atributtion step.
+ */
+function refresh_source(){
+    block = find_parent_with_attr_worth(this, "block")
+    block.source_step = get_step_info(this.value, block.step_list)
+    block.params = []
+
+    block.delete_lines(1, block.lines.length)
+    block.add_line()
+
+    for(param of block.source_step.mandatory_params){
+        block.add_param(param)
+    }
+
+    optional_params = Object.keys(block.source_step.optional_params)
+    if(optional_params.length!=0){
+        block.init_optional_params_button(block.source_step)
+    }
+}
+
+/**
  * Refreshes the parameter inputs of an iterable when it is changed.
  * This function is a method of the select element of the block.
  */
@@ -317,6 +340,8 @@ function refresh_step(){
 
     if(this.value=="para cada"){
         block.turn_to_for_step()
+    }else if(this.value=="atribuicao"){
+        block.turn_to_attribution_step()
     }else if(this.value=="for each page in"){
         block.turn_to_pagination_step()
     }else{
@@ -379,6 +404,50 @@ function turn_to_for_step(){
 
     iterable_select.onchange = refresh_iterable
     iterable_select.onchange()
+}
+
+/**
+ * Sets the block to the attribution step.
+ * This function is a method of the attribution step.
+ */
+ function turn_to_attribution_step(){
+    block = find_parent_with_attr_worth(this, "block")
+    block.delete_lines(block.lines.length)
+    block.add_line()
+
+    // defines target
+    target_input_box = document.createElement("DIV")
+    target_input_box.className = "col-sm"    
+    target_input = document.createElement("INPUT")
+    target_input.value = "option"
+    target_input.className = "form-control row"
+    target_input_box.appendChild(target_input)
+    block.target_input = target_input
+
+    in_label_box = document.createElement("DIV")
+    in_label_box.style.width = "3em"
+    in_label = document.createElement("P")
+    in_label.style.marginTop = "10%"
+    in_label.style.textAlign = "center"
+    in_label.innerText = " ="
+    in_label_box.appendChild(in_label)    
+
+    // defines source step
+    source_select_box = document.createElement("DIV")
+    source_select_box.className = "step-config-select"
+    source_select = document.createElement("select")
+    source_select.className = "form-control select-step"
+    source_select.innerHTML = get_this_texts_inside_each_tag(get_step_names(block.step_list), "<option>")
+    source_select_box.appendChild(source_select)
+    block.source_select = source_select
+
+    block.lines[0].row.appendChild(target_input_box)
+    block.lines[0].row.appendChild(in_label_box)
+    block.lines[0].row.appendChild(source_select_box)
+    block.lines[0].row.full = true
+
+    source_select.onchange = refresh_source
+    source_select.onchange()
 }
 
 /**

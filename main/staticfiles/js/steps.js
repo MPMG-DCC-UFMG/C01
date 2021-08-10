@@ -22,6 +22,7 @@ function load_steps_interface(interface_root_element_id, output_element_id, json
         })
         step_list = step_list.concat(JSON.parse('{"name":"object", "mandatory_params":["ex: [1,2,3]"], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name":"para cada", "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name":"atribuicao", "mandatory_params":[], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name":"for each page in", "mandatory_params":[], "optional_params":{}}'))
         init_steps_creation_interface(interface_root_element, output_element, step_list)
       }
@@ -198,7 +199,17 @@ function get_step_json_format(block){
         for(param of block.params){
             step_dict.iterable.call.arguments[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
         }
-    }else if(param_name == "for_each_page_in"){
+    } else if(param_name == "atribuicao"){
+        step_dict.target = block.target_input.value
+        step_dict.source = {call:{}}
+        step_dict.source.call = {
+            step: block.source_select.value.replace(/ /g, "_"),
+            arguments:{}
+        }
+        for(param of block.params){
+            step_dict.source.call.arguments[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
+        }
+    } else if(param_name == "for_each_page_in"){
         step_dict.children = []
         for(param of block.params){
             step_dict[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
