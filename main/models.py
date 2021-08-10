@@ -463,4 +463,3 @@ class Log(TimeStamped):
     logger_name = models.CharField(max_length=50, blank=True, null=True)
     log_level = models.CharField(max_length=10, blank=True, null=True)
     raw_log = models.CharField(max_length=5000, blank=True, null=True)
-    running = models.BooleanField()

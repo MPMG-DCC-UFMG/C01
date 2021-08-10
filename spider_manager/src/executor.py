@@ -20,7 +20,6 @@ from crawling.spiders.static_page import StaticPageSpider
 from kafka_logger import KafkaLogger
 
 
-
 with open('base_config.json') as f:
     base_config = ujson.loads(f.read())
 
@@ -88,10 +87,16 @@ class Executor:
 
         process = CrawlerProcess(settings=base_settings)
 
-        # sys.stdout = KafkaLogger(instance_id, logger_name, 'out')
-        # sys.stderr = KafkaLogger(instance_id, logger_name, 'err')
+        sys.stdout = KafkaLogger(instance_id, logger_name, 'out')
+        sys.stderr = KafkaLogger(instance_id, logger_name, 'err')
 
-        process.crawl(StaticPageSpider, name=crawler_id, spider_manager_id=self.__container_id, config=ujson.dumps(config))
+        # sys.stdout = open("log_writer.out", "a", buffering=1)
+        # sys.stderr = open("log_writer.err", "a", buffering=1)
+
+        process.crawl(StaticPageSpider, 
+                        name=crawler_id, 
+                        spider_manager_id=self.__container_id, 
+                        config=ujson.dumps(config))
 
         iter_crawler = iter(process.crawlers)
         crawler = next(iter_crawler)
@@ -169,6 +174,9 @@ class Executor:
         crawler_id = str(crawler_id)
 
         print(f'Closing "{crawler_id}"...')
+        if crawler_id not in self.__processes:
+            return 
+
         if self.__processes[crawler_id].is_alive():
             self.__processes[crawler_id].terminate()
         del self.__processes[crawler_id]
