@@ -20,8 +20,10 @@ A lista atualizada pode ser vista [aqui](https://github.com/MPMG-DCC-UFMG/C01/is
 
 - [ ] Suporte total a páginas dinâmicas
 - [ ] Download de arquivos em páginas dinâmicas
+    - Provavelmente será necessário suporte a sistema de arquivos distribuídos 
 - [ ] Suporte a mecânismos de passos (páginas dinâmicas)
 - [ ] Resolver problemas de escalabilidade (módulos `writer` e `link_generator`)
+    - Será necessário suporte à sistema de arquivos distribuídos para o módulo `writer`
 - [ ] Melhorias no sistema de acompanhamento de andamento de coletas (o atual não esté "calibrado")
 - [ ] Tela de monitoramento de coletas, como saúde dos `workers`/`spiders`
 - [ ] Realização de testes, inclusive de robustez 
