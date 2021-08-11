@@ -48,6 +48,11 @@ class Executor:
         
         if config.get("dynamic_processing", False):
             base_config["DOWNLOADER_MIDDLEWARES"] = {'scrapy_puppeteer.PuppeteerMiddleware': 800}
+
+            base_config["DATA_PATH"] = config["data_path"]
+            base_config["CRAWLER_ID"] = config["crawler_id"]
+            base_config["INSTANCE_ID"] = config["instance_id"]
+
             base_config["DYNAMIC_PROCESSING"] = True 
             base_config["DYNAMIC_PROCESSING_STEPS"] = ujson.loads(config["steps"])
 
@@ -87,11 +92,11 @@ class Executor:
 
         process = CrawlerProcess(settings=base_settings)
 
-        sys.stdout = KafkaLogger(instance_id, logger_name, 'out')
-        sys.stderr = KafkaLogger(instance_id, logger_name, 'err')
+        # sys.stdout = KafkaLogger(instance_id, logger_name, 'out')
+        # sys.stderr = KafkaLogger(instance_id, logger_name, 'err')
 
-        # sys.stdout = open("log_writer.out", "a", buffering=1)
-        # sys.stderr = open("log_writer.err", "a", buffering=1)
+        # sys.stdout = open("log_writer.out", "w", buffering=1)
+        # sys.stderr = open("log_writer.err", "w", buffering=1)
 
         process.crawl(StaticPageSpider, 
                         name=crawler_id, 
