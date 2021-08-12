@@ -94,7 +94,17 @@ class Parser:
         Returns:
             List of field labels
         """
-        return [label.text for label in self.form.xpath(".//label")]
+
+        labels = [label.text for label in self.form.xpath(".//label")]
+
+        # Supply an empty label for hidden fields (this usually aligns labels
+        # properly)
+        types = self.list_input_types()
+        for i, t in enumerate(types):
+            if t == "hidden":
+                labels.insert(i, "")
+
+        return labels
 
     def required_fields(self, probing_element=None, submit_button_xpath=None,
                         form_url=None, fillers=None, include_hidden=False,

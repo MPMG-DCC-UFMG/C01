@@ -253,3 +253,18 @@ a.close, a.add_form {
     text-decoration: none;
 }
 /* End hide instances from large list */
+
+/* Modal styles */
+.modal-backdrop {
+    opacity:0.5;
+}
+.form_detection_el {
+    margin-left: 1em;
+}
+.form_indented {
+    margin-left: 2em;
+}
+.form_field_label {
+    margin-left: 0.25em;
+}
+/* End modal styles */

@@ -396,6 +396,7 @@ class ParameterHandlerForm(forms.ModelForm):
 
         self.fields['parameter_type'] = forms.ChoiceField(
             choices=choices,
+            label='Tipo de parâmetro',
             widget=forms.Select(attrs={
                 'onchange': 'detailParamType(event);'
             })
@@ -463,7 +464,6 @@ class ParameterHandlerForm(forms.ModelForm):
         model = ParameterHandler
         fields = '__all__'
         labels = {
-            'parameter_type': 'Tipo de parâmetro',
             'first_num_param': 'Primeiro valor a gerar',
             'last_num_param': 'Último valor a gerar',
             'leading_num_param': 'Zeros à esquerda',
