@@ -149,6 +149,8 @@ class Executor:
 
         print(f'Spider "{spider.name}" from container "{spider.spider_manager_id}" closed because "{reason}"')
 
+        notifier.close()
+    
     def create_spider(self, config: dict) -> None:
         """Creates a sub-process with a spider instance
 
