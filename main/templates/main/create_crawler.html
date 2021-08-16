@@ -316,10 +316,10 @@ New Crawler
                                         <div class="mycollapse" id="adv-links">
                                             <div class="mycollapse-block  p-4 pb-0 rounded mt-3">
                                                 {{ form.encoding_detection_method | as_crispy_field }}
-                                                <p class="small">Essa configuração permite escolher como será obtido a codificação para salvamento das páginas salvas. 
+                                                <p class="small">Essa configuração permite escolher como será obtida a codificação para salvamento das páginas salvas. 
                                                     O padrão é via cabeçalho das respostas do servidor, que devem funcionar para a maiorias dos casos e é mais rápido. 
                                                     O método automático tentará detectar a codificação automaticamente, o que é mais lento mas pode resolver caso de 
-                                                    respostas incorretas do servidor. A detecção de codificação não é perfeita, portanto, o nível de confidência de <strong>85%</strong> é adotado.
+                                                    respostas incorretas do servidor. A detecção de codificação não é perfeita, portanto, o nível de confiança de <strong>80%</strong> é adotado.
                                                 </p>
 
                                                 {{ form.link_extractor_allow_domains | as_crispy_field }}
