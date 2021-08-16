@@ -1,5 +1,4 @@
 # Scrapy and Twister libs
-from io import RawIOBase
 import scrapy
 from scrapy.exceptions import CloseSpider
 from scrapy.spidermiddlewares.httperror import HttpError
