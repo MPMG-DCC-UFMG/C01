@@ -58,16 +58,14 @@ function init_steps_creation_interface(interface_root_element, output_element, s
     add_block_button.onclick = function(){step_board.add_block(step_list)}
     add_block_button.innerText = "Add step"
 
-
-    save_button = document.createElement("button")
-    save_button.innerText = "Save steps"
-    save_button.className="btn btn-primary step-controler-buttons"
-    save_button.style.color = "white"
-    interface_root_element.save_button = save_button
-    interface_root_element.save_button.onclick = function(){build_json(step_board, output_element)}
+    interface_root_element.save_button = document.getElementById('createButton')
+    interface_root_element.save_button.onmousedown = function(){
+        if(getCheckboxState("id_dynamic_processing") && step_board.children.length > 0){            
+            build_json(step_board, output_element)
+        }
+    }
 
     step_controler.appendChild(add_block_button)
-    step_controler.appendChild(save_button)
     steps_creation_interface.appendChild(step_controler)
     steps_creation_interface.appendChild(step_board)
     steps_creation_interface.step_controler = step_controler

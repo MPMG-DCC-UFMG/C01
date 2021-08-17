@@ -585,10 +585,13 @@ function detailWebdriverType() {
 }
 
 function detailDynamicProcessing() {
-    dynamic_processing_block = document.getElementById("dynamic-processing-item")
+    dynamic_processing_check = document.getElementById("dynamic-processing-valid-icon")
+    dynamic_processing_block = document.getElementById("dynamic-processing-item-wrap")
     if(getCheckboxState("id_dynamic_processing")){
+        dynamic_processing_check.classList.remove("disabled")
         dynamic_processing_block.classList.remove("disabled")
     }else{
+        dynamic_processing_check.classList.add("disabled")
         dynamic_processing_block.classList.add("disabled")
     }
 }
