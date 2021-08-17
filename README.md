@@ -18,15 +18,17 @@ Dentre as funcionalidades disponíveis para os coletores, pode-se se citar, por 
 
 Para que seja possível utilizar o sistema, e consequentemente configurar e executar coletores, é necessário inicialmente instalar a aplicação. Essa página se refere a essa etapa inicial. Preferencialmente, a instalação deve ser feita nativamente em sistemas baseados em Linux, contudo, através do Docker, é possível instalar o sistema em outros SO, como Windows. Portanto, se esse for o seu caso, foque nas instruções de instalação no final da página, na seção "Execução com Docker (standalone)". Futuramente, será possível realizar uma instalação distribuída do sistema, que ainda está sendo desenvolvida.
 
-## Instalação
 
-Para usar o programa é necessário um _virtualenv_ ou uma máquina apenas com **Python 3.7+**, de maneira que os comandos _"python"_ referencie o Python 3.7+, e _"pip"_ procure a instalação de pacotes também do Python 3.7+. Assim, configure esse ambiente. Para mais informações de como criar e mantar _virtualenvs_, o [seguinte material](https://docs.python.org/pt-br/3/library/venv.html) pode ajudar.
+## Instalação
+A primeira etapa para poder instalar o sistema é realizar o donwload de seu código-fonte. Para isso, utilize as ferramentas do GitHub para baixar o repositório localmente.
+
+Em seguida, é importante notar que para usar o programa é necessário um _virtualenv_ ou uma máquina apenas com **Python 3.7+**, de maneira que os comandos _"python"_ referencie o Python 3.7+, e _"pip"_ procure a instalação de pacotes também do Python 3.7+. Assim, configure esse ambiente. Para mais informações de como criar e manter _virtualenvs_, o [seguinte material](https://docs.python.org/pt-br/3/library/venv.html) pode ajudar.
 
 Além disso, alguns serviços necessitam que o Java esteja rodando no sistema, que pode ser instalado por 
 ```
 sudo apt install default-jre  
 ```
-Caso seu sistema não seja Linux, siga as instruções de instalação da Java Runtime para o sistema desejado.
+Caso seu sistema não seja Linux, siga as instruções de instalação da Java Runtime para o seu sistema, as quais podem ser encontradas nesse [link](https://www.java.com/en/download/manual.jsp).
 
 Para instalar todos os programas e suas dependências execute o script install.py.
 ```
@@ -64,12 +66,18 @@ Mais informações de como utilizar a interface pode ser encontrado nas próxima
 
 ## Execução com Docker (standalone)
 
-Antes de tudo, assegure-se de que o Docker está devidamente instalado no seu computador. Caso precise de instruições de como fazer isso, o seguinte link pode auxiliar nesse processo: https://docs.docker.com/get-docker/
+Antes de tudo, assegure-se de que o Docker está devidamente instalado no seu computador. Caso precise de instruções de como fazer isso, o seguinte link pode auxiliar nesse processo: https://docs.docker.com/get-docker/
 
 Para instalação do sistema é necessário montar a imagem a partir do Dockerfile, para isso execute o seguinte comando a partir da raiz do repositório:
 ```
 sudo docker build -t c01 .
 ```
+
+Para conseguir executar a imagem, é preciso criar o diretório "data" a partir da raiz do repositório, para isso, execute o comando:
+```
+mkdir data
+```
+Obs: Caso seu sistema não seja Linux, utilize o comando equivalente para criar diretório.
 
 Em seguida, é necessário executar a imagem. Ainda na raiz do respositório execute o comando responsável por isso:
 ```
