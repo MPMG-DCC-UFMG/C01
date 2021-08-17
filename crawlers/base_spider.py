@@ -27,7 +27,7 @@ from crawlers.file_descriptor import FileDescriptor
 from crawlers.injector_tools import create_probing_object,\
     create_parameter_generators
 
-from main.models import HEADER_ENCODE_DETECTION, AUTO_ENCODE_DETECTION
+from main.models import CrawlRequest
 from crawlers.constants import AUTO_ENCODE_DETECTION_CONFIDENCE_THRESHOLD
 
 PUNCTUATIONS = "[{}]".format(string.punctuation)
@@ -212,14 +212,14 @@ class BaseSpider(scrapy.Spider):
 
         encoding = None
         encoding_detection_method = self.config.get(
-            'encoding_detection_method', HEADER_ENCODE_DETECTION)
+            'encoding_detection_method', CrawlRequest.HEADER_ENCODE_DETECTION)
 
-        if encoding_detection_method == HEADER_ENCODE_DETECTION:
+        if encoding_detection_method == CrawlRequest.HEADER_ENCODE_DETECTION:
             content_type = response.headers['Content-type'].decode()
             _, params = cgi.parse_header(content_type)
             encoding = params['charset']
 
-        elif encoding_detection_method == AUTO_ENCODE_DETECTION:
+        elif encoding_detection_method == CrawlRequest.AUTO_ENCODE_DETECTION:
             detection = chardet.detect(response.body)
 
             detected_encoding = detection['encoding']

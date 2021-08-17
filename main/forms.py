@@ -1,5 +1,5 @@
 from django import forms
-from .models import CrawlRequest, ParameterHandler, ResponseHandler, ENCODE_DETECTION_CHOICES, HEADER_ENCODE_DETECTION
+from .models import CrawlRequest, ParameterHandler, ResponseHandler
 from django.core.exceptions import ValidationError
 
 
@@ -349,9 +349,9 @@ class RawCrawlRequestForm(CrawlRequestForm):
     # Crawler Type - Bundle file
 
     # ENCODE DETECTION METHOD
-    encoding_detection_method = forms.ChoiceField(choices=ENCODE_DETECTION_CHOICES, 
+    encoding_detection_method = forms.ChoiceField(choices=CrawlRequest.ENCODE_DETECTION_CHOICES, 
                                                     label='Método de detecção de codificação das páginas',
-                                                    initial=HEADER_ENCODE_DETECTION,
+                                                    initial=CrawlRequest.HEADER_ENCODE_DETECTION,
                                                     widget=forms.RadioSelect)
 
 class ResponseHandlerForm(forms.ModelForm):
