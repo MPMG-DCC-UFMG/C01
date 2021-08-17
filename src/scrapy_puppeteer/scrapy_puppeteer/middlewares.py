@@ -209,14 +209,14 @@ class PuppeteerMiddleware:
             steps = code_g.generate_code(request.steps, functions_file)
             request.meta["pages"] = await steps.execute_steps(page=page)
 
-        content = await page.content()
-        body = str.encode(content)
-
-        await page.close()
-
         content_type = response.headers['content-type']
         _, params = cgi.parse_header(content_type)
         encoding = params['charset']
+
+        content = await page.content()
+        body = str.encode(content, encoding=encoding, errors='ignore')
+
+        await page.close()
 
         # Necessary to bypass the compression middleware (?)
         response.headers.pop('content-encoding', None)
