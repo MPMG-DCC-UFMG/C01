@@ -38,9 +38,9 @@ function submit() {
 function defineIcon(section, isValid) {
     var sectionId = '#' + section + '-valid-icon';
     if (isValid) {
-        $(sectionId).removeClass('fa-warning').addClass('fa-check');
+        $(sectionId).removeClass('fa-exclamation-triangle text-warning').addClass('fa-check');
     } else {
-        $(sectionId).removeClass('fa-check').addClass('fa-warning');
+        $(sectionId).removeClass('fa-check').addClass('fa-exclamation-triangle text-warning');
     }
     enableCreateButton();
 }
