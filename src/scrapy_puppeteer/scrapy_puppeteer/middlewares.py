@@ -20,10 +20,11 @@ import datetime
 import os
 import pathlib
 import time
+import mimetypes
 from glob import glob
 
 import crawling_utils as utils
-import filetype
+import magic
 from pyppeteer import __chromium_revision__, launch
 from scrapy import signals
 from scrapy.exceptions import IgnoreRequest
@@ -271,10 +272,12 @@ class PuppeteerMiddleware:
                 fname = pathlib.Path(file)
                 creation_time = datetime.datetime.fromtimestamp(fname.stat().st_ctime)
 
-                guessed_extension = filetype.guess_extension(file)
+                mimetype = magic.from_file(file, mime=True)
+                guessed_extension = mimetypes.guess_extension(mimetype)
+
                 ext = '' if guessed_extension is None else guessed_extension
 
-                file_with_extension = file + f'.{ext}'
+                file_with_extension = file + ext 
                 os.rename(file, file_with_extension)
                 
                 # A typical file will be: /home/user/folder/filename.ext
@@ -288,7 +291,7 @@ class PuppeteerMiddleware:
                     'instance_id': self.instance_id,
                     'crawled_at_date': str(creation_time),
                     'referer': '<from unique dynamic crawl>',
-                    'type': ext if ext != '' else '<unknown>',
+                    'type': ext.replace('.', '') if ext != '' else '<unknown>',
                 }
 
                 f.write(json.dumps(description) + '\n')
