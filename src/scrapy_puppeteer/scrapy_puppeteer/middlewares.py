@@ -1,7 +1,6 @@
 """This module contains the ``PuppeteerMiddleware`` scrapy middleware"""
 import asyncio
 import json
-from filetype.filetype import guess_extension
 
 from twisted.internet import asyncioreactor
 
@@ -24,6 +23,7 @@ import time
 from glob import glob
 
 import crawling_utils as utils
+import filetype
 from pyppeteer import __chromium_revision__, launch
 from scrapy import signals
 from scrapy.exceptions import IgnoreRequest
@@ -32,7 +32,6 @@ from step_crawler import code_generator as code_g
 from step_crawler import functions_file
 from step_crawler.functions_file import *
 from twisted.internet.defer import Deferred
-import filetype
 
 from .chromium_downloader import chromium_executable
 from .http import PuppeteerRequest
