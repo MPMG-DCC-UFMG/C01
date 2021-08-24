@@ -14,7 +14,7 @@ setuptools.setup(
     author_email='rennanl@ufmg.br',
     packages=setuptools.find_packages(),
     install_requires=['scrapy>=1.0.0', 'promise', 'pyppeteer2',
-                     'requests', 'twisted'],
+                     'requests', 'twisted', 'filetype==1.0.7'],
     entry_points={
         'console_scripts': [
             'scrapyp = scrapy_puppeteer.cli:__main__',
