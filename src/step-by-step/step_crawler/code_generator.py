@@ -111,6 +111,15 @@ def generate_salva_pagina(child, module):
     code += "await salva_pagina(**missing_arguments)\n"
     return code
 
+def generate_abrir_em_nova_aba(child, module):
+    code = ""
+    code += child['depth'] * '    ' + 'page_stack.append(page)\n'
+    code += child['depth'] * '    ' + \
+            'missing_arguments["page"] = await open_in_new_tab(**missing_arguments, ' + \
+                'link_xpath = ' + child['link_xpath'] +')\n'
+    code += child['depth'] * '    ' + 'page = missing_arguments["page"]\n'
+    return code
+
 
 def generate_call_step(child, module):
     code = ""
@@ -152,7 +161,8 @@ def generate_head(module):
     code += "from " + module.__name__ + " import *\n\n"
     code += "async def execute_steps(**missing_arguments):\n"\
         + "    pages = {}\n"\
-        + "    page = missing_arguments['page']\n"
+        + "    page = missing_arguments['page']\n"\
+        + "    page_stack = []\n"
     return code
 
 
@@ -180,4 +190,5 @@ def generate_code(recipe, module):
     code += generate_body(recipe, module)
     code += "    return pages"
     print(code)
+    print('--------------------------------------------------------------------------')
     return RuntimeModule.from_string("steps", code)

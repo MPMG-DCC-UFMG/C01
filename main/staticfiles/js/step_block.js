@@ -58,6 +58,7 @@ function init_block(step_list, depth){
     //Setting the estrutural steps builders
     block.turn_to_for_step = turn_to_for_step
     block.turn_to_pagination_step = turn_to_pagination_step
+    block.turn_to_new_tab_step = turn_to_new_tab_step
 
     //Setting the border functions
     block.onmouseout = function(){
@@ -317,6 +318,8 @@ function refresh_step(){
 
     if(this.value=="para cada"){
         block.turn_to_for_step()
+    }else if(this.value=="abrir em nova aba"){
+        block.turn_to_new_tab_step()
     }else if(this.value=="for each page in"){
         block.turn_to_pagination_step()
     }else{
@@ -392,6 +395,28 @@ function turn_to_pagination_step(){
     block.add_param("buttons ambiguous xpath")
     block.step.optional_params = {"next button index":-1}
     block.init_optional_params_button()
+}
+
+/**
+ * Sets the block to the open in new page step.
+ * This function is a method of the block.
+ */
+function turn_to_new_tab_step(){
+    block = find_parent_with_attr_worth(this, "block")
+    block.delete_lines(block.lines.length)
+    block.add_line()
+
+    // defines link xpath
+    xpath_input_box = document.createElement("DIV")
+    xpath_input_box.className = "col-sm"    
+    xpath_input = document.createElement("INPUT")
+    xpath_input.placeHolder = "link xpath"
+    xpath_input.className = "form-control row"
+    xpath_input_box.appendChild(xpath_input)
+    block.xpath_input = xpath_input
+
+    block.lines[0].row.appendChild(xpath_input_box)
+    block.lines[0].row.full = true
 }
 
 
