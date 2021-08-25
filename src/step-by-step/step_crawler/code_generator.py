@@ -120,6 +120,13 @@ def generate_abrir_em_nova_aba(child, module):
     code += child['depth'] * '    ' + 'page = missing_arguments["page"]\n'
     return code
 
+def generate_fechar_aba(child, module):
+    code = ""
+    code += child['depth'] * '    ' + 'await page.close()\n'
+    code += child['depth'] * '    ' + 'missing_arguments["page"] = page_stack.pop()\n'
+    code += child['depth'] * '    ' + 'page = missing_arguments["page"]\n'
+    return code
+
 
 def generate_call_step(child, module):
     code = ""

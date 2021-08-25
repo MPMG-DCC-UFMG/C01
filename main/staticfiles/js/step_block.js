@@ -59,6 +59,7 @@ function init_block(step_list, depth){
     block.turn_to_for_step = turn_to_for_step
     block.turn_to_pagination_step = turn_to_pagination_step
     block.turn_to_new_tab_step = turn_to_new_tab_step
+    block.turn_to_close_tab_step = turn_to_close_tab_step
 
     //Setting the border functions
     block.onmouseout = function(){
@@ -320,6 +321,8 @@ function refresh_step(){
         block.turn_to_for_step()
     }else if(this.value=="abrir em nova aba"){
         block.turn_to_new_tab_step()
+    }else if(this.value=="fechar aba"){
+        block.turn_to_close_tab_step()
     }else if(this.value=="for each page in"){
         block.turn_to_pagination_step()
     }else{
@@ -416,6 +419,13 @@ function turn_to_new_tab_step(){
     block.xpath_input = xpath_input
 
     block.lines[0].row.appendChild(xpath_input_box)
+    block.lines[0].row.full = true
+}
+
+function turn_to_close_tab_step(){
+    block = find_parent_with_attr_worth(this, "block")
+    block.delete_lines(block.lines.length)
+    block.add_line()
     block.lines[0].row.full = true
 }
 
