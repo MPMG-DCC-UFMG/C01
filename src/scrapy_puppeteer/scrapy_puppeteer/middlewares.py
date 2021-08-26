@@ -20,9 +20,11 @@ import datetime
 import os
 import pathlib
 import time
+import mimetypes
 from glob import glob
 
 import crawling_utils as utils
+import magic
 from pyppeteer import __chromium_revision__, launch
 from scrapy import signals
 from scrapy.exceptions import IgnoreRequest
@@ -80,7 +82,7 @@ class PuppeteerMiddleware:
 
         # Changes the default file save location.
         cdp = await page._target.createCDPSession()
-        await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allow', 'downloadPath': middleware.download_path})
+        await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allowAndName', 'downloadPath': middleware.download_path})
 
         crawler.signals.connect(middleware.spider_closed, signals.spider_closed)
 
@@ -262,32 +264,34 @@ class PuppeteerMiddleware:
         """Generates descriptions for downloaded files."""
        
         # list all files in crawl data folder, except file_description.jsonl
-        files = glob(f'{self.download_path}*.[!jsonl]*')
+        files = glob(f'{self.download_path}*[!jsonl]')
 
         with open(f'{self.download_path}file_description.jsonl', 'w') as f:
             for file in files:
                 # Get timestamp from file download
                 fname = pathlib.Path(file)
                 creation_time = datetime.datetime.fromtimestamp(fname.stat().st_ctime)
-                
-                s_file = file.split('/')
 
-                path = '/'.join(s_file[:-1])
-                ext = file.split('.')[-1].lower()
-                renamed_filename = utils.hash(s_file[-1].encode()) + f'.{ext}'
+                mimetype = magic.from_file(file, mime=True)
+                guessed_extension = mimetypes.guess_extension(mimetype)
 
-                renamed_file = f'{path}/{renamed_filename}'
-                os.rename(file, renamed_file)
+                ext = '' if guessed_extension is None else guessed_extension
+
+                file_with_extension = file + ext 
+                os.rename(file, file_with_extension)
                 
+                # A typical file will be: /home/user/folder/filename.ext
+                # So, we get only the filename.ext in the next line
+                file_name = file_with_extension.split('/')[-1]
 
                 description = {
                     'url': '<triggered by dynamic page click>',
-                    'file_name': renamed_filename,
+                    'file_name': file_name,
                     'crawler_id': self.crawler_id,
                     'instance_id': self.instance_id,
                     'crawled_at_date': str(creation_time),
                     'referer': '<from unique dynamic crawl>',
-                    'type': ext,
+                    'type': ext.replace('.', '') if ext != '' else '<unknown>',
                 }
 
                 f.write(json.dumps(description) + '\n')
@@ -298,5 +302,5 @@ class PuppeteerMiddleware:
     def spider_closed(self):
         """Shutdown the browser when spider is closed"""
         self.block_until_complete_downloads()
-        self.generate_file_descriptions()
+        self.generate_file_descriptions()    
         return as_deferred(self._spider_closed())
