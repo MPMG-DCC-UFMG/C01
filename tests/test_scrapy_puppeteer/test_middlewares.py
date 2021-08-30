@@ -19,7 +19,7 @@ class BrowserMock(pyppeteer.browser.Browser):
         pass
 
 
-def gen_async(result: Any):
+def gen_async(result: Any = None):
     """
     Helper function to generate an async function returning the supplied
     argument
@@ -49,7 +49,22 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
 
         # Response mock
         mockResponse = mock.create_autospec(pyppeteer.network_manager.Response)
+        mockResponse.headers = {
+            'content-type': 'text/html; charset=iso-8859-1'
+        }
+
         self.mockResponse = mockResponse
+
+        # CDP mock
+        mockCDP = mock.create_autospec(pyppeteer.connection.CDPSession)
+        mockCDP.send = mock.MagicMock(side_effect=gen_async())
+        self.mockCDP = mockCDP
+
+        # Target mock
+        mockTarget = mock.create_autospec(pyppeteer.browser.Target)
+        mockTarget.createCDPSession = mock.MagicMock(
+            side_effect=gen_async(mockCDP))
+        self.mockTarget = mockTarget
 
         # Page mock
         mockPage = mock.create_autospec(pyppeteer.page.Page)
@@ -60,7 +75,13 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
         mockPage.screenshot = mock.MagicMock(side_effect=gen_async(None))
         mockPage.waitFor = mock.MagicMock(side_effect=gen_async(None))
         mockPage.url = "http://example.com"
+        mockPage._target = mockTarget
         self.mockPage = mockPage
+
+        # Create the network manager client, which is used internally
+        networkClient = mock.create_autospec(pyppeteer.connection.CDPSession)
+        networkClient.send = mock.MagicMock(side_effect=gen_async(None))
+        self.mockPage._networkManager = mock.MagicMock(_client=networkClient)
 
         # Browser mock
         mockBrowser = mock.create_autospec(BrowserMock)
@@ -107,6 +128,9 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
         self.mockPage.content.assert_called_once()
         # Page should be closed once
         self.mockPage.close.assert_called_once()
+        # Request interception routine should be set up
+        self.mockPage._networkManager._client.on.assert_called()
+        self.mockPage._networkManager._client.send.assert_called()
 
 
     def test_process_request_run_with_no_extra_options(self):

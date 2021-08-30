@@ -315,7 +315,7 @@ function refresh_step(){
     block.step = get_step_info(this.value, block.step_list)
     block.params = []
 
-    if(this.value=="for each"){
+    if(this.value=="para cada"){
         block.turn_to_for_step()
     }else if(this.value=="for each page in"){
         block.turn_to_pagination_step()
@@ -346,6 +346,7 @@ function turn_to_for_step(){
     block.delete_lines(block.lines.length)
     block.add_line()
 
+    // defines iterator
     iterator_input_box = document.createElement("DIV")
     iterator_input_box.className = "col-sm"    
     iterator_input = document.createElement("INPUT")
@@ -362,6 +363,7 @@ function turn_to_for_step(){
     in_label.innerText = " in"
     in_label_box.appendChild(in_label)    
 
+    // defines iterable step
     iterable_select_box = document.createElement("DIV")
     iterable_select_box.className = "step-config-select"
     iterable_select = document.createElement("select")

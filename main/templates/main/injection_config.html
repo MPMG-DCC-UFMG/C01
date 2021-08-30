@@ -1,0 +1,78 @@
+{% load crispy_forms_tags %}
+
+<!-- Injection configuration -->
+<!-- Parameter injection -->
+
+<div id="{{ injection_type }}_param">
+    {{ parameter_formset.management_form }}
+    {% for subform in parameter_formset.forms %}
+        <div class="row">
+            <div class="col md-6">
+                {% include "main/parameter_handler_config.html" with form=subform %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% with parameter_formset.empty_form as form %}
+    <!-- Base template for parameters -->
+    <div class="row" id="base_{{ injection_type }}_param_template">
+        <div class="col md-6">
+            {% include "main/parameter_handler_config.html" with form=form %}
+        </div>
+    </div>
+{% endwith %}
+
+<!-- Form selection modal -->
+{% if injection_type == "static_form" %}
+<div class="modal" id="form_detection_modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Seleção de formulários</h5>
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                </div>
+                <div class="modal-body row">
+                    <div class="text-center col">
+                        <div class="spinner-border" role="status">
+                            <span class="sr-only">Carregando...</span>
+                        </div>
+                    </div>
+                    <div class="form_list">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-primary include_fields">
+                    Incluir campos
+                </button>
+                <button type="button" class="btn btn-secondary"
+                    data-dismiss="modal">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Response handling-->
+<div id="{{ injection_type }}_response">
+    {{ response_formset.management_form }}
+    {% for subform in response_formset.forms %}
+        <div class="row">
+            <div class="col md-6">
+                {% include "main/response_handler_config.html" with form=subform %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% with response_formset.empty_form as form %}
+    <!-- Base template for responses -->
+    <div class="row" id="base_{{ injection_type }}_response_template">
+        <div class="col md-6">
+            {% include "main/response_handler_config.html" with form=form %}
+        </div>
+    </div>
+{% endwith %}

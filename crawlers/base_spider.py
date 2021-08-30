@@ -2,36 +2,33 @@
 import scrapy
 from scrapy.exceptions import CloseSpider
 from scrapy.spidermiddlewares.httperror import HttpError
+from scrapy.http import Response
 from twisted.internet.error import DNSLookupError
 from twisted.internet.error import TimeoutError
+import cchardet as chardet
 
 # Other external libs
 import datetime
 import json
 import itertools
-import logging
 import os
 import re
-import pandas
-import time
 from lxml.html.clean import Cleaner
-import urllib.parse as urlparse
 import mimetypes
 import requests
 import string
+import cgi
 
 # Project libs
 import crawling_utils
 
-from binary import Extractor
 from crawlers.constants import *
 from crawlers.file_descriptor import FileDescriptor
-from entry_probing import BinaryFormatProbingResponse, HTTPProbingRequest,\
-    HTTPStatusProbingResponse, TextMatchProbingResponse,\
-    EntryProbing
-from param_injector import ParamInjector
-from range_inference import RangeInference
-import parsing_html
+from crawlers.injector_tools import create_probing_object,\
+    create_parameter_generators
+
+from main.models import CrawlRequest
+from crawlers.constants import AUTO_ENCODE_DETECTION_CONFIDENCE_THRESHOLD
 
 PUNCTUATIONS = "[{}]".format(string.punctuation)
 
@@ -57,7 +54,6 @@ class BaseSpider(scrapy.Spider):
         folders = [
             f"{self.data_folder}",
             f"{self.data_folder}/raw_pages",
-            f"{self.data_folder}/csv",
             f"{self.data_folder}/files",
         ]
         for f in folders:
@@ -74,11 +70,12 @@ class BaseSpider(scrapy.Spider):
 
         self.get_format = lambda i: str(i).split("/")[1][:-1].split(";")[0]
 
-
         if bool(self.config.get("download_files_allow_extensions")):
-            normalized_allowed_extensions = self.config["download_files_allow_extensions"].replace(" ", "")
+            normalized_allowed_extensions = self.config["download_files_allow_extensions"].replace(
+                " ", "")
             normalized_allowed_extensions = normalized_allowed_extensions.lower()
-            self.download_allowed_extensions = set(normalized_allowed_extensions.split(","))
+            self.download_allowed_extensions = set(
+                normalized_allowed_extensions.split(","))
 
         else:
             self.download_allowed_extensions = set()
@@ -109,223 +106,87 @@ class BaseSpider(scrapy.Spider):
 
         base_url = self.config['base_url']
         req_type = self.config['request_type']
+        form_req_type = self.config['form_request_type']
 
         has_placeholder = "{}" in base_url
+        templated_url_generator = [[None]]
+        templated_url_probe = create_probing_object(base_url, req_type)
+
         if has_placeholder:
-            # Request body (TODO)
-            req_body = {}
-            """
-            param_key = None
-            if req_type == 'POST':
-                if len(templated_url_config['post_dictionary']) > 0:
-                    req_body = json.loads(
-                        templated_url_config['post_dictionary']
-                    )
-
-                param_key = templated_url_config['post_key']"""
-
             # Configure the probing process
-            probe = self.create_probing_object(base_url, req_type, req_body,
-                self.config['templated_url_response_handlers']
-            )
+            templated_url_probe = create_probing_object(base_url, req_type,
+                                                        self.config['templated_url_response_handlers']
+                                                        )
 
             # Instantiate the parameter injectors for the URL
-            url_injectors = self.create_parameter_generators(probe,
-                self.config['parameter_handlers']
-            )
+            url_injectors = create_parameter_generators(templated_url_probe,
+                                                        self.config['templated_url_parameter_handlers']
+                                                        )
 
             # Generate the requests
-            param_generator = itertools.product(*url_injectors)
-            for param_combination in param_generator:
-                # Check if this entry hits a valid page
-                if probe.check_entry(param_combination):
-                    curr_url = base_url
+            templated_url_generator = itertools.product(*url_injectors)
 
-                    # Insert parameter into URL
-                    curr_url = base_url.format(*param_combination)
-                    req_body = {}
+        use_static_forms = self.config['static_form_parameter_handlers']
+        static_form_generator = [[None]]
+        static_form_probe = create_probing_object(base_url, form_req_type)
 
-                    yield {
-                        'url': curr_url,
-                        'method': req_type,
-                        'body': req_body
-                    }
+        if use_static_forms:
+            # Configure the probing process
+            static_form_probe = create_probing_object(base_url, form_req_type,
+                                                      self.config['static_form_response_handlers']
+                                                      )
 
-        else:
-            # By default does a request to the base_url
-            yield {
-                'url': base_url,
-                'method': req_type,
-                'body': {}
-            }
+            # Instantiate the parameter injectors for the forms
+            static_injectors = create_parameter_generators(static_form_probe,
+                                                           self.config['static_form_parameter_handlers']
+                                                           )
 
-    def create_probing_object(self, base_url, req_type, req_body,
-                              resp_handlers):
-        """
-        Loads the request data and response handlers supplied, and generates
-        the respective EntryProbing instance
-        """
+            # Generate the requests
+            static_form_generator = itertools.product(*static_injectors)
 
-        # Probing request
-        probe = EntryProbing(HTTPProbingRequest(base_url, method=req_type,
-                                                req_data=req_body))
+        parameter_keys = list(map(lambda x: x['parameter_key'],
+                                  self.config['static_form_parameter_handlers']))
+        for templated_param_combination in templated_url_generator:
+            # Check if this entry hits a valid page
 
-        # Probing response
-        for handler_data in resp_handlers:
-            resp_handler = None
+            is_valid = templated_url_probe.check_entry(
+                url_entries=templated_param_combination
+            )
+            if is_valid:
 
-            handler_type = handler_data['handler_type']
-            if handler_type == 'text':
-                resp_handler = TextMatchProbingResponse(
-                    text_match=handler_data['text_match_value'],
-                    opposite=handler_data['opposite']
-                )
-            elif handler_type == 'http_status':
-                resp_handler = HTTPStatusProbingResponse(
-                    status_code=handler_data['http_status'],
-                    opposite=handler_data['opposite']
-                )
-            elif handler_type == 'binary':
-                resp_handler = BinaryFormatProbingResponse(
-                    opposite=handler_data['opposite']
-                )
-            else:
-                raise AssertionError
+                # Copy the generator (we'd need to "rewind" if we used the
+                # original)
+                cp_result = itertools.tee(static_form_generator)
+                static_form_generator, static_form_generator_cp = cp_result
 
-            probe.add_response_handler(resp_handler)
+                # Iterate through the form data now
+                for form_param_combination in static_form_generator_cp:
 
-        return probe
+                    req_entries = dict(zip(parameter_keys,
+                                           form_param_combination))
 
-    def create_parameter_generators(self, probe, parameter_handlers):
-        """
-        Loads the parameter information and creates a list of the respective
-        generators from the ParamInjector module, while filtering the ranges as
-        necessary
-        """
-
-        url_injectors = []
-        initial_values = []
-
-        for i in [1, 2]:
-            # We run this code twice: the first pass will get the initial
-            # values for each parameter, which is used in the second pass to
-            # filter the ends of the limits as required
-            # I couldn't find a nicer way to do this
-
-            for param_index, param in enumerate(parameter_handlers):
-                param_type = param['parameter_type']
-                param_gen = None
-
-                if i == 2 and not param['filter_range']:
-                    # We are running the "filtering" pass but this parameter
-                    # should not be filtered
-                    continue
-
-                entries_list = []
-                cons_misses = None
-                if i == 2:
-                    # Configure the list of extra parameters for the range
-                    # inference
-                    entries_list = initial_values.copy()
-                    entries_list[param_index] = None
-                    cons_misses = int(param['cons_misses'])
-
-                if param_type == "process_code":
-                    PROCESS_FORMAT = '{:07d}-{:02d}.{:04d}.{}.{:02d}.{:04d}'
-
-                    first_year = int(param['first_year_proc_param'])
-                    last_year = int(param['last_year_proc_param'])
-                    segment_ids = param['segment_ids_proc_param'].split(",")
-                    court_ids = param['court_ids_proc_param'].split(",")
-                    origin_ids = param['origin_ids_proc_param'].split(",")
-
-                    # turn string lists into integers
-                    segment_ids = list(map(int, segment_ids))
-                    court_ids = list(map(int, court_ids))
-                    origin_ids = list(map(int, origin_ids))
-
-                    max_seq = 9999999
-                    if i == 2:
-                        # Filter the process_code range
-                        max_seq = RangeInference.filter_process_code(
-                            first_year, last_year, segment_ids, court_ids,
-                            origin_ids, probe, entries_list,
-                            cons_misses=cons_misses
-                        )
-
-                    subparam_list = [
-                        # sequential identifier
-                        (0, max_seq),
-                        # year
-                        (first_year, last_year),
-                        # segment identifiers
-                        segment_ids,
-                        # court identifiers
-                        court_ids,
-                        # origin identifiers
-                        origin_ids
-                    ]
-
-                    param_gen = ParamInjector.generate_format(
-                        code_format=PROCESS_FORMAT,
-                        param_limits=subparam_list,
-                        verif=ParamInjector.process_code_verification,
-                        verif_index=1
+                    # Check if once again we hit a valid page
+                    is_valid = static_form_probe.check_entry(
+                        url_entries=templated_param_combination,
+                        req_entries=req_entries
                     )
 
-                elif param_type == "number_seq":
-                    begin = param['first_num_param']
-                    end = param['last_num_param']
+                    if is_valid:
+                        # Insert parameters into URL and request body
+                        curr_url = base_url\
+                            .format(*templated_param_combination)
 
-                    if i == 2:
-                        # Filter the number range
-                        end = RangeInference.filter_numeric_range(begin, end,
-                                  probe, entries_list, cons_misses=cons_misses)
+                        method = form_req_type
+                        if not use_static_forms:
+                            # If no form data is injected, use the regular
+                            # request method set
+                            method = req_type
 
-                    param_gen = ParamInjector.generate_num_sequence(
-                        first=begin,
-                        last=end,
-                        step=param['step_num_param'],
-                        leading=param['leading_num_param'],
-                    )
-                elif param_type == 'date_seq':
-                    begin = datetime.date.fromisoformat(
-                        param['start_date_date_param']
-                    )
-                    end = datetime.date.fromisoformat(
-                        param['end_date_date_param']
-                    )
-                    frequency = param['frequency_date_param']
-                    date_format = param['date_format_date_param']
-
-                    if i == 2:
-                        # Filter the date range
-                        end = RangeInference.filter_daterange(begin, end,
-                                  probe, frequency, date_format, entries_list,
-                                  cons_misses=cons_misses)
-
-                    param_gen = ParamInjector.generate_daterange(
-                        date_format=date_format,
-                        start_date=begin,
-                        end_date=end,
-                        frequency=frequency,
-                    )
-                else:
-                    raise ValueError(f"Invalid parameter type: {param_type}")
-
-                if i == 2 and param_gen is not None:
-                    # We have filtered the range for this parameter, and should
-                    # update the generator in the list
-                    url_injectors[param_index] = param_gen
-                else:
-                    # Create a copy of the generator, to extract the first
-                    # value. After that, add to the list of parameter
-                    # generators
-                    param_gen, param_gen_first = itertools.tee(param_gen)
-                    initial_values.append(next(param_gen_first))
-                    url_injectors.append(param_gen)
-
-        return url_injectors
+                        yield {
+                            'url': curr_url,
+                            'method': method,
+                            'body': req_entries
+                        }
 
     def stop(self):
         """
@@ -345,94 +206,69 @@ class BaseSpider(scrapy.Spider):
 
         return self.stop_flag
 
-    def extract_and_store_csv(self, response, description):
-        """Try to extract a json/csv from page html."""
-        hsh = self.hash_response(response)
-
-        output_filename = f"{self.data_folder}/csv/{hsh}"
-        if self.config["save_csv"]:
-            output_filename += ".csv"
-
-        success = False
-        try:
-            table_attrs = self.config["table_attrs"]
-            if table_attrs is None or table_attrs == "":
-                parsing_html.content.html_detect_content(
-                    description["relative_path"],
-                    is_string=False,
-                    output_file=output_filename,
-                    to_csv=self.config["save_csv"]
-                )
-            else:
-                extra_config = self.extra_config_parser(
-                    self.config["table_attrs"])
-                parsing_html.content.html_detect_content(
-                    description["relative_path"],
-                    is_string=False, output_file=output_filename,
-                    match=extra_config['table_match'],
-                    flavor=extra_config['table_flavor'],
-                    header=extra_config['table_header'],
-                    index_col=extra_config['table_index_col'],
-                    skiprows=extra_config['table_skiprows'],
-                    attrs=extra_config['table_attributes'],
-                    parse_dates=extra_config['table_parse_dates'],
-                    thousands=extra_config['table_thousands'],
-                    encoding=extra_config['table_encoding'],
-                    decimal=extra_config['table_decimal'],
-                    na_values=extra_config['table_na_values'],
-                    keep_default_na=extra_config['table_default_na'],
-                    displayed_only=extra_config['table_displayed_only'],
-                    to_csv=self.config["save_csv"]
-                )
-            success = True
-
-        except Exception as e:
-            print(
-                f"Could not extract csv from {response.url} -",
-                f"message: {str(type(e))}-{e}"
-            )
-
-        if success:
-            description["extracted_from"] = description["relative_path"]
-            description["relative_path"] = output_filename
-            description["type"] = "csv"
-            self.feed_file_description(f"{self.data_folder}csv/", description)
-            return [output_filename]
-
-        return []
-
-    def store_html(self, response):
+    def store_html(self, response: Response):
         """Stores html and adds its description to file_description file."""
         print(f'Saving html page {response.url}')
 
-        cleaner = Cleaner(
-            style=True, links=False, scripts=True,
-            comments=True, page_structure=False
-        )
-        body = cleaner.clean_html(
-            response.body.decode('utf-8', errors='ignore'))
+        encoding = None
+        encoding_detection_method = self.config.get(
+            'encoding_detection_method', CrawlRequest.HEADER_ENCODE_DETECTION)
 
+        if encoding_detection_method == CrawlRequest.HEADER_ENCODE_DETECTION:
+            content_type = response.headers['Content-type'].decode()
+            _, params = cgi.parse_header(content_type)
+            encoding = params['charset']
+
+        elif encoding_detection_method == CrawlRequest.AUTO_ENCODE_DETECTION:
+            detection = chardet.detect(response.body)
+
+            detected_encoding = detection['encoding']
+            confidence = detection['confidence']
+
+            if confidence >= AUTO_ENCODE_DETECTION_CONFIDENCE_THRESHOLD:
+                encoding = detected_encoding
+
+            else:
+                msg = f'Could not detect page encoding "{response.url}" at the level of confidence "{AUTO_ENCODE_DETECTION_CONFIDENCE_THRESHOLD}"".' + \
+                    f'The predicted encoding was "{detected_encoding}" with "{confidence}" confidence. THE PAGE WILL BE SAVED AS BINARY.'
+                self.logger.warn(msg)
+
+        else:
+            ValueError(
+                f'"{encoding_detection_method}" is not a valid encoding detection method.')
+
+        raw_body = response.body
         hsh = self.hash_response(response)
-
         relative_path = f"{self.data_folder}raw_pages/{hsh}.html"
-
-        with open(file=relative_path, mode="w+", errors='ignore') as f:
-            f.write(body)
 
         description = {
             "file_name": f"{hsh}.html",
+            "encoding": encoding,
             "relative_path": relative_path,
             "url": response.url,
             "crawler_id": self.config["crawler_id"],
             "instance_id": self.config["instance_id"],
-            "type": str(response.headers['Content-type']),
+            "type": response.headers['Content-type'].decode(),
             "crawled_at_date": str(datetime.datetime.today()),
             "referer": response.meta["referer"]
         }
 
-        extracted_files = self.extract_and_store_csv(
-            response, description.copy())
-        description["extracted_files"] = extracted_files
+        if encoding is None:
+            description['encoding'] = 'unknown'
+            description["type"] = 'binary'
+            with open(file=relative_path, mode="wb") as f:
+                f.write(raw_body)
+
+        else:
+            cleaner = Cleaner(
+                style=True, links=False, scripts=True,
+                comments=True, page_structure=False
+            )
+
+            body = cleaner.clean_html(raw_body.decode(encoding))
+            with open(file=relative_path, mode="w+", encoding=encoding, errors='ignore') as f:
+                f.write(body)
+
 
         self.feed_file_description(
             self.data_folder + "raw_pages", description)
@@ -474,46 +310,6 @@ class BaseSpider(scrapy.Spider):
 
         return self.filetypes_from_mimetype(content_type)
 
-    def convert_binary(self, url: str, filetype: str, filename: str):
-        if filetype != "pdf":
-            return
-
-        url_hash = crawling_utils.hash(url.encode())
-        source_file = f"{self.data_folder}files/{filename}"
-
-        success = False
-        results = None
-        try:
-            # single DataFrame or list of DataFrames
-            results = Extractor(source_file).extra().read()
-        except Exception as e:
-            print(
-                f"Could not extract csv files from {source_file} -",
-                f"message: {str(type(e))}-{e}"
-            )
-            return []
-
-        if type(results) == pandas.DataFrame:
-            results = [results]
-
-        extracted_files = []
-        for i in range(len(results)):
-            relative_path = f"{self.data_folder}csv/{url_hash}_{i}.csv"
-            results[i].to_csv(relative_path, encoding='utf-8', index=False)
-
-            extracted_files.append(relative_path)
-
-            item_desc = {
-                "file_name": f"{url_hash}_{i}.csv",
-                "type": "csv",
-                "extracted_from": source_file,
-                "relative_path": relative_path
-            }
-
-            FileDescriptor.feed_description(f"{self.data_folder}csv/", item_desc)
-
-        return extracted_files
-
     def get_download_filename(self, url: str, extension: str) -> tuple:
         url_hash = crawling_utils.hash(url.encode())
         file_name = url_hash
@@ -534,7 +330,8 @@ class BaseSpider(scrapy.Spider):
 
         response.close()
 
-        extension = self.detect_file_extensions(url, content_type, content_disposition)[0]
+        extension = self.detect_file_extensions(
+            url, content_type, content_disposition)[0]
 
         file_name = self.get_download_filename(url, extension)
         relative_path = f"{self.data_folder}files/{file_name}"
@@ -545,15 +342,18 @@ class BaseSpider(scrapy.Spider):
                 for chunk in req.iter_content(chunk_size=8192):
                     f.write(chunk)
 
-        self.create_and_feed_file_description(url, file_name, referer, extension)
+        self.create_and_feed_file_description(
+            url, file_name, referer, extension)
 
     def store_small_file(self, response):
         print(f"Saving small file {response.url}")
 
         content_type = response.headers.get("Content-Type", b"").decode()
-        content_disposition = response.headers.get("Content-Disposition", b"").decode()
+        content_disposition = response.headers.get(
+            "Content-Disposition", b"").decode()
 
-        extension = self.detect_file_extensions(response.url, content_type, content_disposition)[0]
+        extension = self.detect_file_extensions(
+            response.url, content_type, content_disposition)[0]
 
         file_name = self.get_download_filename(response.url, extension)
         relative_path = f"{self.data_folder}files/{file_name}"
@@ -561,7 +361,8 @@ class BaseSpider(scrapy.Spider):
         with open(relative_path, "wb") as f:
             f.write(response.body)
 
-        self.create_and_feed_file_description(response.url, file_name, response.meta["referer"], extension)
+        self.create_and_feed_file_description(
+            response.url, file_name, response.meta["referer"], extension)
 
     def errback_httpbin(self, failure):
         # log all errback failures,
@@ -599,32 +400,7 @@ class BaseSpider(scrapy.Spider):
             "type": extension,
         }
 
-        extracted_files = self.convert_binary(url, extension, file_name)
-        description["extracted_files"] = extracted_files
-
         self.feed_file_description(f"{self.data_folder}files/", description)
-
-    def extra_config_parser(self, table_attrs):
-        # get the json from extra_config and
-        # formats in a python proper standard
-        extra_config = json.loads(table_attrs)
-        for key in extra_config:
-            if extra_config[key] == "":
-                extra_config[key] = None
-        if extra_config['table_match'] is None:
-            extra_config['table_match'] = '.+'
-        if extra_config['parse_dates'] is None:
-            extra_config['parse_dates'] = False
-        if extra_config['keep_default_na'] is None:
-            extra_config['keep_default_na'] = True
-        if extra_config['displayed_only'] is None:
-            extra_config['displayed_only'] = True
-        if extra_config['table_thousands'] is None:
-            extra_config['table_thousands'] = '.'
-        if extra_config['table_decimal'] is None:
-            extra_config['table_decimal'] = ', '
-
-        return extra_config
 
     def hash_response(self, response):
         """
@@ -658,16 +434,19 @@ class BaseSpider(scrapy.Spider):
         ]
 
         for attr, default in defaults:
-            self.config[attr] = self.preprocess_listify(self.config[attr], default)
+            self.config[attr] = self.preprocess_listify(
+                self.config[attr], default)
 
         deny = "download_files_deny_extensions"
         if len(self.download_allowed_extensions) > 0:
-            extensions = [ext for ext in scrapy.linkextractors.IGNORED_EXTENSIONS]
-            self.config[deny] = [ext for ext in extensions if ext not in self.download_allowed_extensions]
-        
+            extensions = [
+                ext for ext in scrapy.linkextractors.IGNORED_EXTENSIONS]
+            self.config[deny] = [
+                ext for ext in extensions if ext not in self.download_allowed_extensions]
+
         else:
             self.config[deny] = []
-        
+
         attr = "download_files_process_value"
         if self.config[attr] is not None and len(self.config[attr]) > 0 and type(self.config[attr]) is str:
             self.config[attr] = eval(self.config[attr])
@@ -681,4 +460,5 @@ class BaseSpider(scrapy.Spider):
             ("link_extractor_attrs", ('href',))
         ]
         for attr, default in defaults:
-            self.config[attr] = self.preprocess_listify(self.config[attr], default)
+            self.config[attr] = self.preprocess_listify(
+                self.config[attr], default)

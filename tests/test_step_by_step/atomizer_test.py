@@ -13,8 +13,8 @@ class TestExtractInfo(unittest.TestCase):
         self.assertEqual(atom.track_parallelizable_fors(
             recipe_examples["unique_for"]["recipe"]),
             [{'iterator': 'i', 'iterable': {
-                'call': {'step': 'intervalo',
-                         'arguments': {'parada': 2}}}}])
+                'call': {'step': 'repete',
+                         'arguments': {'vezes': 2}}}}])
         self.assertEqual(atom.track_parallelizable_fors(
             recipe_examples["unbreakable_between_breakable"]["recipe"]),
             [
@@ -23,16 +23,16 @@ class TestExtractInfo(unittest.TestCase):
             }
             },
             {'iterator': 'k', 'iterable': {
-                'call': {'step': 'intervalo',
-                         'arguments': {'parada': 2}}}}
+                'call': {'step': 'repete',
+                         'arguments': {'vezes': 2}}}}
         ])
         self.assertEqual(atom.track_parallelizable_fors(
             recipe_examples["step_after_the_for"]["recipe"]), [])
         self.assertEqual(atom.track_parallelizable_fors(
             recipe_examples["step_before_the_for"]["recipe"]),
             [{'iterator': 'i', 'iterable': {
-                'call': {'step': 'intervalo',
-                         'arguments': {'parada': 2}}}}])
+                'call': {'step': 'repete',
+                         'arguments': {'vezes': 2}}}}])
         self.assertEqual(atom.track_parallelizable_fors(
             recipe_examples["all_cases"]["recipe"]),
             [
@@ -41,8 +41,8 @@ class TestExtractInfo(unittest.TestCase):
             }
             },
             {'iterator': 'j', 'iterable': {
-                'call': {'step': 'intervalo',
-                         'arguments': {'parada': 2}}}}
+                'call': {'step': 'repete',
+                         'arguments': {'vezes': 2}}}}
         ])
 
     def test_get_iterable_objects(self):
@@ -92,7 +92,7 @@ class TestExtractInfo(unittest.TestCase):
                 "depth": 1,
             },
             {
-                "step": "imprimir",
+                "step": "imprime",
                 "arguments": {
                     "texto": "\"teste\""
                 },
