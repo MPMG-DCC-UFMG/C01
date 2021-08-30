@@ -43,8 +43,32 @@ Esses módulos, devidademente configurado os `hosts` do `Zookeeper`, `Kafka` e `
     - No momento, um `Spider Manager` por gerir apenas um spider de uma mesma coleta.
 
 > **Obs.**: Zookeeper, Kafka e Redis devem estar em execução e seus hosts e portas configuradas nos arquivos settings.py dos módulos. 
-### Interface/servidor Django
 
+### Iniciando Kafka e Redis
+
+Ao executar `python install.py` na raiz do projeto, tanto o `Kafka` quanto o `Redis` são baixados automaticamente. Para executá-los, execute os seguintes comandos (considerando que a pasta corrente é a raiz do projeto):
+
+Inicie o `Zookeeper` para que o `Kafka` funcione corretamente:
+```bash
+cd kafka_2.13-2.4.0/
+bin/zookeeper-server-start.sh config/zoo.properties
+```
+
+Abra um outro terminal e inicie o Kafka:
+
+```bash
+cd kafka_2.13-2.4.0/
+bin/kafka-server-start.sh config/server.properties
+```
+
+Abra outro terminal e inicie o `Redis`:
+
+```bash
+cd redis-5.0.10/
+./src/redis-server
+```
+
+### Interface/servidor Django
 
 Instale as dependências:
 
