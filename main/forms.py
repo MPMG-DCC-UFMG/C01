@@ -1,9 +1,6 @@
 from django import forms
 from .models import CrawlRequest, ParameterHandler, ResponseHandler
 from django.core.exceptions import ValidationError
-from django.core.validators import RegexValidator
-
-import re
 
 
 class CrawlRequestForm(forms.ModelForm):
@@ -64,6 +61,8 @@ class CrawlRequestForm(forms.ModelForm):
             'download_imgs',
             'steps',
             'data_path',
+
+            'encoding_detection_method'
         ]
 
 class RawCrawlRequestForm(CrawlRequestForm):
@@ -348,6 +347,12 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     # Crawler Type - Single file
     # Crawler Type - Bundle file
+
+    # ENCODE DETECTION METHOD
+    encoding_detection_method = forms.ChoiceField(choices=CrawlRequest.ENCODE_DETECTION_CHOICES, 
+                                                    label='Método de detecção de codificação das páginas',
+                                                    initial=CrawlRequest.HEADER_ENCODE_DETECTION,
+                                                    widget=forms.RadioSelect)
 
 class ResponseHandlerForm(forms.ModelForm):
     """

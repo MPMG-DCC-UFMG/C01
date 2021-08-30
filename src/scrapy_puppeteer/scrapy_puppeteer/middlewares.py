@@ -15,6 +15,8 @@ try:
 except Exception:
     pass
 
+import cgi
+
 import base64
 import datetime
 import os
@@ -209,8 +211,12 @@ class PuppeteerMiddleware:
             steps = code_g.generate_code(request.steps, functions_file)
             request.meta["pages"] = await steps.execute_steps(page=page)
 
+        content_type = response.headers['content-type']
+        _, params = cgi.parse_header(content_type)
+        encoding = params['charset']
+
         content = await page.content()
-        body = str.encode(content)
+        body = str.encode(content, encoding=encoding, errors='ignore')
 
         await page.close()
 
@@ -223,8 +229,8 @@ class PuppeteerMiddleware:
             status=response.status,
             headers=response.headers,
             body=body,
-            encoding='utf-8',
-            request=request,
+            encoding=encoding,
+            request=request
         )
 
     def process_request(self, request, spider):
