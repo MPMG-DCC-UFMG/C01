@@ -8,7 +8,7 @@ Desenvolvimento de ferramentas para construção e manutenção de coletores de 
 - Problemas de escalabilidade no módulo de salvamento de coletas/arquivos
 - Suporte a páginas estáticas e downloads de arquivos
 - Suporte parcial a páginas dinâmicas (com bugs)
-- Sem suporte a download de arquivos em páginas dinâmicas
+- Suporte a download de arquivos em páginas dinâmicas. Mas caso haja mais de uma instância de `spider_manager` executando em máquinas distintas, os arquivos serão salvos em locais diferentes.   
 - Logs são transmitidos distribuidamente via Kafka
 - Monitoramento parcial de coletas/coletores
     - É possível acompanhar o andamento da coleta de páginas/arquivos
@@ -18,10 +18,10 @@ Desenvolvimento de ferramentas para construção e manutenção de coletores de 
 
 A lista atualizada pode ser vista [aqui](https://github.com/MPMG-DCC-UFMG/C01/issues?q=is%3Aissue+is%3Aopen+label%3A%22sistema+distribu%C3%ADdo%22): 
 
-- [ ] Suporte total a páginas dinâmicas
-- [ ] Download de arquivos em páginas dinâmicas
+- [ ] Suporte total a páginas dinâmicas (há certos bugs na execução de coletas)
+- [ ] Download centralizado de arquivos em páginas dinâmicas
     - Provavelmente será necessário suporte a sistema de arquivos distribuídos 
-- [ ] Suporte a mecânismos de passos (páginas dinâmicas)
+- [x] Suporte a mecânismos de passos (páginas dinâmicas)
 - [ ] Resolver problemas de escalabilidade (módulos `writer` e `link_generator`)
     - Será necessário suporte à sistema de arquivos distribuídos para o módulo `writer`
 - [ ] Melhorias no sistema de acompanhamento de andamento de coletas (o atual não esté "calibrado")
