@@ -92,11 +92,8 @@ class Executor:
 
         process = CrawlerProcess(settings=base_settings)
 
-        # sys.stdout = KafkaLogger(instance_id, logger_name, 'out')
-        # sys.stderr = KafkaLogger(instance_id, logger_name, 'err')
-
-        # sys.stdout = open("log_writer.out", "w", buffering=1)
-        # sys.stderr = open("log_writer.err", "w", buffering=1)
+        sys.stdout = KafkaLogger(instance_id, logger_name, 'out')
+        sys.stderr = KafkaLogger(instance_id, logger_name, 'err')
 
         process.crawl(StaticPageSpider, 
                         name=crawler_id, 
