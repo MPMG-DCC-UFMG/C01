@@ -62,6 +62,11 @@ async def salva_pagina(page):
     body = str.encode(content)
     return body
 
+@step
+async def extrai_texto(page, xpath):
+    await page.waitForXPath(xpath)
+    text = await page.Jeval(cssify(xpath), "el => el.textContent")
+    return text
 
 @step
 async def opcoes(page, xpath, exceto=None):
