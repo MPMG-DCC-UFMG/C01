@@ -1,5 +1,8 @@
 import os
 import subprocess
+
+subprocess.run(["pip", "install", "-U", "pip"])
+
 import asyncio
 import shutil
 import sys
@@ -40,7 +43,6 @@ if env('INSTALL_KAFKA'):
     if os.path.isfile("zoo.properties"):
         shutil.copy("zoo.properties", "kafka_2.13-2.4.0/config/zoo.properties")
 
-
 # Install modules from src directory, with their dependencies
 src_folder = "src"
 for folder in os.listdir(f"{src_folder}"):
@@ -52,6 +54,7 @@ for folder in os.listdir(f"{src_folder}"):
 print(f"Installing other project dependencies...")
 subprocess.run(["pip", "install", "-r" "requirements.txt"])
 print()
+
 
 try:
     loop = asyncio.get_event_loop()

@@ -2,33 +2,35 @@ from django.conf import settings
 from django.utils import timezone
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, \
+
+from django.http import HttpResponseRedirect, JsonResponse, \
     FileResponse, HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404, redirect
 
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm,\
     ResponseHandlerFormSet, ParameterHandlerFormSet
-from .models import CrawlRequest, CrawlerInstance
+from .models import CrawlRequest, CrawlerInstance, Log
 
 from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer
 
-from crawlers.constants import *
+from crawler_manager.constants import *
 
+from datetime import datetime
+import json
 import itertools
 import json
 import logging
-import subprocess
 import time
 import os
 
 from datetime import datetime
 
-import crawlers.crawler_manager as crawler_manager
+import crawler_manager.crawler_manager as crawler_manager
 
-from crawlers.injector_tools import create_probing_object,\
+from crawler_manager.injector_tools import create_probing_object,\
     create_parameter_generators
 
 from django.views.decorators.csrf import csrf_exempt
@@ -44,34 +46,32 @@ logger = logging.getLogger('file')
 
 def process_run_crawl(crawler_id):
     instance = None
-    instance_id = None
     instance_info = dict()
 
-    with transaction.atomic():
-        # Execute DB commands atomically
-        crawler_entry = CrawlRequest.objects.filter(id=crawler_id)
-        data = crawler_entry.values()[0]
+    crawler_entry = CrawlRequest.objects.filter(id=crawler_id)
+    data = crawler_entry.values()[0]
 
-        # Instance already running
-        if crawler_entry.get().running:
-            instance_id = crawler_entry.get().running_instance.instance_id
-            raise ValueError("An instance is already running for this crawler "
-                             f"({instance_id})")
+    # Instance already running
+    if crawler_entry.get().running:
+        instance_id = crawler_entry.get().running_instance.instance_id
+        raise ValueError("An instance is already running for this crawler "
+                         f"({instance_id})")
 
-        data = CrawlRequest.process_config_data(crawler_entry.get(), data)
-        instance_id = crawler_manager.start_crawler(data.copy())
-        instance = create_instance(data['id'], instance_id)
+    data = CrawlRequest.process_config_data(crawler_entry.get(), data)
+
+    data["instance_id"] = crawler_manager.gen_key()
+    instance = create_instance(data['id'], data["instance_id"])
+    crawler_manager.start_crawler(data.copy())
 
     instance_info["started_at"] = str(instance.creation_date)
     instance_info["finished_at"] = None
 
     crawler_manager.update_instances_info(
-        data["data_path"], str(instance_id), instance_info)
+        data["data_path"], str(data["instance_id"]), instance_info)
 
     return instance
 
-
-def process_stop_crawl(crawler_id):
+def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
     instance = CrawlRequest.objects.filter(
         id=crawler_id).get().running_instance
     # instance = CrawlerInstance.objects.get(instance_id=instance_id)
@@ -79,6 +79,12 @@ def process_stop_crawl(crawler_id):
     # No instance running
     if instance is None:
         raise ValueError("No instance running")
+
+    if from_sm_listener and not instance.download_files_finished():
+        instance.page_crawling_finished = True
+        instance.save() 
+
+        return
 
     instance_id = instance.instance_id
     config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
@@ -100,10 +106,7 @@ def process_stop_crawl(crawler_id):
     crawler_manager.update_instances_info(
         config["data_path"], str(instance_id), instance_info)
 
-    crawler_manager.stop_crawler(instance_id, config)
-
-    return instance
-
+    crawler_manager.stop_crawler(crawler_id)
 
 def getAllData():
     return CrawlRequest.objects.all().order_by('-creation_date')
@@ -275,52 +278,148 @@ def create_steps(request):
 
 
 def stop_crawl(request, crawler_id):
-    process_stop_crawl(crawler_id)
+    from_sm_listener = request.GET.get('from', '') == 'sm_listener'
+    process_stop_crawl(crawler_id, from_sm_listener)
     return redirect(detail_crawler, id=crawler_id)
-
 
 def run_crawl(request, crawler_id):
     process_run_crawl(crawler_id)
     return redirect(detail_crawler, id=crawler_id)
 
-
 def tail_log_file(request, instance_id):
-    crawler = CrawlerInstance.objects.filter(
-        instance_id=instance_id
-    ).values().first()
+    instance = CrawlerInstance.objects.get(instance_id=instance_id)
+    
+    files_found = instance.number_files_found
+    download_file_success = instance.number_files_success_download
+    download_file_error = instance.number_files_error_download
 
-    if not crawler:
-        return JsonResponse({
-            "out": '',
-            "err": '',
-            "time": str(datetime.fromtimestamp(time.time())),
-        })
+    pages_found = instance.number_pages_found
+    download_page_success = instance.number_pages_success_download
+    download_page_error = instance.number_pages_error_download
 
-    crawler_id = crawler["crawler_id_id"]
+    logs = Log.objects.filter(instance_id=instance_id).order_by('-creation_date')
 
-    config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
-    data_path = config["data_path"]
+    log_results = logs.filter(Q(log_level="out"))[:20]
+    err_results = logs.filter(Q(log_level="err"))[:20]
 
-    out = subprocess.run(["tail",
-                          f"{data_path}/log/{instance_id}.out",
-                          "-n",
-                          "10"],
-                         stdout=subprocess.PIPE).stdout
-    err = subprocess.run(["tail",
-                          f"{data_path}/log/{instance_id}.err",
-                          "-n",
-                          "10"],
-                         stdout=subprocess.PIPE).stdout
+    log_text = [f"[{r.logger_name}] {r.log_message}" for r in log_results]
+    log_text = "\n".join(log_text)
+    err_text = [f"[{r.logger_name}] [{r.log_level:^5}] {r.log_message}" for r in err_results]
+    err_text = "\n".join(err_text)
+
     return JsonResponse({
-        "out": out.decode('utf-8'),
-        "err": err.decode('utf-8'),
+        "files_found": files_found,
+        "files_success": download_file_success,
+        "files_error": download_file_error, 
+        "pages_found": pages_found,
+        "pages_success": download_page_success,
+        "pages_error": download_page_error, 
+        "out": log_text,
+        "err": err_text,
         "time": str(datetime.fromtimestamp(time.time())),
     })
 
 
+def raw_log(request, instance_id):
+    logs = Log.objects.filter(instance_id=instance_id)\
+                      .order_by('-creation_date')
+
+    raw_results = logs[:100]
+    raw_text = [json.loads(r.raw_log) for r in raw_results]
+
+    resp = JsonResponse({str(instance_id): raw_text},
+                        json_dumps_params={'indent': 2})
+
+    if len(logs) > 0 and logs[0].instance.running:
+        resp['Refresh'] = 5
+    return resp
+
+def files_found(request, instance_id, num_files):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id = instance_id) 
+
+        instance.number_files_found += num_files
+        instance.save()
+        
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        print(e)
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+def success_download_file(request, instance_id):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id = instance_id) 
+
+        instance.number_files_success_download += 1
+        instance.save()
+
+        if instance.page_crawling_finished and instance.download_files_finished():
+            process_stop_crawl(instance.crawler_id.id) 
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def error_download_file(request, instance_id):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id = instance_id) 
+
+        instance.number_files_error_download += 1
+        instance.save()
+
+        if instance.page_crawling_finished and instance.download_files_finished():
+            process_stop_crawl(instance.crawler_id.id) 
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+def pages_found(request, instance_id, num_pages):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id = instance_id) 
+
+        instance.number_pages_found += num_pages
+        instance.save()
+        
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        print(e)
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def success_download_page(request, instance_id):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id = instance_id) 
+
+        instance.number_pages_success_download += 1
+        instance.save()
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def error_download_page(request, instance_id):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id = instance_id) 
+
+        instance.number_pages_error_download += 1
+        instance.save()
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+ 
+
 def downloads(request):
     return render(request, "main/downloads.html")
-
 
 def load_form_fields(request):
     """
@@ -416,7 +515,6 @@ def export_config(request, instance_id):
         response['Content-Disposition'] = "attachment; filename=%s" % file_name
 
     return response
-
 
 # API
 ########

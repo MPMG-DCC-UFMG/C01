@@ -65,8 +65,8 @@ def initChromeWebdriver     (
         driver.set_page_load_timeout(60)
         return driver
 
-def checkForUrl(driver, prev, dtype, container_id, btn_id):
-    container = driver.find_element_by_id(container_id)
+def checkForUrl(driver, prev, dtype, spider_manager_id, btn_id):
+    container = driver.find_element_by_id(spider_manager_id)
     css = container.value_of_css_property("display")
     if css == "block":
         print("link found", dtype)

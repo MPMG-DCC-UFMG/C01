@@ -1,6 +1,6 @@
 from django import forms
 from .models import CrawlRequest, ParameterHandler, ResponseHandler
-from django.core.exceptions import ValidationError
+from django.core.exceptions import RequestAborted, ValidationError
 from django.core.validators import RegexValidator
 
 import re
@@ -22,6 +22,25 @@ class CrawlRequestForm(forms.ModelForm):
             'form_request_type',
             'obey_robots',
             'captcha',
+
+            'sc_scheduler_persist',
+            'sc_scheduler_queue_refresh',
+            'sc_queue_hits',
+            'sc_queue_window',
+            'sc_queue_moderated',
+            'sc_dupefilter_timeout',
+            'sc_global_page_per_domain_limit',
+            'sc_global_page_per_domain_limit_timeout',
+            'sc_domain_max_page_timeout',
+            'sc_scheduler_ip_refresh',
+            'sc_scheduler_backlog_blacklist',
+            'sc_scheduler_type_enabled',
+            'sc_scheduler_ip_enabled',
+            'sc_scheduler_item_retries',
+            'sc_scheduler_queue_timeout',
+            'sc_httperror_allow_all',
+            'sc_retry_times',
+            'sc_download_timeout',
 
             'antiblock_download_delay',
             'antiblock_autothrottle_enabled',
@@ -90,6 +109,51 @@ class RawCrawlRequestForm(CrawlRequestForm):
             attrs={'placeholder': '/home/user/Documents/<crawler_name>'}),
         validators=[CrawlRequest.pathValid]
     )
+
+    # SCRAPY CLUSTER ##########################################################
+
+    # página de detalhes do coletor
+    sc_scheduler_persist = forms.BooleanField(
+        required=False, initial=True, label="Don't cleanup redis queues, allows to pause/resume crawls.", widget=forms.CheckboxInput())
+    
+    sc_scheduler_queue_refresh = forms.IntegerField(
+        required=False, initial=10, label='Seconds to wait between seeing new queues, cannot be faster than spider_idle time of 5', min_value=5)
+    
+    sc_queue_moderated = forms.BooleanField(
+        required=False, initial=True, label='We want the queue to produce a consistent pop flow')
+    
+    sc_dupefilter_timeout = forms.IntegerField(
+        required=False, initial=600, label='How long we want the duplicate timeout queues to stick around in seconds')
+    
+    sc_httperror_allow_all = forms.BooleanField(
+        required=False, initial=True, label='Allow all return codes')
+
+    sc_retry_times = forms.IntegerField(required=False, initial=3, label='Retry times')
+
+    sc_download_timeout = forms.IntegerField(required=False, initial=10, label='Download timeout')
+    
+    sc_queue_hits = forms.IntegerField(required=False, initial=10, label='Queue hits')
+
+    sc_queue_window= forms.IntegerField(required=False, initial=60, label='Queue Windows')
+
+    sc_scheduler_type_enabled = forms.BooleanField(required=False, initial=True, label='Scheduler type enabled')
+    
+    sc_scheduler_ip_enabled = forms.BooleanField(required=False, initial=True, label='Scheduler ip enabled')
+    
+    sc_global_page_per_domain_limit = forms.IntegerField(required=False, label='Global page per domain limit')
+    
+    sc_global_page_per_domain_limit_timeout = forms.IntegerField(required=False, initial=600, label='Global page per domain timeout')
+    
+    sc_domain_max_page_timeout = forms.IntegerField(required=False, initial=600, label='Domain max page timeout')
+    
+    sc_scheduler_ip_refresh = forms.IntegerField(required=False, initial=60, label='Scheduler ip refresh')
+    
+    sc_scheduler_backlog_blacklist = forms.BooleanField(required=False, initial=True, label='Scheduler backlog blacklist')
+    
+    sc_scheduler_item_retries = forms.IntegerField(required=False, initial=3, label='Scheduler item retries')
+    
+    sc_scheduler_queue_timeout = forms.IntegerField(required=False, initial=3600, label='Scheduler queue timeout')
+
 
     # ANTIBLOCK ###############################################################
     # Options for Delay

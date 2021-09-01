@@ -64,7 +64,6 @@ Crawler "{{ crawler.source_name }}"
                 </thead>
                 <tbody>
                     {% for instance in instances %}
-
                     <tr {% if forloop.counter > 3 %} class="multinstancias hidden" {% endif %}>
                         <td>{{instance.instance_id}}</td>
                         <td>{{instance.creation_date}}</td>
@@ -114,64 +113,113 @@ Crawler "{{ crawler.source_name }}"
             <a class="btn btn-secondary" href="{% url 'delete_crawler' crawler.id %}">Excluir</a>
         </div>
     </div>
-
     {% if last_instance is not None %}
     <!-- Log header -->
-    <div class="row" style="margin-top: 15px;">
+
+    <div class="row mt-4">
         <div class="col">
-            <h4>Logs da última instância</h4>
+            <h4>Dados da última instância</h4>
         </div>
     </div>
 
     <!-- Tail stdout -->
     <div class="row">
         <div class="col">
-            <div class="row"><div class="col"><h5>Últimas linhas do stdout</h5></div></div>
             <div class="row">
-                <div class="col" style="border: 1px solid gray" id="stdout_tail">
-                    2020-06-19 14:24:24 [scrapy.utils.log] INFO: Scrapy 2.1.0 started (bot: crawlers) <br>
-                    2020-06-19 14:24:24 [scrapy.utils.log] INFO: Versions: lxml 4.5.1.0, libxml2 2.9.10, cssselect 1.1.0, parsel 1.6.0,
-                    w3lib 1.22.0, Twisted 20.3.0, Python 3.6.9 (default, Apr 18 2020, 01:56:04) - [GCC 8.4.0], pyOpenSSL 19.1.0 (OpenSSL
-                    1.1.1g 21 Apr 2020), cryptography 2.9.2, Platform Linux-5.3.0-59-generic-x86_64-with-Ubuntu-18.04-bionic <br>
-                    2020-06-19 14:24:24 [scrapy.utils.log] DEBUG: Using reactor: twisted.internet.epollreactor.EPollReactor <br>
-                    2020-06-19 14:24:24 [scrapy.crawler] INFO: Overridden settings: <br>
-                    {'BOT_NAME': 'crawlers', 'DOWNLOAD_DELAY': 1, 'ROBOTSTXT_OBEY': True} <br>
-                    2020-06-19 14:24:24 [scrapy.extensions.telnet] INFO: Telnet Password: 12e8d0344a5231aa <br>
-                    2020-06-19 14:24:24 [scrapy.middleware] INFO: Enabled extensions: <br>
-                    ['scrapy.extensions.corestats.CoreStats', <br>
-                    'scrapy.extensions.telnet.TelnetConsole', <br>
-                    'scrapy.extensions.memusage.MemoryUsage', <br>
-                    'scrapy.extensions.logstats.LogStats'] <br>
+                <div class="col-12 pr-0">
+                    <hr>
+                    <h5>Progresso de coleta de páginas</h5>
+                    <div class="progress mt-3"
+                        title="Nenhuma coleta de páginas realizada"
+                        style="cursor: pointer;"
+                        id="remaining-progress-page">
+                        <div id="progress-page-success" 
+                            title="Porcentagem de páginas coletadas com sucesso" 
+                            class="progress-bar bg-success py-2"
+                            role="progressbar" 
+                            style="width:0%; cursor: pointer;">
+                        </div>
+                        <div id="progress-page-failure" 
+                            class="progress-bar bg-danger" 
+                            title="Porcentagem de erro ao coletar páginas"
+                            role="progressbar"
+                            style="width:0%; cursor: pointer;">
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end mt-2"
+                        title="Total de páginas encontradas e coletadas">
+                        <small id="progress-pages-total" style="cursor: pointer;">0 de 0</small>
+                    </div>
+                </div>
+                <div class="col-12 pr-0 ">
+                    <h5>Progresso de download de arquivos</h5>
+                    <div class="progress mt-3"
+                        title="Nenhum arquivo baixado"
+                        style="cursor: pointer;"
+                        id="remaining-progress-file">
+                        <div id="progress-file-success" 
+                            title="Porcentagem de arquivos baixados com sucesso" 
+                            class="progress-bar bg-success py-2" 
+                            role="progressbar"
+                            style="width:0%; cursor: pointer;">
+                        </div>
+                        <div id="progress-file-failure" 
+                            class="progress-bar bg-danger"
+                            title="Porcentagem de arquivos baixados com erro"
+                            role="progressbar"
+                            style="width:0%; cursor: pointer;">
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end mt-2" 
+                        title="Total de arquivos encontrados e processados"
+                        style="cursor: pointer;">
+                        <small id="progress-files-total">0 de 0</small>
+                    </div>
+                    <hr class="my-4">
                 </div>
             </div>
-            <div class="row"><div class="col"><i id="stdout_tail_update">Última atualização: 07/06/2020 11:09</i></div></div>
+            <div class="row mb-3">
+                <div class="col pr-0 d-flex align-items-center justify-content-between">
+                    <h5>Últimas linhas do stdout</h5>
+                    <a class="btn btn-primary" href="{% url 'raw_log' last_instance.instance_id %}">Abrir Log Bruto</a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col pr-0">
+                    <pre id="stdout_tail" class="border rounded p-2 m-0">
+                        Arquivo em branco.
+                    </pre>
+                </div>
+            </div>
+            <div class="row mt-1">
+                <div class="col">
+                    <i id="stdout_tail_update" class="small">Última atualização: 07/06/2020 11:09</i>
+                </div>
+            </div>
         </div>
     </div>
-
+    <br>
     <!-- Tail stderr -->
     <div class="row">
         <div class="col">
-            <div class="row"><div class="col"><h5>Últimas linhas do stderr</h5></div></div>
             <div class="row">
-                <div class="col" style="border: 1px solid gray" id="stderr_tail">
-                    2020-06-19 14:24:24 [scrapy.utils.log] INFO: Scrapy 2.1.0 started (bot: crawlers) <br>
-                    2020-06-19 14:24:24 [scrapy.utils.log] INFO: Versions: lxml 4.5.1.0, libxml2 2.9.10, cssselect 1.1.0, parsel 1.6.0,
-                    w3lib 1.22.0, Twisted 20.3.0, Python 3.6.9 (default, Apr 18 2020, 01:56:04) - [GCC 8.4.0], pyOpenSSL 19.1.0 (OpenSSL
-                    1.1.1g 21 Apr 2020), cryptography 2.9.2, Platform Linux-5.3.0-59-generic-x86_64-with-Ubuntu-18.04-bionic <br>
-                    2020-06-19 14:24:24 [scrapy.utils.log] DEBUG: Using reactor: twisted.internet.epollreactor.EPollReactor <br>
-                    2020-06-19 14:24:24 [scrapy.crawler] INFO: Overridden settings: <br>
-                    {'BOT_NAME': 'crawlers', 'DOWNLOAD_DELAY': 1, 'ROBOTSTXT_OBEY': True} <br>
-                    2020-06-19 14:24:24 [scrapy.extensions.telnet] INFO: Telnet Password: 12e8d0344a5231aa <br>
-                    2020-06-19 14:24:24 [scrapy.middleware] INFO: Enabled extensions: <br>
-                    ['scrapy.extensions.corestats.CoreStats', <br>
-                    'scrapy.extensions.telnet.TelnetConsole', <br>
-                    'scrapy.extensions.memusage.MemoryUsage', <br>
-                    'scrapy.extensions.logstats.LogStats'] <br>
+                <div class="col">
+                    <h5>Últimas linhas do stderr</h5>
                 </div>
             </div>
-            <div class="row"><div class="col"><i id="stderr_tail_update">Última atualização: 07/06/2020 11:09</i></div></div>
+            <div class="row">
+                <div class="col pr-0">
+                    <pre class="border rounded p-2 m-0" id="stderr_tail">
+                        Arquivo em branco.
+                    </pre>
+                </div>
+            </div>
+            <div class="row mt-1">
+                <div class="col">
+                    <i id="stderr_tail_update" class="small">Última atualização: 07/06/2020 11:09</i>
+                </div>
+            </div>
         </div>
-    </div>
     {% endif %}
 </div>
 {% endblock %}
