@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.db import transaction
 from django.db.models import Q
 
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, \
+from django.http import HttpResponseRedirect, JsonResponse, \
     FileResponse, HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404, redirect
 
@@ -30,7 +30,7 @@ from datetime import datetime
 
 import crawler_manager.crawler_manager as crawler_manager
 
-from crawlers.injector_tools import create_probing_object,\
+from crawler_manager.injector_tools import create_probing_object,\
     create_parameter_generators
 
 from django.views.decorators.csrf import csrf_exempt
