@@ -73,10 +73,19 @@ def generate_while(child, module):
     return code
 
 
-def generate_attribution(child, module):
+def generate_atribuicao(child, module):
     code = ""
     code += child['depth'] * '    ' + child['target']
-    code += ' = ' + str(child['source']) + '\n'
+    if type(child['source']) == dict and 'call' in child['source']:
+        function_info = child['source']['call']
+        function = getattr(module, function_info['step'])
+        is_coroutine = inspect.iscoroutinefunction(function)
+        source_statement = generate_call(function_info['step'],
+                                          function_info['arguments'],
+                                          is_coroutine)
+        code += ' = ' + source_statement + '\n'
+    else:
+        code += ' = ' + str(child['source']) + '\n'
     return code
 
 
