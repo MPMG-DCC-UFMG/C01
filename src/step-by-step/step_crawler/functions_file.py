@@ -49,7 +49,6 @@ async def clique(page, param):
         param.click()
     await wait_page(page)
 
-
 @step
 async def selecione(page, xpath, opcao):
     await page.waitForXPath(xpath)
@@ -63,6 +62,11 @@ async def salva_pagina(page):
     body = str.encode(content)
     return body
 
+@step
+async def extrai_texto(page, xpath):
+    await page.waitForXPath(xpath)
+    text = await page.Jeval(cssify(xpath), "el => el.textContent")
+    return text
 
 @step
 async def opcoes(page, xpath, exceto=None):
@@ -181,3 +185,21 @@ async def element_in_page(page, xpath):
         :returns bool: True or False
     """
     return bool(await page.xpath(xpath))
+
+async def open_in_new_tab(page, link_xpath):
+    await page.waitForXPath(link_xpath)
+    elements = await page.xpath(link_xpath)
+    new_page_promisse = asyncio.get_event_loop().create_future()
+    if len(elements) == 1:
+        page.browser.once("targetcreated", lambda target: new_page_promisse.set_result(target))
+        await page.evaluate('el => el.setAttribute("target", "_blank")', elements[0])
+        await elements[0].click()
+        await page.bringToFront()
+    else:
+        raise Exception('XPath points to non existent element, or multiple elements!')
+
+    new_page = await (await new_page_promisse).page()
+    await wait_page(new_page)
+    await new_page.bringToFront()
+
+    return new_page
