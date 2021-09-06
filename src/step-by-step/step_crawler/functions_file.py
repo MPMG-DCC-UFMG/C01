@@ -35,6 +35,31 @@ def gera_nome_arquivo():
 async def wait_page(page):
     await page.waitForSelector("html")
 
+async def fill_iframe_content(page):
+    # based in: https://gist.github.com/jgontrum/5a9060e40c7fc04c2c3bae3f1a9b28ad
+
+    iframes = await page.querySelectorAll('iframe')
+    for iframe in iframes:
+        frame = await iframe.contentFrame()
+        
+        # Checks if the element is really an iframe
+        if not frame:
+            continue
+        
+        # Extract the content inside the iframe
+        content = await frame.evaluate('''
+            () => {
+                const el = document.querySelector("*");
+                return el.innerHTML;
+            }
+        ''')
+
+        # Inserts iframe content as base page content
+        await page.evaluate('''
+            (iframe, content) => {
+                iframe.innerHTML = content;
+            }
+        ''', iframe, content) 
 
 @step
 async def clique(page, param):
@@ -58,6 +83,7 @@ async def selecione(page, xpath, opcao):
 
 @step
 async def salva_pagina(page):
+    await fill_iframe_content(page)
     content = await page.content()
     body = str.encode(content)
     return body
