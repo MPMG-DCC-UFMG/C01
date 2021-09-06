@@ -12,6 +12,7 @@ def step(function):
     function.is_step = True
     return function
 
+
 @step
 def imprime(texto):
     print(texto)
@@ -35,17 +36,18 @@ def gera_nome_arquivo():
 async def wait_page(page):
     await page.waitForSelector("html")
 
+
 async def fill_iframe_content(page):
     # based on: https://gist.github.com/jgontrum/5a9060e40c7fc04c2c3bae3f1a9b28ad
 
     iframes = await page.querySelectorAll('iframe')
     for iframe in iframes:
         frame = await iframe.contentFrame()
-        
+
         # Checks if the element is really an iframe
         if not frame:
             continue
-        
+
         # Extract the content inside the iframe
         content = await frame.evaluate('''
             () => {
@@ -59,7 +61,8 @@ async def fill_iframe_content(page):
             (iframe, content) => {
                 iframe.innerHTML = content;
             }
-        ''', iframe, content) 
+        ''', iframe, content)
+
 
 @step
 async def clique(page, param):
@@ -73,6 +76,7 @@ async def clique(page, param):
     else:
         param.click()
     await wait_page(page)
+
 
 @step
 async def selecione(page, xpath, opcao):
@@ -88,11 +92,13 @@ async def salva_pagina(page):
     body = str.encode(content)
     return body
 
+
 @step
 async def extrai_texto(page, xpath):
     await page.waitForXPath(xpath)
     text = await page.Jeval(cssify(xpath), "el => el.textContent")
     return text
+
 
 @step
 async def opcoes(page, xpath, exceto=None):
@@ -121,7 +127,7 @@ async def localiza_elementos(page, xpath, num=None):
 
     xpath_list = []
     for i in range(len(await page.xpath(base_xpath))):
-        candidate_xpath = xpath.replace("*", str(i+1))
+        candidate_xpath = xpath.replace("*", str(i + 1))
         if await element_in_page(page, candidate_xpath):
             xpath_list.append(candidate_xpath)
 
@@ -157,9 +163,11 @@ async def pegue_os_links_da_paginacao(page, xpath_dos_botoes, xpath_dos_links, i
 async def digite(page, xpath, texto):
     await page.type(cssify(xpath), texto)
 
+
 @step
 async def object(page, param):
     return param
+
 
 @step
 async def nesse_elemento_esta_escrito(page, xpath, texto):
@@ -211,6 +219,7 @@ async def element_in_page(page, xpath):
         :returns bool: True or False
     """
     return bool(await page.xpath(xpath))
+
 
 async def open_in_new_tab(page, link_xpath):
     await page.waitForXPath(link_xpath)
