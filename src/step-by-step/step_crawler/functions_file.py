@@ -36,7 +36,7 @@ async def wait_page(page):
     await page.waitForSelector("html")
 
 async def fill_iframe_content(page):
-    # based in: https://gist.github.com/jgontrum/5a9060e40c7fc04c2c3bae3f1a9b28ad
+    # based on: https://gist.github.com/jgontrum/5a9060e40c7fc04c2c3bae3f1a9b28ad
 
     iframes = await page.querySelectorAll('iframe')
     for iframe in iframes:
