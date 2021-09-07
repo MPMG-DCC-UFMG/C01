@@ -1,9 +1,10 @@
-../src/crawling_utils/
-../src/step-by-step/
-../src/captcha_solver/
-../src/scrapy_puppeteer/
-../src/cssify/
-attrs==18.1.0  # Updated from 17.2.0
+../crawling_utils/
+../step-by-step/
+../captcha_solver/
+../scrapy_puppeteer/
+../cssify/
+../scutils/
+attrs==18.1.0  # Updated from 17.2.0'
 cffi==1.11.5  # Updated from 1.10.0
 ConcurrentLogHandler==0.9.1
 cryptography==2.3
@@ -33,7 +34,6 @@ requests==2.18.4  # Updated from 2.18.3
 requests-file==1.4.3  # Updated from 1.4.2
 retrying==1.3.3
 Scrapy==1.5.0  # Updated from 1.4.0
-scutils/
 service-identity==17.0.0
 six==1.11.0  # Updated from 1.10.0
 testfixtures==6.0.2  # Updated from 5.1.1
