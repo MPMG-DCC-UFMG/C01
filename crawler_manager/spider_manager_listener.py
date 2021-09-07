@@ -54,7 +54,7 @@ class SpiderManagerListener:
         """
 
         payload = {'from': 'sm_listener'}
-        requests.get(settings.STOPPED_CRAWLER_SPIDER_ADDRESS.format(
+        requests.get(settings.STOPPED_SPIDER_NOTIFICATION_ADDRESS.format(
             crawler_id = crawler_id), params=payload)
         
     def run(self):

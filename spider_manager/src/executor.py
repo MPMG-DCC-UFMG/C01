@@ -19,16 +19,17 @@ from scrapy.spiders import Spider
 from crawling.spiders.static_page import StaticPageSpider
 from kafka_logger import KafkaLogger
 
+import settings
 
-with open('base_config.json') as f:
-    base_config = ujson.loads(f.read())
+# with open('base_config.json') as f:
+#     base_config = ujson.loads(f.read())
 
 class Executor:
     def __init__(self):
         self.__processes = dict()
         self.__container_id = os.getpid()
 
-        self.__notifier = KafkaProducer(bootstrap_servers=base_config['KAFKA_HOSTS'],
+        self.__notifier = KafkaProducer(bootstrap_servers=settings.KAFKA_HOSTS,
                                  value_serializer=lambda m: ujson.dumps(m).encode('utf-8'))
 
 
@@ -42,7 +43,20 @@ class Executor:
 
         Returns the base configuration for creating a spider with collector modifications
         """
-        
+
+        with open('scrapy_cluster_base_config.json') as f:
+            base_config = ujson.loads(f.read())
+
+            # inserts settings.py conf. in scrapy-cluster conf.
+            # params with '__' are metadata, like __dict__, __name__, etc. Params with '_' are valid params and filter imports, like 'os'
+            params = [param for param in settings.__dict__.keys() if '__' not in param and '_' in param]
+
+            for param in params:
+                base_config[param] = settings.__dict__[param]
+
+            base_config['KAFKA_TOPIC_PREFIX'] = base_config['SC_KAFKA_TOPIC_PREFIX']
+            del base_config['SC_KAFKA_TOPIC_PREFIX']
+
         base_config["DYNAMIC_PROCESSING"] = False 
         base_config["DYNAMIC_PROCESSING_STEPS"] = {} 
         
@@ -120,7 +134,7 @@ class Executor:
             'code': 'created'
         }
 
-        self.__notifier.send(base_config['NOTIFICATIONS_TOPIC'], message)
+        self.__notifier.send(settings.NOTIFICATIONS_TOPIC, message)
         self.__notifier.flush()
 
     def __notify_stop(self, spider: Spider, reason: str):
@@ -131,7 +145,7 @@ class Executor:
             - reason: Cause that caused the spider to close
         """
 
-        notifier = KafkaProducer(bootstrap_servers=base_config['KAFKA_HOSTS'],
+        notifier = KafkaProducer(bootstrap_servers=settings.KAFKA_HOSTS,
                                 value_serializer=lambda m: ujson.dumps(m).encode('utf-8'))
 
         message = {
@@ -141,7 +155,7 @@ class Executor:
             'reason': reason
         }
 
-        notifier.send(base_config['NOTIFICATIONS_TOPIC'], message)
+        notifier.send(settings.NOTIFICATIONS_TOPIC, message)
         notifier.flush()
 
         print(f'Spider "{spider.name}" from container "{spider.spider_manager_id}" closed because "{reason}"')

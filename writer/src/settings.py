@@ -1,18 +1,13 @@
-REQUEST_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36'}
+import os 
 
-FILE_DOWNLOADER_PREFIX = 'crawler_ufmg_file_downloader'
-FILE_DESCRIPTOR_TOPIC = 'crawler_ufmg_file_descriptor'
-CRAWLED_TOPIC = 'crawler_ufmg_sc.crawled_firehose'
-WRITER_TOPIC = 'crawler_ufmg_writer'
+KAFKA_HOSTS = [x.strip() for x in os.getenv('KAFKA_HOSTS', 'localhost:9092').split(',')]
+KAFKA_TOPIC_PREFIX = os.getenv('KAFKA_TOPIC_PREFIX', 'crawler_ufmg')
 
-KAFKA_HOSTS = ['localhost:9092']
+REQUEST_USER_AGENT = os.getenv('REQUEST_USER_AGENT', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36')
+REQUEST_HEADERS = {'User-Agent': REQUEST_USER_AGENT}
 
-# Redis host information
-REDIS_HOST = 'localhost'
-REDIS_PORT = 6379
-REDIS_DB = 0
-REDIS_PASSWORD = None
-REDIS_SOCKET_TIMEOUT = 10
+FILE_DOWNLOADER_PREFIX = os.getenv('FILE_DOWNLOADER_PREFIX', KAFKA_TOPIC_PREFIX + '.file_downloader')
+FILE_DESCRIPTOR_TOPIC = os.getenv('FILE_DESCRIPTOR_TOPIC', KAFKA_TOPIC_PREFIX + '.file_descriptor')
 
-#django application port
-SERVER_PORT = 8000
+CRAWLED_TOPIC = os.getenv('CRAWLED_TOPIC', KAFKA_TOPIC_PREFIX + '.scrapy_cluster.crawled_firehose')
+WRITER_TOPIC = os.getenv('WRITER_TOPIC', KAFKA_TOPIC_PREFIX + '.writer')
