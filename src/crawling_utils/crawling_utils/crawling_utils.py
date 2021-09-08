@@ -3,6 +3,7 @@ from selenium.webdriver.common.keys import Keys
 import time
 import hashlib
 import os
+import sys 
 from urllib.parse import urlparse
 import requests
 
@@ -86,6 +87,14 @@ def notify_file_downloaded_with_error(instance_id: str):
     server_notification_url = SERVER_FILE_DOWNLOADED_API.format(
         message='error', instance_id=instance_id)
     notify_server(server_notification_url)
+
+def system_running_db_migrations() -> bool:
+    '''Check whether the system is running via Django's 'makemigrations' or 'migrate' commands
+
+    Returns:
+        Returns True if the system is running via 'makemigrations' or 'migrate' command, False otherwise.
+    '''
+    return 'makemigrations' in sys.argv or 'migrate' in sys.argv
 
 # leave as 'chromedriver' if driver is on path
 CHROME_WEBDRIVER_PATH = 'chromedriver'

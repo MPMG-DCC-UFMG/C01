@@ -1,20 +1,29 @@
 import random
 import time
+import sys 
 
 # Project libs
 from crawler_manager.log_writer import LogWriter
 from crawler_manager.message_sender import MessageSender
 from crawler_manager.spider_manager_listener import SpiderManagerListener
 
-message_sender = MessageSender()
+from crawling_utils import system_running_db_migrations
+
+message_sender = None
+if not system_running_db_migrations():
+    message_sender = MessageSender()
 
 def log_writer_process():
-    """Redirects log_writer output and starts descriptor consumer loop."""
-    LogWriter.log_consumer()
+    '''Redirects log_writer output and starts descriptor consumer loop.'''
+    if not system_running_db_migrations():
+        LogWriter.log_consumer()
 
 def run_spider_manager_listener():
-    sm_listener = SpiderManagerListener()
-    sm_listener.run()
+    '''Start spider_manager message consumer loop'''
+
+    if not system_running_db_migrations():
+        sm_listener = SpiderManagerListener()
+        sm_listener.run()
 
 def gen_key():
     """Generates a unique key based on time and a random seed."""
