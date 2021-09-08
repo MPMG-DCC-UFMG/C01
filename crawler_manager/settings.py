@@ -1,11 +1,11 @@
 import os 
 
 # Kafka host information 
-KAFKA_HOSTS = [x.strip() for x in os.getenv('KAFKA_HOSTS', 'localhost:9092').split(',')]
+KAFKA_HOSTS = [x.strip() for x in os.getenv('KAFKA_HOSTS', 'kafka:9092').split(',')]
 KAFKA_TOPIC_PREFIX = os.getenv('KAFKA_TOPIC_PREFIX', 'crawler_ufmg')
 
 # Redis host information
-REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+REDIS_HOST = os.getenv('REDIS_HOST', 'redis')
 REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
 REDIS_DB = int(os.getenv('REDIS_DB', 0))
 REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', None)
@@ -27,4 +27,4 @@ LINK_GENERATOR_TOPIC = os.getenv('LINK_GENERATOR_TOPIC', KAFKA_TOPIC_PREFIX + '.
 
 WRITER_TOPIC = os.getenv('WRITER_TOPIC', KAFKA_TOPIC_PREFIX + '.writer')
 
-STOPPED_SPIDER_NOTIFICATION_ADDRESS = os.getenv('STOPPED_SPIDER_NOTIFICATION_ADDRESS', 'http://localhost:8000/detail/stop_crawl/{crawler_id}')
+STOPPED_SPIDER_NOTIFICATION_ADDRESS = os.getenv('STOPPED_SPIDER_NOTIFICATION_ADDRESS', 'http://web_server:8000/detail/stop_crawl/{crawler_id}')
