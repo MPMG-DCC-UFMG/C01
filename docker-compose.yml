@@ -1,10 +1,29 @@
 version: '3.7'
 
 services:
+    # db:
+    #     image: postgres:12.0-alpine
+    #     hostname: localhost
+    #     volumes:
+    #         - postgres_data:/var/lib/postgresql/data/
+    #     env_file:
+    #         - .env
+    #     ports:
+    #         - "5432:5432"
+    #     healthcheck:
+    #         test: ["CMD", "pg_isready"]
+    #         interval: 1s
+    #         timeout: 3s
+    #         retries: 30
     redis:
         image: redis
         ports:
             - "6379:6379"
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 1s
+            timeout: 3s
+            retries: 30
         restart: always
     zookeeper:
         image: wurstmeister/zookeeper
@@ -12,6 +31,11 @@ services:
             - "2181:2181"
         env_file:
             - .env
+        healthcheck:
+            test: ["CMD", "nc", "-vz", "zookeeper", "2181"]
+            interval: 1s
+            timeout: 3s
+            retries: 30
         restart: always
     kafka:
         image: wurstmeister/kafka
@@ -22,21 +46,28 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
         depends_on:
-            - zookeeper
+            zookeeper:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD", "nc", "-vz", "kafka", "9092"]
+            interval: 1s
+            timeout: 3s
+            retries: 30
         restart: always
-    web_server:
+    web:
         build:
             context: .
-            dockerfile: ./docker/web_server/Dockerfile
+            dockerfile: ./docker/web/Dockerfile
         volumes:
             - static_volume:/home/django/C01/staticfiles
             - data:/data
-        expose:
-            - 8000
+        ports: 
+            - "8000:8000"
         env_file:
             - .env
         depends_on:
-            - kafka
+            kafka:
+                condition: service_healthy
         restart: on-failure
     link_generator:
         build: 
@@ -45,8 +76,10 @@ services:
         env_file:
             - .env
         depends_on: 
-            - kafka
-            - redis
+            redis:
+                condition: service_healthy
+            kafka:
+                condition: service_healthy
         restart: on-failure
     spider_manager:
         build: 
@@ -54,20 +87,23 @@ services:
             dockerfile: ./docker/spider_manager/Dockerfile
         env_file:
             - .env
-        depends_on: 
-            - kafka
-            - redis 
+        depends_on:
+            redis:
+                condition: service_healthy 
+            kafka:
+                condition: service_healthy
         restart: on-failure
     writer:
         build:
             context: .
             dockerfile: ./docker/writer/Dockerfile
-        volumes:
-            - data:/data
+        # volumes:
+        #     - data:/data
         env_file:
             - .env
         depends_on:
-            - kafka
+            kafka:
+                condition: service_healthy
         restart: on-failure
 
 volumes:
