@@ -17,8 +17,12 @@ function load_steps_interface(interface_root_element_id, output_element_id, json
         step_list = JSON.parse(this.response, function (key, value){
             return value
         })
-        step_list = step_list.concat(JSON.parse('{"name": "objeto", "name_display" : "Objeto", "mandatory_params":["ex: [1,2,3]"], "optional_params":{}}'))
+
         step_list = step_list.concat(JSON.parse('{"name": "para_cada", "name_display" : "Para cada", "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "atribuicao", "name_display" : "Atribuição", "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "abrir_em_nova_aba", "name_display" : "Abrir em nova aba", "mandatory_params":["link_xpath"], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "fechar_aba", "name_display" : "Fechar aba", "mandatory_params":[], "optional_params":{}}'))
+
         init_steps_creation_interface(interface_root_element, output_element, step_list)
       }
     };
@@ -54,16 +58,14 @@ function init_steps_creation_interface(interface_root_element, output_element, s
     add_block_button.onclick = function(){step_board.add_block(step_list)}
     add_block_button.innerText = "Adicionar Passo"
 
-
-    save_button = document.createElement("button")
-    save_button.innerText = "Salvar Passos"
-    save_button.className="btn btn-primary step-controler-buttons"
-    save_button.style.color = "white"
-    interface_root_element.save_button = save_button
-    interface_root_element.save_button.onclick = function(){build_json(step_board, output_element)}
+    interface_root_element.save_button = document.getElementById('createButton')
+    interface_root_element.save_button.onmousedown = function(){
+        if(getCheckboxState("id_dynamic_processing") && step_board.children.length > 0){
+            build_json(step_board, output_element)
+        }
+    }
 
     step_controler.appendChild(add_block_button)
-    step_controler.appendChild(save_button)
     steps_creation_interface.appendChild(step_controler)
     steps_creation_interface.appendChild(step_board)
     steps_creation_interface.step_controler = step_controler
@@ -141,7 +143,7 @@ function build_json(step_board, output_element){
         depth: 0,
         children: []
     }
-
+    
     stack = [root_step]
     for(step_element of step_board.children){
         indent = step_element.depth - stack[stack.length-1].depth
@@ -191,6 +193,16 @@ function get_step_json_format(block){
             step: steps_names[block.iterable_select.value],
             arguments: load_param_dict(block)
         }
+    }else if(param_name == "atribuicao"){
+        step_dict.target = block.target_input.value
+        step_dict.source = {call:{}}
+        step_dict.source.call = {
+            step: steps_names[block.source_select.value],
+            arguments: load_param_dict(block)
+        }
+    }else if(param_name == "abrir_em_nova_aba"){
+        step_dict.link_xpath = block.xpath_input.value
+        step_dict.children = []
     }else{
         step_dict.arguments = load_param_dict(block)
     }
@@ -233,6 +245,12 @@ function param_to_placeholder(param){
             break;
         case "funcao_preprocessamento":
             param_display = "função de pré-processamento"
+            break;
+        case "objeto":
+            param_display = "ex: [1,2,3]"
+            break;
+        case "link_xpath":
+            param_display = "xpath do link"
             break;
         default:
             param_display = String(param).replaceAll("_", " ")

@@ -9,5 +9,5 @@ setup(
     author='Gabriel Cardoso',
     author_email='gabrielcrds@users.noreply.github.com',
     packages=['crawling_utils'],
-    install_requires=['selenium']
+    install_requires=['selenium', 'requests']
 )

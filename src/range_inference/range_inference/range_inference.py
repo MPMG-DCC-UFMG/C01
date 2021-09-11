@@ -142,7 +142,7 @@ class RangeInference():
         param_index = extra_params.index(None)
 
         params_instance = extra_params.copy()
-        while curr_begin < curr_end:
+        while curr_begin <= curr_end:
             mid = mid_calc(curr_begin, curr_end)
             # check the required number of entries before declaring a miss
             all_miss = True

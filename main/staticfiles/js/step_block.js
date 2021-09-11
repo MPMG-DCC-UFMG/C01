@@ -1,4 +1,3 @@
-
 /**
  * Init a block. A block is an element that allows the user choose a step and then
  * parametrize it.
@@ -54,7 +53,10 @@ function init_block(step_list, depth){
     block.hide_show_params()
 
     //Setting the estrutural steps builders
-    block.turn_to_para_cada = turn_to_para_cada
+    block.turn_to_for_step = turn_to_for_step
+    block.turn_to_attribution_step = turn_to_attribution_step
+    block.turn_to_new_tab_step = turn_to_new_tab_step
+    block.turn_to_close_tab_step = turn_to_close_tab_step
 
     //Setting the border functions
     block.onmouseout = function(){
@@ -308,6 +310,28 @@ function refresh_iterable(){
 }
 
 /**
+ * Refreshes the parameter inputs of an source when it is changed.
+ * This function is a method of the atributtion step.
+ */
+function refresh_source(){
+    block = find_parent_with_attr_worth(this, "block")
+    block.source_step = get_step_info(this.value, block.step_list)
+    block.params = []
+
+    block.delete_lines(1, block.lines.length)
+    block.add_line()
+
+    for(param of block.source_step.mandatory_params){
+        block.add_param(param)
+    }
+
+    optional_params = Object.keys(block.source_step.optional_params)
+    if(optional_params.length!=0){
+        block.init_optional_params_button(block.source_step)
+    }
+}
+
+/**
  * Refreshes the parameter inputs of an iterable when it is changed.
  * This function is a method of the select element of the block.
  */
@@ -317,7 +341,13 @@ function refresh_step(){
     block.params = []
 
     if(this.value=="Para cada"){
-        block.turn_to_para_cada()
+        block.turn_to_for_step()
+    }else if(this.value=="Atribuição"){
+        block.turn_to_attribution_step()
+    }else if(this.value=="Abrir em nova aba"){
+        block.turn_to_new_tab_step()
+    }else if(this.value=="Fechar aba"){
+        block.turn_to_close_tab_step()
     }else{
         block.delete_lines(block.lines.length)
         block.add_line()
@@ -340,7 +370,7 @@ function refresh_step(){
  * Sets the block to the for each step.
  * This function is a method of the block.
  */
-function turn_to_para_cada(){
+function turn_to_for_step(){
     block = find_parent_with_attr_worth(this, "block")
     block.delete_lines(block.lines.length)
     block.add_line()
@@ -379,6 +409,80 @@ function turn_to_para_cada(){
     iterable_select.onchange = refresh_iterable
     iterable_select.onchange()
 }
+
+/**
+ * Sets the block to the attribution step.
+ * This function is a method of the attribution step.
+ */
+ function turn_to_attribution_step(){
+    block = find_parent_with_attr_worth(this, "block")
+    block.delete_lines(block.lines.length)
+    block.add_line()
+
+    // defines target
+    target_input_box = document.createElement("DIV")
+    target_input_box.className = "col-sm"
+    target_input = document.createElement("INPUT")
+    target_input.value = "opção"
+    target_input.className = "form-control row"
+    target_input_box.appendChild(target_input)
+    block.target_input = target_input
+
+    in_label_box = document.createElement("DIV")
+    in_label_box.style.width = "3em"
+    in_label = document.createElement("P")
+    in_label.style.marginTop = "10%"
+    in_label.style.textAlign = "center"
+    in_label.innerText = " ="
+    in_label_box.appendChild(in_label)
+
+    // defines source step
+    source_select_box = document.createElement("DIV")
+    source_select_box.className = "step-config-select"
+    source_select = document.createElement("select")
+    source_select.className = "form-control select-step"
+    source_select.innerHTML = get_this_texts_inside_each_tag(Object.keys(get_step_names(block.step_list)), "<option>")
+    source_select_box.appendChild(source_select)
+    block.source_select = source_select
+
+    block.lines[0].row.appendChild(target_input_box)
+    block.lines[0].row.appendChild(in_label_box)
+    block.lines[0].row.appendChild(source_select_box)
+    block.lines[0].row.full = true
+
+    source_select.onchange = refresh_source
+    source_select.onchange()
+}
+
+/**
+ * Sets the block to the open in new page step.
+ * This function is a method of the block.
+ */
+function turn_to_new_tab_step(){
+    block = find_parent_with_attr_worth(this, "block")
+    block.delete_lines(block.lines.length)
+    block.add_line()
+
+    // defines link xpath
+    xpath_input_box = document.createElement("DIV")
+    xpath_input_box.className = "col-sm"
+    xpath_input = document.createElement("INPUT")
+    xpath_input.placeHolder = "link xpath"
+    xpath_input.className = "form-control row"
+    xpath_input_box.appendChild(xpath_input)
+    block.xpath_input = xpath_input
+
+    block.lines[0].row.appendChild(xpath_input_box)
+    block.lines[0].row.full = true
+}
+
+function turn_to_close_tab_step(){
+    block = find_parent_with_attr_worth(this, "block")
+    block.delete_lines(block.lines.length)
+    block.add_line()
+    block.lines[0].row.full = true
+}
+
 
 //---------------- block menu methods ------------------------------
 

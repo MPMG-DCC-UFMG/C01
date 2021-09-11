@@ -50,7 +50,11 @@ async def espere_pagina(pagina):
 async def clique(pagina, elemento):
     if type(elemento) == str:
         await pagina.waitForXPath(elemento)
-        await pagina.click(cssify(elemento))
+        elements = await pagina.xpath(elemento)
+        if len(elements) == 1:
+            await elements[0].click()
+        else:
+            raise Exception('XPath points to non existent element, or multiple elements!')
     else:
         elemento.click()
     await espere_pagina(pagina)
@@ -63,12 +67,17 @@ async def selecione(pagina, xpath, opcao):
     await espere_pagina(pagina)
 
 
-@step("Salvar Página")
+@step("Salvar página")
 async def salva_pagina(pagina):
     content = await pagina.content()
     body = str.encode(content)
     return body
 
+@step("Extrair texto de")
+async def extrai_texto(pagina, xpath):
+    await pagina.waitForXPath(xpath)
+    text = await pagina.Jeval(cssify(xpath), "el => el.textContent")
+    return text
 
 @step("Opções")
 async def opcoes(pagina, xpath, exceto=None):
@@ -108,12 +117,15 @@ async def localiza_elementos(pagina, xpath, numero_xpaths=None):
 @step("Voltar")
 async def retorna_pagina(pagina):
     await pagina.goBack()
-    
+
 
 @step("Digitar em")
 async def digite(pagina, xpath, texto):
     await pagina.type(cssify(xpath), texto)
 
+@step("Objeto")
+async def objeto(pagina, objeto):
+    return objeto
 
 @step("Está escrito")
 async def nesse_elemento_esta_escrito(pagina, xpath, texto):
@@ -165,3 +177,21 @@ async def elemento_existe_na_pagina(pagina, xpath):
         :returns bool: True or False
     """
     return bool(await pagina.xpath(xpath))
+
+async def open_in_new_tab(pagina, link_xpath):
+    await pagina.waitForXPath(link_xpath)
+    elements = await pagina.xpath(link_xpath)
+    new_page_promisse = asyncio.get_event_loop().create_future()
+    if len(elements) == 1:
+        pagina.browser.once("targetcreated", lambda target: new_page_promisse.set_result(target))
+        await pagina.evaluate('el => el.setAttribute("target", "_blank")', elements[0])
+        await elements[0].click()
+        await pagina.bringToFront()
+    else:
+        raise Exception('XPath points to non existent element, or multiple elements!')
+
+    new_page = await (await new_page_promisse).page()
+    await espere_pagina(new_page)
+    await new_page.bringToFront()
+
+    return new_page

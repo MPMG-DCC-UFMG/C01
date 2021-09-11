@@ -77,13 +77,38 @@ def generate_enquanto(child, module):
 def generate_atribuicao(child, module):
     code = ""
     code += child['depth'] * '    ' + child['target']
-    code += ' = ' + str(child['source']) + '\n'
+    if type(child['source']) == dict and 'call' in child['source']:
+        function_info = child['source']['call']
+        function = getattr(module, function_info['step'])
+        is_coroutine = inspect.iscoroutinefunction(function)
+        source_statement = generate_call(function_info['step'],
+                                          function_info['arguments'],
+                                          is_coroutine)
+        code += ' = ' + source_statement + '\n'
+    else:
+        code += ' = ' + str(child['source']) + '\n'
     return code
 
 def generate_salva_pagina(child, module):
     code = ""
     code += child['depth'] * '    ' + "pages[gera_nome_arquivo()] = "
     code += "await salva_pagina(**missing_arguments)\n"
+    return code
+
+def generate_abrir_em_nova_aba(child, module):
+    code = ""
+    code += child['depth'] * '    ' + 'page_stack.append(page)\n'
+    code += child['depth'] * '    ' + \
+            'missing_arguments["pagina"] = await open_in_new_tab(**missing_arguments, ' + \
+                'link_xpath = ' + child['link_xpath'] +')\n'
+    code += child['depth'] * '    ' + 'page = missing_arguments["pagina"]\n'
+    return code
+
+def generate_fechar_aba(child, module):
+    code = ""
+    code += child['depth'] * '    ' + 'await page.close()\n'
+    code += child['depth'] * '    ' + 'missing_arguments["pagina"] = page_stack.pop()\n'
+    code += child['depth'] * '    ' + 'page = missing_arguments["pagina"]\n'
     return code
 
 
@@ -127,7 +152,8 @@ def generate_head(module):
     code += "from " + module.__name__ + " import *\n\n"
     code += "async def execute_steps(**missing_arguments):\n"\
         + "    pages = {}\n"\
-        + "    page = missing_arguments['pagina']\n"
+        + "    page = missing_arguments['pagina']\n"\
+        + "    page_stack = []\n"
     return code
 
 
@@ -155,4 +181,5 @@ def generate_code(recipe, module):
     code += generate_body(recipe, module)
     code += "    return pages"
     print(code)
+    print('--------------------------------------------------------------------------')
     return RuntimeModule.from_string("steps", code)

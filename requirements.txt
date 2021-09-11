@@ -7,3 +7,4 @@ pytest
 pytest-mock
 python3-wget
 validators
+cchardet==2.1.7

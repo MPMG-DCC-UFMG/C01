@@ -59,6 +59,7 @@ class TestExtractInfo(unittest.TestCase):
         expected_result += "execute_steps(**missing_arguments):\n"
         expected_result += "    pages = {}\n"
         expected_result += "    page = missing_arguments['pagina']\n"
+        expected_result += "    page_stack = []\n"
         self.assertEqual(expected_result, result)
 
     def test_generate_body(self):

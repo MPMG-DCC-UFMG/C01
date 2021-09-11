@@ -15,14 +15,18 @@ try:
 except Exception:
     pass
 
+import cgi
+
 import base64
 import datetime
 import os
 import pathlib
 import time
+import mimetypes
 from glob import glob
 
 import crawling_utils as utils
+import magic
 from pyppeteer import __chromium_revision__, launch
 from scrapy import signals
 from scrapy.exceptions import IgnoreRequest
@@ -80,7 +84,7 @@ class PuppeteerMiddleware:
 
         # Changes the default file save location.
         cdp = await page._target.createCDPSession()
-        await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allow', 'downloadPath': middleware.download_path})
+        await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allowAndName', 'downloadPath': middleware.download_path})
 
         crawler.signals.connect(middleware.spider_closed, signals.spider_closed)
 
@@ -207,8 +211,12 @@ class PuppeteerMiddleware:
             steps = code_g.generate_code(request.steps, functions_file)
             request.meta["pages"] = await steps.execute_steps(pagina=page)
 
+        content_type = response.headers['content-type']
+        _, params = cgi.parse_header(content_type)
+        encoding = params['charset']
+
         content = await page.content()
-        body = str.encode(content)
+        body = str.encode(content, encoding=encoding, errors='ignore')
 
         await page.close()
 
@@ -221,8 +229,8 @@ class PuppeteerMiddleware:
             status=response.status,
             headers=response.headers,
             body=body,
-            encoding='utf-8',
-            request=request,
+            encoding=encoding,
+            request=request
         )
 
     def process_request(self, request, spider):
@@ -262,7 +270,7 @@ class PuppeteerMiddleware:
         """Generates descriptions for downloaded files."""
 
         # list all files in crawl data folder, except file_description.jsonl
-        files = glob(f'{self.download_path}*.[!jsonl]*')
+        files = glob(f'{self.download_path}*[!jsonl]')
 
         with open(f'{self.download_path}file_description.jsonl', 'w') as f:
             for file in files:
@@ -270,24 +278,26 @@ class PuppeteerMiddleware:
                 fname = pathlib.Path(file)
                 creation_time = datetime.datetime.fromtimestamp(fname.stat().st_ctime)
 
-                s_file = file.split('/')
+                mimetype = magic.from_file(file, mime=True)
+                guessed_extension = mimetypes.guess_extension(mimetype)
 
-                path = '/'.join(s_file[:-1])
-                ext = file.split('.')[-1].lower()
-                renamed_filename = utils.hash(s_file[-1].encode()) + f'.{ext}'
+                ext = '' if guessed_extension is None else guessed_extension
 
-                renamed_file = f'{path}/{renamed_filename}'
-                os.rename(file, renamed_file)
+                file_with_extension = file + ext
+                os.rename(file, file_with_extension)
 
+                # A typical file will be: /home/user/folder/filename.ext
+                # So, we get only the filename.ext in the next line
+                file_name = file_with_extension.split('/')[-1]
 
                 description = {
                     'url': '<triggered by dynamic page click>',
-                    'file_name': renamed_filename,
+                    'file_name': file_name,
                     'crawler_id': self.crawler_id,
                     'instance_id': self.instance_id,
                     'crawled_at_date': str(creation_time),
                     'referer': '<from unique dynamic crawl>',
-                    'type': ext,
+                    'type': ext.replace('.', '') if ext != '' else '<unknown>',
                 }
 
                 f.write(json.dumps(description) + '\n')
