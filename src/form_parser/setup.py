@@ -15,5 +15,5 @@ setup(
     author_email='rubia-rg@users.noreply.github.com',
     packages=find_packages(),
     install_requires=['lxml', 'requests', 'asyncio',
-                      'pyppeteer', 'syncer']
+                      'pyppeteer==0.2.6', 'syncer']
 )
