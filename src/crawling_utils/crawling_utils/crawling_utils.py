@@ -7,7 +7,7 @@ import sys
 from urllib.parse import urlparse
 import requests
 
-SERVER_ADDRESS = 'http://localhost:8000'
+SERVER_ADDRESS = os.getenv('SERVER_ADDRESS', 'http://localhost:8000')
 
 SERVER_NEW_PAGE_FOUND_API = SERVER_ADDRESS + '/download/pages/found/{instance_id}/{num_pages}'
 SERVER_PAGE_CRAWLED_API = SERVER_ADDRESS + '/download/page/{message}/{instance_id}'

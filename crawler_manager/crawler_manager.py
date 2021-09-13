@@ -17,10 +17,9 @@ def log_writer_process():
     '''Redirects log_writer output and starts descriptor consumer loop.'''
     if not system_running_db_migrations():
         LogWriter.log_consumer()
-
+    
 def run_spider_manager_listener():
     '''Start spider_manager message consumer loop'''
-
     if not system_running_db_migrations():
         sm_listener = SpiderManagerListener()
         sm_listener.run()

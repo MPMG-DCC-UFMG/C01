@@ -1,20 +1,6 @@
 version: '3.7'
 
 services:
-    # db:
-    #     image: postgres:12.0-alpine
-    #     hostname: localhost
-    #     volumes:
-    #         - postgres_data:/var/lib/postgresql/data/
-    #     env_file:
-    #         - .env
-    #     ports:
-    #         - "5432:5432"
-    #     healthcheck:
-    #         test: ["CMD", "pg_isready"]
-    #         interval: 1s
-    #         timeout: 3s
-    #         retries: 30
     redis:
         image: redis
         ports:
@@ -30,7 +16,7 @@ services:
         ports:
             - "2181:2181"
         env_file:
-            - .env
+            - ./docker/config/.env
         healthcheck:
             test: ["CMD", "nc", "-vz", "zookeeper", "2181"]
             interval: 1s
@@ -42,7 +28,7 @@ services:
         ports:
             - "9092:9092"
         env_file:
-            - .env
+            - ./docker/config/.env
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
         depends_on:
@@ -64,7 +50,7 @@ services:
         ports: 
             - "8000:8000"
         env_file:
-            - .env
+            - ./docker/config/.env
         depends_on:
             kafka:
                 condition: service_healthy
@@ -74,7 +60,7 @@ services:
             context: .
             dockerfile: ./docker/link_generator/Dockerfile
         env_file:
-            - .env
+            - ./docker/config/.env
         depends_on: 
             redis:
                 condition: service_healthy
@@ -86,7 +72,7 @@ services:
             context: .
             dockerfile: ./docker/spider_manager/Dockerfile
         env_file:
-            - .env
+            - ./docker/config/.env
         depends_on:
             redis:
                 condition: service_healthy 
@@ -97,10 +83,10 @@ services:
         build:
             context: .
             dockerfile: ./docker/writer/Dockerfile
-        # volumes:
-        #     - data:/data
+        volumes:
+            - data:/data
         env_file:
-            - .env
+            - ./docker/config/.env
         depends_on:
             kafka:
                 condition: service_healthy

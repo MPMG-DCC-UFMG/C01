@@ -30,8 +30,7 @@ print(f"Installing other project dependencies...")
 subprocess.run(["pip", "install", "-r" "requirements.txt"])
 print()
 
-if env("EXECUTION_TYPE") == "standalone":
-    print(f"Creating database...")
-    subprocess.run(["python", "manage.py", "makemigrations"])
-    subprocess.run(["python", "manage.py", "migrate"])
-    print()
+print(f"Creating database...")
+subprocess.run(["python", "manage.py", "makemigrations"])
+subprocess.run(["python", "manage.py", "migrate"])
+print()
