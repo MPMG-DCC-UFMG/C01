@@ -18,6 +18,28 @@ class ParamInjector():
     """
 
     @staticmethod
+    def process_code_verification(sequential: int, year: int, seg_id: int,
+                                  court_id: int, origin_id: int):
+        """
+        Generates the verification digits for a process code.
+
+        :param sequential: the sequential identifier for the process
+        :param year:       the year of the process
+        :param seg_id:     the segment id of the process
+        :param court_id:   the court id of the process
+        :param origin_id:  the origin id of the process
+
+        :returns: the verification digits obtained
+        """
+
+        value_str = str(sequential) + str(year) + str(seg_id) + \
+            str(court_id) + str(origin_id)
+        verif_val = 98 - ((int(value_str) * 100) % 97)
+
+        return verif_val
+
+
+    @staticmethod
     def __format_unpack_ranges(param_limits: List[Union[Tuple[int, int],
                                                         List[int]]]
                                ) -> List[Union[range, list]]:
@@ -57,11 +79,11 @@ class ParamInjector():
 
 
     @staticmethod
-    def __format_params(code_format: str,
-                        entry: Tuple[int, ...],
-                        verif: Optional[Callable[[List[int]], int]],
-                        verif_index: Optional[int]
-                        ) -> str:
+    def format_params(code_format: str,
+                      entry: Tuple[int, ...],
+                      verif: Optional[Callable[[List[int]], int]],
+                      verif_index: Optional[int]
+                      ) -> str:
         """
         Generates the formatted code as a string for a single combination of
         parameters
@@ -129,8 +151,8 @@ class ParamInjector():
         # itertools.product generates all combinations of entries from each list
         # in ranges_list
         for entry in itertools.product(*ranges_list):
-            yield ParamInjector.__format_params(code_format, entry, verif,
-                                                verif_index)
+            yield ParamInjector.format_params(code_format, entry, verif,
+                                              verif_index)
 
 
     @staticmethod
@@ -370,3 +392,37 @@ class ParamInjector():
             if period_val(curr) != prev_period:
                 prev_period = period_val(curr)
                 yield curr.strftime(date_format)
+
+
+    @staticmethod
+    def generate_list(elements: str) -> Generator[str, None, None]:
+        """
+        Generates a user-specified list of values. Used when there is not a
+        large amount of values to generate and they are not uniform enough to
+        use one of the other generators
+
+        :param elements: comma-separated list of elements to generate, as a
+                         string
+
+        :yields: the values described in the supplied string
+        """
+
+        # Remove leading and trailing spaces in the list elements
+        values = [i.strip() for i in elements.split(',')]
+
+        for v in values:
+            yield v
+
+
+    @staticmethod
+    def generate_constant(value: str) -> Generator[str, None, None]:
+        """
+        Generates a single value once. Used for specific cases where you just
+        want to fill a placeholder.
+
+        :param value: value to be generated
+
+        :yields: the supplied value
+        """
+
+        yield value

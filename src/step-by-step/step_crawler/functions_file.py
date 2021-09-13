@@ -8,14 +8,22 @@ from captcha_solver.image_solver import ImageSolver
 from pyext import RuntimeModule
 
 
-def range_(stop):
-    return [i for i in range(stop)]
+def step(function):
+    function.is_step = True
+    return function
+
+@step
+def imprime(texto):
+    print(texto)
+    return
 
 
-def print_(word):
-    return word
+@step
+def repete(vezes):
+    return [i for i in range(vezes)]
 
 
+@step
 def espere(segs):
     time.sleep(segs)
 
@@ -25,30 +33,42 @@ def gera_nome_arquivo():
 
 
 async def wait_page(page):
-    jsWait = "document.readyState === 'complete' || \
-              document.readyState === 'iteractive'"
-    while not (await page.evaluate(jsWait)):
-        await page.waitFor(1)
+    await page.waitForSelector("html")
 
 
-async def clique(page, xpath):
-    await page.waitForXPath(xpath)
-    await page.click(cssify(xpath))
+@step
+async def clique(page, param):
+    if type(param) == str:
+        await page.waitForXPath(param)
+        elements = await page.xpath(param)
+        if len(elements) == 1:
+            await elements[0].click()
+        else:
+            raise Exception('XPath points to non existent element, or multiple elements!')
+    else:
+        param.click()
     await wait_page(page)
 
-
+@step
 async def selecione(page, xpath, opcao):
     await page.waitForXPath(xpath)
     await page.type(cssify(xpath), opcao)
     await wait_page(page)
 
 
+@step
 async def salva_pagina(page):
     content = await page.content()
     body = str.encode(content)
     return body
 
+@step
+async def extrai_texto(page, xpath):
+    await page.waitForXPath(xpath)
+    text = await page.Jeval(cssify(xpath), "el => el.textContent")
+    return text
 
+@step
 async def opcoes(page, xpath, exceto=None):
     if exceto is None:
         exceto = []
@@ -60,6 +80,7 @@ async def opcoes(page, xpath, exceto=None):
     return [value for value in options if value not in exceto]
 
 
+@step
 async def for_clicavel(page, xpath):
     try:
         await clique(page, xpath)
@@ -67,6 +88,24 @@ async def for_clicavel(page, xpath):
     except:
         return False
 
+
+@step
+async def localiza_elementos(page, xpath, num=None):
+    base_xpath = xpath.split("[*]")[0]
+
+    xpath_list = []
+    for i in range(len(await page.xpath(base_xpath))):
+        candidate_xpath = xpath.replace("*", str(i+1))
+        if await element_in_page(page, candidate_xpath):
+            xpath_list.append(candidate_xpath)
+
+    num = len(xpath_list) if not num else num
+    return xpath_list[:num]
+
+
+@step
+async def retorna_pagina(page):
+    await page.goBack()
 
 
 async def pegue_os_links_da_paginacao(page, xpath_dos_botoes, xpath_dos_links, indice_do_botao_proximo=-1):
@@ -88,11 +127,15 @@ async def pegue_os_links_da_paginacao(page, xpath_dos_botoes, xpath_dos_links, i
             clickable = False
 
 
+@step
 async def digite(page, xpath, texto):
     await page.type(cssify(xpath), texto)
 
+@step
+async def object(page, param):
+    return param
 
-
+@step
 async def nesse_elemento_esta_escrito(page, xpath, texto):
     elements = await page.xpath(xpath)
     if len(elements):
@@ -108,6 +151,7 @@ async def nesse_elemento_esta_escrito(page, xpath, texto):
         return False
 
 
+@step
 async def break_image_captcha(page, xpath_input, xpath_output, preprocessing=None):
     """This step downloads the captcha image then solves it and fills its respective form field
 
@@ -133,6 +177,7 @@ async def break_image_captcha(page, xpath_input, xpath_output, preprocessing=Non
     return text
 
 
+@step
 async def element_in_page(page, xpath):
     """This step returns True if there's any element given a xpath, otherwise, returns False
 
@@ -140,3 +185,21 @@ async def element_in_page(page, xpath):
         :returns bool: True or False
     """
     return bool(await page.xpath(xpath))
+
+async def open_in_new_tab(page, link_xpath):
+    await page.waitForXPath(link_xpath)
+    elements = await page.xpath(link_xpath)
+    new_page_promisse = asyncio.get_event_loop().create_future()
+    if len(elements) == 1:
+        page.browser.once("targetcreated", lambda target: new_page_promisse.set_result(target))
+        await page.evaluate('el => el.setAttribute("target", "_blank")', elements[0])
+        await elements[0].click()
+        await page.bringToFront()
+    else:
+        raise Exception('XPath points to non existent element, or multiple elements!')
+
+    new_page = await (await new_page_promisse).page()
+    await wait_page(new_page)
+    await new_page.bringToFront()
+
+    return new_page

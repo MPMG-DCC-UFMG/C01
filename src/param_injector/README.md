@@ -30,6 +30,20 @@ gen = ParamInjector.generate_format('{}-{}', [(1996, 2000)], lambda x: x % 10, 1
 list(gen) # ['1996-6', '1997-7', '1998-8', '1999-9', '2000-0']
 ```
 
+#### Formatted string creator
+The method `format_params` is used by this module's internals, but can also be useful in other modules. It takes in the code information and returns the string, filled with the supplied values.
+
+```
+def verif(x, y):
+    return x + y
+
+verif_index = 2
+ParamInjector.format_params("{}-{}-{}", (1, 2), verif, verif_index) # '1-2-3'
+```
+
+#### Verification digits for process codes
+The method `process_code_verification` is also supplied. It takes the process code's data as input and returns the verification digits for this instance.
+
 ### Number sequence generator
 Generates a sequence of numbers between two values with a given step size. By default adds leading zeros to the values so that they have the same number of digits.
 
@@ -61,4 +75,26 @@ list(gen) # ['2000', '2001', '2002', '2003']
 
 gen = ParamInjector.generate_daterange('%Y-%m-%d', datetime.date(2000,1,1), datetime.date(2000,1,5), "D")
 list(gen) # ['2000-01-01', '2000-01-02', '2000-01-03', '2000-01-04', '2000-01-05']
+```
+
+### Predefined list generator
+Takes in a user-supplied list of comma-separated values and generates them individually. Leading and trailing spaces in each element are ignored. An empty value for the input generates an empty string as its single element.
+
+```
+gen = ParamInjector.generate_list('a, b, c, d, e')
+list(gen) # ['a', 'b', 'c', 'd', 'e']
+
+gen = ParamInjector.generate_list('')
+list(gen) # ['']
+```
+
+### Constant generator
+Generates the supplied value once. Used for specific situations when filling placeholders.
+
+```
+gen = ParamInjector.generate_constant('testelement')
+list(gen) # ['testelement']
+
+gen = ParamInjector.generate_constant('')
+list(gen) # ['']
 ```

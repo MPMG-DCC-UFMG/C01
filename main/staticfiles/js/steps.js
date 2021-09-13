@@ -4,7 +4,13 @@
  * @param  {Node} output_element [The element where the steps json are going to be placed]
  * @param  {String} json_path [The path of the json with the steps information]
  */
-function load_steps(interface_root_element, output_element, json_path="/static/json/step_signatures.json"){
+function load_steps_interface(interface_root_element_id, output_element_id, json_path="/static/json/steps_signature.json"){
+    interface_root_element = document.getElementById(interface_root_element_id) 
+    if(interface_root_element.type == "root" )
+        return
+    
+    output_element = document.getElementById(output_element_id)
+
     var xmlhttp = new XMLHttpRequest();
     xmlhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
@@ -15,8 +21,11 @@ function load_steps(interface_root_element, output_element, json_path="/static/j
             return value;
         })
         step_list = step_list.concat(JSON.parse('{"name":"object", "mandatory_params":["ex: [1,2,3]"], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name":"for each", "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name":"para cada", "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name":"atribuicao", "mandatory_params":[], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name":"for each page in", "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name":"abrir em nova aba", "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name":"fechar aba", "mandatory_params":[], "optional_params":{}}'))
         init_steps_creation_interface(interface_root_element, output_element, step_list)
       }
     };
@@ -52,16 +61,14 @@ function init_steps_creation_interface(interface_root_element, output_element, s
     add_block_button.onclick = function(){step_board.add_block(step_list)}
     add_block_button.innerText = "Add step"
 
-
-    save_button = document.createElement("button")
-    save_button.innerText = "Save steps"
-    save_button.className="btn btn-primary step-controler-buttons"
-    save_button.style.color = "white"
-    interface_root_element.save_button = save_button
-    interface_root_element.save_button.onclick = function(){build_json(step_board, output_element)}
+    interface_root_element.save_button = document.getElementById('createButton')
+    interface_root_element.save_button.onmousedown = function(){
+        if(getCheckboxState("id_dynamic_processing") && step_board.children.length > 0){            
+            build_json(step_board, output_element)
+        }
+    }
 
     step_controler.appendChild(add_block_button)
-    step_controler.appendChild(save_button)
     steps_creation_interface.appendChild(step_controler)
     steps_creation_interface.appendChild(step_board)
     steps_creation_interface.step_controler = step_controler
@@ -114,7 +121,7 @@ function get_last_depth(){
         step_board = find_parent_with_attr_worth(this, "step_board")
         if(step_board.children.length>0){
             last_step = step_board.children[step_board.children.length-1]
-            if(last_step.step.name == "for each" || last_step.step.name == "for each page in"){
+            if(last_step.step.name == "para cada" || last_step.step.name == "for each page in"){
                 return last_step.depth + 1
             }else{
                 return last_step.depth
@@ -157,13 +164,17 @@ function build_json(step_board, output_element){
             for(var i = 0; i < -indent; i++){
                 stack.pop()
             }
+            stack.pop()
+            stack[stack.length-1].children.push(step_dict)
+            stack.push(step_dict)
+
         }else if(indent>1){
             console.log("Indentation ERROR")
         }
 
     }
     output_element.value = JSON.stringify(root_step)
-    
+
 }
 
 /**
@@ -177,18 +188,31 @@ function get_step_json_format(block){
         step : param_name,
         depth : block.depth,
     }
-    if(param_name == "for each"){
+    if(param_name == "para_cada"){
         step_dict.iterator = block.iterator_input.value
         step_dict.children = []
         step_dict.iterable = {call:{}}
         step_dict.iterable.call = {
-            step: block.iterable_select.value,
+            step: block.iterable_select.value.replace(/ /g, "_"),
             arguments:{}
         }
         for(param of block.params){
             step_dict.iterable.call.arguments[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
         }
-    }else if(param_name == "for each page in"){
+    }else if(param_name == "atribuicao"){
+        step_dict.target = block.target_input.value
+        step_dict.source = {call:{}}
+        step_dict.source.call = {
+            step: block.source_select.value.replace(/ /g, "_"),
+            arguments:{}
+        }
+        for(param of block.params){
+            step_dict.source.call.arguments[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value
+        }
+    }else if(param_name == "abrir_em_nova_aba"){
+        step_dict.link_xpath = block.xpath_input.value
+        step_dict.children = []
+    }else if(param_name == "for_each_page_in"){
         step_dict.children = []
         for(param of block.params){
             step_dict[param.children[0].placeholder.replace(/ /g, "_")] = param.children[0].value

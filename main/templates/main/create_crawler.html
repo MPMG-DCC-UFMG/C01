@@ -20,6 +20,20 @@ New Crawler
             <!-- d-* hiddens the Sidebar in smaller devices. Its itens can be kept on the Navbar 'Menu' -->
             <!-- Bootstrap List Group -->
             <ul class="list-group list-group-mine sticky-top sticky-offset">
+                {% if not form.instance.pk %}
+                <!-- import settings -->
+                <a onClick="showBlock(this.id);" href="#" class="button-block bg-dark list-group-item list-group-item-action"
+                    id="import-settings-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-download fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Importar configuração</span>
+                        </div>
+                    </div>
+                </a>
+                <!-- End of import settings -->
+                {% endif %}
+
                 <!-- Separator with title -->
                 <li
                     class="sidebar list-group-item sidebar-separator-title text-muted d-flex align-items-center menu-collapsed">
@@ -72,15 +86,29 @@ New Crawler
                 </a>
                 <a onClick="showBlock(this.id)" href="#"
                     class="disabled button-block bg-dark list-group-item list-group-item-action"
-                    id="templated-url-item">
+                    id="templated_url-item">
                     <div class="d-flex w-100 justify-content-start align-items-center">
                         <div class="col-md-10 sidemenu-items">
                             <span class="fa fa-sliders fa-fw mr-3"></span>
                             <span class="menu-collapsed">URL Parametrizada</span>
                         </div>
                         <div class="col-md-2">
-                            <span id="templated-url-valid-icon"
-                                class="fa fa-check fa-fw mr-3 templated-url-valid-icon valid-icon"></span>
+                            <span id="templated_url-valid-icon"
+                                class="fa fa-check fa-fw mr-3 templated_url-valid-icon valid-icon"></span>
+                        </div>
+                    </div>
+                </a>
+                <a onClick="showBlock(this.id)" href="#"
+                    class="button-block bg-dark list-group-item list-group-item-action"
+                    id="static_form-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-wpforms fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Formulários</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span id="static_form-valid-icon"
+                                class="fa fa-check fa-fw mr-3 static_form-valid-icon valid-icon"></span>
                         </div>
                     </div>
                 </a>
@@ -90,25 +118,44 @@ New Crawler
                 </li>
 
                 <!-- /END Separator -->
-                <a onClick="showBlock(this.id)" href="#"
-                    class="button-block bg-dark list-group-item list-group-item-action" id="crawler-type-item">
+
+                <!-- implementation local begin -->
+                <a onClick="showBlock(this.id); load_steps_interface(this.id + '-wrap', 'id_steps');" href="#"
+                    class="button-block bg-dark list-group-item list-group-item-action" id="dynamic-processing-item">
                     <div class="d-flex w-100 justify-content-start align-items-center">
                         <div class="col-md-10 sidemenu-items">
-                            <span class="fa fa-gear fa-fw mr-3"></span>
-                            <span class="menu-collapsed">Tipo do coletor</span>
+                            <span class="fa fa-code fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Processamento dinâmico</span>
                         </div>
                         <div class="col-md-2">
-                            <span id="crawler-type-valid-icon"
-                                class="fa fa-check fa-fw mr-3 crawler-type-valid-icon valid-icon"></span>
+                            <span id="dynamic-processing-valid-icon"
+                                class="fa fa-check fa-fw mr-3 crawler-details-valid-icon valid-icon disabled"></span>
                         </div>
                     </div>
                 </a>
+                <!-- implementation local end -->
+
+                <a onClick="showBlock(this.id)" href="#"
+                    class="button-block bg-dark list-group-item list-group-item-action" id="crawler-details-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-gear fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Detalhes do coletor</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span id="crawler-details-valid-icon"
+                                class="fa fa-check fa-fw mr-3 crawler-details-valid-icon valid-icon"></span>
+                        </div>
+                    </div>
+                </a>
+
                 <a href="#" class="disabled bg-dark list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-start align-items-center">
                         <span class="fa fa-shield fa-fw mr-3"></span>
                         <span class="menu-collapsed">Configuração...</span>
                     </div>
                 </a>
+                <!--
                 <a onClick="showBlock(this.id);" href="#"
                     class="disabled button-block bg-dark list-group-item list-group-item-action" id="probing-item">
                     <div class="d-flex w-100 justify-content-start align-items-center">
@@ -122,23 +169,11 @@ New Crawler
                         </div>
                     </div>
                 </a>
+                -->
                 <a href="#" class="disabled bg-dark list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-start align-items-center">
                         <span class="fa fa-image fa-fw mr-3"></span>
                         <span class="menu-collapsed">Configuração...</span>
-                    </div>
-                </a>
-                <a onClick="showBlock(this.id)" href="#"
-                    class="button-block bg-dark list-group-item list-group-item-action" id="parsing-item">
-                    <div class="d-flex w-100 justify-content-start align-items-center">
-                        <div class="col-md-10 sidemenu-items">
-                            <span class="fa fa-wrench  fa-fw mr-3"></span>
-                            <span class="menu-collapsed">Tratamento</span>
-                        </div>
-                        <div class="col-md-2">
-                            <span id="crawler-type-valid-icon"
-                                class="fa fa-check fa-fw mr-3 crawler-type-valid-icon valid-icon"></span>
-                        </div>
                     </div>
                 </a>
                 {% if crawler %}
@@ -163,11 +198,31 @@ New Crawler
                 <div class="col-8">
                     <hr class="mt-0 mb-4">
 
+                    <div id="import-settings-item-block" class="block" hidden>
+                        <div class="row" style="padding: 20px;">
+                            <div class="col md-6">
+                                <div id="div_id_import_settings" class="form-group">
+                                    <label for="id_import_settings">Importar arquivo de configuração</label>
+                                    <div class="">
+                                        <input type="file"
+                                                class="form-control-file"
+                                                accept="application/JSON"
+                                                id="id_import_settings"
+                                                name="import_settings"
+                                                onchange="parseSettings(this)"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div id="basic-info-item-block" class="block">
                         <div class="row" style="padding:20px;">
                             <div class="col md-6">
                                 {{ form.source_name | as_crispy_field}}
                                 {{ form.base_url | as_crispy_field}}
+                                <p>A URL pode conter espaços para parâmetros, representados como um conjunto de chaves vazias</p>
                                 {{ form.request_type | as_crispy_field}}
                                 {{ form.obey_robots | as_crispy_field}}
                                 {{ form.data_path | as_crispy_field}}
@@ -283,82 +338,104 @@ New Crawler
                         </div>
                     </div>
 
-                    <div id="crawler-type-item-block" class="block" hidden>
-                        <div class="row" style="padding:20px;">
+
+                    <div id="dynamic-processing-item-block" class="block" hidden>
+                        <div id="dynamic_processing" class="">
+                            {{ form.dynamic_processing | as_crispy_field}}
+                        </div>
+                        <div id="dynamic-processing-item-wrap" class="" style="padding:20px;" class="hidden">
+                            {{ form.steps | as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <div id="crawler-details-item-block" class="block" hidden>
+                        <div class="row">
                             <div class="col md-6">
-                                {{ form.crawler_type | as_crispy_field}}
                                 <div class="crawler-type-content-div" id="static_page">
-                                    <div id="explore_links" style="padding:20px; border-top: 1px solid #DCDCDC;">
+                                    <div id="explore_links" style="padding: 20px; border-top: 1px solid #DCDCDC;">
                                         {{ form.explore_links | as_crispy_field}}
                                         {{ form.link_extractor_max_depth | as_crispy_field}}
                                         {{ form.link_extractor_allow_url | as_crispy_field}}
+
+                                        <div class="btn btn-primary" id="collapse-adv-links">
+                                            Opções Avançadas
+                                        </div>
+                                        <div class="mycollapse" id="adv-links">
+                                            <div class="mycollapse-block  p-4 pb-0 rounded mt-3">
+                                                {{ form.encoding_detection_method | as_crispy_field }}
+                                                <p class="small">Essa configuração permite escolher como será obtida a codificação para salvamento das páginas salvas. 
+                                                    O padrão é via cabeçalho das respostas do servidor, que devem funcionar para a maiorias dos casos e é mais rápido. 
+                                                    O método automático tentará detectar a codificação automaticamente, o que é mais lento mas pode resolver caso de 
+                                                    respostas incorretas do servidor. A detecção de codificação não é perfeita, portanto, o nível de confiança de <strong>80%</strong> é adotado.
+                                                    <br>
+                                                    <br>
+                                                    <strong>Obs.:</strong>A detecção automática de codificação não é atualmente suportada em páginas dinâmicas.
+                                                </p>
+
+                                                {{ form.link_extractor_allow_domains | as_crispy_field }}
+                                                {{ form.link_extractor_tags | as_crispy_field }}
+                                                {{ form.link_extractor_attrs | as_crispy_field }}
+                                                {{ form.link_extractor_check_type | as_crispy_field }}
+                                                <p class="small">Se existirem urls que apontam para arquivos mas não <strong>terminam</strong>
+                                                    em uma extensão de arquivo, o coletor pode conferir o tipo da página pra qual a url aponta.
+                                                    Nesse caso, ele irá requisitar os <i>headers</i> da url. Se o tipo for <i>'text/html'</i>,
+                                                    a página será tratada com um html; caso contrário, como um arquivo. Habilitar essa opção
+                                                    pode deixar a coleta mais lenta, então priorize filtrar urls com regex.
+                                                </p>
+                                                {{ form.link_extractor_process_value | as_crispy_field }}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div id="download_files" style="padding:20px; border-top: 1px solid #DCDCDC;">
+
+                                    <div id="download_files" style="padding: 20px; border-top: 1px solid #DCDCDC;">
                                         {{ form.download_files | as_crispy_field}}
                                         {{ form.download_files_allow_url | as_crispy_field}}
                                         {{ form.download_files_allow_extensions | as_crispy_field}}
+
+                                        <div class="btn btn-primary" id="collapse-adv-download">
+                                            Opções Avançadas
+                                        </div>
+                                        <div class="mycollapse" id="adv-download">
+                                            <div class="mycollapse-block p-4 pb-0 rounded mt-3">
+                                                {{ form.download_files_allow_domains | as_crispy_field }}
+                                                {{ form.download_files_tags | as_crispy_field }}
+                                                {{ form.download_files_attrs | as_crispy_field }}
+                                                {{ form.download_files_process_value | as_crispy_field }}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div id="download_files" style="padding:20px; border-top: 1px solid #DCDCDC;">
+
+                                    <div id="download_img" class="" style="padding: 20px 20px 0 20px; border-top: 1px solid #DCDCDC;">
                                         {{ form.download_imgs | as_crispy_field}}
                                     </div>
+                                    <div class="download_check_large_files" style="padding: 0 20px 0 20px;">
+                                        {{ form.download_files_check_large_content | as_crispy_field}}
+                                        <p class="small">Caso não haja arquivos grandes (>1GB) a serem coletados, desabilite a opção acima para ganhar desempenho. </p>                     
                                 </div>
-                                <div class="crawler-type-content-div" id="form_page" hidden>
-                                    {{ form.steps |  as_crispy_field }}
-                                </div>
-                                <div class="crawler-type-content-div" id="single_file" hidden></div>
-                                <div class="crawler-type-content-div" id="bundle_file" hidden></div>
                             </div>
                         </div>
                     </div>
-                    <div id="templated-url-item-block" class="block" hidden>
-                        <div class="row">
-                            <div class="col md-6" id="templated-url-config">
-                                {% include "main/request_config.html" with parameter_formset=parameter_formset response_formset=response_formset %}
-                            </div>
+                </div>
+
+                <div id="templated_url-item-block" class="block" hidden>
+                    <div class="row">
+                        <div class="col md-6" id="templated_url-config">
+                            {% include "main/injection_config.html" with parameter_formset=templated_parameter_formset response_formset=templated_response_formset injection_type='templated_url' %}
                         </div>
                     </div>
-                    <div id="parsing-item-block" class="block" hidden>
-                        <div class="row" style="padding:20px;">
-                            <div class="col md-6">
-                                <div class="form-row">
-                                    <div class="form-group col-md-6 mb-0">
-                                        {{ form.save_csv | as_crispy_field}}
-                                    </div>
-                                </div>
-                                <div id="js-extra-parsing" class="form-row">
-                                <div class="form-group col-md-12 mb-0">
-                                      {{ form.table_attrs | as_crispy_field}}
+                </div>
 
-                                    <label for="table_match">Texto ou regex na tabela</label><br>
-                                    <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_match"><br>
-                                    <label for="table_flavor">Motor de extração</label><br>
-                                    <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_flavor"><br>
-                                    <label for="table_header">Linha com o nome das colunas na tabela</label><br>
-                                    <input type="number" class="dynamic_input_table numberinput form-control" name="table_header"><br>
-                                    <label for="table_index_col">Coluna que contêm o index</label><br>
-                                    <input type="number" class="dynamic_input_table numberinput form-control" name="table_index_col"><br>
-                                    <label for="table_skiprows">Número de linhas após o nome da coluna</label><br>
-                                    <input type="number" class="dynamic_input_table numberinput form-control" name="table_skiprows"><br>
-                                    <label for="table_attributes">Atributos da tabela</label><br>
-                                    <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_attributes"><br>
-                                    <label for="table_thousands">Separador de milhar</label><br>
-                                    <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_thousands"><br>
-                                    <label for="table_enconding">Encoding da página</label><br>
-                                    <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_enconding"><br>
-                                    <label for="table_decimal">Separador de decimal</label><br>
-                                    <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_decimal"><br>
-                                    <label for="table_na_values">Valores não presentes</label><br>
-                                    <input type="text" class="dynamic_input_table textinput textInput form-control" name="table_na_values"><br>
-                                    <input type="checkbox" class="dynamic_input_table" name="table_keep_default_na" value="True">
-                                    <label for="table_keep_default_na"> Manter valores faltantes</label><br>
-                                    <input type="checkbox" class="dynamic_input_table" name="table_displayed_only" value="True">
-                                    <label for="table_displayed_only"> Elementos não-visíveis devem ser capturados</label><br>
-                                    <input type="checkbox" class="dynamic_input_table" name="table_parse_dates" value="True">
-                                    <label for="table_parse_dates"> Decodificar datas</label><br>
-
-                                    </div>
-                                </div>
-                            </div>
+                <div id="static_form-item-block" class="block" hidden>
+                    <div class="row">
+                        <div class="col md-6" id="static_form-config">
+                            <input name="loadfields"
+                                type="button" onclick="loadStaticForm()"
+                                value="Carregar campos de formulário">
+                            </input>
+                            <br><br>
+                            {{ form.form_request_type | as_crispy_field}}
+                            <div class="bordered-bottom-option"></div>
+                            {% include "main/injection_config.html" with parameter_formset=static_parameter_formset response_formset=static_response_formset injection_type='static_form' %}
                         </div>
                     </div>
                 </div>
@@ -370,35 +447,54 @@ New Crawler
 {% endblock %}
 
 {% block js %}
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
-    integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
-    crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-    integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-    crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js"
-    integrity="sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4"
-    crossorigin="anonymous"></script>
-<script src="{% static 'js/steps.js' %}"></script>
-<script src="{% static 'js/step_block.js' %}"></script>
 <script>
     // initialize formsets
-    $('.templated-url-param-step').formset({
-        prefix: '{{ parameter_formset.prefix }}',
-        addText: '',
-        addCssClass: 'add-form-button',
-        deleteText: '',
-        deleteCssClass: 'close',
-        formCssClass: 'templated-url-param-step',
+    $('#templated_url_param').formset({
+        prefix: '{{ templated_parameter_formset.prefix }}',
+        templateId: 'base_templated_url_param_template',
+        subformSelector: '.param-step',
+        displayControls: false,
     });
-    $('.templated-url-response-handling-step').formset({
-        prefix: '{{ response_formset.prefix }}',
-        addText: 'add validation',
-        addCssClass: 'add-form-button',
-        deleteText: '&times;',
-        deleteCssClass: 'close',
-        formCssClass: 'templated-url-response-handling-step',
+    $('#templated_url_response').formset({
+        prefix: '{{ templated_response_formset.prefix }}',
+        templateId: 'base_templated_url_response_template',
+        subformSelector: '.resp-step',
+        addBtnContent: $('<a><span class="fa fa-plus"></span> ' +
+                         'Adicionar validação</a>'),
+        addBtnClass: 'add_form',
+        rmBtnClass: 'close',
+        added: () => checkTemplatedURL(),
+        removed: () => checkTemplatedURL(),
+    });
+
+    $('#static_form_param').formset({
+        prefix: '{{ static_parameter_formset.prefix }}',
+        templateId: 'base_static_form_param_template',
+        subformSelector: '.param-step',
+        addBtnContent: $('<a><span class="fa fa-plus"></span> ' +
+                         'Adicionar campo</a>'),
+        addBtnClass: 'add_form',
+        rmBtnClass: 'close',
+        added: () => {
+            updateInjectionFields('static_form');
+            checkStaticForm();
+        },
+        removed: () => checkStaticForm(),
+    });
+    $('#static_form_response').formset({
+        prefix: '{{ static_response_formset.prefix }}',
+        templateId: 'base_static_form_response_template',
+        subformSelector: '.resp-step',
+        addBtnContent: $('<a><span class="fa fa-plus"></span> ' +
+                         'Adicionar validação</a>'),
+        addBtnClass: 'add_form',
+        rmBtnClass: 'close',
+        added: () => checkStaticForm(),
+        removed: () => checkStaticForm(),
     });
 </script>
 <script src="{% static 'js/create_crawler.js' %}"></script>
+<script>detailDynamicProcessing();</script>
+<script src="{% static 'js/steps.js' %}"></script>
+<script src="{% static 'js/step_block.js' %}"></script>
 {% endblock %}

@@ -16,21 +16,13 @@ from multiprocessing import Process
 import crawling_utils.crawling_utils as crawling_utils
 from crawlers.constants import *
 from crawlers.file_descriptor import FileDescriptor
-from crawlers.file_downloader import FileDownloader
-from crawlers.static_page import StaticPageSpider
 
-def file_downloader_process():
-    """Redirects downloader output and starts downloader consumer loop."""
-    crawling_utils.check_file_path("crawlers/log/")
-    sys.stdout = open(f"crawlers/log/file_downloader.out", "a", buffering=1)
-    sys.stderr = open(f"crawlers/log/file_downloader.err", "a", buffering=1)
-    FileDownloader.download_consumer()
 
 def file_descriptor_process():
     """Redirects descriptor output and starts descriptor consumer loop."""
     crawling_utils.check_file_path("crawlers/log/")
-    sys.stdout = open(f"crawlers/log/file_descriptor.out", "a", buffering=1)
-    sys.stderr = open(f"crawlers/log/file_descriptor.err", "a", buffering=1)
+    sys.stdout = open(f"crawlers/log/file_descriptor.out", "w+", buffering=1)
+    sys.stderr = open(f"crawlers/log/file_descriptor.err", "w+", buffering=1)
     FileDescriptor.description_consumer()
 
 def create_folders(data_path: dict):
@@ -52,8 +44,8 @@ def get_ip_rotation_settings(config: dict, settings: dict):
     if config["antiblock_ip_rotation_enabled"]:
         # rotação de IPs via Tor
         if config["antiblock_ip_rotation_type"] == "tor":
-            settings["DOWNLOADER_MIDDLEWARES"]["antiblock_scrapy.middlewares.TorProxyMiddleware"] = 100 
-            settings["DOWNLOADER_MIDDLEWARES"]["scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware"] = 110 
+            settings["DOWNLOADER_MIDDLEWARES"]["antiblock_scrapy.middlewares.TorProxyMiddleware"] = 900 
+            settings["DOWNLOADER_MIDDLEWARES"]["scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware"] = 910 
 
             settings["TOR_IPROTATOR_CHANGE_AFTER"] = config["antiblock_max_reqs_per_ip"]
             settings["TOR_IPROTATOR_ALLOW_REUSE_IP_AFTER"] = config["antiblock_max_reuse_rounds"]
@@ -102,9 +94,17 @@ def get_autothrottle_settings(config: dict, settings: dict):
     settings["AUTOTHROTTLE_START_DELAY"] = config["antiblock_autothrottle_start_delay"]
     settings["AUTOTHROTTLE_MAX_DELAY"] = config["antiblock_autothrottle_max_delay"]
 
+def get_dynamic_processing_settings(config: dict, settings: dict):
+
+    if config.get("dynamic_processing", False):
+        settings["DOWNLOADER_MIDDLEWARES"] = {'scrapy_puppeteer.PuppeteerMiddleware': 800}
+        settings["DATA_PATH"] = config["data_path"]
+        settings["CRAWLER_ID"] = config["crawler_id"]
+        settings["INSTANCE_ID"] = config["instance_id"]
+
 def get_crawler_base_settings(config: dict):
     """Returns scrapy base configurations."""
-    
+
     settings = {
         "BOT_NAME": "crawlers",
         "ROBOTSTXT_OBEY": config["obey_robots"],
@@ -113,6 +113,7 @@ def get_crawler_base_settings(config: dict):
         "RANDOMIZE_DOWNLOAD_DELAY": True
     }
 
+    get_dynamic_processing_settings(config, settings)
     get_ip_rotation_settings(config, settings)
     get_user_agent_rotation_settings(config, settings)
     get_insert_cookies_settings(config, settings)
@@ -120,8 +121,11 @@ def get_crawler_base_settings(config: dict):
 
     return settings
 
-def crawler_process(config: dict):
+def crawler_process(config):
     """Starts crawling."""
+    import scrapy_puppeteer
+    from crawlers.page_spider import PageSpider
+
     crawler_id = config["crawler_id"]
     instance_id = config["instance_id"]
     data_path = config["data_path"]
@@ -131,18 +135,7 @@ def crawler_process(config: dict):
     sys.stderr = open(f"{data_path}/log/{instance_id}.err", "a", buffering=1)
 
     process = CrawlerProcess(settings=get_crawler_base_settings(config))
-
-    if config["crawler_type"] == "single_file":
-        # process.crawl(StaticPageSpider, crawler_id=crawler_id)
-        raise NotImplementedError
-    elif config["crawler_type"] == "file_bundle":
-        # process.crawl(StaticPageSpider, crawler_id=crawler_id)
-        raise NotImplementedError
-    elif config["crawler_type"] == "deep_crawler":
-        # process.crawl(StaticPageSpider, crawler_id=crawler_id)
-        raise NotImplementedError
-    elif config["crawler_type"] == "static_page":
-        process.crawl(StaticPageSpider, config=json.dumps(config))
+    process.crawl(PageSpider, config=json.dumps(config))
 
     def update_database():
         # TODO: get port as variable
@@ -162,7 +155,7 @@ def gen_key():
 
 def start_crawler(config: dict):
     """Create and starts a crawler as a new process."""
-    
+
     config["crawler_id"] = config["id"]
     del config["id"]
     config["instance_id"] = gen_key()
@@ -184,6 +177,7 @@ def start_crawler(config: dict):
 
 def stop_crawler(instance_id: str, config: dict):
     """Sets the flags of a crawler to stop."""
+
     data_path = config["data_path"]
     with open(f"{data_path}/flags/{instance_id}.json", "w+") as f:
         f.write(json.dumps({"stop": True}))
@@ -222,3 +216,18 @@ def remove_crawler(instance_id: str, are_you_sure: bool =False):
             shutil.rmtree(f)
         except OSError as e:
             print("Error: %s : %s" % (f, e.strerror))
+
+
+def update_instances_info(data_path: str, instance_id: str, instance: dict):
+    """Updates the file with information about instances when they are created, initialized or terminated."""
+
+    instances = dict()
+
+    filename = f"{data_path}/instances.json"
+    if os.path.exists(filename):
+        with open(filename) as f:
+            instances = json.loads(f.read())
+
+    instances[instance_id] = instance
+    with open(filename, "w+") as f:
+        f.write(json.dumps(instances, indent=4))

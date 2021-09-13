@@ -1,3 +1,7 @@
+*, ::after, ::before {
+    box-sizing: border-box;
+}
+
 .navbar{
     background-color: #286f99;
 }
@@ -18,8 +22,9 @@ body {
     margin-left:0;
     margin-right:0;
 }
+
 #sidebar-container {
-    min-height: 89vh;   
+    min-height: 89vh;
     background-color: #333;
     padding: 0;
 }
@@ -28,6 +33,7 @@ body {
 .sidebar-expanded {
     width: 230px;
 }
+
 .sidebar-collapsed {
     width: 60px;
 }
@@ -47,6 +53,7 @@ body {
     height: 45px;
     padding-left: 30px;
 }
+
 .sidebar-submenu {
     font-size: 0.9rem;
 }
@@ -56,10 +63,12 @@ body {
     background-color: #333;
     height: 35px;
 }
+
 .sidebar-separator {
     background-color: #333;
     height: 25px;
 }
+
 .logo-separator {
     background-color: #333;    
     height: 60px;
@@ -73,6 +82,7 @@ body {
   text-align: right;
   padding-left: 10px;
 }
+
 /* Opened submenu icon */
 #sidebar-container .list-group .list-group-item[aria-expanded="true"] .submenu-icon::after {
     content: " \f0da";
@@ -148,7 +158,16 @@ table.dataTable thead .sorting_desc_disabled:before {
     bottom: .5em;
 }
 
+.indented-subblock {
+    padding-left: 20px;
+}
+
 /* Step styles -----------*/
+
+#dynamic-processing-item-wrap.disabled {
+    opacity: .5;
+    pointer-events: none;
+}
 
 .step-block {
     margin-top: 0em;
@@ -192,9 +211,10 @@ card .step{
     margin: 0em;
 }
 
-a.close {
+a.close, a.add_form {
     margin-right: 0;
     margin-top: -2rem;
+    cursor: pointer;
 }
 
 .bordered-bottom-option {
@@ -209,3 +229,54 @@ a.close {
 .antiblock-wrapper .form-group input, .antiblock-wrapper .form-group label{
     cursor: pointer;
 }
+/* Collapse div */
+.mycollapse {
+    display: block;
+    max-height: 0px;
+    overflow: hidden;
+    transition: max-height .5s cubic-bezier(0, 1, 0, 1);
+}
+
+.mycollapse-block {
+    padding: 5px;
+    margin: 5px 0px;
+    border: 1px solid #DCDCDC;
+}
+
+.myshow {
+    max-height: 99em;
+    transition: max-height .5s ease-in-out;
+}
+/* End collapse div */
+
+/* Hide instances from large list */
+.multinstancias.hidden {
+    display: none;
+}
+#show_hide_instances::before {
+    content: "<";
+    transform: rotate(90deg);
+    display: inline-block;
+}
+#show_hide_instances.hidden::before {
+    transform: rotate(-90deg);
+}
+#show_hide_instances.focus, #show_hide_instances:focus {
+    text-decoration: none;
+}
+/* End hide instances from large list */
+
+/* Modal styles */
+.modal-backdrop {
+    opacity:0.5;
+}
+.form_detection_el {
+    margin-left: 1em;
+}
+.form_indented {
+    margin-left: 2em;
+}
+.form_field_label {
+    margin-left: 0.25em;
+}
+/* End modal styles */
