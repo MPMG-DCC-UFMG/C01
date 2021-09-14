@@ -388,9 +388,9 @@ def load_form_fields(request):
                 status_code = extractor.html_response.status_code
                 return JsonResponse({
                     'error': 'Erro ao acessar a página (HTTP ' +
-                        str(status_code) + '). Verifique se a URL inicial ' +
-                        'está correta e se a página de interesse está ' +
-                        'funcionando.'
+                    str(status_code) + '). Verifique se a URL inicial ' +
+                    'está correta e se a página de interesse está ' +
+                    'funcionando.'
                 }, status=404)
 
             forms = extractor.get_forms()
@@ -464,7 +464,7 @@ def view_screenshots(request, instance_id, page):
     instance = get_object_or_404(CrawlerInstance, pk=instance_id)
     data_path = instance.crawler_id.data_path
 
-    screenshot_dir = os.path.join(data_path, "data", "screenshots", \
+    screenshot_dir = os.path.join(data_path, "data", "screenshots",
         str(instance_id))
 
     if not os.path.isdir(screenshot_dir):
@@ -482,7 +482,7 @@ def view_screenshots(request, instance_id, page):
             'total_screenshots': 0
         }, status=200)
 
-    screenshot_list = screenshot_list[(page - 1) * IMGS_PER_PAGE : \
+    screenshot_list = screenshot_list[(page - 1) * IMGS_PER_PAGE:
         page * IMGS_PER_PAGE]
 
     image_data = []
