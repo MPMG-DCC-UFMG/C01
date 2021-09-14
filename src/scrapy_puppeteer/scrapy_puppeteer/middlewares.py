@@ -66,12 +66,12 @@ class PuppeteerMiddleware:
 
         middleware = cls()
         middleware.browser = await launch({
-                                        'executablePath': chromium_executable(),
-                                        'headless': True,
-                                        'args': ['--no-sandbox'],
-                                        'dumpio': True,
-                                        'logLevel': crawler.settings.get('LOG_LEVEL')
-                                    })
+            'executablePath': chromium_executable(),
+            'headless': True,
+            'args': ['--no-sandbox'],
+            'dumpio': True,
+            'logLevel': crawler.settings.get('LOG_LEVEL')
+        })
 
         data_path = crawler.settings.get('DATA_PATH')
         middleware.data_path = data_path
@@ -119,7 +119,7 @@ class PuppeteerMiddleware:
                                         'headless': True,
                                         'args': ['--no-sandbox'],
                                         'dumpio': True
-                                    })
+                                        })
             await self.browser.newPage()
             page = await self.browser.newPage()
 
@@ -207,9 +207,9 @@ class PuppeteerMiddleware:
             await page.waitFor(request.wait_for)
 
         if request.steps:
-            scrshot_path = os.path.join(self.data_path, "data", \
+            scrshot_path = os.path.join(self.data_path, "data",
                 "screenshots", str(self.instance_id))
-            steps = code_g.generate_code(request.steps, functions_file, \
+            steps = code_g.generate_code(request.steps, functions_file,
                 scrshot_path)
             request.meta["pages"] = await steps.execute_steps(pagina=page)
 
