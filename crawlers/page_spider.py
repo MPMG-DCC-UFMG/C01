@@ -47,7 +47,7 @@ class PageSpider(BaseSpider):
                     meta={
                         "referer": "start_requests",
                         "config": self.config
-                },
+                    },
                     steps=steps)
 
             else:
@@ -58,7 +58,7 @@ class PageSpider(BaseSpider):
                     meta={
                         "referer": "start_requests",
                         "config": self.config
-                },
+                    },
                     errback=self.errback_httpbin)
 
     def get_url_info(self, url: str) -> tuple:

@@ -17,6 +17,7 @@ from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer
 
 from crawlers.constants import *
 
+import base64
 import itertools
 import json
 import subprocess
@@ -456,6 +457,49 @@ def export_config(request, instance_id):
 
     return response
 
+
+def view_screenshots(request, instance_id, page):
+    IMGS_PER_PAGE = 20
+
+    instance = get_object_or_404(CrawlerInstance, pk=instance_id)
+    data_path = instance.crawler_id.data_path
+
+    screenshot_dir = os.path.join(data_path, "data", "screenshots", \
+        str(instance_id))
+
+    if not os.path.isdir(screenshot_dir):
+        return JsonResponse({
+            'error': 'Pasta de coleta não encontrada.',
+            'total_screenshots': 0
+        }, status=200)
+
+    screenshot_list = sorted(os.listdir(screenshot_dir))
+    total_screenshots = len(screenshot_list)
+
+    if total_screenshots == 0:
+        return JsonResponse({
+            'error': 'Nenhum screenshot encontrado.',
+            'total_screenshots': 0
+        }, status=200)
+
+    screenshot_list = screenshot_list[(page - 1) * IMGS_PER_PAGE : \
+        page * IMGS_PER_PAGE]
+
+    image_data = []
+    for index, screenshot in enumerate(screenshot_list):
+        img_path = os.path.join(screenshot_dir, screenshot)
+        with open(img_path, "rb") as image:
+            curr_img = {
+                'base64': base64.b64encode(image.read()).decode('ascii'),
+                'title': str(1 + index + ((page - 1) * IMGS_PER_PAGE))
+            }
+            image_data.append(curr_img)
+
+
+    return JsonResponse({
+        'data': image_data,
+        'total_screenshots': total_screenshots
+    }, status=200)
 
 # API
 ########

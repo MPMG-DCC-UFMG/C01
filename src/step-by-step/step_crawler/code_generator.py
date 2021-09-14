@@ -112,6 +112,14 @@ def generate_fechar_aba(child, module):
     return code
 
 
+def generate_screenshot(child, module):
+    code = ""
+    code += child['depth'] * '    ' + "await page.screenshot"
+    code += "({'path': f\"{scrshot_path}/{datetime.datetime.now()}.png\", "
+    code += "'fullPage': True })\n"
+    return code
+
+
 def generate_call_step(child, module):
     code = ""
     is_coroutine = inspect.iscoroutinefunction(getattr(module,
@@ -142,7 +150,7 @@ def generate_call(function_name, dict_of_arguments, is_coroutine=False):
     return call
 
 
-def generate_head(module):
+def generate_head(module, scrshot_path):
     """
     Generates the first part of the code, that is,
     imports and function signature.
@@ -153,7 +161,8 @@ def generate_head(module):
     code += "async def execute_steps(**missing_arguments):\n"\
         + "    pages = {}\n"\
         + "    page = missing_arguments['pagina']\n"\
-        + "    page_stack = []\n"
+        + "    page_stack = []\n"\
+        + "    scrshot_path = \"" + scrshot_path + "\"\n"
     return code
 
 
@@ -173,11 +182,11 @@ def generate_body(recipe, module):
     return code
 
 
-def generate_code(recipe, module):
+def generate_code(recipe, module, scrshot_path):
     """
     Generates the entire code.
     """
-    code = generate_head(module)
+    code = generate_head(module, scrshot_path)
     code += generate_body(recipe, module)
     code += "    return pages"
     print(code)

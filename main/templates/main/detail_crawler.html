@@ -59,6 +59,9 @@ Crawler "{{ crawler.source_name }}"
                         <th scope="col">ID</th>
                         <th scope="col">Iniciado em</th>
                         <th scope="col">Última atualização</th>
+                        {% if crawler.dynamic_processing %}
+                        <th scope="col">Screenshots</th>
+                        {% endif %}
                         <th scope="col">Arquivo de configurações</th>
                     </tr>
                 </thead>
@@ -69,6 +72,9 @@ Crawler "{{ crawler.source_name }}"
                         <td>{{instance.instance_id}}</td>
                         <td>{{instance.creation_date}}</td>
                         <td>{{instance.last_modified}}</td>
+                        {% if crawler.dynamic_processing %}
+                        <td><button type="button" class="btn btn-primary" onclick="displayScreenshotModal({{instance.instance_id}})">Visualizar</button></td>
+                        {% endif %}
                         <td><a class="btn btn-primary" href="{% url 'export_config' instance.instance_id%}">Baixar</a></td>
                     </tr>
                     
@@ -174,9 +180,52 @@ Crawler "{{ crawler.source_name }}"
     </div>
     {% endif %}
 </div>
+
+{% if crawler.dynamic_processing %}
+<div class="modal" id="screenshot_modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Screenshots</h5>
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body row">
+                <div class="text-center col">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">Carregando...</span>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="screenshot_list">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="pagination mr-auto"></div>
+                <button type="button" class="btn btn-secondary"
+                    data-dismiss="modal">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}
 
 
+{% block style %}
+ <link  href="https://cdn.jsdelivr.net/npm/nanogallery2@3/dist/css/nanogallery2.min.css" rel="stylesheet" type="text/css">
+{% endblock %}
+
 {% block js %}
+<script  type="text/javascript" src="https://cdn.jsdelivr.net/npm/nanogallery2@3/dist/jquery.nanogallery2.min.js"></script>
+
+<script src="{% static 'js/jquery.paging.min.js' %}"></script>
+<script src="{% static 'js/screenshot_viewer.js' %}"></script>
 <script src="{% static 'js/details.js' %}"></script>
 {% endblock %}
