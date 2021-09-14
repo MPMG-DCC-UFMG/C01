@@ -16,4 +16,3 @@ COPY crawler_manager crawler_manager
 EXPOSE 8000
 RUN python install.py
 
-ENTRYPOINT ["python", "manage.py", "runserver", "0.0.0.0:8000", "--noreload"]

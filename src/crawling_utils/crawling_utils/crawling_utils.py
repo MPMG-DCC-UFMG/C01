@@ -88,13 +88,17 @@ def notify_file_downloaded_with_error(instance_id: str):
         message='error', instance_id=instance_id)
     notify_server(server_notification_url)
 
-def system_running_db_migrations() -> bool:
-    '''Check whether the system is running via Django's 'makemigrations' or 'migrate' commands
+def system_is_deploying() -> bool:
+    '''
+    Check whether the system is running via Django's 'makemigrations',
+    'migrate' or 'collectstatic' commands
 
     Returns:
-        Returns True if the system is running via 'makemigrations' or 'migrate' command, False otherwise.
+        Returns True if the system is running via one of the aforementioned
+        commands, False otherwise.
     '''
-    return 'makemigrations' in sys.argv or 'migrate' in sys.argv
+    return 'makemigrations' in sys.argv or 'migrate' in sys.argv or \
+        'collectstatic' in sys.argv
 
 # leave as 'chromedriver' if driver is on path
 CHROME_WEBDRIVER_PATH = 'chromedriver'

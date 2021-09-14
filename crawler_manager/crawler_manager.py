@@ -7,20 +7,20 @@ from crawler_manager.log_writer import LogWriter
 from crawler_manager.message_sender import MessageSender
 from crawler_manager.spider_manager_listener import SpiderManagerListener
 
-from crawling_utils import system_running_db_migrations
+from crawling_utils import system_is_deploying
 
 message_sender = None
-if not system_running_db_migrations():
+if not system_is_deploying():
     message_sender = MessageSender()
 
 def log_writer_process():
     '''Redirects log_writer output and starts descriptor consumer loop.'''
-    if not system_running_db_migrations():
+    if not system_is_deploying():
         LogWriter.log_consumer()
     
 def run_spider_manager_listener():
     '''Start spider_manager message consumer loop'''
-    if not system_running_db_migrations():
+    if not system_is_deploying():
         sm_listener = SpiderManagerListener()
         sm_listener.run()
 

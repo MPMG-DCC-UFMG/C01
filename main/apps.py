@@ -43,7 +43,7 @@ class MainConfig(AppConfig):
                 instance.running = False
                 instance.save()
 
-       # starts kafka log consumer
+        # starts kafka log consumer
         log_writer = Process(target=log_writer_process)
         log_writer.start()
         atexit.register(log_writer.join)

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-python manage.py makemigrations --check --noinput
-python manage.py migrate --noinput
+python3 manage.py makemigrations --check --noinput;
+python3 manage.py migrate --noinput
 
-python manage.py runserver --noreload
+gunicorn interface.wsgi:application -c gunicorn.conf.py
