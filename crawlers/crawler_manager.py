@@ -65,12 +65,10 @@ def get_user_agent_rotation_settings(config: dict, settings: dict):
     """Updates the settings for user-agent rotation."""
 
     if config["antiblock_user_agent_rotation_enabled"]:
-        config["antiblock_user_agents_list"] = config["antiblock_user_agents_list"].split('\r\n')
-        
         settings["DOWNLOADER_MIDDLEWARES"]["scrapy.downloadermiddlewares.useragent.UserAgentMiddleware"] = None 
         settings["DOWNLOADER_MIDDLEWARES"]["antiblock_scrapy.middlewares.RotateUserAgentMiddleware"] = 500
 
-        settings["USER_AGENTS"] = config["antiblock_user_agents_list"]
+        settings["USER_AGENTS"] = config["antiblock_user_agents_list"].split('\r\n')
 
         settings["MIN_USER_AGENT_USAGE"] = max(1, int(config["antiblock_reqs_per_user_agent"] * .5))
         settings["MAX_USER_AGENT_USAGE"] = int(config["antiblock_reqs_per_user_agent"] * 1.5)
@@ -97,7 +95,7 @@ def get_autothrottle_settings(config: dict, settings: dict):
 def get_dynamic_processing_settings(config: dict, settings: dict):
 
     if config.get("dynamic_processing", False):
-        settings["DOWNLOADER_MIDDLEWARES"] = {'scrapy_puppeteer.PuppeteerMiddleware': 800}
+        settings["DOWNLOADER_MIDDLEWARES"]["scrapy_puppeteer.PuppeteerMiddleware"] = 800
         settings["DATA_PATH"] = config["data_path"]
         settings["CRAWLER_ID"] = config["crawler_id"]
         settings["INSTANCE_ID"] = config["instance_id"]
@@ -107,10 +105,12 @@ def get_crawler_base_settings(config: dict):
 
     settings = {
         "BOT_NAME": "crawlers",
+        "DOWNLOADER_MIDDLEWARES": {},
         "ROBOTSTXT_OBEY": config["obey_robots"],
-        "DOWNLOADER_MIDDLEWARES": {"scrapy_puppeteer.PuppeteerMiddleware": 800},
         "DOWNLOAD_DELAY": config["antiblock_download_delay"],
-        "RANDOMIZE_DOWNLOAD_DELAY": True
+        "DEPTH_LIMIT": config["link_extractor_max_depth"],
+        "RANDOMIZE_DOWNLOAD_DELAY": True,
+        "LOG_LEVEL": "INFO"
     }
 
     get_dynamic_processing_settings(config, settings)
@@ -118,6 +118,9 @@ def get_crawler_base_settings(config: dict):
     get_user_agent_rotation_settings(config, settings)
     get_insert_cookies_settings(config, settings)
     get_autothrottle_settings(config, settings)
+
+    if len(settings["DOWNLOADER_MIDDLEWARES"]) == 0:
+        del settings["DOWNLOADER_MIDDLEWARES"]
 
     return settings
 
@@ -133,7 +136,7 @@ def crawler_process(config):
     # Redirects process logs to files
     sys.stdout = open(f"{data_path}/log/{instance_id}.out", "a", buffering=1)
     sys.stderr = open(f"{data_path}/log/{instance_id}.err", "a", buffering=1)
-
+    
     process = CrawlerProcess(settings=get_crawler_base_settings(config))
     process.crawl(PageSpider, config=json.dumps(config))
 
