@@ -17,7 +17,7 @@ def log_writer_process():
     '''Redirects log_writer output and starts descriptor consumer loop.'''
     if not system_is_deploying():
         LogWriter.log_consumer()
-    
+
 def run_spider_manager_listener():
     '''Start spider_manager message consumer loop'''
     if not system_is_deploying():
@@ -30,20 +30,20 @@ def gen_key():
 
 def start_crawler(config: dict):
     """Send the command to the spider managers to create the spiders.
-   
+
     Args:
         - Config: Scraper configuration to be processed
-   
+
     """
 
     config["crawler_id"] = config["id"]
     del config["id"]
-    
+
     message_sender.send_start_crawl(config)
 
 def stop_crawler(crawler_id):
     """Send the command to the spider managers to stop the spiders.
-    
+
     Args:
         - crawler_id: Uniquer crawler identifier
 

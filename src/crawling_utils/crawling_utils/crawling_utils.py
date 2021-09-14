@@ -3,7 +3,7 @@ from selenium.webdriver.common.keys import Keys
 import time
 import hashlib
 import os
-import sys 
+import sys
 from urllib.parse import urlparse
 import requests
 
@@ -25,7 +25,7 @@ class StopDownload(Exception):
 def file_larger_than_giga(url):
     # Mudar user-agent para evitar ser bloqueado por usar a biblioteca requests
     headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
-    
+
     # requisição apenas para obter o cabeçalho do conteúdo a ser baixado
     response = requests.head(url, allow_redirects=True, headers=headers)
 
