@@ -22,6 +22,41 @@
     </div>
 {% endwith %}
 
+<!-- Form selection modal -->
+{% if injection_type == "static_form" %}
+<div class="modal" id="form_detection_modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Seleção de formulários</h5>
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                </div>
+                <div class="modal-body row">
+                    <div class="text-center col">
+                        <div class="spinner-border" role="status">
+                            <span class="sr-only">Carregando...</span>
+                        </div>
+                    </div>
+                    <div class="form_list">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-primary include_fields">
+                    Incluir campos
+                </button>
+                <button type="button" class="btn btn-secondary"
+                    data-dismiss="modal">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- Response handling-->
 <div id="{{ injection_type }}_response">
     {{ response_formset.management_form }}

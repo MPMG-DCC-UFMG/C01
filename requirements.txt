@@ -11,3 +11,4 @@ kafka-python
 requests
 scrapy
 validators
+cchardet==2.1.7

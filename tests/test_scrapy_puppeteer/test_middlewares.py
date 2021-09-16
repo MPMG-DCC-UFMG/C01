@@ -49,6 +49,10 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
 
         # Response mock
         mockResponse = mock.create_autospec(pyppeteer.network_manager.Response)
+        mockResponse.headers = {
+            'content-type': 'text/html; charset=iso-8859-1'
+        }
+
         self.mockResponse = mockResponse
 
         # CDP mock
@@ -233,7 +237,7 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
             self.mockPage.waitFor.assert_not_called()
             # The methods for step generation and execution should be called
             mockCode_g.generate_code.assert_called_once()
-            mockSteps.execute_steps.assert_called_once_with(page=self.mockPage)
+            mockSteps.execute_steps.assert_called_once_with(pagina=self.mockPage)
 
 
     def test_middleware_closes_browser(self):

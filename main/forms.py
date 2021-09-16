@@ -1,9 +1,6 @@
 from django import forms
 from .models import CrawlRequest, ParameterHandler, ResponseHandler
-from django.core.exceptions import RequestAborted, ValidationError
-from django.core.validators import RegexValidator
-
-import re
+from django.core.exceptions import ValidationError
 
 
 class CrawlRequestForm(forms.ModelForm):
@@ -83,6 +80,8 @@ class CrawlRequestForm(forms.ModelForm):
             'download_imgs',
             'steps',
             'data_path',
+
+            'encoding_detection_method'
         ]
 
 class RawCrawlRequestForm(CrawlRequestForm):
@@ -403,7 +402,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
         required=False, label="Baixar imagens")
 
     # Crawler Type - Page with form
-    steps = forms.CharField(required=False, label="Steps JSON",
+    steps = forms.CharField(required=False, label="JSON dos passos",
                             max_length=9999999,
                             widget=forms.TextInput(
                                 attrs={'placeholder': '{' + '}'})
@@ -412,6 +411,12 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     # Crawler Type - Single file
     # Crawler Type - Bundle file
+
+    # ENCODE DETECTION METHOD
+    encoding_detection_method = forms.ChoiceField(choices=CrawlRequest.ENCODE_DETECTION_CHOICES, 
+                                                    label='Método de detecção de codificação das páginas',
+                                                    initial=CrawlRequest.HEADER_ENCODE_DETECTION,
+                                                    widget=forms.RadioSelect)
 
 class ResponseHandlerForm(forms.ModelForm):
     """
@@ -460,6 +465,7 @@ class ParameterHandlerForm(forms.ModelForm):
 
         self.fields['parameter_type'] = forms.ChoiceField(
             choices=choices,
+            label='Tipo de parâmetro',
             widget=forms.Select(attrs={
                 'onchange': 'detailParamType(event);'
             })
@@ -527,7 +533,6 @@ class ParameterHandlerForm(forms.ModelForm):
         model = ParameterHandler
         fields = '__all__'
         labels = {
-            'parameter_type': 'Tipo de parâmetro',
             'first_num_param': 'Primeiro valor a gerar',
             'last_num_param': 'Último valor a gerar',
             'leading_num_param': 'Zeros à esquerda',
