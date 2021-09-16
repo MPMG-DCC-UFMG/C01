@@ -13,7 +13,7 @@ setuptools.setup(
     author='Rennan Cordeiro',
     author_email='rennanl@ufmg.br',
     packages=setuptools.find_packages(),
-    install_requires=['scrapy>=1.0.0', 'promise', 'pyppeteer2',
+    install_requires=['scrapy>=1.0.0', 'promise', 'pyppeteer==0.2.6',
                      'requests', 'twisted', 'python-magic'],
     entry_points={
         'console_scripts': [
