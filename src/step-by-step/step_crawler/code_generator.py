@@ -82,12 +82,13 @@ def generate_atribuicao(child, module):
         function = getattr(module, function_info['step'])
         is_coroutine = inspect.iscoroutinefunction(function)
         source_statement = generate_call(function_info['step'],
-                                          function_info['arguments'],
-                                          is_coroutine)
+                                         function_info['arguments'],
+                                         is_coroutine)
         code += ' = ' + source_statement + '\n'
     else:
         code += ' = ' + str(child['source']) + '\n'
     return code
+
 
 def generate_salva_pagina(child, module):
     code = ""
@@ -95,14 +96,16 @@ def generate_salva_pagina(child, module):
     code += "await salva_pagina(**missing_arguments)\n"
     return code
 
+
 def generate_abrir_em_nova_aba(child, module):
     code = ""
     code += child['depth'] * '    ' + 'page_stack.append(page)\n'
     code += child['depth'] * '    ' + \
-            'missing_arguments["pagina"] = await open_in_new_tab(**missing_arguments, ' + \
-                'link_xpath = ' + child['link_xpath'] +')\n'
+        'missing_arguments["pagina"] = await open_in_new_tab(**missing_arguments, ' + \
+        'link_xpath = ' + child['link_xpath'] + ')\n'
     code += child['depth'] * '    ' + 'page = missing_arguments["pagina"]\n'
     return code
+
 
 def generate_fechar_aba(child, module):
     code = ""
@@ -120,6 +123,7 @@ def generate_call_step(child, module):
         + generate_call(child['step'], child['arguments'],
                         is_coroutine) + '\n'
     return code
+
 
 def dict_to_arguments(dict_of_arguments):
     """
