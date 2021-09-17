@@ -67,12 +67,12 @@ class PuppeteerMiddleware:
 
         middleware = cls()
         middleware.browser = await launch({
-                                        'executablePath': chromium_executable(),
-                                        'headless': True,
-                                        'args': ['--no-sandbox'],
-                                        'dumpio': True,
-                                        'logLevel': crawler.settings.get('LOG_LEVEL')
-                                    })
+            'executablePath': chromium_executable(),
+            'headless': True,
+            'args': ['--no-sandbox'],
+            'dumpio': True,
+            'logLevel': crawler.settings.get('LOG_LEVEL')
+        })
 
         data_path = crawler.settings.get('DATA_PATH')
 
@@ -120,7 +120,7 @@ class PuppeteerMiddleware:
                                         'headless': True,
                                         'args': ['--no-sandbox'],
                                         'dumpio': True
-                                    })
+                                        })
             await self.browser.newPage()
             page = await self.browser.newPage()
 
