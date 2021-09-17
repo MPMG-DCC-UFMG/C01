@@ -4,6 +4,7 @@ from django.core.validators import RegexValidator
 
 from crawler_manager.constants import *
 
+
 class TimeStamped(models.Model):
     creation_date = models.DateTimeField()
     last_modified = models.DateTimeField()
@@ -38,9 +39,9 @@ class CrawlRequest(TimeStamped):
     request_type = models.CharField(max_length=15,
                                     choices=REQUEST_TYPES,
                                     default='GET')
-    
+
     # SCRAPY CLUSTER ##########################################################
-    
+
     # Don't cleanup redis queues, allows to pause/resume crawls.
     sc_scheduler_persist = models.BooleanField(default=True)
 
@@ -203,8 +204,8 @@ class CrawlRequest(TimeStamped):
 
     steps = models.CharField(
         blank=True, null=True, max_length=9999999, default='{}')
-    
-    # ENCODING DETECTION ======================================================= 
+
+    # ENCODING DETECTION =======================================================
     HEADER_ENCODE_DETECTION = 1
     AUTO_ENCODE_DETECTION = 2
 
@@ -465,6 +466,7 @@ class CrawlerInstance(TimeStamped):
 
     def download_files_finished(self):
         return self.number_files_success_download + self.number_files_error_download == self.number_files_found
+
 
 class Log(TimeStamped):
     instance = models.ForeignKey(CrawlerInstance, on_delete=models.CASCADE,
