@@ -43,13 +43,15 @@ SC_LOG_LEVEL = "INFO"
 STATS_STATUS_CODES = True
 STATS_RESPONSE_CODES = [200, 404, 403, 504]
 STATS_CYCLE = 5
-STATS_TIMES = ['SECONDS_15_MINUTE', 'SECONDS_1_HOUR', 'SECONDS_6_HOUR', 'SECONDS_12_HOUR', 'SECONDS_1_DAY', 'SECONDS_1_WEEK']
+STATS_TIMES = ['SECONDS_15_MINUTE', 'SECONDS_1_HOUR', 'SECONDS_6_HOUR',
+    'SECONDS_12_HOUR', 'SECONDS_1_DAY', 'SECONDS_1_WEEK']
 BOT_NAME = "crawling"
 SPIDER_MODULES = ['crawling.spiders']
 NEWSPIDER_MODULE = "crawling.spiders"
 SCHEDULER = "crawling.distributed_scheduler.DistributedScheduler"
 ITEM_PIPELINES = {'crawling.pipelines.KafkaPipeline': 100, 'crawling.pipelines.LoggingBeforePipeline': 1}
-SPIDER_MIDDLEWARES = {'scrapy.spidermiddlewares.depth.DepthMiddleware': None, 'crawling.meta_passthrough_middleware.MetaPassthroughMiddleware': 100, 'crawling.redis_stats_middleware.RedisStatsMiddleware': 101}
+SPIDER_MIDDLEWARES = {'scrapy.spidermiddlewares.depth.DepthMiddleware': None,
+    'crawling.meta_passthrough_middleware.MetaPassthroughMiddleware': 100, 'crawling.redis_stats_middleware.RedisStatsMiddleware': 101}
 DOWNLOADER_MIDDLEWARES = {'scrapy_puppeteer.PuppeteerMiddleware': 800}
 LOG_ENABLED = True
 LOG_LEVEL = "INFO"
@@ -62,7 +64,8 @@ LOGGING_TOPIC = "crawler_ufmg_logs"
 COMMANDS_TOPIC = "crawler_ufmg_commands"
 NOTIFICATIONS_TOPIC = "crawler_ufmg_notifications"
 DYNAMIC_PROCESSING = True
-DYNAMIC_PROCESSING_STEPS = {'step': 'root', 'depth': 0, 'children': [{'step': 'espere', 'depth': 1, 'arguments': {'segundos': '60'}}, {'step': 'salva_pagina', 'depth': 1, 'arguments': {}}]}
+DYNAMIC_PROCESSING_STEPS = {'step': 'root', 'depth': 0, 'children': [
+    {'step': 'espere', 'depth': 1, 'arguments': {'segundos': '60'}}, {'step': 'salva_pagina', 'depth': 1, 'arguments': {}}]}
 DATA_PATH = "/home/elves/WorkSpaces/MPMG/coletas/727/teofilo_otoni_transparencia"
 CRAWLER_ID = "21"
 INSTANCE_ID = "163189912959440"
