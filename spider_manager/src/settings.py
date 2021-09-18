@@ -1,11 +1,11 @@
-import os 
+import os
 
-#Zookeeper host information
+# Zookeeper host information
 ZOOKEEPER_ASSIGN_PATH = os.getenv('ZOOKEEPER_ASSIGN_PATH', '/scrapy-cluster/crawler/')
 ZOOKEEPER_ID = os.getenv('ZOOKEEPER_ID', 'all')
 ZOOKEEPER_HOSTS = [x.strip() for x in os.getenv('ZOOKEEPER_HOSTS', 'zookeeper:2181').split(',')]
 
-# Kafka host information 
+# Kafka host information
 KAFKA_HOSTS = [x.strip() for x in os.getenv('KAFKA_HOSTS', 'kafka:9092').split(',')]
 KAFKA_TOPIC_PREFIX = os.getenv('KAFKA_TOPIC_PREFIX', 'crawler_ufmg')
 
