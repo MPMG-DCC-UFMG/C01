@@ -33,14 +33,17 @@ SC_LOG_LEVEL = "INFO"
 STATS_STATUS_CODES = True
 STATS_RESPONSE_CODES = [200, 404, 403, 504]
 STATS_CYCLE = 5
-STATS_TIMES = ['SECONDS_15_MINUTE', 'SECONDS_1_HOUR', 'SECONDS_6_HOUR', 'SECONDS_12_HOUR', 'SECONDS_1_DAY', 'SECONDS_1_WEEK']
+STATS_TIMES = ['SECONDS_15_MINUTE', 'SECONDS_1_HOUR', 'SECONDS_6_HOUR',
+    'SECONDS_12_HOUR', 'SECONDS_1_DAY', 'SECONDS_1_WEEK']
 BOT_NAME = "crawling"
 SPIDER_MODULES = ['crawling.spiders']
 NEWSPIDER_MODULE = "crawling.spiders"
 SCHEDULER = "crawling.distributed_scheduler.DistributedScheduler"
 ITEM_PIPELINES = {'crawling.pipelines.KafkaPipeline': 100, 'crawling.pipelines.LoggingBeforePipeline': 1}
-SPIDER_MIDDLEWARES = {'scrapy.spidermiddlewares.depth.DepthMiddleware': None, 'crawling.meta_passthrough_middleware.MetaPassthroughMiddleware': 100, 'crawling.redis_stats_middleware.RedisStatsMiddleware': 101}
-DOWNLOADER_MIDDLEWARES = {'scrapy.downloadermiddlewares.retry.RetryMiddleware': None, 'crawling.redis_retry_middleware.RedisRetryMiddleware': 510, 'crawling.log_retry_middleware.LogRetryMiddleware': 520, 'scrapy.downloadermiddlewares.cookies.CookiesMiddleware': None, 'crawling.custom_cookies.CustomCookiesMiddleware': 700}
+SPIDER_MIDDLEWARES = {'scrapy.spidermiddlewares.depth.DepthMiddleware': None,
+    'crawling.meta_passthrough_middleware.MetaPassthroughMiddleware': 100, 'crawling.redis_stats_middleware.RedisStatsMiddleware': 101}
+DOWNLOADER_MIDDLEWARES = {'scrapy.downloadermiddlewares.retry.RetryMiddleware': None, 'crawling.redis_retry_middleware.RedisRetryMiddleware': 510,
+    'crawling.log_retry_middleware.LogRetryMiddleware': 520, 'scrapy.downloadermiddlewares.cookies.CookiesMiddleware': None, 'crawling.custom_cookies.CustomCookiesMiddleware': 700}
 LOG_ENABLED = True
 LOG_LEVEL = "INFO"
 HTTPERROR_ALLOW_ALL = True
