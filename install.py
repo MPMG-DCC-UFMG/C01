@@ -1,8 +1,26 @@
+from twisted.internet import asyncioreactor
+import environ
+import asyncio
 import os
 import subprocess
 
 subprocess.run(["pip", "install", "-U", "pip"])
 
+<<<<<<< HEAD
+=======
+
+subprocess.run(["pip", "install", "-U", "pip"])
+subprocess.run(["pip", "install", "twisted"])
+subprocess.run(["pip", "install", "django-environ"])
+
+
+# Initialize Django-environ to read settings from environment variables
+env = environ.Env(
+    # set casting, default value
+    EXECUTION_TYPE=(str, "standalone"),
+)
+
+>>>>>>> 7a268a6b996167ab438c69ad74a41cb7690558a3
 # Install modules from src directory, with their dependencies
 src_folder = "src"
 for folder in os.listdir(f"{src_folder}"):
