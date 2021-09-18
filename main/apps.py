@@ -19,6 +19,7 @@ import sys
 # Enable interrupt signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
+
 class MainConfig(AppConfig):
     name = 'main'
 
@@ -45,9 +46,9 @@ class MainConfig(AppConfig):
         # starts kafka log consumer
         log_writer_exec_thread = Thread(target=log_writer_executor, daemon=True)
         log_writer_exec_thread.start()
-        
+
         run_spider_manager_listener()
-        
+
     def ready(self):
         try:
             self.runOnce()
