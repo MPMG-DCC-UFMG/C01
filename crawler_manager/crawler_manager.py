@@ -13,7 +13,7 @@ message_sender = None
 if not system_is_deploying():
     message_sender = MessageSender()
 
-def log_writer_process():
+def log_writer_executor():
     '''Redirects log_writer output and starts descriptor consumer loop.'''
     if not system_is_deploying():
         LogWriter.log_consumer()
