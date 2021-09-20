@@ -3,6 +3,10 @@ import subprocess
 
 subprocess.run(["pip", "install", "-U", "pip"])
 
+print(f"Installing other project dependencies...")
+subprocess.run(["pip", "install", "-r" "requirements.txt"])
+print()
+
 # Install modules from src directory, with their dependencies
 src_folder = "src"
 for folder in os.listdir(f"{src_folder}"):
@@ -10,10 +14,6 @@ for folder in os.listdir(f"{src_folder}"):
         print(f"Installing {folder}...")
         subprocess.run(["pip", "install", f"{src_folder}/{folder}"])
         print()
-
-print(f"Installing other project dependencies...")
-subprocess.run(["pip", "install", "-r" "requirements.txt"])
-print()
 
 print(f"Creating database...")
 subprocess.run(["python", "manage.py", "makemigrations"])
