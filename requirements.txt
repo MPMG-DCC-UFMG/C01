@@ -11,4 +11,3 @@ kafka-python
 requests
 scrapy
 validators
-websockets
