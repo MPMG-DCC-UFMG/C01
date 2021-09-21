@@ -22,7 +22,7 @@ function load_steps_interface(interface_root_element_id, output_element_id, json
         step_list = step_list.concat(JSON.parse('{"name": "atribuicao", "name_display" : "Atribuição", "mandatory_params":[], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name": "abrir_em_nova_aba", "name_display" : "Abrir em nova aba", "mandatory_params":["link_xpath"], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name": "fechar_aba", "name_display" : "Fechar aba", "mandatory_params":[], "optional_params":{}}'))
-
+        step_list = step_list.concat(JSON.parse('{"name":"screenshot", "name_display" : "Screenshot", "mandatory_params":[], "optional_params":{}}'))
         init_steps_creation_interface(interface_root_element, output_element, step_list)
       }
     };
