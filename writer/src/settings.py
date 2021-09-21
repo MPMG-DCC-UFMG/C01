@@ -1,4 +1,5 @@
-REQUEST_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36'}
+REQUEST_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36'}
 
 FILE_DOWNLOADER_PREFIX = 'crawler_ufmg_file_downloader'
 FILE_DESCRIPTOR_TOPIC = 'crawler_ufmg_file_descriptor'
@@ -15,5 +16,5 @@ REDIS_DB = 0
 REDIS_PASSWORD = None
 REDIS_SOCKET_TIMEOUT = 10
 
-#django application port
+# django application port
 SERVER_PORT = 8000

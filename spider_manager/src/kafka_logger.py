@@ -17,10 +17,10 @@ class KafkaLogger:
             self.__kafka_topic = config['LOGGING_TOPIC']
             self.__producer = KafkaProducer(bootstrap_servers=config['KAFKA_HOSTS'],
                                             value_serializer=lambda v: ujson.dumps(v).encode('utf-8'))
-        
+
     def write(self, message: str):
         """Write the message passed as a parameter to a kafka topic.
-        
+
         Args:
             - message: Log message to be sent to the topic 
         """
