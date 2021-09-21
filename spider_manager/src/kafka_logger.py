@@ -5,7 +5,8 @@ from kafka import KafkaProducer
 
 
 class KafkaLogger:
-    def __init__(self, instance_id: str, name: str, log_level: str):
+    def __init__(self, crawler_id: str, instance_id: str, name: str, log_level: str):
+        self.__crawler_id = crawler_id
         self.__instance_id = instance_id
         self.__name = name
         self.__log_level = log_level
@@ -32,6 +33,7 @@ class KafkaLogger:
             'name': self.__name,
             'levelname': self.__log_level,
             'instance_id': self.__instance_id,
+            'crawler_id': self.__crawler_id,
             'message': message
         })
 

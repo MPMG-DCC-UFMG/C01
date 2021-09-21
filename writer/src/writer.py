@@ -18,6 +18,12 @@ from crawling_utils import notify_page_crawled_successfully
 class Writer:
     def __init__(self) -> None:
         self.__crawls_running = dict()
+
+        self.__log_consumer = KafkaConsumer(settings.LOGGING_TOPIC,
+                            bootstrap_servers=settings.KAFKA_HOSTS,
+                            # auto_offset_reset='earliest',
+                            value_deserializer=lambda m: ujson.loads(m.decode('utf-8')))
+
         self.__crawled_data_consumer = KafkaConsumer(settings.CRAWLED_TOPIC,
                             bootstrap_servers=settings.KAFKA_HOSTS,
                             # auto_offset_reset='earliest',
@@ -106,11 +112,34 @@ class Writer:
         data_path = self.__crawls_running[crawled_data['crawler_id']]['data_path']
         self.__file_downloader.feed(crawled_data, data_path)
 
+    def __procces_log(self, log: dict):
+        print('Processing log...')
+        
+        data_path = self.__crawls_running[log['crawler_id']]['data_path']
+        instance_id = log['instance_id']
+
+        # can be "out" or "err" 
+        log_type = log['levelname']
+
+        filename = f'{data_path}/log/{instance_id}.{log_type}'
+
+        # log["name"] indicates where the log came from
+        message = f'[{log["name"]}] {log["message"]}\n'
+
+        with open(filename, 'a') as f:
+            f.write(message)
+
     def __run_crawled_consumer(self):
         print('Crawled consumer started...')
         for message in self.__crawled_data_consumer:
             crawled_data = message.value
             self.__process_crawled_data(crawled_data)
+
+    def __run_log_consumer(self):
+        print('Log consumer started...')
+        for message in self.__log_consumer:
+            log = message.value
+            self.__procces_log(log)
 
     def __process_command(self, command):
         if 'register' in command:
@@ -118,6 +147,9 @@ class Writer:
 
     def run(self):
         thread = threading.Thread(target=self.__run_crawled_consumer, daemon=True)  
+        thread.start()
+
+        thread = threading.Thread(target=self.__run_log_consumer, daemon=True)
         thread.start()
 
         self.__file_descriptor.run()

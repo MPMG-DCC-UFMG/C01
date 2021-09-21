@@ -4,6 +4,7 @@ FILE_DOWNLOADER_PREFIX = 'crawler_ufmg_file_downloader'
 FILE_DESCRIPTOR_TOPIC = 'crawler_ufmg_file_descriptor'
 CRAWLED_TOPIC = 'crawler_ufmg_sc.crawled_firehose'
 WRITER_TOPIC = 'crawler_ufmg_writer'
+LOGGING_TOPIC = 'crawler_ufmg_logs'
 
 KAFKA_HOSTS = ['localhost:9092']
 
