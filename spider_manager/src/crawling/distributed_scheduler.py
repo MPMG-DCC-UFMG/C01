@@ -561,18 +561,31 @@ class DistributedScheduler(object):
         return None
 
     def request_from_feed(self, item):
+        attrs = item.get('attrs', dict())
+
+        req_body = attrs.get('req_body', '').encode()
+        req_method = attrs.get('req_method', 'GET')
+
+        print('*' * 100)
+        print(req_body)
+        print('*' * 100)
+
         if settings.get('DYNAMIC_PROCESSING'):
             steps = settings.get('DYNAMIC_PROCESSING_STEPS')
-            req = PuppeteerRequest(url=item['url'], steps=steps)
+            req = PuppeteerRequest(url=item['url'], body=req_body, method=req_method, steps=steps)
 
         else:
             try:
-                req = Request(item['url'])
+                print('\---/')
+                req = Request(item['url'], body=req_body, method=req_method,)
+                print('\--/')
                 
             except ValueError:
+                print('\-/')
                 # need absolute url
                 # need better url validation here
-                req = Request('http://' + item['url'])
+                req = Request('http://' + item['url'], body=req_body, method=req_method)
+
 
         # defaults not in schema
         if 'curdepth' not in item:
