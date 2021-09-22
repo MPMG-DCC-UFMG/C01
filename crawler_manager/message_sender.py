@@ -17,13 +17,15 @@ class MessageSender:
             - config: Scraper configuration to be processed
         """
         lite_config = {
-            'base_url': config['base_url'],
+            'base_url': config['base_url'], 
             'crawler_id': config['crawler_id'], 
             'instance_id': config['instance_id'], 
             'req_type': config['request_type'], 
-            'req_body': {}, 
-            'response_handlers':  config['templated_url_response_handlers'],
-            'parameter_handlers': config['templated_url_parameter_handlers']
+            'form_req_type': config['form_request_type'], 
+            'templated_url_response_handlers': config['templated_url_response_handlers'], 
+            'templated_url_parameter_handlers': config['templated_url_parameter_handlers'], 
+            'static_form_parameter_handlers': config['static_form_parameter_handlers'], 
+            'static_form_response_handlers': config['static_form_response_handlers']
         }
 
         # writer module
