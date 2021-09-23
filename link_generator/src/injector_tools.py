@@ -175,7 +175,7 @@ def create_parameter_generators(probe, parameter_handlers, filter_limits=True):
                 param_gen = ParamInjector.generate_alpha(length=length,
                    num_words=num_words,
                    no_upper=no_upper
-                )
+                                                         )
             elif param_type == 'value_list':
                 # No filtering applied to this parameter
                 list_values = param['value_list_param']
