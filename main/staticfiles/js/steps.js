@@ -5,7 +5,7 @@
  * @param  {String} json_path [The path of the json with the steps information]
  */
 
- function load_steps_interface(interface_root_element_id, output_element_id, json_path="/static/json/steps_signature.json"){
+function load_steps_interface(interface_root_element_id, output_element_id, json_path="/static/json/steps_signature.json"){
     interface_root_element = document.getElementById(interface_root_element_id)
     if(interface_root_element.type == "root" )
         return

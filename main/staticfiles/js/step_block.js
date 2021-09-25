@@ -5,7 +5,7 @@
  * @param {Number} depth The depth is the level of indentention of this step.
  * @return {Node} The block initalized.
  */
- function init_block(step_list, depth){
+function init_block(step_list, depth){
     //instanciating and initializing the block element
     var block = init_block_element(step_list)
 
