@@ -1,5 +1,6 @@
 import io
 import asyncio
+import datetime
 import time
 import uuid
 from cssify import cssify
@@ -14,6 +15,7 @@ from pyext import RuntimeModule
 
 """
 
+
 def step(display):
     def function(f):
         f.is_step = True
@@ -21,6 +23,7 @@ def step(display):
         return f
 
     return function
+
 
 @step("Imprimir")
 def imprime(texto):
@@ -73,11 +76,13 @@ async def salva_pagina(pagina):
     body = str.encode(content)
     return body
 
+
 @step("Extrair texto de")
 async def extrai_texto(pagina, xpath):
     await pagina.waitForXPath(xpath)
     text = await pagina.Jeval(cssify(xpath), "el => el.textContent")
     return text
+
 
 @step("Opções")
 async def opcoes(pagina, xpath, exceto=None):
@@ -106,7 +111,7 @@ async def localiza_elementos(pagina, xpath, numero_xpaths=None):
 
     xpath_list = []
     for i in range(len(await pagina.xpath(base_xpath))):
-        candidate_xpath = xpath.replace("*", str(i+1))
+        candidate_xpath = xpath.replace("*", str(i + 1))
         if await elemento_existe_na_pagina(pagina, candidate_xpath):
             xpath_list.append(candidate_xpath)
 
@@ -122,9 +127,11 @@ async def retorna_pagina(pagina):
 async def digite(pagina, xpath, texto):
     await pagina.type(cssify(xpath), texto)
 
+
 @step("Objeto")
 async def objeto(pagina, objeto):
     return objeto
+
 
 @step("Está escrito")
 async def nesse_elemento_esta_escrito(pagina, xpath, texto):
@@ -176,6 +183,7 @@ async def elemento_existe_na_pagina(pagina, xpath):
         :returns bool: True or False
     """
     return bool(await pagina.xpath(xpath))
+
 
 async def open_in_new_tab(pagina, link_xpath):
     await pagina.waitForXPath(link_xpath)
