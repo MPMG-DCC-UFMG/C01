@@ -80,7 +80,8 @@ function init_steps_creation_interface(interface_root_element, output_element, s
     interface_root_element.step_json_input = output_element
 
     interface_root_element.load_steps = load_steps
-    interface_root_element.load_steps(JSON.parse(output_element.value), step_list)
+    if (output_element.value.length != 0)
+        interface_root_element.load_steps(JSON.parse(output_element.value), step_list)
 }
 
 //------------------- step board ------------------------------
