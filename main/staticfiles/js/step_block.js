@@ -5,7 +5,7 @@
  * @param {Number} depth The depth is the level of indentention of this step.
  * @return {Node} The block initalized.
  */
-function init_block(step_list, depth){
+ function init_block(step_list, depth){
     //instanciating and initializing the block element
     var block = init_block_element(step_list)
 
@@ -467,7 +467,7 @@ function turn_to_new_tab_step(){
     xpath_input_box = document.createElement("DIV")
     xpath_input_box.className = "col-sm"
     xpath_input = document.createElement("INPUT")
-    xpath_input.placeHolder = "link xpath"
+    xpath_input.placeholder = "xpath do link"
     xpath_input.className = "form-control row"
     xpath_input_box.appendChild(xpath_input)
     block.xpath_input = xpath_input
