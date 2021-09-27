@@ -55,6 +55,8 @@ class BaseSpider(scrapy.Spider):
             f"{self.data_folder}",
             f"{self.data_folder}/raw_pages",
             f"{self.data_folder}/files",
+            f"{self.data_folder}/screenshots",
+            f"{self.data_folder}/screenshots/{self.config['instance_id']}",
         ]
         for f in folders:
             try:

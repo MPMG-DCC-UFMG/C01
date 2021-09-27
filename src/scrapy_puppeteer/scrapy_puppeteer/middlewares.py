@@ -64,21 +64,20 @@ class PuppeteerMiddleware:
         :crawler(Crawler object): crawler that uses this middleware
         """
 
-
         middleware = cls()
         middleware.browser = await launch({
-                                        'executablePath': chromium_executable(),
-                                        'headless': True, 
-                                        'args': ['--no-sandbox'], 
-                                        'dumpio': True, 
-                                        'logLevel': crawler.settings.get('LOG_LEVEL')
-                                    })
+            'executablePath': chromium_executable(),
+            'headless': True,
+            'args': ['--no-sandbox'],
+            'dumpio': True,
+            'logLevel': crawler.settings.get('LOG_LEVEL')
+        })
 
         data_path = crawler.settings.get('DATA_PATH')
-        
+        middleware.data_path = data_path
         middleware.download_path = f'{data_path}/data/files/'
         middleware.crawler_id = crawler.settings.get('CRAWLER_ID')
-        middleware.instance_id = crawler.settings.get('INSTANCE_ID') 
+        middleware.instance_id = crawler.settings.get('INSTANCE_ID')
 
         page = await middleware.browser.newPage()
 
@@ -116,11 +115,11 @@ class PuppeteerMiddleware:
 
         except:
             self.browser = await launch({
-                                        'executablePath': chromium_executable(), 
-                                        'headless': True, 
-                                        'args': ['--no-sandbox'], 
+                                        'executablePath': chromium_executable(),
+                                        'headless': True,
+                                        'args': ['--no-sandbox'],
                                         'dumpio': True
-                                    })
+                                        })
             await self.browser.newPage()
             page = await self.browser.newPage()
 
@@ -208,8 +207,11 @@ class PuppeteerMiddleware:
             await page.waitFor(request.wait_for)
 
         if request.steps:
-            steps = code_g.generate_code(request.steps, functions_file)
-            request.meta["pages"] = await steps.execute_steps(page=page)
+            scrshot_path = os.path.join(self.data_path, "data",
+                "screenshots", str(self.instance_id))
+            steps = code_g.generate_code(request.steps, functions_file,
+                scrshot_path)
+            request.meta["pages"] = await steps.execute_steps(pagina=page)
 
         content_type = response.headers['content-type']
         _, params = cgi.parse_header(content_type)
@@ -268,7 +270,7 @@ class PuppeteerMiddleware:
 
     def generate_file_descriptions(self):
         """Generates descriptions for downloaded files."""
-       
+
         # list all files in crawl data folder, except file_description.jsonl
         files = glob(f'{self.download_path}*[!jsonl]')
 
@@ -283,9 +285,9 @@ class PuppeteerMiddleware:
 
                 ext = '' if guessed_extension is None else guessed_extension
 
-                file_with_extension = file + ext 
+                file_with_extension = file + ext
                 os.rename(file, file_with_extension)
-                
+
                 # A typical file will be: /home/user/folder/filename.ext
                 # So, we get only the filename.ext in the next line
                 file_name = file_with_extension.split('/')[-1]
@@ -308,5 +310,5 @@ class PuppeteerMiddleware:
     def spider_closed(self):
         """Shutdown the browser when spider is closed"""
         self.block_until_complete_downloads()
-        self.generate_file_descriptions()    
+        self.generate_file_descriptions()
         return as_deferred(self._spider_closed())

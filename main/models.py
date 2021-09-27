@@ -23,7 +23,7 @@ class CrawlRequest(TimeStamped):
 
     # BASIC INFO ##############################################################
     source_name = models.CharField(max_length=200)
-    base_url = models.CharField(max_length=200)
+    base_url = models.TextField()
     obey_robots = models.BooleanField(blank=True, null=True)
     pathValid = RegexValidator(r'^[0-9a-zA-Z\/\\-_]*$',
                                'This is not a valid path.')
