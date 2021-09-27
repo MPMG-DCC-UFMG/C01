@@ -99,6 +99,7 @@ async def selecione(pagina, xpath, opcao):
 
 @step("Salvar página")
 async def salva_pagina(pagina):
+    await fill_iframe_content(pagina)
     content = await pagina.content()
     body = str.encode(content)
     return body
