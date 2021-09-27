@@ -74,7 +74,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
             attrs={'placeholder': 'Diário oficial do Município'})
     )
     base_url = forms.CharField(
-        label="URL Base", max_length=200,
+        label="URL Base",
         widget=forms.TextInput(attrs={
             'placeholder': 'www.example.com/data/{}',
             'onchange': 'detailBaseUrl();'
