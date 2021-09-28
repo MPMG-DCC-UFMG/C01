@@ -2,7 +2,6 @@ import random
 from itertools import cycle
 from typing import List
 
-from scrapy import signals
 from scrapy.crawler import Crawler
 from scrapy.exceptions import NotConfigured
 from scrapy.http import Request
@@ -98,10 +97,14 @@ class RotateUserAgentMiddleware(object):
 
     def process_request(self, request: Request, spider: Spider):
         if self.items_scraped >= self.limit_usage:
+            spider.log(f'Changing user-agent "{self.user_agent}" after {self.limit_usage} requests')
+
             self.items_scraped = 0
             self.limit_usage = random.randint(self.min_usage, self.max_usage)
 
             self.user_agent = next(self.user_agents)
+
+            spider.log(f'User-agent changed to "{self.user_agent}". A new user-agent will be chosen after {self.limit_usage} requests')
 
         request.headers['user-agent'] = self.user_agent
         self.items_scraped += 1

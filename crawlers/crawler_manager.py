@@ -110,7 +110,7 @@ def get_crawler_base_settings(config: dict):
         "DOWNLOAD_DELAY": config["antiblock_download_delay"],
         "DEPTH_LIMIT": config["link_extractor_max_depth"],
         "RANDOMIZE_DOWNLOAD_DELAY": True,
-        "LOG_LEVEL": "INFO"
+        "LOG_LEVEL": "DEBUG"
     }
 
     get_dynamic_processing_settings(config, settings)
