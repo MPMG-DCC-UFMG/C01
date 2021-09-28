@@ -62,7 +62,7 @@ function init_steps_creation_interface(interface_root_element, output_element, s
 
     interface_root_element.save_button = document.getElementById('createButton')
     interface_root_element.save_button.onmousedown = function(){
-        if(getCheckboxState("id_dynamic_processing") && step_board.children.length > 0){
+        if(getCheckboxState("id_dynamic_processing")){
             build_json(step_board, output_element)
         }
     }
