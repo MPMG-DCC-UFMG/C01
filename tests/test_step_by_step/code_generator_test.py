@@ -52,14 +52,15 @@ class TestExtractInfo(unittest.TestCase):
         self.assertEqual(expected_result, result)
 
     def test_generate_head(self):
-        result = cg.generate_head(json)
+        result = cg.generate_head(json, "test_path")
         expected_result = "import step_crawler\n"
         expected_result += "from " + "json" + " import *\n\n"
         expected_result += "async def "
         expected_result += "execute_steps(**missing_arguments):\n"
         expected_result += "    pages = {}\n"
-        expected_result += "    page = missing_arguments['page']\n"
+        expected_result += "    page = missing_arguments['pagina']\n"
         expected_result += "    page_stack = []\n"
+        expected_result += "    scrshot_path = \"test_path\"\n"
         self.assertEqual(expected_result, result)
 
     def test_generate_body(self):
@@ -91,7 +92,7 @@ class TestExtractInfo(unittest.TestCase):
         expected_result += "        imprime(texto = \"teste\")\n"
         self.assertEqual(expected_result, result)
 
-    def test_generate_for(self):
+    def test_generate_para_cada(self):
         with open("tests/test_step_by_step/examples/recipe_examples.json") as file:
             recipe_examples = json.load(file)
 

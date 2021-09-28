@@ -280,3 +280,14 @@ a.close, a.add_form {
     margin-left: 0.25em;
 }
 /* End modal styles */
+
+/* Screenshot pagination styles */
+
+.paging_entry_arrow {
+    margin-left: 0.25em;
+}
+
+.paging_entry_number {
+    margin-left: 0.25em;
+}
+/* End screenshot pagination styles */

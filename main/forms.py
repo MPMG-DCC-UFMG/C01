@@ -76,7 +76,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
             attrs={'placeholder': 'Diário oficial do Município'})
     )
     base_url = forms.CharField(
-        label="URL Base", max_length=200,
+        label="URL Base",
         widget=forms.TextInput(attrs={
             'placeholder': 'www.example.com/data/{}',
             'onchange': 'detailBaseUrl();'
@@ -387,7 +387,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
         required=False, label="Baixar imagens")
 
     # Crawler Type - Page with form
-    steps = forms.CharField(required=False, label="Steps JSON",
+    steps = forms.CharField(required=False, label="JSON dos passos",
                             max_length=9999999,
                             widget=forms.TextInput(
                                 attrs={'placeholder': '{' + '}'})

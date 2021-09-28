@@ -22,7 +22,8 @@ def generate_para_cada(child, module):
     code += generate_body(child, module)
     return code
 
-def generate_if(child, module):
+
+def generate_se(child, module):
     code = ''
     code += child['depth'] * '    ' + 'if '
     if child['negation']:
@@ -43,7 +44,7 @@ def generate_if(child, module):
     return code
 
 
-def generate_while(child, module):
+def generate_enquanto(child, module):
     code = ''
     if 'limit' in child['condition']:
         code += child['depth'] * '    ' + 'limit = 0\n'
@@ -81,36 +82,11 @@ def generate_atribuicao(child, module):
         function = getattr(module, function_info['step'])
         is_coroutine = inspect.iscoroutinefunction(function)
         source_statement = generate_call(function_info['step'],
-                                          function_info['arguments'],
-                                          is_coroutine)
+                                         function_info['arguments'],
+                                         is_coroutine)
         code += ' = ' + source_statement + '\n'
     else:
         code += ' = ' + str(child['source']) + '\n'
-    return code
-
-
-def generate_para_cada_pagina_em(child, module):
-    code = ""
-    code += child['depth'] * '    ' + 'clickable = True' + '\n'\
-        + child['depth'] * '    ' + 'while clickable:' + '\n'\
-        + generate_body(child, module)\
-        + (1 + child['depth']) * '    ' + "buttons = await page.xpath("\
-        + child["xpath_dos_botoes"] + ")\n"\
-        + (1 + child['depth']) * '    ' + "if len(buttons) !=0: \n"\
-        + (1 + child['depth']) * '    ' + "    next_button = buttons["\
-        + str(child["indice_do_botao_proximo"]) + "] \n"\
-        + (1 + child['depth']) * '    '\
-        + "    before_click = await page.content()\n"\
-        + (1 + child['depth']) * '    '\
-        + "    await next_button.click() \n"\
-        + (1 + child['depth']) * '    '\
-        + "    after_click = await page.content() \n"\
-        + (1 + child['depth']) * '    '\
-        + "    if before_click == after_click: \n"\
-        + (1 + child['depth']) * '    '\
-        + "        clickable = False \n"\
-        + (1 + child['depth']) * '    ' + "else: \n"\
-        + (1 + child['depth']) * '    ' + "    clickable = False \n"
     return code
 
 
@@ -120,20 +96,30 @@ def generate_salva_pagina(child, module):
     code += "await salva_pagina(**missing_arguments)\n"
     return code
 
+
 def generate_abrir_em_nova_aba(child, module):
     code = ""
     code += child['depth'] * '    ' + 'page_stack.append(page)\n'
     code += child['depth'] * '    ' + \
-            'missing_arguments["page"] = await open_in_new_tab(**missing_arguments, ' + \
-                'link_xpath = ' + child['link_xpath'] +')\n'
-    code += child['depth'] * '    ' + 'page = missing_arguments["page"]\n'
+        'missing_arguments["pagina"] = await open_in_new_tab(**missing_arguments, ' + \
+        'link_xpath = ' + child['link_xpath'] + ')\n'
+    code += child['depth'] * '    ' + 'page = missing_arguments["pagina"]\n'
     return code
+
 
 def generate_fechar_aba(child, module):
     code = ""
     code += child['depth'] * '    ' + 'await page.close()\n'
-    code += child['depth'] * '    ' + 'missing_arguments["page"] = page_stack.pop()\n'
-    code += child['depth'] * '    ' + 'page = missing_arguments["page"]\n'
+    code += child['depth'] * '    ' + 'missing_arguments["pagina"] = page_stack.pop()\n'
+    code += child['depth'] * '    ' + 'page = missing_arguments["pagina"]\n'
+    return code
+
+
+def generate_screenshot(child, module):
+    code = ""
+    code += child['depth'] * '    ' + "await page.screenshot"
+    code += "({'path': f\"{scrshot_path}/{datetime.datetime.now()}.png\", "
+    code += "'fullPage': True })\n"
     return code
 
 
@@ -145,6 +131,7 @@ def generate_call_step(child, module):
         + generate_call(child['step'], child['arguments'],
                         is_coroutine) + '\n'
     return code
+
 
 def dict_to_arguments(dict_of_arguments):
     """
@@ -167,7 +154,7 @@ def generate_call(function_name, dict_of_arguments, is_coroutine=False):
     return call
 
 
-def generate_head(module):
+def generate_head(module, scrshot_path):
     """
     Generates the first part of the code, that is,
     imports and function signature.
@@ -177,8 +164,9 @@ def generate_head(module):
     code += "from " + module.__name__ + " import *\n\n"
     code += "async def execute_steps(**missing_arguments):\n"\
         + "    pages = {}\n"\
-        + "    page = missing_arguments['page']\n"\
-        + "    page_stack = []\n"
+        + "    page = missing_arguments['pagina']\n"\
+        + "    page_stack = []\n"\
+        + "    scrshot_path = \"" + scrshot_path + "\"\n"
     return code
 
 
@@ -198,11 +186,11 @@ def generate_body(recipe, module):
     return code
 
 
-def generate_code(recipe, module):
+def generate_code(recipe, module, scrshot_path):
     """
     Generates the entire code.
     """
-    code = generate_head(module)
+    code = generate_head(module, scrshot_path)
     code += generate_body(recipe, module)
     code += "    return pages"
     print(code)
