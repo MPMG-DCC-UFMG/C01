@@ -330,7 +330,7 @@ $(document).ready(function () {
         checkAntiblock();
     });
 
-    $('input').on('blur keyup change', checkRelatedFields);
+    $('input, textarea').on('blur keyup change', checkRelatedFields);
     $('#collapse-adv-links').on("click", function () { mycollapse("#adv-links");})
     $('#collapse-adv-download').on("click", function () { mycollapse("#adv-download"); })
     updateInjectionFields('static_form');
@@ -338,7 +338,6 @@ $(document).ready(function () {
 });
 
 function showBlock(clicked_id) {
-    console.log(clicked_id);
     var blocks = document.getElementsByClassName('block');
     for (var i = 0; i < blocks.length; i++)
         blocks[i].setAttribute('hidden', true);
