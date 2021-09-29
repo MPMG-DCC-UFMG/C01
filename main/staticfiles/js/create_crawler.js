@@ -1,3 +1,10 @@
+// 
+var selected_proxy = "tor";
+
+function setIpRotationType() {
+    $('#id_antiblock_ip_rotation_type').val(selected_proxy);
+}
+
 /* Collapse div */
 
 function mycollapse(target){
@@ -89,40 +96,36 @@ function checkBasicInfo() {
 
 function checkAntiblock() {
     var valid = true;
-    valid = (
-        valid &&
-        validateIntegerInput('id_antiblock_download_delay', can_be_empty = false, can_be_negative = false)
-    );
+
+    valid = validateIntegerInput('id_antiblock_download_delay', can_be_empty = false, can_be_negative = false);
 
     if (getCheckboxState('id_antiblock_autothrottle_enabled')) {
         valid = (
-            valid &&
             validateIntegerInput('id_antiblock_autothrottle_start_delay', can_be_empty = false, can_be_negative = false) &&
             validateIntegerInput('id_antiblock_autothrottle_max_delay', can_be_empty = false, can_be_negative = false)
         );
     }
 
-    var selected_option = getSelectedOptionValue("id_antiblock_mask_type");
-    // console.log("id_antiblock_mask_type", selected_option);
-    if (selected_option == 'ip') {
-        valid = (
-            valid &&
-            validateIntegerInput('id_antiblock_max_reqs_per_ip', can_be_empty = false, can_be_negative = false) &&
-            validateIntegerInput('id_antiblock_max_reuse_rounds', can_be_empty = false, can_be_negative = false)
-        );
+    if (getCheckboxState("id_antiblock_ip_rotation_enabled")) {
+        if (selected_proxy === "tor") {
+            valid = (
+                validateIntegerInput('id_antiblock_max_reqs_per_ip', can_be_empty = false, can_be_negative = false) &&
+                validateIntegerInput('id_antiblock_max_reuse_rounds', can_be_empty = false, can_be_negative = false)
+            );
 
-        var selected_proxy = getSelectedOptionText("id_antiblock_mask_type");
-        if (selected_proxy == "proxy")
-            valid = validateTextInput('id_proxy_list');
+        } else
+            valid = validateTextInput('id_antiblock_proxy_list');
     }
-    else if (selected_option == 'user_agent') {
+
+    if (getCheckboxState("id_antiblock_user_agent_rotation_enabled")) {
         valid = (
             validateIntegerInput('id_antiblock_reqs_per_user_agent', can_be_empty = false, can_be_negative = false) &&
-            validateIntegerInput('id_antiblock_user_agents_file', can_be_empty = false, can_be_negative = false)
+            validateTextInput('id_antiblock_user_agents_list')
         );
     }
-    else if (selected_option == 'cookies') {
-        valid = validateTextInput('id_antiblock_cookies_file');
+
+    if (getCheckboxState("id_antiblock_insert_cookies_enabled")) {
+        valid = validateTextInput('id_antiblock_cookies_list');
     }
 
     defineIcon("antiblock", valid);
@@ -301,9 +304,33 @@ function checkRelatedFields() {
     }
 }
 
+function initIpRotationTabs() {
+    if ($('#id_antiblock_ip_rotation_type').val() === 'proxies') {
+        selected_proxy = 'proxies';
+        
+        $('#tor').removeClass('active');
+        $('#ip-nav').removeClass('show active');
+
+        $('#proxies').addClass('active');
+        $('#proxies-nav').addClass('show active');
+
+    } else
+        setIpRotationType();
+}
+
 $(document).ready(function () {
     setNavigation();
-    $('input').on('blur keyup', checkRelatedFields);
+    initIpRotationTabs();
+
+    // Responsible for identifying which IP rotation mechanism to use: Tor or proxy list.
+    $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        selected_proxy = $(e.target).attr('id');
+        
+        setIpRotationType();
+        checkAntiblock();
+    });
+
+    $('input, textarea').on('blur keyup change', checkRelatedFields);
     $('#collapse-adv-links').on("click", function () { mycollapse("#adv-links");})
     $('#collapse-adv-download').on("click", function () { mycollapse("#adv-download"); })
     updateInjectionFields('static_form');
@@ -311,7 +338,6 @@ $(document).ready(function () {
 });
 
 function showBlock(clicked_id) {
-    console.log(clicked_id);
     var blocks = document.getElementsByClassName('block');
     for (var i = 0; i < blocks.length; i++)
         blocks[i].setAttribute('hidden', true);
@@ -686,18 +712,6 @@ function detailParamFilter(e) {
     checkStaticForm(); checkTemplatedURL();
 }
 
-function detailIpRotationType() {
-    var ipSelect = document.getElementById("id_ip_type");
-
-    const ip_rotation_type = ipSelect.options[ipSelect.selectedIndex].value;
-
-    setHiddenState("tor_div", true);
-    setHiddenState("proxy_div", true);
-
-    var id = ip_rotation_type + "_div";
-    setHiddenState(id, false);
-}
-
 function detailAntiblock() {
     var mainSelect = document.getElementById("id_antiblock_mask_type");
     const antiblock_type = mainSelect.options[mainSelect.selectedIndex].value;
@@ -791,6 +805,18 @@ function processParameterizedURL(data) {
     // Re-updates the parameterized URL section (used to refresh sub-options
     // based on select values and remove/add the "required" attribute)
     detailBaseUrl();
+}
+
+function ipRotationEnabled() {
+    setHiddenState("ip-rotation-options-div", !getCheckboxState("id_antiblock_ip_rotation_enabled"));
+}
+
+function userAgentRotationEnabled() {
+    setHiddenState("user-agent-rotation-options-div", !getCheckboxState("id_antiblock_user_agent_rotation_enabled"));
+}
+
+function insertCookiesEnabled() {
+    setHiddenState("insert-cookies-options-div", !getCheckboxState("id_antiblock_insert_cookies_enabled"));
 }
 
 function processStaticForms(data) {
