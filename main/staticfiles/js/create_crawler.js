@@ -351,6 +351,15 @@ function showBlock(clicked_id) {
     for (var i = 0; i < buttons.length; i++)
         buttons[i].classList.remove('active');
     document.getElementById(clicked_id).classList.add('active');
+
+
+    //Editar aqui futuramete. É necessário uma estrutura
+    //mais geral para as funções do tipo detail já que ao
+    //editar um coletor e navegar pelas abas, o showblock
+    //é chamado mostrando apenas as suas paginas iniciais.
+    if (clicked_id == "crawler-type-item"){
+        detailCrawlerType();
+    }
 }
 
 function detailBaseUrl() {

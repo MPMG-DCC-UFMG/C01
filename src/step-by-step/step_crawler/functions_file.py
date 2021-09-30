@@ -118,7 +118,6 @@ async def localiza_elementos(pagina, xpath, numero_xpaths=None):
     numero_xpaths = len(xpath_list) if not numero_xpaths else numero_xpaths
     return xpath_list[:numero_xpaths]
 
-
 @step("Voltar")
 async def retorna_pagina(pagina):
     await pagina.goBack()
