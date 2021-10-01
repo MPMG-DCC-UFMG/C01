@@ -16,10 +16,11 @@ from pyext import RuntimeModule
 """
 
 
-def step(display):
+def step(display, executable_contexts = ['page', 'tab', 'iframe']):
     def function(f):
         f.is_step = True
         f.display = display
+        f.executable_contexts = executable_contexts
         return f
 
     return function
@@ -30,6 +31,31 @@ def imprime(texto):
     print(texto)
     return
 
+async def fill_iframe_content(pagina):
+    # based on: https://gist.github.com/jgontrum/5a9060e40c7fc04c2c3bae3f1a9b28ad
+
+    iframes = await pagina.querySelectorAll('iframe')
+    for iframe in iframes:
+        frame = await iframe.contentFrame()
+
+        # Checks if the element is really an iframe
+        if not frame:
+            continue
+
+        # Extract the content inside the iframe
+        content = await frame.evaluate('''
+            () => {
+                const el = document.querySelector("*");
+                return el.innerHTML;
+            }
+        ''')
+
+        # Inserts iframe content as base page content
+        await pagina.evaluate('''
+            (iframe, content) => {
+                iframe.innerHTML = content;
+            }
+        ''', iframe, content)
 
 @step("Repetir")
 def repete(vezes):
@@ -72,6 +98,7 @@ async def selecione(pagina, xpath, opcao):
 
 @step("Salvar página")
 async def salva_pagina(pagina):
+    await fill_iframe_content(pagina)
     content = await pagina.content()
     body = str.encode(content)
     return body
@@ -119,7 +146,7 @@ async def localiza_elementos(pagina, xpath, numero_xpaths=None):
     return xpath_list[:numero_xpaths]
 
 
-@step("Voltar")
+@step("Voltar", executable_contexts=['page', 'tab'])
 async def retorna_pagina(pagina):
     await pagina.goBack()
 

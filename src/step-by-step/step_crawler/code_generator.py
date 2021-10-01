@@ -92,7 +92,13 @@ def generate_atribuicao(child, module):
 
 def generate_salva_pagina(child, module):
     code = ""
-    code += child['depth'] * '    ' + "pages[gera_nome_arquivo()] = "
+    code += child['depth'] * '    ' + 'if iframe is not None:\n'
+    code += child['depth'] * '    ' + '    missing_arguments["pagina"] = page\n'
+    code += child['depth'] * '    ' + "    pages[gera_nome_arquivo()] = "
+    code += "await salva_pagina(**missing_arguments)\n"
+    code += child['depth'] * '    ' + '    missing_arguments["pagina"] = iframe\n'
+    code += child['depth'] * '    ' + 'else:\n'
+    code += child['depth'] * '    ' + "    pages[gera_nome_arquivo()] = "
     code += "await salva_pagina(**missing_arguments)\n"
     return code
 
@@ -122,6 +128,26 @@ def generate_screenshot(child, module):
     code += "'fullPage': True })\n"
     return code
 
+def generate_executar_em_iframe(child, module):
+    xpath = child['arguments']['xpath']
+
+    code = "\n"
+    code += child['depth'] * '    ' + "### Início: Passando o contexto de execução para iframe ###\n"
+    code += child['depth'] * '    ' + 'page_stack.append(page)\n'
+    code += child['depth'] * '    ' + f'await page.waitForXPath({xpath})\n'
+    code += child['depth'] * '    ' + f'el_handlers = await page.xpath({xpath})\n'
+    code += child['depth'] * '    ' + f'iframe = await el_handlers[0].contentFrame()\n'
+    code += child['depth'] * '    ' + 'missing_arguments["pagina"] = iframe\n'
+    code += child['depth'] * '    ' + "### Fim: Passando o contexto de execução para iframe ###\n"
+    return code 
+
+def generate_sair_de_iframe(child, module):
+    code = "\n"
+    code += child['depth'] * '    ' + "### Início: Saindo do contexto de iframe ###\n"
+    code += child['depth'] * '    ' + 'missing_arguments["pagina"] = page\n'
+    code += child['depth'] * '    ' + 'iframe = None\n'
+    code += child['depth'] * '    ' + "### Fim: Saindo do contexto de iframe ###\n\n"
+    return code
 
 def generate_call_step(child, module):
     code = ""
@@ -166,6 +192,7 @@ def generate_head(module, scrshot_path):
         + "    pages = {}\n"\
         + "    page = missing_arguments['pagina']\n"\
         + "    page_stack = []\n"\
+        + "    iframe = None\n"\
         + "    scrshot_path = \"" + scrshot_path + "\"\n"
     return code
 

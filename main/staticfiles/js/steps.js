@@ -18,11 +18,14 @@ function load_steps_interface(interface_root_element_id, output_element_id, json
             return value
         })
 
-        step_list = step_list.concat(JSON.parse('{"name": "para_cada", "name_display" : "Para cada", "mandatory_params":[], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name": "atribuicao", "name_display" : "Atribuição", "mandatory_params":[], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name": "abrir_em_nova_aba", "name_display" : "Abrir em nova aba", "mandatory_params":["link_xpath"], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name": "fechar_aba", "name_display" : "Fechar aba", "mandatory_params":[], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name":"screenshot", "name_display" : "Screenshot", "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "para_cada", "name_display" : "Para cada", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "atribuicao", "name_display" : "Atribuição", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "abrir_em_nova_aba", "name_display" : "Abrir em nova aba", "executable_contexts": ["page", "tab"], "mandatory_params":["link_xpath"], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "fechar_aba", "name_display" : "Fechar aba", "executable_contexts": ["tab"], "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "executar_em_iframe", "name_display" : "Executar em iframe", "executable_contexts": ["page", "tab"], "mandatory_params":["xpath"], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "sair_de_iframe", "name_display" : "Sair de iframe", "executable_contexts": ["iframe"], "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name":"screenshot", "name_display" : "Screenshot", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
+
         init_steps_creation_interface(interface_root_element, output_element, step_list)
       }
     };
@@ -94,14 +97,24 @@ function init_step_board(step_list){
     step_board.style.marginTop = "1em"
     step_board.style.marginBottom = "1em"
     step_board.add_block = function(step_list, index = -1){
+
+        execution_context = get_insertion_index_context(index, 'up')
+
+        console.log(execution_context, index)
+
+        let context_step_list = step_list.filter(function (step) { return step.executable_contexts.indexOf(execution_context) >= 0})
+
         steps_creation_interface = find_parent_with_attr_worth(this, "steps_creation_interface")
         step_board = steps_creation_interface.step_board
-        step_block = init_block(step_list, step_board.get_last_depth())
+        step_block = init_block(context_step_list, step_board.get_last_depth())
+
         if(index != -1){
             step_board.insertBefore(step_block, step_board.children[index])
         }else{
             step_board.appendChild(step_block)
         }
+
+        colorize_contexts()
     }
     return step_board
 }
@@ -206,7 +219,6 @@ function get_step_json_format(block){
     }else{
         step_dict.arguments = load_param_dict(block)
     }
-
     return step_dict
 }
 

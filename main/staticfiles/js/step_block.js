@@ -6,6 +6,10 @@
  * @return {Node} The block initalized.
  */
 function init_block(step_list, depth){
+    // // Filter the steps so that only those compatible with iframe are available
+    // if (curr_execution_context == 'iframe') 
+    //     step_list = step_list.filter(function (step) { return step.executable_in_iframe })
+
     //instanciating and initializing the block element
     var block = init_block_element(step_list)
 
@@ -331,6 +335,104 @@ function refresh_source(){
     }
 }
 
+function colorize_contexts() {
+    let contexts = [];
+    let curr_context = 'page';
+    
+    let step_blocks = $('.step-block');
+
+    for (let i=0; i < step_blocks.length;i++) {
+        curr_step = step_blocks[i];
+        
+        // reseta cores
+        curr_step.classList.remove("bg-tab-execution-context");
+        curr_step.classList.remove("bg-iframe-execution-context");
+
+        if (curr_step.classList.contains('new-tab-context-start')) {
+            curr_step.classList.add("bg-tab-execution-context");
+
+            contexts.push(curr_context)
+            curr_context = 'tab';
+        } else if (curr_step.classList.contains('iframe-context-start')) {
+            curr_step.classList.add('bg-iframe-execution-context');
+
+            contexts.push(curr_context)
+            curr_context = 'iframe';
+        } else if (curr_step.classList.contains('new-tab-context-end')) {
+            curr_step.classList.add("bg-tab-execution-context");
+            curr_context = contexts.pop();
+        } else if (curr_step.classList.contains('iframe-context-end')) {
+            curr_step.classList.add('bg-iframe-execution-context');
+            curr_context = contexts.pop();
+        } else {
+            if (curr_context == 'iframe')
+                curr_step.classList.add('bg-iframe-execution-context');
+    
+            else if (curr_context == 'tab')
+                curr_step.classList.add("bg-tab-execution-context");
+        }
+    }
+
+}
+
+function get_insertion_index_context(index, direction) {
+    let curr_context = 'page';
+    
+    let step_blocks = $('.step-block');
+    if (index < 0)
+        index = step_blocks.length
+    
+    let contexts = [];
+
+    for (let i = 0; i < step_blocks.length; i++) {
+        curr_step = step_blocks[i];
+        if (curr_step.classList.contains('new-tab-context-start')) {
+            if (i == index) {
+                // estamos saindo do contexto da aba
+                if (direction == 'up')
+                    return curr_context;
+                // estamos entrando no contexto de uma aba
+                return 'tab';
+            }
+
+            contexts.push(curr_context)
+            curr_context = 'tab';
+
+        } else if (curr_step.classList.contains('iframe-context-start')) {
+            if (i == index) {
+                // estamos saindo do contexto da aba
+                if (direction == 'up')
+                    return curr_context;
+                // estamos entrando no contexto de uma iframe
+                return 'iframe';
+            }
+
+            contexts.push(curr_context)
+            curr_context = 'iframe';
+        } else if (curr_step.classList.contains('new-tab-context-end') || curr_step.classList.contains('iframe-context-end')) {
+            if (i == index) {
+                if (direction == 'up')
+                    return curr_context;
+                return contexts.pop();
+            }
+
+            curr_context = contexts.pop(); 
+        } else {
+            if (i == index)
+                return curr_context
+        }
+    }
+
+    return curr_context;
+}
+
+function refresh_step_options(block, context) {
+    let value = block.select.value
+    let context_step_list = step_list.filter(function (step) { return step.executable_contexts.indexOf(context) >= 0 })
+    block.select.innerHTML = get_this_texts_inside_each_tag(Object.keys(get_step_names(context_step_list)), "<option>")
+    block.select.value = value
+}
+
 /**
  * Refreshes the parameter inputs of an iterable when it is changed.
  * This function is a method of the select element of the block.
@@ -346,9 +448,17 @@ function refresh_step(){
         block.turn_to_attribution_step()
     }else if(this.value=="Abrir em nova aba"){
         block.turn_to_new_tab_step()
+        block.className += " new-tab-context-start"
     }else if(this.value=="Fechar aba"){
         block.turn_to_close_tab_step()
-    }else{
+        block.className += " new-tab-context-end"
+    }
+    else{
+        if (this.value == "Executar em iframe")
+            block.className += " iframe-context-start"
+        else if (this.value == "Sair de iframe")
+            block.className += " iframe-context-end"
+
         block.delete_lines(block.lines.length)
         block.add_line()
 
@@ -361,6 +471,8 @@ function refresh_step(){
             block.init_optional_params_button(block.step)
         }
     }
+
+    colorize_contexts()
 }
 
 
@@ -549,10 +661,29 @@ function indent_step(){
  */
 function move_up(){
     block = find_parent_with_attr_worth(this, "block")
+
+    
     index = get_index_in_parent(block)
     parent = block.parentElement
     if(index>0){
+        if (get_insertion_index_context(index-1, 'up') == 'iframe') {
+            let step = get_step_info(block.select.value, step_list);
+            if (step.executable_contexts.indexOf('iframe') < 0) {
+                alert(`⚠️ Não é possível mover o passo "${step.name_display}" para o contexto de execução de iframe, pois ele não é compatível!`)
+                return;
+            }
+        }
+        
+        let last_block_context = get_insertion_index_context(index, 'up');
         parent.insertBefore(parent.children[index], parent.children[index-1]);
+        let curr_block_context = get_insertion_index_context(index-1,'up');
+        
+        
+        // o contexto do bloco mudou
+        if (last_block_context != curr_block_context) {
+            colorize_contexts()
+            refresh_step_options(block, curr_block_context)
+        }
     }
 }
 
@@ -565,7 +696,23 @@ function move_down(){
     index = get_index_in_parent(block)
     parent = block.parentElement
     if(index<parent.children.length-1){
+        if (get_insertion_index_context(index + 1, 'down') == 'iframe') {
+            let step = get_step_info(block.select.value, step_list);
+            if (step.executable_contexts.indexOf('iframe') < 0) {
+                alert(`⚠️ Não é possível mover o passo "${step.name_display}" para o contexto de execução de iframe, pois ele não é compatível!`)
+                return;
+            }
+        }
+
+        let last_block_context = get_insertion_index_context(index, 'up');
         parent.insertBefore(parent.children[index+1], parent.children[index]);
+        let curr_block_context = get_insertion_index_context(index + 1, 'up');
+
+        // o contexto do bloco mudou
+        if (last_block_context != curr_block_context) {
+            colorize_contexts()
+            refresh_step_options(block, curr_block_context)
+        }
     }
 }
 
@@ -613,6 +760,8 @@ function init_block_element(step_list){
                     <div>`
     var new_block = document.createElement("DIV")
     new_block.innerHTML = block_html_base
+
     new_block.className = "conteiner card step-block"
+
     return new_block
 }
