@@ -26,6 +26,8 @@ function load_steps_interface(interface_root_element_id, output_element_id, json
         step_list = step_list.concat(JSON.parse('{"name": "sair_de_iframe", "name_display" : "Sair de iframe", "executable_contexts": ["iframe"], "mandatory_params":[], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name":"screenshot", "name_display" : "Screenshot", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
 
+        step_list_complete = step_list
+
         init_steps_creation_interface(interface_root_element, output_element, step_list)
       }
     };
@@ -99,9 +101,6 @@ function init_step_board(step_list){
     step_board.add_block = function(step_list, index = -1){
 
         execution_context = get_insertion_index_context(index, 'up')
-
-        console.log(execution_context, index)
-
         let context_step_list = step_list.filter(function (step) { return step.executable_contexts.indexOf(execution_context) >= 0})
 
         steps_creation_interface = find_parent_with_attr_worth(this, "steps_creation_interface")
@@ -314,14 +313,18 @@ function get_index_in_parent(element){
     }
 }
 
+function get_block_value_by_index(index) {
+    let step_blocks = $('.step-block')
+    return step_blocks[index].select.value
+}
+
 /**
  * This function gets the information of an step inside a step_list by its name_display.
  * @param {String} step_name The description of the step.
- * @param {List} step_list The list of steps that conteing the step named with the step_name value.
  * @retuns {Dict} A dictionary with the information of the step.
  */
-function get_step_info(step_name_display, step_list){
-    for(step of step_list){
+function get_step_info(step_name_display){
+    for(step of step_list_complete){
         if(step.name_display == step_name_display){
             return step
         }

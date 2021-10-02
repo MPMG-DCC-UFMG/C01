@@ -1,0 +1,33 @@
+{% extends 'main/base.html' %}
+
+{% block title %}
+Erro ao carregar iframe
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <div class="d-flex justify-context-center align-items-center pt-5" style="flex-direction: column;">
+        
+        <div class="jumbotron mt-5">
+            <p class="text-warning mb-5 text-center">
+                <i class="fa fa-exclamation-triangle" aria-hidden="true" style="font-size: 6em;"></i>
+            </p>
+
+            <h1 class="h4 text-center font-weight-bold">Não foi possível carregar o iframe.</a></h1>
+            
+            <br>
+
+            <p><strong>XPATH</strong>: {{xpath}}</p>
+            <p><strong>URL</strong>: <a href="{{url}}">{{ url }}</a></p>
+            
+            <hr class="my-4">
+            
+            <p><strong>Erro</strong>:</p>
+            <p class="lead">                
+                {{ error }}
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

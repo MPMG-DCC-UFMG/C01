@@ -90,7 +90,7 @@ function init_block(step_list, depth){
     block.select.onchange = refresh_step
     block.select.onchange()
 
-    block.step = get_step_info(block.select.value, step_list)
+    block.step = get_step_info(block.select.value)
 
     //Setting controler functions
     block.unindent_step = unindent_step
@@ -297,7 +297,7 @@ function delete_lines(m, n=null){
  */
 function refresh_iterable(){
     block = find_parent_with_attr_worth(this, "block")
-    block.iterable_step = get_step_info(this.value, block.step_list)
+    block.iterable_step = get_step_info(this.value)
     block.params = []
 
     block.delete_lines(1, block.lines.length)
@@ -318,8 +318,9 @@ function refresh_iterable(){
  * This function is a method of the atributtion step.
  */
 function refresh_source(){
+
     block = find_parent_with_attr_worth(this, "block")
-    block.source_step = get_step_info(this.value, block.step_list)
+    block.source_step = get_step_info(this.value)
     block.params = []
 
     block.delete_lines(1, block.lines.length)
@@ -428,9 +429,62 @@ function get_insertion_index_context(index, direction) {
 
 function refresh_step_options(block, context) {
     let value = block.select.value
-    let context_step_list = step_list.filter(function (step) { return step.executable_contexts.indexOf(context) >= 0 })
+    let context_step_list = step_list.filter(function (step) { return step_executable_in_context(step, context) })
     block.select.innerHTML = get_this_texts_inside_each_tag(Object.keys(get_step_names(context_step_list)), "<option>")
     block.select.value = value
+}
+
+function refresh_steps_option_below_index(index) {
+    let step_blocks = $('.step-block')
+    let start_index = index + 1;
+    if (start_index >= step_blocks.length)
+        return;
+
+    for (let i=start_index;i<step_blocks.length;i++) {
+        let context = get_insertion_index_context(index, 'down')
+        refresh_step_options(step_blocks[i], context)
+    }
+}
+
+function add_open_iframe_button(block) {
+    block.open_iframe_block = document.createElement("DIV")
+    block.open_iframe_button = document.createElement("BUTTON")
+    open_iframe_img = document.createElement("IMG")
+
+    block.open_iframe_block.appendChild(block.open_iframe_button)
+    block.open_iframe_button.appendChild(open_iframe_img)
+
+    block.open_iframe_block.style.borderRadius = "1em"
+
+    block.open_iframe_button.type = "button"
+    block.open_iframe_button.title = "Abrir iframe em nova aba"
+    block.open_iframe_button.className = "btn btn-primary"
+
+    open_iframe_img.src = "/static/icons/external-link-alt-solid.svg"
+    open_iframe_img.style.width = "1.25em"
+    open_iframe_img.style.height = "1.25em"
+
+    block.open_iframe_button.onclick = function () {
+        let xpath = load_param_dict(block).xpath;
+
+        if (xpath.length == 0) {
+            alert('É necessário especificar o XPATH do iframe antes!')
+            return
+        }
+
+        let base_url = document.getElementById('id_base_url').value
+        if (base_url.length == 0) {
+            alert('Insira a "URL BASE" primeiro na seção "Infos básicas"!')
+            return
+        }
+
+        let host = location.protocol + '//' + location.host;
+        let url_of_iframe_loader = `${host}/iframe/load?url="${base_url}"&xpath="${xpath}"`
+
+        window.open(url_of_iframe_loader, '_blank').focus();
+    }
+
+    block.lines[last_line].appendChild(block.open_iframe_block)
 }
 
 /**
@@ -438,9 +492,19 @@ function refresh_step_options(block, context) {
  * This function is a method of the select element of the block.
  */
 function refresh_step(){
+    let execution_context_changed = false;
+    
+    
+    
     block = find_parent_with_attr_worth(this, "block")
-    block.step = get_step_info(this.value, block.step_list)
+    block.step = get_step_info(this.value)
     block.params = []
+
+    // reseta o contexto do block
+    block.classList.remove("new-tab-context-start")
+    block.classList.remove("new-tab-context-end")
+    block.classList.remove("iframe-context-start")
+    block.classList.remove("iframe-context-end")
 
     if(this.value=="Para cada"){
         block.turn_to_for_step()
@@ -449,27 +513,40 @@ function refresh_step(){
     }else if(this.value=="Abrir em nova aba"){
         block.turn_to_new_tab_step()
         block.className += " new-tab-context-start"
+        execution_context_changed = true
     }else if(this.value=="Fechar aba"){
         block.turn_to_close_tab_step()
         block.className += " new-tab-context-end"
+        execution_context_changed = true
     }
-    else{
-        if (this.value == "Executar em iframe")
-            block.className += " iframe-context-start"
-        else if (this.value == "Sair de iframe")
-            block.className += " iframe-context-end"
-
+    else{        
         block.delete_lines(block.lines.length)
         block.add_line()
-
+        
         for(param of block.step.mandatory_params){
             block.add_param(param)
         }
-
+        
         optional_params = Object.keys(block.step.optional_params)
         if(optional_params.length!=0){
             block.init_optional_params_button(block.step)
         }
+    
+        if (this.value == "Executar em iframe") {
+            block.className += " iframe-context-start"
+            execution_context_changed = true;            
+            add_open_iframe_button(block);
+        }
+
+        else if (this.value == "Sair de iframe") {
+            block.className += " iframe-context-end"
+            execution_context_changed = true;
+        }
+    }
+    
+    if (execution_context_changed) {
+        let index = get_index_in_parent(block)
+        refresh_steps_option_below_index(index)
     }
 
     colorize_contexts()
@@ -655,6 +732,10 @@ function indent_step(){
     block.style.left = (block.depth*2-2) +"em"
 }
 
+function step_executable_in_context(step, context) {
+    return step.executable_contexts.indexOf(context) >= 0
+}
+
 /**
  * Moves the block that called this method up.
  * This function is a method of the block
@@ -665,10 +746,19 @@ function move_up(){
     
     index = get_index_in_parent(block)
     parent = block.parentElement
-    if(index>0){
+    if(index>0){ 
         if (get_insertion_index_context(index-1, 'up') == 'iframe') {
-            let step = get_step_info(block.select.value, step_list);
-            if (step.executable_contexts.indexOf('iframe') < 0) {
+            let step = get_step_info(block.select.value);
+            if (!step_executable_in_context(step, 'iframe')) {
+                alert(`⚠️ Não é possível mover o passo "${step.name_display}" para o contexto de execução de iframe, pois ele não é compatível!`)
+                return;
+            }
+        } 
+        
+        if (get_block_value_by_index(index) == 'Executar em iframe') {
+            let previous_step_value = get_block_value_by_index(index - 1)
+            let step = get_step_info(previous_step_value)
+            if (!step_executable_in_context(step, 'iframe')) {
                 alert(`⚠️ Não é possível mover o passo "${step.name_display}" para o contexto de execução de iframe, pois ele não é compatível!`)
                 return;
             }
@@ -681,9 +771,9 @@ function move_up(){
         
         // o contexto do bloco mudou
         if (last_block_context != curr_block_context) {
-            colorize_contexts()
             refresh_step_options(block, curr_block_context)
         }
+        colorize_contexts()
     }
 }
 
@@ -695,10 +785,20 @@ function move_down(){
     block = find_parent_with_attr_worth(this, "block")
     index = get_index_in_parent(block)
     parent = block.parentElement
+    
     if(index<parent.children.length-1){
         if (get_insertion_index_context(index + 1, 'down') == 'iframe') {
-            let step = get_step_info(block.select.value, step_list);
-            if (step.executable_contexts.indexOf('iframe') < 0) {
+            let step = get_step_info(block.select.value);
+            if (!step_executable_in_context(step, 'iframe')) {
+                alert(`⚠️ Não é possível mover o passo "${step.name_display}" para o contexto de execução de iframe, pois ele não é compatível!`)
+                return;
+            }
+        }
+
+        if (get_block_value_by_index(index) == 'Sair de iframe') {
+            let next_step_value = get_block_value_by_index(index + 1)
+            let step = get_step_info(next_step_value)
+            if (!step_executable_in_context(step, 'iframe')) {
                 alert(`⚠️ Não é possível mover o passo "${step.name_display}" para o contexto de execução de iframe, pois ele não é compatível!`)
                 return;
             }
@@ -710,9 +810,9 @@ function move_down(){
 
         // o contexto do bloco mudou
         if (last_block_context != curr_block_context) {
-            colorize_contexts()
             refresh_step_options(block, curr_block_context)
         }
+        colorize_contexts()
     }
 }
 
@@ -721,7 +821,13 @@ function move_down(){
  * This function is a method of the block
  */
 function delete_step(){
-    find_parent_with_attr_worth(this, "block").remove()
+    block = find_parent_with_attr_worth(this, "block")
+    let index = get_index_in_parent(block)
+
+    block.remove()
+
+    refresh_steps_option_below_index(index-1)
+    colorize_contexts();
 }
 
 
