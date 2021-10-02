@@ -344,7 +344,6 @@ def files_found(request, instance_id, num_files):
         return JsonResponse({}, status=status.HTTP_200_OK)
 
     except Exception as e:
-        print(e)
         return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
 
 def success_download_file(request, instance_id):
@@ -388,7 +387,6 @@ def pages_found(request, instance_id, num_pages):
         return JsonResponse({}, status=status.HTTP_200_OK)
 
     except Exception as e:
-        print(e)
         return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
 
 
