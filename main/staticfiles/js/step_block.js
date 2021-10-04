@@ -683,7 +683,7 @@ function turn_to_new_tab_step(){
     xpath_input_box = document.createElement("DIV")
     xpath_input_box.className = "col-sm"
     xpath_input = document.createElement("INPUT")
-    xpath_input.placeHolder = "link xpath"
+    xpath_input.placeholder = "xpath do link"
     xpath_input.className = "form-control row"
     xpath_input_box.appendChild(xpath_input)
     block.xpath_input = xpath_input

@@ -230,6 +230,13 @@ a.close, a.add_form {
     padding-top: 0.75rem;
 }
 
+.antiblock-wrapper .form-group, #div_id_antiblock_reqs_per_user_agent {
+    margin-bottom: 0;
+}
+
+.antiblock-wrapper .form-group input, .antiblock-wrapper .form-group label{
+    cursor: pointer;
+}
 /* Collapse div */
 .mycollapse {
     display: block;

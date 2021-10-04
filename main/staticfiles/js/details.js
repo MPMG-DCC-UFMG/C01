@@ -31,7 +31,6 @@ function tail_logs(instance_id){
     xhr.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
             var response = JSON.parse(this.responseText);
-            console.log(response);
 
             if(response["out"].lenght != 0)
                 document.getElementById("stdout_tail").innerText = response["out"]

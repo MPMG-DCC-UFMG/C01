@@ -23,7 +23,7 @@ class CrawlRequest(TimeStamped):
 
     # BASIC INFO ##############################################################
     source_name = models.CharField(max_length=200)
-    base_url = models.CharField(max_length=200)
+    base_url = models.TextField()
     obey_robots = models.BooleanField(blank=True, null=True)
     pathValid = RegexValidator(r'^[0-9a-zA-Z\/\\-_]*$',
                                'This is not a valid path.')
@@ -45,48 +45,31 @@ class CrawlRequest(TimeStamped):
     # ANTIBLOCK ###############################################################
     # Options for Delay
     antiblock_download_delay = models.IntegerField(blank=True, null=True)
-    antiblock_autothrottle_enabled = models.BooleanField(blank=True, null=True)
-    antiblock_autothrottle_start_delay = models.IntegerField(
-        blank=True, null=True)
-    antiblock_autothrottle_max_delay = models.IntegerField(
-        blank=True, null=True)
 
-    # Options for antiblock masks
-    ANTIBLOCK_MASK_TYPE = [
-        ('none', 'None'),
-        ('ip', 'IP rotation'),
-        ('user_agent', 'User-agent rotation'),
-        ('cookies', 'Use cookies'),
-    ]
-    antiblock_mask_type = models.CharField(
-        max_length=15,
-        choices=ANTIBLOCK_MASK_TYPE,
-        blank=True,
-        null=True,
-        default='none'
-    )
+    antiblock_autothrottle_enabled = models.BooleanField(default=False, blank=True)
+    antiblock_autothrottle_start_delay = models.IntegerField(blank=True, null=True)
+    antiblock_autothrottle_max_delay = models.IntegerField(blank=True, null=True)
 
     # Options for IP rotation
-    IP_TYPE = [
-        ('tor', 'Tor'),
-        ('proxy', 'Proxy'),
-    ]
-    antiblock_ip_rotation_type = models.CharField(
-        max_length=15, choices=IP_TYPE, null=True, blank=True)
-    antiblock_proxy_list = models.CharField(
-        max_length=2000, blank=True, null=True)  # available for Proxy List
+    antiblock_ip_rotation_enabled = models.BooleanField(default=False, blank=True)
+
+    antiblock_ip_rotation_type = models.CharField(max_length=15, null=True, blank=True)
     antiblock_max_reqs_per_ip = models.IntegerField(blank=True, null=True)
     antiblock_max_reuse_rounds = models.IntegerField(blank=True, null=True)
 
+    antiblock_proxy_list = models.TextField(blank=True, null=True)  # available for Proxy List
+
     # Options for User Agent rotation
+    antiblock_user_agent_rotation_enabled = models.BooleanField(default=False, blank=True)
+
     antiblock_reqs_per_user_agent = models.IntegerField(blank=True, null=True)
-    antiblock_user_agents_file = models.CharField(
-        max_length=2000, blank=True, null=True)
+    antiblock_user_agents_list = models.TextField(blank=True, null=True)
 
     # Options for Cookies
-    antiblock_cookies_file = models.CharField(
-        max_length=2000, blank=True, null=True)
-    antiblock_persist_cookies = models.BooleanField(blank=True, null=True)
+    antiblock_insert_cookies_enabled = models.BooleanField(default=False, blank=True)
+
+    antiblock_cookies_list = models.TextField(blank=True, null=True)
+    # antiblock_persist_cookies = models.BooleanField(blank=True, null=True)
 
     # CAPTCHA #################################################################
     CAPTCHA_TYPE = [
