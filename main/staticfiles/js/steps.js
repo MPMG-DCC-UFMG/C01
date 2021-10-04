@@ -313,6 +313,12 @@ function get_index_in_parent(element){
     }
 }
 
+/**
+ * This function takes the selected value of a block by its index
+ * @param {Number} The index of the block to get the selected value.
+ * @retuns {String} The value selected in block.
+ */
+
 function get_block_value_by_index(index) {
     let step_blocks = $('.step-block')
     return step_blocks[index].select.value

@@ -336,6 +336,10 @@ function refresh_source(){
     }
 }
 
+/**
+ * Colorize the context of the steps execution
+ */
+
 function colorize_contexts() {
     let contexts = [];
     let curr_context = 'page';
@@ -376,6 +380,14 @@ function colorize_contexts() {
 
 }
 
+/**
+ * Gets the context that a block to be inserted will have at the passed index, 
+ * depending on whether the block will be inserted below or on top of another block
+ * @param {Number} Index where the block will be inserted in the step block set.
+ * @param {String} direction Indicates whether the block will be inserted below or above another
+ * @return {String} The execution context of the inserted step (page, tab, or iframe)
+ */
+
 function get_insertion_index_context(index, direction) {
     let curr_context = 'page';
     
@@ -389,10 +401,10 @@ function get_insertion_index_context(index, direction) {
         curr_step = step_blocks[i];
         if (curr_step.classList.contains('new-tab-context-start')) {
             if (i == index) {
-                // estamos saindo do contexto da aba
+                // we are leaving the tab context
                 if (direction == 'up')
                     return curr_context;
-                // estamos entrando no contexto de uma aba
+                // we are entering the tab context
                 return 'tab';
             }
 
@@ -401,10 +413,10 @@ function get_insertion_index_context(index, direction) {
 
         } else if (curr_step.classList.contains('iframe-context-start')) {
             if (i == index) {
-                // estamos saindo do contexto da aba
+                // we are leaving the iframe context
                 if (direction == 'up')
                     return curr_context;
-                // estamos entrando no contexto de uma iframe
+                // we are entering the iframe context
                 return 'iframe';
             }
 
@@ -427,12 +439,23 @@ function get_insertion_index_context(index, direction) {
     return curr_context;
 }
 
+
+/**
+ * Updates the available step options according to an execution context
+ * @param {Node} block The block that will have the updated step options
+ * @param {String} context The new context that the block will execute
+ */
 function refresh_step_options(block, context) {
     let value = block.select.value
     let context_step_list = step_list.filter(function (step) { return step_executable_in_context(step, context) })
     block.select.innerHTML = get_this_texts_inside_each_tag(Object.keys(get_step_names(context_step_list)), "<option>")
     block.select.value = value
 }
+
+/**
+ * Updates the options available for all step blocks below an index in the block set
+ * @param {Number} index Indicates from which index the available step options will be updated
+ */
 
 function refresh_steps_option_below_index(index) {
     let step_blocks = $('.step-block')
@@ -446,6 +469,10 @@ function refresh_steps_option_below_index(index) {
     }
 }
 
+/**
+ * Adds the button and the functionality to open the iframe in a new tab
+ * @param {Node} block Block containing the "Executar em iframe" step
+ */
 function add_open_iframe_button(block) {
     block.open_iframe_block = document.createElement("DIV")
     block.open_iframe_button = document.createElement("BUTTON")
