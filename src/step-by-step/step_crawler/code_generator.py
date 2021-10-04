@@ -128,6 +128,7 @@ def generate_screenshot(child, module):
     code += "'fullPage': True })\n"
     return code
 
+
 def generate_executar_em_iframe(child, module):
     xpath = child['arguments']['xpath']
 
@@ -139,7 +140,8 @@ def generate_executar_em_iframe(child, module):
     code += child['depth'] * '    ' + f'iframe = await el_handlers[0].contentFrame()\n'
     code += child['depth'] * '    ' + 'missing_arguments["pagina"] = iframe\n'
     code += child['depth'] * '    ' + "### Fim: Passando o contexto de execução para iframe ###\n"
-    return code 
+    return code
+
 
 def generate_sair_de_iframe(child, module):
     code = "\n"
@@ -148,6 +150,7 @@ def generate_sair_de_iframe(child, module):
     code += child['depth'] * '    ' + 'iframe = None\n'
     code += child['depth'] * '    ' + "### Fim: Saindo do contexto de iframe ###\n\n"
     return code
+
 
 def generate_call_step(child, module):
     code = ""

@@ -16,7 +16,7 @@ from pyext import RuntimeModule
 """
 
 
-def step(display, executable_contexts = ['page', 'tab', 'iframe']):
+def step(display, executable_contexts=['page', 'tab', 'iframe']):
     def function(f):
         f.is_step = True
         f.display = display
@@ -30,6 +30,7 @@ def step(display, executable_contexts = ['page', 'tab', 'iframe']):
 def imprime(texto):
     print(texto)
     return
+
 
 async def fill_iframe_content(pagina):
     # based on: https://gist.github.com/jgontrum/5a9060e40c7fc04c2c3bae3f1a9b28ad
@@ -56,6 +57,7 @@ async def fill_iframe_content(pagina):
                 iframe.innerHTML = content;
             }
         ''', iframe, content)
+
 
 @step("Repetir")
 def repete(vezes):
@@ -144,6 +146,7 @@ async def localiza_elementos(pagina, xpath, numero_xpaths=None):
 
     numero_xpaths = len(xpath_list) if not numero_xpaths else numero_xpaths
     return xpath_list[:numero_xpaths]
+
 
 @step("Voltar", executable_contexts=['page', 'tab'])
 async def retorna_pagina(pagina):

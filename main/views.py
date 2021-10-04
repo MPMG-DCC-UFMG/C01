@@ -502,9 +502,10 @@ def view_screenshots(request, instance_id, page):
         'total_screenshots': total_screenshots
     }, status=200)
 
+
 def load_iframe(request):
-    url = request.GET['url'].replace('"','')
-    xpath = request.GET['xpath'].replace('"','')
+    url = request.GET['url'].replace('"', '')
+    xpath = request.GET['xpath'].replace('"', '')
 
     try:
         content = iframe_loader(url, xpath)
@@ -514,7 +515,7 @@ def load_iframe(request):
         ctx = {
             'url': url,
             'xpath': xpath,
-            'error': str(e) 
+            'error': str(e)
         }
         return render(request, 'main/error_iframe_loader.html', ctx)
 

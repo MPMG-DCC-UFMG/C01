@@ -20,11 +20,12 @@ def content_empty(content: str) -> bool:
     """
 
     soup = BeautifulSoup(content, 'html.parser')
-    
+
     title = soup.find('title').getText().replace('\n', '')
     content = soup.getText().replace('\n', '')
 
     return (len(content) - len(title)) == 0
+
 
 async def async_iframe_loader(url: str, xpath: str, max_attempts: int = 5) -> str:
     """ Method responsible for extracting the content of an iframe from a website with the `url` passed from `xpath`.
@@ -50,7 +51,7 @@ async def async_iframe_loader(url: str, xpath: str, max_attempts: int = 5) -> st
 
     await page.goto(url)
     await page.waitForXPath(xpath)
-    
+
     el_handlers = await page.xpath(xpath)
     iframe = await el_handlers[0].contentFrame()
 
@@ -76,7 +77,7 @@ async def async_iframe_loader(url: str, xpath: str, max_attempts: int = 5) -> st
                 break
 
         except Exception as e:
-            attempt += 1 
+            attempt += 1
             error = e
 
     await browser.close()
@@ -86,9 +87,10 @@ async def async_iframe_loader(url: str, xpath: str, max_attempts: int = 5) -> st
 
     return content
 
+
 def iframe_loader(url: str, xpath: str) -> str:
     """wrapper for the asynchronous method of retrieving iframe content
-    
+
     Args:
         url (str) - Address of the site that has the iframe
         xpath (str) - The iframe XPATH
@@ -99,7 +101,7 @@ def iframe_loader(url: str, xpath: str) -> str:
 
     try:
         loop = asyncio.get_event_loop()
-        
+
     except RuntimeError:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
