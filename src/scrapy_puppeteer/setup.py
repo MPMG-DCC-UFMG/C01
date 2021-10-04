@@ -15,7 +15,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=['scrapy>=1.0.0', 'promise', 'pyppeteer==0.2.6',
                       'requests', 'twisted', 'python-magic',
-                      'websockets==9.1', 'pyee==8.2.2'],
+                      'websockets==9.1', 'pyee==8.2.2', 'beautifulsoup4==4.10.0'],
     entry_points={
         'console_scripts': [
             'scrapyp = scrapy_puppeteer.cli:__main__',

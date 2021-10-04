@@ -1,18 +1,49 @@
-import asyncio
+"""This module contains the code responsible for loading the content of an iframe"""
 
+import asyncio
 import time
+
 from pyppeteer import launch
+from bs4 import BeautifulSoup
 
 from .chromium_downloader import chromium_executable
 
-CONTENT_EMPTY = '<head></head><body></body>'
+
+def content_empty(content: str) -> bool:
+    """Check if iframe content is empty
+
+    Args:
+        content (str) - Content of iframe
+
+    Returns:
+        Returns True if content of iframe is empty, False otherwise.
+    """
+
+    soup = BeautifulSoup(content, 'html.parser')
+    
+    title = soup.find('title').getText().replace('\n', '')
+    content = soup.getText().replace('\n', '')
+
+    return (len(content) - len(title)) == 0
 
 async def async_iframe_loader(url: str, xpath: str, max_attempts: int = 5) -> str:
+    """ Method responsible for extracting the content of an iframe from a website with the `url` passed from `xpath`.
+
+    Args:
+        url (str) - Address of the site that has the iframe
+        xpath (str) - The iframe XPATH
+        max_attempts (int) - Maximum attempts to get iframe content (default 5) 
+
+    Returns:
+        Returns the content of the iframe in XPATH at the URL site
+    """
     wait_time = 1.5
 
     browser = await launch({'handleSIGINT': False,
                             'handleSIGTERM': False,
                             'handleSIGHUP': False,
+                            'LOG_LEVEL': 'INFO',
+                            'executablePath': chromium_executable(),
                             'headless': True})
 
     page = await browser.newPage()
@@ -38,7 +69,7 @@ async def async_iframe_loader(url: str, xpath: str, max_attempts: int = 5) -> st
                 }
             ''')
 
-            if content == CONTENT_EMPTY:
+            if content_empty(content):
                 attempt += 1
 
             else:
@@ -55,7 +86,17 @@ async def async_iframe_loader(url: str, xpath: str, max_attempts: int = 5) -> st
 
     return content
 
-def iframe_loader(url: str, xpath: str):
+def iframe_loader(url: str, xpath: str) -> str:
+    """wrapper for the asynchronous method of retrieving iframe content
+    
+    Args:
+        url (str) - Address of the site that has the iframe
+        xpath (str) - The iframe XPATH
+
+    Returns:
+        Returns the content of the iframe in XPATH at the URL site
+    """
+
     try:
         loop = asyncio.get_event_loop()
         
