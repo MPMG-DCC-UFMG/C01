@@ -1,5 +1,10 @@
 import os
 
+# Zookeeper host information
+ZOOKEEPER_ASSIGN_PATH = os.getenv('ZOOKEEPER_ASSIGN_PATH', '/scrapy-cluster/crawler/')
+ZOOKEEPER_ID = os.getenv('ZOOKEEPER_ID', 'all')
+ZOOKEEPER_HOSTS = [x.strip() for x in os.getenv('ZOOKEEPER_HOSTS', 'zookeeper:2181').split(',')]
+
 # Kafka host information
 KAFKA_HOSTS = [x.strip() for x in os.getenv('KAFKA_HOSTS', 'kafka:9092').split(',')]
 KAFKA_TOPIC_PREFIX = os.getenv('KAFKA_TOPIC_PREFIX', 'crawler_ufmg')
@@ -11,21 +16,8 @@ REDIS_DB = int(os.getenv('REDIS_DB', 0))
 REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', None)
 REDIS_SOCKET_TIMEOUT = int(os.getenv('REDIS_SOCKET_TIMEOUT', 10))
 
-# Kafka topics
+SC_KAFKA_TOPIC_PREFIX = os.getenv('SC_KAFKA_TOPIC_PREFIX', KAFKA_TOPIC_PREFIX + '.scrapy_cluster')
 
-# Transmits logs from spiders
 LOGGING_TOPIC = os.getenv('LOGGING_TOPIC', KAFKA_TOPIC_PREFIX + '.logs')
-
-# Transmits command to create and stop spiders
 COMMANDS_TOPIC = os.getenv('COMMANDS_TOPIC', KAFKA_TOPIC_PREFIX + '.commands')
-
-# Transmits messages about creating or terminating spiders
 NOTIFICATIONS_TOPIC = os.getenv('NOTIFICATIONS_TOPIC', KAFKA_TOPIC_PREFIX + '.notifications')
-
-# Broadcast messages to generate initial crawl urls
-LINK_GENERATOR_TOPIC = os.getenv('LINK_GENERATOR_TOPIC', KAFKA_TOPIC_PREFIX + '.link_generator')
-
-WRITER_TOPIC = os.getenv('WRITER_TOPIC', KAFKA_TOPIC_PREFIX + '.writer')
-
-STOPPED_SPIDER_NOTIFICATION_ADDRESS = os.getenv(
-    'STOPPED_SPIDER_NOTIFICATION_ADDRESS', 'http://web:8000/detail/stop_crawl/{crawler_id}')

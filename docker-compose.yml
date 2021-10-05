@@ -1,47 +1,129 @@
-version: '3'
-services: 
+version: '3.7'
+
+services:
     redis:
         image: redis
         ports:
             - "6379:6379"
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 1s
+            timeout: 3s
+            retries: 30
         restart: always
     zookeeper:
-        image: confluentinc/cp-zookeeper:latest
-        networks: 
-            - broker-kafka
-        environment:
-            # Instructs ZooKeeper where to listen for connections by clients
-            ZOOKEEPER_CLIENT_PORT: 2181
-            # The basic time unit in milliseconds used by ZooKeeper
-            ZOOKEEPER_TICK_TIME: 2000
-    kafka:
-        image: confluentinc/cp-kafka:latest
-        networks: 
-            - broker-kafka
-        depends_on:
-            - zookeeper
+        image: wurstmeister/zookeeper
         ports:
-            - 9092:9092
-        environment:
-            KAFKA_BROKER_ID: 1
-            KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-            KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
-            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
-            KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    interface:
-        build: .
-        ports: 
-            - 8000:8000
-        environment: 
-            KAFKA_HOSTS: kafka:29092
-            REDIS_HOST: redis
-            REDIS_PORT: 6379    
-        networks: 
-            - broker-kafka
-        depends_on: 
-            - kafka        
-            - redis
-networks: 
-    broker-kafka:
-        driver: bridge  
+            - "2181:2181"
+        env_file:
+            - ./docker/config/.env
+        healthcheck:
+            test: ["CMD", "nc", "-vz", "zookeeper", "2181"]
+            interval: 1s
+            timeout: 3s
+            retries: 30
+        restart: always
+    kafka:
+        image: wurstmeister/kafka
+        ports:
+            - "9092:9092"
+        env_file:
+            - ./docker/config/.env
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+        depends_on:
+            zookeeper:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD", "nc", "-vz", "kafka", "9092"]
+            interval: 1s
+            timeout: 3s
+            retries: 30
+        restart: always
+    web:
+        build:
+            context: .
+            dockerfile: ./docker/django-gunicorn/Dockerfile
+            args:
+                EXECUTION_TYPE: distributed
+                INSTALL_REDIS: "False"
+                INSTALL_KAFKA: "False"
+        command: ./django_run.sh
+        volumes:
+            - static_volume:/home/django/C01/staticfiles
+            - data:/data
+        expose:
+            - 8000
+        env_file:
+            - ./docker/config/.env
+        depends_on:
+            kafka:
+                condition: service_healthy
+            db:
+                condition: service_healthy
+        restart: on-failure
+    nginx:
+        build:
+            context: .
+            dockerfile: ./docker/nginx/Dockerfile
+        volumes:
+            - static_volume:/home/nginx/staticfiles
+        ports:
+            - 8000:80
+        depends_on:
+            - web
+    db:
+        image: postgres:12.0-alpine
+        hostname: localhost
+        volumes:
+          - postgres_data:/var/lib/postgresql/data/
+        env_file:
+          - ./docker/config/.env
+        ports:
+          - "5432:5432"
+        healthcheck:
+          test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+          interval: 10s
+          timeout: 5s
+          retries: 5
+    link_generator:
+        build:
+            context: .
+            dockerfile: ./docker/link_generator/Dockerfile
+        env_file:
+            - ./docker/config/.env
+        depends_on:
+            redis:
+                condition: service_healthy
+            kafka:
+                condition: service_healthy
+        restart: on-failure
+    spider_manager:
+        build:
+            context: .
+            dockerfile: ./docker/spider_manager/Dockerfile
+        env_file:
+            - ./docker/config/.env
+        depends_on:
+            redis:
+                condition: service_healthy
+            kafka:
+                condition: service_healthy
+        restart: on-failure
+    writer:
+        build:
+            context: .
+            dockerfile: ./docker/writer/Dockerfile
+        volumes:
+            - data:/data
+        env_file:
+            - ./docker/config/.env
+        depends_on:
+            kafka:
+                condition: service_healthy
+        restart: on-failure
+
+volumes:
+    static_volume:
+    data:
+    postgres_data:

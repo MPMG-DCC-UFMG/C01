@@ -1,13 +1,12 @@
-import atexit
 import os
 import json
 import signal
-from multiprocessing import Process
+from threading import Thread
 
 from django.apps import AppConfig
 from django.db.utils import OperationalError
 
-from crawler_manager.crawler_manager import log_writer_process
+from crawler_manager.crawler_manager import log_writer_executor
 from step_crawler import functions_file
 from step_crawler import parameter_extractor
 from crawler_manager.crawler_manager import run_spider_manager_listener
@@ -19,6 +18,7 @@ import sys
 
 # Enable interrupt signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
+
 
 class MainConfig(AppConfig):
     name = 'main'
@@ -43,13 +43,12 @@ class MainConfig(AppConfig):
                 instance.running = False
                 instance.save()
 
-       # starts kafka log consumer
-        log_writer = Process(target=log_writer_process)
-        log_writer.start()
-        atexit.register(log_writer.join)
+        # starts kafka log consumer
+        log_writer_exec_thread = Thread(target=log_writer_executor, daemon=True)
+        log_writer_exec_thread.start()
 
         run_spider_manager_listener()
-        
+
     def ready(self):
         try:
             self.runOnce()

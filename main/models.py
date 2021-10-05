@@ -39,9 +39,9 @@ class CrawlRequest(TimeStamped):
     request_type = models.CharField(max_length=15,
                                     choices=REQUEST_TYPES,
                                     default='GET')
-    
+
     # SCRAPY CLUSTER ##########################################################
-    
+
     # Don't cleanup redis queues, allows to pause/resume crawls.
     sc_scheduler_persist = models.BooleanField(default=True)
 
@@ -204,6 +204,17 @@ class CrawlRequest(TimeStamped):
 
     steps = models.CharField(
         blank=True, null=True, max_length=9999999, default='{}')
+
+    # ENCODING DETECTION =======================================================
+    HEADER_ENCODE_DETECTION = 1
+    AUTO_ENCODE_DETECTION = 2
+
+    ENCODE_DETECTION_CHOICES = [
+        (HEADER_ENCODE_DETECTION, 'Via cabeçalho da resposta'),
+        (AUTO_ENCODE_DETECTION, 'Automático'),
+    ]
+
+    encoding_detection_method = models.IntegerField(choices=ENCODE_DETECTION_CHOICES, default=HEADER_ENCODE_DETECTION)
 
     @staticmethod
     def process_parameter_data(param_list):
@@ -456,10 +467,11 @@ class CrawlerInstance(TimeStamped):
     def download_files_finished(self):
         return self.number_files_success_download + self.number_files_error_download == self.number_files_found
 
+
 class Log(TimeStamped):
     instance = models.ForeignKey(CrawlerInstance, on_delete=models.CASCADE,
                                  related_name="log")
-    log_message = models.CharField(max_length=2000, blank=True, null=True)
+    log_message = models.TextField(blank=True, null=True)
     logger_name = models.CharField(max_length=50, blank=True, null=True)
     log_level = models.CharField(max_length=10, blank=True, null=True)
-    raw_log = models.CharField(max_length=5000, blank=True, null=True)
+    raw_log = models.TextField(blank=True, null=True)

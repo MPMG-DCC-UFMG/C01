@@ -8,9 +8,10 @@ from kafka import KafkaConsumer
 
 from crawler_manager import settings
 
+
 class SpiderManagerListener:
     def __init__(self) -> None:
-        self.__consumer = KafkaConsumer(settings.NOTIFICATIONS_TOPIC, 
+        self.__consumer = KafkaConsumer(settings.NOTIFICATIONS_TOPIC,
                                         bootstrap_servers=settings.KAFKA_HOSTS,
                                         value_deserializer=lambda m: json.loads(m.decode('utf-8')))
 
@@ -31,7 +32,7 @@ class SpiderManagerListener:
             if crawler_id not in self.__spiders_running:
                 return
 
-            self.__spiders_running[crawler_id].remove(spider_manager_id) 
+            self.__spiders_running[crawler_id].remove(spider_manager_id)
 
             if len(self.__spiders_running[crawler_id]) == 0:
                 self.__notify_stopped_spiders(crawler_id)
@@ -45,18 +46,18 @@ class SpiderManagerListener:
         for message in self.__consumer:
             notification = message.value
             self.__parse_notification(notification)
-        
+
     def __notify_stopped_spiders(self, crawler_id: str):
         """Notifies Django that there are no more spiders running, with the scraping process finished.
-        
+
         Args:
             crawler_id: Unique crawler identifier.
         """
 
         payload = {'from': 'sm_listener'}
-        requests.get(settings.STOPPED_CRAWLER_SPIDER_ADDRESS.format(
-            crawler_id = crawler_id), params=payload)
-        
+        requests.get(settings.STOPPED_SPIDER_NOTIFICATION_ADDRESS.format(
+            crawler_id=crawler_id), params=payload)
+
     def run(self):
         """Executes the thread with the kafka consumer responsible for receiving notifications of creation/termination of spiders.
         """

@@ -86,7 +86,7 @@ class TestExtractInfo(unittest.TestCase):
 
         expected_result = [
             {
-                "step": "attribution",
+                "step": "atribuicao",
                 "source": 0,
                 "target": "i",
                 "depth": 1,
@@ -105,7 +105,7 @@ class TestExtractInfo(unittest.TestCase):
             expected_result)
         self.assertEqual(atom.for_to_attribution(
             {"step": "para_cada", "depth": 0, "children": []}, 'i', 2), [
-            {"step": "attribution", "depth": 0, "target": "i",
+            {"step": "atribuicao", "depth": 0, "target": "i",
              "source": 2}])
 
     def test_replace_fors_by_attributions(self):

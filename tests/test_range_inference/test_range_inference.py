@@ -94,6 +94,18 @@ class RangeInferenceTest(unittest.TestCase):
                                                          cons_misses=10)
         self.assertEqual(last_entry, 50)
 
+        # Last entry at end of search space
+        entry_probe = RangeInferenceTest.dummy_entry_probe(0, 50)
+        last_entry = RangeInference.filter_numeric_range(0, 50, entry_probe,
+                                                         cons_misses=1)
+        self.assertEqual(last_entry, 50)
+
+        # Last entry at end of search space (with smaller search space)
+        entry_probe = RangeInferenceTest.dummy_entry_probe(1, 2)
+        last_entry = RangeInference.filter_numeric_range(1, 2, entry_probe,
+                                                         cons_misses=1)
+        self.assertEqual(last_entry, 2)
+
         # Interval beginning at 25 and ending at 48
         entry_probe = RangeInferenceTest.dummy_entry_probe(25, 48)
         last_entry = RangeInference.filter_numeric_range(0, 200, entry_probe,

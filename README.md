@@ -1,6 +1,6 @@
 # C01
 
-Desenvolvimento de ferramentas para construção e manutenção de coletores de páginas da Web. (Em desenvolvimento)
+Existem coletores bases, que podem ser personalizados através da interface feita em django. Eles são capazes de coletar:
 
 ## Status atual
 
@@ -60,6 +60,7 @@ Abra um outro terminal e inicie o Kafka:
 cd kafka_2.13-2.4.0/
 bin/kafka-server-start.sh config/server.properties
 ```
+Caso seu sistema não seja Linux, siga as instruções de instalação da Java Runtime para o seu sistema, as quais podem ser encontradas nesse [link](https://www.java.com/en/download/manual.jsp).
 
 Abra outro terminal e inicie o `Redis`:
 
@@ -77,7 +78,6 @@ Instale as dependências:
 python3.7 -m venv venv
 source venv/bin/activate
 python install.py
-
 ```
 
 Coloque-o para rodar:

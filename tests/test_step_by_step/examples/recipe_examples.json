@@ -295,7 +295,7 @@
             "depth": 0,
             "children": [
                 {
-                    "step": "while",
+                    "step": "enquanto",
                     "negation": false,
                     "condition": {
                         "comparison": "True == 1",
