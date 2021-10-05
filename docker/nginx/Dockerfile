@@ -3,7 +3,7 @@ FROM nginx:1.19.10
 
 # Create nginx configuration for our Django app
 RUN rm /etc/nginx/conf.d/default.conf
-COPY docker-web/c01-web.conf /etc/nginx/conf.d/c01-web.conf
+COPY docker/config/c01-web.conf /etc/nginx/conf.d/c01-web.conf
 
 # This section is based on this
 # https://gonzalo123.com/2020/12/14/running-python-django-docker-containers-with-non-root-user/

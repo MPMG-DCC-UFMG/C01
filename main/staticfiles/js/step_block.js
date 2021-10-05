@@ -1,4 +1,3 @@
-
 /**
  * Init a block. A block is an element that allows the user choose a step and then
  * parametrize it.
@@ -21,7 +20,7 @@ function init_block(step_list, depth){
     block.select_box.className = "step-config-select"
     block.select = document.createElement("select")
     block.select.className = "row form-control select-step"
-    block.select.innerHTML = get_this_texts_inside_each_tag(get_step_names(step_list), "<option>")
+    block.select.innerHTML = get_this_texts_inside_each_tag(Object.keys(get_step_names(step_list)), "<option>")
     block.select_box.appendChild(block.select)
 
     //Seting up the lines of the object
@@ -53,29 +52,29 @@ function init_block(step_list, depth){
     block.hide_show_params = hide_show_params
     block.hide_show_params()
 
-
-
     //Setting the estrutural steps builders
     block.turn_to_for_step = turn_to_for_step
-    block.turn_to_pagination_step = turn_to_pagination_step
+    block.turn_to_attribution_step = turn_to_attribution_step
+    block.turn_to_new_tab_step = turn_to_new_tab_step
+    block.turn_to_close_tab_step = turn_to_close_tab_step
 
     //Setting the border functions
     block.onmouseout = function(){
-        hide(this.controler_box); 
+        hide(this.controler_box);
         this.style.borderColor = "";
         this.show_params_button_box.style.height = "0em";
         this.show_params_button.hidden = true
     }
     block.onmouseover = function(){
-        show(this.controler_box); 
-        this.style.borderColor = "rgba(0,143,255,.5)"; 
+        show(this.controler_box);
+        this.style.borderColor = "rgba(0,143,255,.5)";
         this.show_params_button_box.style.height = "2em";
         this.show_params_button.hidden = false
     }
     block.onmouseout()
 
     //seting other block methods
-    block.delete_lines =  delete_lines 
+    block.delete_lines =  delete_lines
 
 
     //setting new parameter button
@@ -89,10 +88,9 @@ function init_block(step_list, depth){
 
     block.step = get_step_info(block.select.value, step_list)
 
-
     //Setting controler functions
-    block.unindent_step = unindent_step   
-    block.indent_step = indent_step    
+    block.unindent_step = unindent_step
+    block.indent_step = indent_step
     block.move_up = move_up
     block.move_down = move_down
     block.delete_step = delete_step
@@ -118,7 +116,7 @@ function init_block(step_list, depth){
  * @param {Dict} step A step in the json steps format
  */
 function init_optional_params_button(step){
-    
+
     block = find_parent_with_attr_worth(this, "block")
 
     block.new_parameter_button_box = document.createElement("DIV")
@@ -131,9 +129,9 @@ function init_optional_params_button(step){
     block.new_parameter_button.appendChild(new_parameter_button_image)
 
     block.new_parameter_button_box.style.borderRadius = "1em"
-    
-    block.new_parameter_button.type="button" 
-    block.new_parameter_button.className="btn btn-primary" 
+
+    block.new_parameter_button.type="button"
+    block.new_parameter_button.className="btn btn-primary"
     block.new_parameter_button.setAttribute("data-toggle", "dropdown" )
     block.new_parameter_button.setAttribute("aria-haspopup", "true" )
     block.new_parameter_button.setAttribute("aria-expanded", "false")
@@ -149,26 +147,30 @@ function init_optional_params_button(step){
     }
 
     optional_params = Object.keys(step.optional_params)
-    dropdown_menu.innerHTML = get_this_texts_inside_each_tag(optional_params, '<a class="dropdown-item" style="cursor:pointer">')
+    dropdown_menu.innerHTML = optional_params.map(
+        function(param){
+            text = param_to_placeholder(param)
+            return `<a class="dropdown-item" style="cursor:pointer" data-param="${param}">${text}<\a>`
+        }
+    )
     for(child of dropdown_menu.children){
         child.onclick = function(){
             block = find_parent_with_attr_worth(this, "block")
-            block.add_param(this.innerText, true)
+            block.add_param(this.dataset.param, true)
             hide(this)
         }
     }
 
     block.new_parameter_button.dropdown_menu = dropdown_menu
-    block.lines[last_line].appendChild(block.new_parameter_button_box) 
+    block.lines[last_line].appendChild(block.new_parameter_button_box)
 }
 
-
 /**
- * This function adds a parameter to a block, that is, 
- * an input element to obtain the value to be setted 
+ * This function adds a parameter to a block, that is,
+ * an input element to obtain the value to be setted
  * for this parameter. This function is a method of block.
  * @param {String} param_name The name of the param to be added.
- * @param {Bool} optional_param A boolean that says whether or 
+ * @param {Bool} optional_param A boolean that says whether or
  *               not the parameter is optional
  */
 function add_param(param_name, optional_param = false){
@@ -183,10 +185,11 @@ function add_param(param_name, optional_param = false){
         }
     }
 
-
     param_element = document.createElement("DIV")
     param_element.className = "col-sm"
-    param_element.innerHTML = `<input placeholder="` + String(param_name) + `" class="row form-control">`
+    param_display = param_to_placeholder(param_name)
+    param_element.innerHTML = `<input placeholder="${param_display}" class="row form-control" data-param="${param_name}">`
+
     if(optional_param){
         remove_button = document.createElement("A")
         remove_img = document.createElement("IMG")
@@ -207,9 +210,9 @@ function add_param(param_name, optional_param = false){
                 }
             }
             line = find_parent_with_attr_worth(this, "line")
-            
+
             this.parentElement.remove()
-            
+
             if(block.lines[block.lines.length-1].row.children.length == 0){
                 block.new_parameter_button_box.remove()
                 block.lines[block.lines.length-2].append(block.new_parameter_button_box)
@@ -242,7 +245,7 @@ function add_param(param_name, optional_param = false){
  * A line is a conteiner that stores the parameters input and sometime,
  * other things.
  * @param {String} param_name The name of the param to be added.
- * @param {Bool} optional_param A boolean that says whether or 
+ * @param {Bool} optional_param A boolean that says whether or
  *               not the parameter is optional
  */
 function add_line(){
@@ -268,7 +271,7 @@ function add_line(){
  * This function is method of block. It deletes a range of lines.
  * @param {Number} m If n wasn't passed, so m is the top limit
  *                 of the range and 0 is the bottom limit. Else
- *                 m is the bottom limit                    
+ *                 m is the bottom limit
  * @param {Number} n The superior limit of the range.
  *
  */
@@ -307,6 +310,28 @@ function refresh_iterable(){
 }
 
 /**
+ * Refreshes the parameter inputs of an source when it is changed.
+ * This function is a method of the atributtion step.
+ */
+function refresh_source(){
+    block = find_parent_with_attr_worth(this, "block")
+    block.source_step = get_step_info(this.value, block.step_list)
+    block.params = []
+
+    block.delete_lines(1, block.lines.length)
+    block.add_line()
+
+    for(param of block.source_step.mandatory_params){
+        block.add_param(param)
+    }
+
+    optional_params = Object.keys(block.source_step.optional_params)
+    if(optional_params.length!=0){
+        block.init_optional_params_button(block.source_step)
+    }
+}
+
+/**
  * Refreshes the parameter inputs of an iterable when it is changed.
  * This function is a method of the select element of the block.
  */
@@ -315,10 +340,14 @@ function refresh_step(){
     block.step = get_step_info(this.value, block.step_list)
     block.params = []
 
-    if(this.value=="para cada"){
+    if(this.value=="Para cada"){
         block.turn_to_for_step()
-    }else if(this.value=="for each page in"){
-        block.turn_to_pagination_step()
+    }else if(this.value=="Atribuição"){
+        block.turn_to_attribution_step()
+    }else if(this.value=="Abrir em nova aba"){
+        block.turn_to_new_tab_step()
+    }else if(this.value=="Fechar aba"){
+        block.turn_to_close_tab_step()
     }else{
         block.delete_lines(block.lines.length)
         block.add_line()
@@ -348,9 +377,9 @@ function turn_to_for_step(){
 
     // defines iterator
     iterator_input_box = document.createElement("DIV")
-    iterator_input_box.className = "col-sm"    
+    iterator_input_box.className = "col-sm"
     iterator_input = document.createElement("INPUT")
-    iterator_input.value = "option"
+    iterator_input.placeholder = "opção"
     iterator_input.className = "form-control row"
     iterator_input_box.appendChild(iterator_input)
     block.iterator_input = iterator_input
@@ -360,15 +389,15 @@ function turn_to_for_step(){
     in_label = document.createElement("P")
     in_label.style.marginTop = "10%"
     in_label.style.textAlign = "center"
-    in_label.innerText = " in"
-    in_label_box.appendChild(in_label)    
+    in_label.innerText = " em"
+    in_label_box.appendChild(in_label)
 
     // defines iterable step
     iterable_select_box = document.createElement("DIV")
     iterable_select_box.className = "step-config-select"
     iterable_select = document.createElement("select")
     iterable_select.className = "form-control select-step"
-    iterable_select.innerHTML = get_this_texts_inside_each_tag(get_step_names(block.step_list), "<option>")
+    iterable_select.innerHTML = get_this_texts_inside_each_tag(Object.keys(get_step_names(block.step_list)), "<option>")
     iterable_select_box.appendChild(iterable_select)
     block.iterable_select = iterable_select
 
@@ -382,16 +411,76 @@ function turn_to_for_step(){
 }
 
 /**
- * Sets the block to the pagination step.
- * This function is a method of the block.
+ * Sets the block to the attribution step.
+ * This function is a method of the attribution step.
  */
-function turn_to_pagination_step(){
+ function turn_to_attribution_step(){
     block = find_parent_with_attr_worth(this, "block")
     block.delete_lines(block.lines.length)
     block.add_line()
-    block.add_param("buttons ambiguous xpath")
-    block.step.optional_params = {"next button index":-1}
-    block.init_optional_params_button()
+
+    // defines target
+    target_input_box = document.createElement("DIV")
+    target_input_box.className = "col-sm"
+    target_input = document.createElement("INPUT")
+    target_input.value = "opção"
+    target_input.className = "form-control row"
+    target_input_box.appendChild(target_input)
+    block.target_input = target_input
+
+    in_label_box = document.createElement("DIV")
+    in_label_box.style.width = "3em"
+    in_label = document.createElement("P")
+    in_label.style.marginTop = "10%"
+    in_label.style.textAlign = "center"
+    in_label.innerText = " ="
+    in_label_box.appendChild(in_label)
+
+    // defines source step
+    source_select_box = document.createElement("DIV")
+    source_select_box.className = "step-config-select"
+    source_select = document.createElement("select")
+    source_select.className = "form-control select-step"
+    source_select.innerHTML = get_this_texts_inside_each_tag(Object.keys(get_step_names(block.step_list)), "<option>")
+    source_select_box.appendChild(source_select)
+    block.source_select = source_select
+
+    block.lines[0].row.appendChild(target_input_box)
+    block.lines[0].row.appendChild(in_label_box)
+    block.lines[0].row.appendChild(source_select_box)
+    block.lines[0].row.full = true
+
+    source_select.onchange = refresh_source
+    source_select.onchange()
+}
+
+/**
+ * Sets the block to the open in new page step.
+ * This function is a method of the block.
+ */
+function turn_to_new_tab_step(){
+    block = find_parent_with_attr_worth(this, "block")
+    block.delete_lines(block.lines.length)
+    block.add_line()
+
+    // defines link xpath
+    xpath_input_box = document.createElement("DIV")
+    xpath_input_box.className = "col-sm"
+    xpath_input = document.createElement("INPUT")
+    xpath_input.placeHolder = "link xpath"
+    xpath_input.className = "form-control row"
+    xpath_input_box.appendChild(xpath_input)
+    block.xpath_input = xpath_input
+
+    block.lines[0].row.appendChild(xpath_input_box)
+    block.lines[0].row.full = true
+}
+
+function turn_to_close_tab_step(){
+    block = find_parent_with_attr_worth(this, "block")
+    block.delete_lines(block.lines.length)
+    block.add_line()
+    block.lines[0].row.full = true
 }
 
 

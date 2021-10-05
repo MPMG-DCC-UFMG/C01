@@ -33,10 +33,6 @@ class LogWriter():
         consumer = KafkaConsumer(settings.LOGGING_TOPIC, **params)
         try:
             for message in consumer:
-                print('*' * 100)
-                print(message)
-                print('*' * 100)
-
                 log = {}
                 log['iid'] = message.value['instance_id']
                 log['raw'] = json.dumps(message.value)

@@ -30,7 +30,7 @@ COPY *.py ./
 COPY src src
 COPY main main
 COPY interface interface
-COPY crawlers crawlers
+COPY crawler_manager crawler_manager
 
 RUN mkdir logs
 
@@ -48,14 +48,13 @@ RUN chown django:django /data
 RUN pip install gunicorn
 
 # Copy the gunicorn configuration file
-COPY docker-web/gunicorn.conf.py ./gunicorn.conf.py
+COPY docker/config/gunicorn.conf.py ./gunicorn.conf.py
 
-# Copy the kafka interface files
-COPY broker_interface broker_interface
-COPY docker-web/django_run.sh ./django_run.sh
+COPY docker/scripts/django_run.sh ./django_run.sh
 RUN chmod +x django_run.sh
 
 RUN chown -R django:django $APP_HOME
 USER django
 
+# Collect static files
 RUN python3 manage.py collectstatic --no-input --clear
