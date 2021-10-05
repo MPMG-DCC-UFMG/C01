@@ -3,6 +3,8 @@
 import ujson
 from kafka import KafkaProducer
 
+import settings
+
 
 class KafkaLogger:
     def __init__(self, instance_id: str, name: str, log_level: str):
@@ -10,16 +12,13 @@ class KafkaLogger:
         self.__name = name
         self.__log_level = log_level
 
-        with open('base_config.json') as f:
-            config = ujson.loads(f.read())
+        self.__kafka_topic = settings.LOGGING_TOPIC
+        self.__producer = KafkaProducer(bootstrap_servers=settings.KAFKA_HOSTS,
+                                        value_serializer=lambda v: ujson.dumps(v).encode('utf-8'))
 
-            self.__kafka_topic = config['LOGGING_TOPIC']
-            self.__producer = KafkaProducer(bootstrap_servers=config['KAFKA_HOSTS'],
-                                            value_serializer=lambda v: ujson.dumps(v).encode('utf-8'))
-        
     def write(self, message: str):
         """Write the message passed as a parameter to a kafka topic.
-        
+
         Args:
             - message: Log message to be sent to the topic 
         """
