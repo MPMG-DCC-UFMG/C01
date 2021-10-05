@@ -42,6 +42,7 @@ SCHEDULER = "crawling.distributed_scheduler.DistributedScheduler"
 ITEM_PIPELINES = {'crawling.pipelines.KafkaPipeline': 100, 'crawling.pipelines.LoggingBeforePipeline': 1}
 SPIDER_MIDDLEWARES = {'scrapy.spidermiddlewares.depth.DepthMiddleware': None,
     'crawling.meta_passthrough_middleware.MetaPassthroughMiddleware': 100, 'crawling.redis_stats_middleware.RedisStatsMiddleware': 101}
+DOWNLOADER_MIDDLEWARES = {'scrapy_puppeteer.PuppeteerMiddleware': 800}
 DOWNLOADER_MIDDLEWARES = {'scrapy.downloadermiddlewares.retry.RetryMiddleware': None, 'crawling.redis_retry_middleware.RedisRetryMiddleware': 510,
     'crawling.log_retry_middleware.LogRetryMiddleware': 520, 'scrapy.downloadermiddlewares.cookies.CookiesMiddleware': None, 'crawling.custom_cookies.CustomCookiesMiddleware': 700}
 LOG_ENABLED = True
@@ -51,6 +52,15 @@ RETRY_TIMES = 3
 DOWNLOAD_TIMEOUT = 30
 DNSCACHE_ENABLED = True
 USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36"
+LOGGING_TOPIC = "crawler_ufmg_logs"
+COMMANDS_TOPIC = "crawler_ufmg_commands"
+NOTIFICATIONS_TOPIC = "crawler_ufmg_notifications"
+DYNAMIC_PROCESSING = True
+DYNAMIC_PROCESSING_STEPS = {'step': 'root', 'depth': 0, 'children': [
+    {'step': 'espere', 'depth': 1, 'arguments': {'segundos': '60'}}, {'step': 'salva_pagina', 'depth': 1, 'arguments': {}}]}
+DATA_PATH = "/home/elves/WorkSpaces/MPMG/coletas/727/teofilo_otoni_transparencia"
+CRAWLER_ID = "21"
+INSTANCE_ID = "163189912959440"
 ZOOKEEPER_ASSIGN_PATH = "/scrapy-cluster/crawler/"
 ZOOKEEPER_ID = "all"
 ZOOKEEPER_HOSTS = ['localhost:2181']

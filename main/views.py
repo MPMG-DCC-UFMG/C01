@@ -35,8 +35,9 @@ from crawler_manager.injector_tools import create_probing_object,\
 
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
+from requests.exceptions import MissingSchema
 
-from formparser.html import HTMLParser
+from formparser.html import HTMLExtractor, HTMLParser
 
 # Log the information to the file logger
 logger = logging.getLogger('file')
@@ -71,6 +72,7 @@ def process_run_crawl(crawler_id):
 
     return instance
 
+
 def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
     instance = CrawlRequest.objects.filter(
         id=crawler_id).get().running_instance
@@ -82,7 +84,7 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
 
     if from_sm_listener and not instance.download_files_finished():
         instance.page_crawling_finished = True
-        instance.save() 
+        instance.save()
 
         return
 
@@ -107,6 +109,7 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
         config["data_path"], str(instance_id), instance_info)
 
     crawler_manager.stop_crawler(crawler_id)
+
 
 def getAllData():
     return CrawlRequest.objects.all().order_by('-creation_date')
@@ -282,13 +285,15 @@ def stop_crawl(request, crawler_id):
     process_stop_crawl(crawler_id, from_sm_listener)
     return redirect(detail_crawler, id=crawler_id)
 
+
 def run_crawl(request, crawler_id):
     process_run_crawl(crawler_id)
     return redirect(detail_crawler, id=crawler_id)
 
+
 def tail_log_file(request, instance_id):
     instance = CrawlerInstance.objects.get(instance_id=instance_id)
-    
+
     files_found = instance.number_files_found
     download_file_success = instance.number_files_success_download
     download_file_error = instance.number_files_error_download
@@ -310,10 +315,10 @@ def tail_log_file(request, instance_id):
     return JsonResponse({
         "files_found": files_found,
         "files_success": download_file_success,
-        "files_error": download_file_error, 
+        "files_error": download_file_error,
         "pages_found": pages_found,
         "pages_success": download_page_success,
-        "pages_error": download_page_error, 
+        "pages_error": download_page_error,
         "out": log_text,
         "err": err_text,
         "time": str(datetime.fromtimestamp(time.time())),
@@ -334,27 +339,29 @@ def raw_log(request, instance_id):
         resp['Refresh'] = 5
     return resp
 
+
 def files_found(request, instance_id, num_files):
     try:
-        instance = CrawlerInstance.objects.get(instance_id = instance_id) 
+        instance = CrawlerInstance.objects.get(instance_id=instance_id)
 
         instance.number_files_found += num_files
         instance.save()
-        
+
         return JsonResponse({}, status=status.HTTP_200_OK)
 
     except Exception as e:
         return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
 
+
 def success_download_file(request, instance_id):
     try:
-        instance = CrawlerInstance.objects.get(instance_id = instance_id) 
+        instance = CrawlerInstance.objects.get(instance_id=instance_id)
 
         instance.number_files_success_download += 1
         instance.save()
 
         if instance.page_crawling_finished and instance.download_files_finished():
-            process_stop_crawl(instance.crawler_id.id) 
+            process_stop_crawl(instance.crawler_id.id)
 
         return JsonResponse({}, status=status.HTTP_200_OK)
 
@@ -364,26 +371,27 @@ def success_download_file(request, instance_id):
 
 def error_download_file(request, instance_id):
     try:
-        instance = CrawlerInstance.objects.get(instance_id = instance_id) 
+        instance = CrawlerInstance.objects.get(instance_id=instance_id)
 
         instance.number_files_error_download += 1
         instance.save()
 
         if instance.page_crawling_finished and instance.download_files_finished():
-            process_stop_crawl(instance.crawler_id.id) 
+            process_stop_crawl(instance.crawler_id.id)
 
         return JsonResponse({}, status=status.HTTP_200_OK)
 
     except:
         return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
 
+
 def pages_found(request, instance_id, num_pages):
     try:
-        instance = CrawlerInstance.objects.get(instance_id = instance_id) 
+        instance = CrawlerInstance.objects.get(instance_id=instance_id)
 
         instance.number_pages_found += num_pages
         instance.save()
-        
+
         return JsonResponse({}, status=status.HTTP_200_OK)
 
     except Exception as e:
@@ -392,7 +400,7 @@ def pages_found(request, instance_id, num_pages):
 
 def success_download_page(request, instance_id):
     try:
-        instance = CrawlerInstance.objects.get(instance_id = instance_id) 
+        instance = CrawlerInstance.objects.get(instance_id=instance_id)
 
         instance.number_pages_success_download += 1
         instance.save()
@@ -405,7 +413,7 @@ def success_download_page(request, instance_id):
 
 def error_download_page(request, instance_id):
     try:
-        instance = CrawlerInstance.objects.get(instance_id = instance_id) 
+        instance = CrawlerInstance.objects.get(instance_id=instance_id)
 
         instance.number_pages_error_download += 1
         instance.save()
@@ -414,10 +422,11 @@ def error_download_page(request, instance_id):
 
     except:
         return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
- 
+
 
 def downloads(request):
     return render(request, "main/downloads.html")
+
 
 def load_form_fields(request):
     """
@@ -444,8 +453,15 @@ def load_form_fields(request):
 
     probe = create_probing_object(base_url, req_type, responses)
 
-    # Instantiate the parameter injectors for the URL
-    injectors = create_parameter_generators(probe, params, False)
+    try:
+        # Instantiate the parameter injectors for the URL
+        injectors = create_parameter_generators(probe, params, False)
+    except:
+        # Invalid templated URL configuration
+        return JsonResponse({
+            'error': 'Erro ao gerar URLs parametrizadas. Verifique se a ' +
+                     'injeção foi configurada corretamente.'
+        }, status=404)
 
     # Generate the requests
     generator = itertools.product(*injectors)
@@ -457,43 +473,87 @@ def load_form_fields(request):
             values = next(generator)
         except:
             # No more values to generate
-            return JsonResponse({}, status=404)
+            return JsonResponse({
+                'error': 'Nenhuma página válida encontrada com os valores ' +
+                         'gerados.'
+            }, status=404)
 
-        is_valid = probe.check_entry(url_entries=values)
+        try:
+            is_valid = probe.check_entry(url_entries=values)
+        except MissingSchema as e:
+            # URL schema error
+            return JsonResponse({
+                'error': 'URL inválida, o protocolo foi especificado? (ex: ' +
+                         'http://, https://)'
+            }, status=404)
 
         if is_valid:
             curr_url = base_url.format(*values)
             parser = None
 
             try:
-                parser = HTMLParser(url=curr_url)
-            except:
-                # Failed to find a form in a valid page
-                return JsonResponse({}, status=404)
-
-            if parser is not None:
-                fields = parser.list_fields()
-
-                def field_names(field):
-                    return parser.field_attributes(field).get('name', '')
-
-                names = list(map(field_names, fields))
-
-                method = parser.form.get('method', 'GET')
-                if method == "":
-                    method = 'GET'
-
-                method = method.upper()
-
+                extractor = HTMLExtractor(url=curr_url)
+            except MissingSchema as e:
+                # URL schema error
                 return JsonResponse({
-                    'method': method,
-                    'length': parser.number_of_fields(),
-                    'names': names,
-                    'types': parser.list_input_types(),
-                    'labels': parser.list_field_labels()
-                })
+                    'error': 'URL inválida, o protocolo foi especificado? ' +
+                             '(ex: http://, https://)'
+                }, status=404)
 
-    return JsonResponse({}, status=404)
+            if not extractor.html_response.ok:
+                # Error during form extractor request
+                status_code = extractor.html_response.status_code
+                return JsonResponse({
+                    'error': 'Erro ao acessar a página (HTTP ' +
+                    str(status_code) + '). Verifique se a URL inicial ' +
+                    'está correta e se a página de interesse está ' +
+                    'funcionando.'
+                }, status=404)
+
+            forms = extractor.get_forms()
+
+            if len(forms) == 0:
+                # Failed to find a form in a valid page
+                return JsonResponse({
+                    'error': 'Nenhum formulário encontrado na página.'
+                }, status=404)
+
+            result = []
+            for form in forms:
+                current_data = {}
+                parser = HTMLParser(form=form)
+
+                if parser is not None:
+                    fields = parser.list_fields()
+
+                    def field_names(field):
+                        return parser.field_attributes(field).get('name', '')
+
+                    names = list(map(field_names, fields))
+
+                    method = parser.form.get('method', 'GET')
+                    if method == "":
+                        method = 'GET'
+
+                    method = method.upper()
+
+                    # Filter leading or trailing whitespace
+                    labels = [x.strip() for x in parser.list_field_labels()]
+
+                    result.append({
+                        'method': method,
+                        'length': parser.number_of_fields(),
+                        'names': names,
+                        'types': parser.list_input_types(),
+                        'labels': labels
+                    })
+
+            return JsonResponse({'forms': result})
+
+    return JsonResponse({
+        'error': f'Nenhuma página válida encontrada com os {MAX_TRIES} ' +
+        'primeiros valores gerados.'
+    }, status=404)
 
 
 def export_config(request, instance_id):
