@@ -1,8 +1,11 @@
 FROM python:3.6
 
 # os setup
-RUN apt-get update && apt-get upgrade -y && apt-get autoremove && apt-get install ffmpeg libsm6 libxext6 -y && apt-get autoclean && pip install -U pip
-RUN apt-get install ffmpeg libsm6 libxext6  -y
+RUN apt-get update && apt-get upgrade -y && apt-get autoremove \
+    && apt-get install ffmpeg libsm6 libnss3 libxss1 libasound2 \
+    libatk-bridge2.0-0 libgtk-3-0 libxext6 -y \ 
+    && apt-get autoclean && pip install -U pip
+
 RUN mkdir -p /usr/src/app
 
 # copy dependencies
