@@ -208,7 +208,7 @@ class PageSpider(BaseSpider):
                 status=response.status,
                 headers=response.headers,
                 body=page,
-                encoding='utf-8',
+                encoding=response.encoding,
                 request=response.request
             )
 
