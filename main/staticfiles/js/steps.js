@@ -116,7 +116,7 @@ function init_step_board(step_list){
         
         steps_creation_interface = find_parent_with_attr_worth(this, "steps_creation_interface")
         step_board = steps_creation_interface.step_board
-        step_block = init_block(context_step_list, step_board.get_last_depth())
+        step_block = init_block(context_step_list, depth)
           
         if(index != -1){
             step_board.insertBefore(step_block, step_board.children[index]);
