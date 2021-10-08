@@ -31,34 +31,7 @@ def imprime(texto):
     print(texto)
     return
 
-
-async def fill_iframe_content(pagina):
-    # based on: https://gist.github.com/jgontrum/5a9060e40c7fc04c2c3bae3f1a9b28ad
-
-    iframes = await pagina.querySelectorAll('iframe')
-    for iframe in iframes:
-        frame = await iframe.contentFrame()
-
-        # Checks if the element is really an iframe
-        if not frame:
-            continue
-
-        # Extract the content inside the iframe
-        content = await frame.evaluate('''
-            () => {
-                const el = document.querySelector("*");
-                return el.innerHTML;
-            }
-        ''')
-
-        # Inserts iframe content as base page content
-        await pagina.evaluate('''
-            (iframe, content) => {
-                iframe.innerHTML = content;
-            }
-        ''', iframe, content)
-
-
+  
 @step("Repetir")
 def repete(vezes):
     return [i for i in range(vezes)]
@@ -75,6 +48,33 @@ def gera_nome_arquivo():
 
 async def espere_pagina(pagina):
     await pagina.waitForSelector("html")
+
+
+async def fill_iframe_content(page):
+    # based on: https://gist.github.com/jgontrum/5a9060e40c7fc04c2c3bae3f1a9b28ad
+
+    iframes = await page.querySelectorAll('iframe')
+    for iframe in iframes:
+        frame = await iframe.contentFrame()
+
+        # Checks if the element is really an iframe
+        if not frame:
+            continue
+
+        # Extract the content inside the iframe
+        content = await frame.evaluate('''
+            () => {
+                const el = document.querySelector("*");
+                return el.innerHTML;
+            }
+        ''')
+
+        # Inserts iframe content as base page content
+        await page.evaluate('''
+            (iframe, content) => {
+                iframe.innerHTML = content;
+            }
+        ''', iframe, content)
 
 
 @step("Clicar")
