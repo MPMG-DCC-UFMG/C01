@@ -54,7 +54,6 @@ function init_block(step_list, depth){
 
     //Setting the estrutural steps builders
     block.turn_to_for_step = turn_to_for_step
-    // block.turn_to_if_step = turn_to_if_step
     block.turn_to_attribution_step = turn_to_attribution_step
     block.turn_to_new_tab_step = turn_to_new_tab_step
     block.turn_to_close_tab_step = turn_to_close_tab_step
@@ -343,11 +342,7 @@ function refresh_step(){
 
     if(this.value=="Para cada"){
         block.turn_to_for_step()
-    }
-    // else if(this.value=="Checar se elemento existe na página"){
-    //     block.turn_to_if_step()
-    // }
-    else if(this.value=="Atribuição"){
+    }else if(this.value=="Atribuição"){
         block.turn_to_attribution_step()
     }else if(this.value=="Abrir em nova aba"){
         block.turn_to_new_tab_step()
@@ -414,28 +409,6 @@ function turn_to_for_step(){
     iterable_select.onchange = refresh_iterable
     iterable_select.onchange()
 }
-
-/**
- * Sets the block to the if step.
- * This function is a method of the block.
- */
-// function turn_to_if_step(){
-//     block = find_parent_with_attr_worth(this, "block")
-//     block.delete_lines(block.lines.length)
-//     block.add_line()
-//
-//     // defines xpath
-//     condition_box = document.createElement("DIV")
-//     condition_box.className = "col-sm"
-//     condition = document.createElement("INPUT")
-//     condition.placeholder = "xpath do elemento"
-//     condition.className = "form-control row"
-//     condition_box.appendChild(condition)
-//     block.condition = condition
-//
-//     block.lines[0].row.appendChild(condition_box)
-//     block.lines[0].row.full = true
-// }
 
 /**
  * Sets the block to the attribution step.

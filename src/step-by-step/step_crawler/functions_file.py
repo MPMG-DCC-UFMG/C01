@@ -209,11 +209,8 @@ async def elemento_existe_na_pagina(pagina, xpath):
 
         :param pagina : a pyppeteer page
         :param xpath : elements xpaths
-        :param inverse : if should return the inverse
         :returns bool: True or False
     """
-    # if inverse:
-    #     return not bool(await pagina.xpath(xpath))
     return bool(await pagina.xpath(xpath))
 
 

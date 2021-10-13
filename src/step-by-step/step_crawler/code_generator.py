@@ -23,59 +23,20 @@ def generate_para_cada(child, module):
     return code
 
 def generate_elemento_existe_na_pagina(child, module):
-    f = open("/home/caio/Downloads/teste_se_elemento.txt", "w+")
-    f.write("child: "+str(child))
-    f.write("module: "+str(module))
-    f.close()
-
     code = ''
     code += child['depth'] * '    ' + 'if '
-    # if child['negation']:
-    #     code += 'not '
     if child['arguments'] !='':
         call = child
         function = getattr(module, call['step'])
         is_coroutine = inspect.iscoroutinefunction(function)
-        # code += 'elemento_existe_na_pagina()'
         code += generate_call(call['step'], call['arguments'], is_coroutine)
         code += ':\n'
-    # elif 'comparison' in child['condition']:
-    #     code += child['condition']['comparison'] + ':\n'
     else:
         raise TypeError('This condition is in the wrong format')
 
     code += generate_body(child, module)
 
-    f = open("/home/caio/Downloads/teste_se_elemento.txt", "a")
-    f.write("code: "+str(code))
-    f.close()
-
     return code
-
-# def generate_elemento_existe_na_pagina(child, module):
-#     f = open("/home/caio/Downloads/teste_se_elemento.txt", "w+")
-#     f.write("child: "+str(child))
-#     f.write("module: "+str(module))
-#     f.close()
-#     code = ''
-#     code += child['depth'] * '    ' + 'if '
-#     if child['negation']:
-#         code += 'not '
-#     if 'call' in child['condition']:
-#         call = child['condition']['call']
-#         function = getattr(module, call['step'])
-#         is_coroutine = inspect.iscoroutinefunction(function)
-#         code += generate_call(call['step'], call['arguments'], is_coroutine)
-#         code += ':\n'
-#     elif 'comparison' in child['condition']:
-#         code += child['condition']['comparison'] + ':\n'
-#     else:
-#         raise TypeError('This condition is in the wrong format')
-#
-#     code += generate_body(child, module)
-#
-#     return code
-
 
 def generate_enquanto(child, module):
     code = ''
@@ -223,10 +184,6 @@ def generate_code(recipe, module, scrshot_path):
     """
     Generates the entire code.
     """
-    f = open("/home/caio/Downloads/teste_se_main.txt", "w+")
-    f.write("recipe: "+str(recipe))
-    f.write("module: "+str(module))
-    f.close()
     code = generate_head(module, scrshot_path)
     code += generate_body(recipe, module)
     code += "    return pages"
