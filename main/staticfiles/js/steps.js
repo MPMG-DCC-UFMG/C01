@@ -24,6 +24,8 @@ function load_steps_interface(interface_root_element_id, output_element_id, json
         step_list = step_list.concat(JSON.parse('{"name": "abrir_em_nova_aba", "name_display" : "Abrir em nova aba", "mandatory_params":[], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name": "fechar_aba", "name_display" : "Fechar aba", "mandatory_params":[], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name":"screenshot", "name_display" : "Screenshot", "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "elemento_existe_na_pagina", "name_display": "AChecar se elemento existe na p\u00e1gina", "mandatory_params": ["xpath"], "optional_params": {}}'))
+
         init_steps_creation_interface(interface_root_element, output_element, step_list)
       }
     };
@@ -128,7 +130,7 @@ function get_last_depth(){
         step_board = find_parent_with_attr_worth(this, "step_board")
         if(step_board.children.length>0){
             last_step = step_board.children[step_board.children.length-1]
-            if(last_step.step.name == "para_cada"){
+            if(last_step.step.name == "para_cada" || last_step.step.name == "elemento_existe_na_pagina" ){
                 return last_step.depth + 1
             }else{
                 return last_step.depth
@@ -165,6 +167,8 @@ function load_steps(json_steps, step_list){
 
     let name_dict = get_step_names(step_list)
     let args;
+    console.log("name_dict: %o",name_dict);
+    console.log("json_steps: %o",json_steps);
     if(json_steps.step == "para_cada"){
         block.iterator_input.value = json_steps.iterator
         let iterable = Object.keys(name_dict).find(key => name_dict[key] === json_steps.iterable.call.step)
@@ -187,6 +191,12 @@ function load_steps(json_steps, step_list){
         block.xpath_input.value = json_steps.link_xpath
         args = {}
 
+    }else if(json_steps.step == "elemento_existe_na_pagina"){
+      // block.condition.value = json_steps.condition
+      args = json_steps.arguments
+      for(let child of json_steps.children){
+          this.load_steps(child, step_list)
+      }
     }else{
     // se @step
         args = json_steps.arguments
@@ -226,16 +236,25 @@ function build_json(step_board, output_element){
         depth: 0,
         children: []
     }
-    
+
     stack = [root_step]
+    console.log("stepboard: %o",step_board);
     for(step_element of step_board.children){
         indent = step_element.depth - stack[stack.length-1].depth;
 
+        console.log("depth: %o", step_element.depth);
+        console.log("indent: "+ indent);
+
         step_dict = get_step_json_format(step_element);
 
+        console.log("step_dict: %o", step_dict);
+
         if(indent == 1){
+            console.log("this step_dict: %o", step_dict);
+            console.log("stack lenght: %o", stack.length-1);
             stack[stack.length-1].children.push(step_dict)
             stack.push(step_dict)
+
 
         }else if(indent == 0){
             stack.pop()
@@ -253,8 +272,11 @@ function build_json(step_board, output_element){
         }else if(indent>1){
             console.log("Indentation ERROR")
         }
+        console.log("stack: %o", stack);
     }
+    console.log("root_step: %o", root_step);
     output_element.value = JSON.stringify(root_step)
+
 
 }
 
@@ -277,6 +299,10 @@ function get_step_json_format(block){
             step: steps_names[block.iterable_select.value],
             arguments: load_param_dict(block)
         }
+    }else if(param_name == "elemento_existe_na_pagina"){
+        step_dict.children = []
+        // step_dict.condition = block.condition.value
+        step_dict.arguments = load_param_dict(block)
     }else if(param_name == "atribuicao"){
         step_dict.target = block.target_input.value
         step_dict.source = {call:{}}

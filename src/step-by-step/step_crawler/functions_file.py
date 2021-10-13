@@ -30,7 +30,7 @@ def imprime(texto):
     print(texto)
     return
 
-  
+
 @step("Repetir")
 def repete(vezes):
     return [i for i in range(vezes)]
@@ -208,8 +208,12 @@ async def elemento_existe_na_pagina(pagina, xpath):
     """This step returns True if there's any element given a xpath, otherwise, returns False
 
         :param pagina : a pyppeteer page
+        :param xpath : elements xpaths
+        :param inverse : if should return the inverse
         :returns bool: True or False
     """
+    # if inverse:
+    #     return not bool(await pagina.xpath(xpath))
     return bool(await pagina.xpath(xpath))
 
 
