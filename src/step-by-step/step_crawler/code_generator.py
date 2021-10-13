@@ -22,10 +22,11 @@ def generate_para_cada(child, module):
     code += generate_body(child, module)
     return code
 
+
 def generate_elemento_existe_na_pagina(child, module):
     code = ''
     code += child['depth'] * '    ' + 'if '
-    if child['arguments'] !='':
+    if child['arguments'] != '':
         call = child
         function = getattr(module, call['step'])
         is_coroutine = inspect.iscoroutinefunction(function)
@@ -37,6 +38,7 @@ def generate_elemento_existe_na_pagina(child, module):
     code += generate_body(child, module)
 
     return code
+
 
 def generate_enquanto(child, module):
     code = ''
