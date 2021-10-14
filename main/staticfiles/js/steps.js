@@ -24,6 +24,7 @@ function load_steps_interface(interface_root_element_id, output_element_id, json
         step_list = step_list.concat(JSON.parse('{"name": "abrir_em_nova_aba", "name_display" : "Abrir em nova aba", "mandatory_params":[], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name": "fechar_aba", "name_display" : "Fechar aba", "mandatory_params":[], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name":"screenshot", "name_display" : "Screenshot", "mandatory_params":[], "optional_params":{}}'))
+
         init_steps_creation_interface(interface_root_element, output_element, step_list)
       }
     };
@@ -128,7 +129,7 @@ function get_last_depth(){
         step_board = find_parent_with_attr_worth(this, "step_board")
         if(step_board.children.length>0){
             last_step = step_board.children[step_board.children.length-1]
-            if(last_step.step.name == "para_cada"){
+            if(last_step.step.name == "para_cada" || last_step.step.name == "elemento_existe_na_pagina" ){
                 return last_step.depth + 1
             }else{
                 return last_step.depth
@@ -187,6 +188,11 @@ function load_steps(json_steps, step_list){
         block.xpath_input.value = json_steps.link_xpath
         args = {}
 
+    }else if(json_steps.step == "elemento_existe_na_pagina"){
+      args = json_steps.arguments
+      for(let child of json_steps.children){
+          this.load_steps(child, step_list)
+      }
     }else{
     // se @step
         args = json_steps.arguments
@@ -226,7 +232,7 @@ function build_json(step_board, output_element){
         depth: 0,
         children: []
     }
-    
+
     stack = [root_step]
     for(step_element of step_board.children){
         indent = step_element.depth - stack[stack.length-1].depth;
@@ -236,6 +242,7 @@ function build_json(step_board, output_element){
         if(indent == 1){
             stack[stack.length-1].children.push(step_dict)
             stack.push(step_dict)
+
 
         }else if(indent == 0){
             stack.pop()
@@ -255,6 +262,7 @@ function build_json(step_board, output_element){
         }
     }
     output_element.value = JSON.stringify(root_step)
+
 
 }
 
@@ -277,6 +285,9 @@ function get_step_json_format(block){
             step: steps_names[block.iterable_select.value],
             arguments: load_param_dict(block)
         }
+    }else if(param_name == "elemento_existe_na_pagina"){
+        step_dict.children = []
+        step_dict.arguments = load_param_dict(block)
     }else if(param_name == "atribuicao"){
         step_dict.target = block.target_input.value
         step_dict.source = {call:{}}

@@ -30,7 +30,7 @@ def imprime(texto):
     print(texto)
     return
 
-  
+
 @step("Repetir")
 def repete(vezes):
     return [i for i in range(vezes)]
@@ -146,6 +146,7 @@ async def localiza_elementos(pagina, xpath, numero_xpaths=None):
     numero_xpaths = len(xpath_list) if not numero_xpaths else numero_xpaths
     return xpath_list[:numero_xpaths]
 
+
 @step("Voltar")
 async def retorna_pagina(pagina):
     await pagina.goBack()
@@ -209,6 +210,7 @@ async def elemento_existe_na_pagina(pagina, xpath):
     """This step returns True if there's any element given a xpath, otherwise, returns False
 
         :param pagina : a pyppeteer page
+        :param xpath : elements xpaths
         :returns bool: True or False
     """
     return bool(await pagina.xpath(xpath))
