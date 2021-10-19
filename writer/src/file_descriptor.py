@@ -1,5 +1,6 @@
 import ujson
 import threading
+from datetime import datetime
 
 from kafka import KafkaProducer, KafkaConsumer
 
@@ -26,6 +27,7 @@ class FileDescriptor:
             del description
 
     def run(self):
+        print(f'[{datetime.now()}] Starting File Descriptor consumer')
         thread = threading.Thread(target=self.__run_consumer, daemon=True)
         thread.start()
 

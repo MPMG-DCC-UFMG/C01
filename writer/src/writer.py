@@ -19,9 +19,9 @@ class Writer:
     def __init__(self) -> None:
         self.__crawls_running = dict()
         self.__crawled_data_consumer = KafkaConsumer(settings.CRAWLED_TOPIC,
-                            bootstrap_servers=settings.KAFKA_HOSTS,
+                            bootstrap_servers=settings.KAFKA_HOSTS)
                             # auto_offset_reset='earliest',
-                            value_deserializer=lambda m: ujson.loads(m.decode('utf-8')))
+                            # value_deserializer=lambda m: ujson.loads(m.decode('utf-8')))
 
         self.__command_consumer = KafkaConsumer(settings.WRITER_TOPIC,
                             bootstrap_servers=settings.KAFKA_HOSTS,
@@ -73,7 +73,14 @@ class Writer:
             comments=True, page_structure=False
         )
 
-        body = cleaner.clean_html(crawled_data['body'])
+        try:
+            body = cleaner.clean_html(crawled_data['body'])
+        
+        except ValueError as e:
+            print('-[ERROR]-' * 10)
+            print(str(e)) 
+            print('-[ERROR]-' * 10) 
+            body = crawled_data['body']
 
         key = crawled_data['url'] + body
         hsh = hashlib.md5(key.encode()).hexdigest()
@@ -109,7 +116,14 @@ class Writer:
     def __run_crawled_consumer(self):
         print('Crawled consumer started...')
         for message in self.__crawled_data_consumer:
-            crawled_data = message.value
+            try:
+                crawled_data = ujson.loads(message.value.decode('utf-8'))
+            except ValueError as e:
+                print('-|-ERROR-|-' * 10)
+                print(str(e))
+                print('-|-ERROR-|-' * 10)
+                continue
+            
             self.__process_crawled_data(crawled_data)
 
     def __process_command(self, command):
@@ -117,17 +131,20 @@ class Writer:
             self.__register_crawl(command['register'])
 
     def run(self):
-        thread = threading.Thread(target=self.__run_crawled_consumer, daemon=True)  
-        thread.start()
+        try:
+            thread = threading.Thread(target=self.__run_crawled_consumer, daemon=True)  
+            thread.start()
 
-        self.__file_descriptor.run()
+            self.__file_descriptor.run()
 
-        print('Waiting for commands...')
-        for message in self.__command_consumer:
-            print('New command received')
+            print('Waiting for commands...')
+            for message in self.__command_consumer:
+                print('New command received')
 
-            command = message.value
-            self.__process_command(command)
+                command = message.value
+                self.__process_command(command)
+        except:
+            print('][|-ERRO-|][' * 100)
 
 if __name__ == '__main__':
     writer = Writer()

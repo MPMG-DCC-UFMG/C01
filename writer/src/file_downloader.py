@@ -1,4 +1,5 @@
 import threading
+from datetime import datetime
 
 import ujson
 from kafka import KafkaConsumer, KafkaProducer
@@ -42,7 +43,7 @@ class FileDownloader:
             del download_request
 
     def new_crawler_listener(self, crawler_id: str):
-        print('Started new listener...')
+        print(f'[{datetime.now()}] FD - Starting new listener...')
         topic = f'{settings.FILE_DOWNLOADER_PREFIX}_{crawler_id}'
 
         thread = threading.Thread(target=self.__run_listener, args=(topic,), daemon=True)

@@ -160,7 +160,7 @@ class StaticPageSpider(BaseSpider):
         item["encoding"] = response.encoding
 
         item["referer"] = response.meta["attrs"]["referer"]
-        item["content_type"] = response.headers['Content-type'].decode()
+        item["content_type"] = response.headers.get('Content-type', b'').decode()
         item["crawler_id"] = self.config["crawler_id"]
         item["instance_id"] = self.config["instance_id"]
         item["crawled_at_date"] = str(datetime.datetime.today())
@@ -192,31 +192,38 @@ class StaticPageSpider(BaseSpider):
                             for page in list(response.request.meta["pages"].values())]
         
         for response in responses:
+            try:
+                if self.config.get("explore_links", False):
+                    for link in self.extract_links(response):
+                        yield Request(url=link,
+                                    callback=self.parse,
+                                    meta={
+                                        "attrs": {
+                                            'referer': response.url,
+                                            'instance_id': self.config["instance_id"]
+                                        }
+                                    },
+                                    errback=self.errback_httpbin)
 
-            if self.config.get("explore_links", False):
-                for link in self.extract_links(response):
-                    yield Request(url=link,
-                                callback=self.parse,
-                                meta={
-                                    "attrs": {
-                                        'referer': response.url,
-                                        'instance_id': self.config["instance_id"]
-                                    }
-                                },
-                                errback=self.errback_httpbin)
+                files_found = set()
+                if self.config.get("download_files", False):
+                    files_found = self.extract_files(response)
 
-            files_found = set()
-            if self.config.get("download_files", False):
-                files_found = self.extract_files(response)
+                images_found = set()
+                if self.config.get("download_imgs", False):
+                    images_found = self.extract_imgs(response)
 
-            images_found = set()
-            if self.config.get("download_imgs", False):
-                images_found = self.extract_imgs(response)
-            
+            except AttributeError:
+                self._logger.warn(f'The content of URL {response.url} is not text. Either improve your REGEX filter' +  
+                        ' or enable the option to check the content type of a URL to be downloaded in the' + 
+                        ' advanced settings of your crawler.')
+
+                continue    
+                
             num_files = len(files_found) + len(images_found)
             notify_files_found(self.config["instance_id"], num_files)
 
             item = self.response_to_item(response, files_found, images_found)
 
             yield item 
-    
+
