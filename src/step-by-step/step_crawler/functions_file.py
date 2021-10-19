@@ -207,13 +207,17 @@ async def quebrar_captcha_imagem(pagina, xpath_do_elemento_captcha, xpath_do_cam
 
 @step("Checar se elemento existe na página")
 async def elemento_existe_na_pagina(pagina, xpath):
-    """This step returns True if there's any element given a xpath, otherwise, returns False
+    """This step returns True if there's any visible element given a xpath, otherwise, returns False
 
         :param pagina : a pyppeteer page
         :param xpath : elements xpaths
         :returns bool: True or False
     """
-    return bool(await pagina.xpath(xpath))
+    try:
+        await pagina.waitForXPath(xpath, visible=True, timeout=300)
+    except Exception as e:
+        return False
+    return True
 
 
 async def open_in_new_tab(pagina, link_xpath):
