@@ -3,7 +3,7 @@ import ujson
 import hashlib
 import os 
 
-import requests
+from pykafka import KafkaClient
 from kafka import KafkaConsumer
 
 from lxml.html.clean import Cleaner
@@ -18,10 +18,25 @@ from crawling_utils import notify_page_crawled_successfully
 class Writer:
     def __init__(self) -> None:
         self.__crawls_running = dict()
-        self.__crawled_data_consumer = KafkaConsumer(settings.CRAWLED_TOPIC,
-                            bootstrap_servers=settings.KAFKA_HOSTS)
-                            # auto_offset_reset='earliest',
-                            # value_deserializer=lambda m: ujson.loads(m.decode('utf-8')))
+
+        client = KafkaClient(hosts=','.join(settings.KAFKA_HOSTS))
+        topic = client.topics[settings.CRAWLED_TOPIC]
+
+        self.__crawled_data_consumer = topic.get_balanced_consumer(
+                                consumer_group='testgroup',
+                                auto_commit_enable=True,
+                                zookeeper_connect=','.join(settings.ZOOKEEPER_HOSTS)
+                            ) 
+
+        # self.__crawled_data_consumer = KafkaConsumer(
+        #     settings.CRAWLED_TOPIC,
+        #     group_id=settings.KAFKA_GROUP,
+        #     bootstrap_servers=settings.KAFKA_HOSTS,            
+        #     auto_offset_reset=settings.KAFKA_CONSUMER_AUTO_OFFSET_RESET,
+        #     auto_commit_interval_ms=settings.KAFKA_CONSUMER_COMMIT_INTERVAL_MS,
+        #     enable_auto_commit=settings.KAFKA_CONSUMER_AUTO_COMMIT_ENABLE,
+        #     max_partition_fetch_bytes=settings.KAFKA_CONSUMER_FETCH_MESSAGE_MAX_BYTES,
+        # )
 
         self.__command_consumer = KafkaConsumer(settings.WRITER_TOPIC,
                             bootstrap_servers=settings.KAFKA_HOSTS,

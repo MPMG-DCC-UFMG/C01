@@ -1,6 +1,22 @@
 import os
 
 KAFKA_HOSTS = [x.strip() for x in os.getenv('KAFKA_HOSTS', 'kafka:9092').split(',')]
+KAFKA_INCOMING_TOPIC = 'demo.incoming'
+KAFKA_GROUP = 'demo-group'
+KAFKA_FEED_TIMEOUT = 10
+KAFKA_CONSUMER_AUTO_OFFSET_RESET = 'earliest'
+KAFKA_CONSUMER_TIMEOUT = 5000
+KAFKA_CONSUMER_COMMIT_INTERVAL_MS = 5000
+KAFKA_CONSUMER_AUTO_COMMIT_ENABLE = True
+KAFKA_CONSUMER_FETCH_MESSAGE_MAX_BYTES = 10 * 1024 * 1024  # 10MB
+KAFKA_PRODUCER_BATCH_LINGER_MS = 25  # 25 ms before flush
+KAFKA_PRODUCER_BUFFER_BYTES = 4 * 1024 * 1024  # 4MB before blocking
+
+# Zookeeper host information
+ZOOKEEPER_ASSIGN_PATH = os.getenv('ZOOKEEPER_ASSIGN_PATH', '/scrapy-cluster/crawler/')
+ZOOKEEPER_ID = os.getenv('ZOOKEEPER_ID', 'all')
+ZOOKEEPER_HOSTS = [x.strip() for x in os.getenv('ZOOKEEPER_HOSTS', 'zookeeper:2181').split(',')]
+
 KAFKA_TOPIC_PREFIX = os.getenv('KAFKA_TOPIC_PREFIX', 'crawler_ufmg')
 
 REQUEST_USER_AGENT = os.getenv(
