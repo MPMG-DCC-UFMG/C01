@@ -19,12 +19,16 @@ function load_steps_interface(interface_root_element_id, output_element_id, json
             return value
         })
 
-        step_list = step_list.concat(JSON.parse('{"name": "para_cada", "name_display" : "Para cada", "mandatory_params":[], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name": "atribuicao", "name_display" : "Atribuição", "mandatory_params":[], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name": "abrir_em_nova_aba", "name_display" : "Abrir em nova aba", "mandatory_params":[], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name": "fechar_aba", "name_display" : "Fechar aba", "mandatory_params":[], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name":"screenshot", "name_display" : "Screenshot", "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "para_cada", "name_display" : "Para cada", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "atribuicao", "name_display" : "Atribuição", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "abrir_em_nova_aba", "name_display" : "Abrir em nova aba", "executable_contexts": ["page", "tab"], "mandatory_params":["link_xpath"], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "fechar_aba", "name_display" : "Fechar aba", "executable_contexts": ["tab"], "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "executar_em_iframe", "name_display" : "Executar em iframe", "executable_contexts": ["page", "tab"], "mandatory_params":["xpath"], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "sair_de_iframe", "name_display" : "Sair de iframe", "executable_contexts": ["iframe"], "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name":"screenshot", "name_display" : "Screenshot", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
 
+        step_list_complete = step_list
+        
         init_steps_creation_interface(interface_root_element, output_element, step_list)
       }
     };
@@ -100,18 +104,27 @@ function init_step_board(step_list){
     step_board.get_last_depth = get_last_depth
     step_board.style.marginTop = "1em"
     step_board.style.marginBottom = "1em"
+  
     step_board.add_block = function(step_list, index = -1, depth = null){
+          
+        execution_context = get_insertion_index_context(index, 'up')
+        let context_step_list = step_list.filter(function (step) { return step.executable_contexts.indexOf(execution_context) >= 0})
+        
         if(depth == null){
             depth = step_board.get_last_depth();
         }
+        
         steps_creation_interface = find_parent_with_attr_worth(this, "steps_creation_interface")
-        step_board = steps_creation_interface.step_board;
-        step_block = init_block(step_list, depth);
+        step_board = steps_creation_interface.step_board
+        step_block = init_block(context_step_list, depth)
+          
         if(index != -1){
             step_board.insertBefore(step_block, step_board.children[index]);
         }else{
             step_board.appendChild(step_block);
         }
+          
+        colorize_contexts()
         return step_block;
     }
     return step_board
@@ -301,7 +314,6 @@ function get_step_json_format(block){
     }else{
         step_dict.arguments = load_param_dict(block)
     }
-
     return step_dict
 }
 
@@ -398,13 +410,23 @@ function get_index_in_parent(element){
 }
 
 /**
+ * This function takes the selected value of a block by its index
+ * @param {Number} The index of the block to get the selected value.
+ * @retuns {String} The value selected in block.
+ */
+
+function get_block_value_by_index(index) {
+    let step_blocks = $('.step-block')
+    return step_blocks[index].select.value
+}
+
+/**
  * This function gets the information of an step inside a step_list by its name_display.
  * @param {String} step_name The description of the step.
- * @param {List} step_list The list of steps that conteing the step named with the step_name value.
  * @retuns {Dict} A dictionary with the information of the step.
  */
-function get_step_info(step_name_display, step_list){
-    for(step of step_list){
+function get_step_info(step_name_display){
+    for(step of step_list_complete){
         if(step.name_display == step_name_display){
             return step
         }

@@ -16,10 +16,11 @@ from pyext import RuntimeModule
 """
 
 
-def step(display):
+def step(display, executable_contexts=['page', 'tab', 'iframe']):
     def function(f):
         f.is_step = True
         f.display = display
+        f.executable_contexts = executable_contexts
         return f
 
     return function
@@ -147,7 +148,7 @@ async def localiza_elementos(pagina, xpath, numero_xpaths=None):
     return xpath_list[:numero_xpaths]
 
 
-@step("Voltar")
+@step("Voltar", executable_contexts=['page', 'tab'])
 async def retorna_pagina(pagina):
     await pagina.goBack()
 
