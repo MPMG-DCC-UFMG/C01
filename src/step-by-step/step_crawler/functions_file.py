@@ -83,11 +83,11 @@ async def clique(pagina, elemento):
         await pagina.waitForXPath(elemento)
         elements = await pagina.xpath(elemento)
         if len(elements) == 1:
-            await elements[0].click()
+            await pagina.evaluate('element => { element.click(); }', elements[0])
         else:
             raise Exception('XPath points to non existent element, or multiple elements!')
     else:
-        elemento.click()
+        await pagina.evaluate('element => { element.click(); }', elemento)
     await espere_pagina(pagina)
 
 
@@ -223,8 +223,7 @@ async def open_in_new_tab(pagina, link_xpath):
     new_page_promisse = asyncio.get_event_loop().create_future()
     if len(elements) == 1:
         pagina.browser.once("targetcreated", lambda target: new_page_promisse.set_result(target))
-        await pagina.evaluate('el => el.setAttribute("target", "_blank")', elements[0])
-        await elements[0].click()
+        await pagina.evaluate('el => { el.setAttribute("target", "_blank"); el.click();}', elements[0])
         await pagina.bringToFront()
     else:
         raise Exception('XPath points to non existent element, or multiple elements!')
