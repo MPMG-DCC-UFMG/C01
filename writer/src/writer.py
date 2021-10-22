@@ -2,6 +2,7 @@ import threading
 import ujson
 import hashlib
 import os 
+from datetime import datetime
 
 from pykafka import KafkaClient
 from kafka import KafkaConsumer
@@ -19,29 +20,29 @@ class Writer:
     def __init__(self) -> None:
         self.__crawls_running = dict()
 
-        client = KafkaClient(hosts=','.join(settings.KAFKA_HOSTS))
-        topic = client.topics[settings.CRAWLED_TOPIC]
-
-        self.__crawled_data_consumer = topic.get_balanced_consumer(
-                                consumer_group='testgroup',
-                                auto_commit_enable=True,
-                                zookeeper_connect=','.join(settings.ZOOKEEPER_HOSTS)
-                            ) 
-
-        # self.__crawled_data_consumer = KafkaConsumer(
-        #     settings.CRAWLED_TOPIC,
-        #     group_id=settings.KAFKA_GROUP,
-        #     bootstrap_servers=settings.KAFKA_HOSTS,            
-        #     auto_offset_reset=settings.KAFKA_CONSUMER_AUTO_OFFSET_RESET,
-        #     auto_commit_interval_ms=settings.KAFKA_CONSUMER_COMMIT_INTERVAL_MS,
-        #     enable_auto_commit=settings.KAFKA_CONSUMER_AUTO_COMMIT_ENABLE,
-        #     max_partition_fetch_bytes=settings.KAFKA_CONSUMER_FETCH_MESSAGE_MAX_BYTES,
-        # )
+        self.__crawled_data_consumer = KafkaConsumer(settings.CRAWLED_TOPIC,
+                            # group_id=settings.KAFKA_WRITER_GROUP,
+                            bootstrap_servers=settings.KAFKA_HOSTS,            
+                            auto_offset_reset=settings.KAFKA_CONSUMER_AUTO_OFFSET_RESET,
+                            connections_max_idle_ms=settings.KAFKA_CONNECTIONS_MAX_IDLE_MS,
+                            request_timeout_ms=settings.KAFKA_REQUEST_TIMEOUT_MS,
+                            session_timeout_ms=settings.KAFKA_SESSION_TIMEOUT_MS,
+                            # consumer_timeout_ms=settings.KAFKA_CONSUMER_TIMEOUT_MS,
+                            auto_commit_interval_ms=settings.KAFKA_CONSUMER_COMMIT_INTERVAL_MS,
+                            enable_auto_commit=settings.KAFKA_CONSUMER_AUTO_COMMIT_ENABLE,
+                            max_partition_fetch_bytes=settings.KAFKA_CONSUMER_FETCH_MESSAGE_MAX_BYTES)
 
         self.__command_consumer = KafkaConsumer(settings.WRITER_TOPIC,
-                            bootstrap_servers=settings.KAFKA_HOSTS,
-                            # auto_offset_reset='earliest',
-                            value_deserializer=lambda m: ujson.loads(m.decode('utf-8')))
+                            # group_id=settings.KAFKA_CMD_GROUP,
+                            bootstrap_servers=settings.KAFKA_HOSTS,            
+                            auto_offset_reset=settings.KAFKA_CONSUMER_AUTO_OFFSET_RESET,
+                            connections_max_idle_ms=settings.KAFKA_CONNECTIONS_MAX_IDLE_MS,
+                            request_timeout_ms=settings.KAFKA_REQUEST_TIMEOUT_MS,
+                            session_timeout_ms=settings.KAFKA_SESSION_TIMEOUT_MS,
+                            # consumer_timeout_ms=settings.KAFKA_CONSUMER_TIMEOUT_MS,
+                            auto_commit_interval_ms=settings.KAFKA_CONSUMER_COMMIT_INTERVAL_MS,
+                            enable_auto_commit=settings.KAFKA_CONSUMER_AUTO_COMMIT_ENABLE,
+                            max_partition_fetch_bytes=settings.KAFKA_CONSUMER_FETCH_MESSAGE_MAX_BYTES)
 
         self.__file_descriptor = FileDescriptor()
         self.__file_downloader = FileDownloader()
@@ -83,18 +84,14 @@ class Writer:
         print('Persisting crawled data')
         crawler_id = str(crawled_data['crawler_id']) 
 
-        cleaner = Cleaner(
-            style=True, links=False, scripts=True,
-            comments=True, page_structure=False
-        )
-
         try:
+            cleaner = Cleaner(
+                style=True, links=False, scripts=True,
+                comments=True, page_structure=False
+            )
             body = cleaner.clean_html(crawled_data['body'])
         
-        except ValueError as e:
-            print('-[ERROR]-' * 10)
-            print(str(e)) 
-            print('-[ERROR]-' * 10) 
+        except:
             body = crawled_data['body']
 
         key = crawled_data['url'] + body
@@ -129,38 +126,36 @@ class Writer:
         self.__file_downloader.feed(crawled_data, data_path)
 
     def __run_crawled_consumer(self):
-        print('Crawled consumer started...')
+        print(f'[{datetime.now()}] Crawled consumer started...')
         for message in self.__crawled_data_consumer:
+            print(f'[{datetime.now()}] Message received')
             try:
                 crawled_data = ujson.loads(message.value.decode('utf-8'))
-            except ValueError as e:
-                print('-|-ERROR-|-' * 10)
-                print(str(e))
-                print('-|-ERROR-|-' * 10)
-                continue
-            
-            self.__process_crawled_data(crawled_data)
+                self.__process_crawled_data(crawled_data)
+            except Exception as e:
+                print(f'\t[{datetime.now()}] Error processing crawled data: {e}')
 
     def __process_command(self, command):
         if 'register' in command:
             self.__register_crawl(command['register'])
 
     def run(self):
-        try:
-            thread = threading.Thread(target=self.__run_crawled_consumer, daemon=True)  
-            thread.start()
+        thread = threading.Thread(target=self.__run_crawled_consumer, daemon=True)  
+        thread.start()
 
-            self.__file_descriptor.run()
+        self.__file_descriptor.run()
 
-            print('Waiting for commands...')
-            for message in self.__command_consumer:
-                print('New command received')
+        print('Waiting for commands...')
+        for message in self.__command_consumer:
+            print('New command received')
 
-                command = message.value
+            try:
+                command = ujson.loads(message.value.decode('utf-8'))
                 self.__process_command(command)
-        except:
-            print('][|-ERRO-|][' * 100)
+            except Exception as e:
+                print(f'[{datetime.now()}] Error processing command: {e}') 
 
 if __name__ == '__main__':
     writer = Writer()
     writer.run()
+

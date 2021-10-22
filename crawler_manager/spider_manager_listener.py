@@ -1,6 +1,6 @@
 """This file has the implementation of a listener of notifications of creation and termination of spiders coming from Spider Managers"""
 
-import json
+import ujson
 from threading import Thread
 
 import requests
@@ -12,8 +12,14 @@ from crawler_manager import settings
 class SpiderManagerListener:
     def __init__(self) -> None:
         self.__consumer = KafkaConsumer(settings.NOTIFICATIONS_TOPIC,
-                                        bootstrap_servers=settings.KAFKA_HOSTS,
-                                        value_deserializer=lambda m: json.loads(m.decode('utf-8')))
+                                        bootstrap_servers=settings.KAFKA_HOSTS,            
+                                        auto_offset_reset=settings.KAFKA_CONSUMER_AUTO_OFFSET_RESET,
+                                        connections_max_idle_ms=settings.KAFKA_CONNECTIONS_MAX_IDLE_MS,
+                                        request_timeout_ms=settings.KAFKA_REQUEST_TIMEOUT_MS,
+                                        session_timeout_ms=settings.KAFKA_SESSION_TIMEOUT_MS,
+                                        auto_commit_interval_ms=settings.KAFKA_CONSUMER_COMMIT_INTERVAL_MS,
+                                        enable_auto_commit=settings.KAFKA_CONSUMER_AUTO_COMMIT_ENABLE,
+                                        max_partition_fetch_bytes=settings.KAFKA_CONSUMER_FETCH_MESSAGE_MAX_BYTES)
 
         self.__spiders_running = dict()
 
@@ -44,9 +50,12 @@ class SpiderManagerListener:
         """Kafka consumer of notifications of creation and termination of spiders."""
 
         for message in self.__consumer:
-            notification = message.value
-            self.__parse_notification(notification)
-
+            try:
+                notification =  ujson.loads(message.value.decode('utf-8'))
+                self.__parse_notification(notification)
+            except:
+                print('Error processing message...')
+                
     def __notify_stopped_spiders(self, crawler_id: str):
         """Notifies Django that there are no more spiders running, with the scraping process finished.
 
