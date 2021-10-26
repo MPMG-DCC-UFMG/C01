@@ -186,14 +186,23 @@ class StaticPageSpider(BaseSpider):
         Will try to follow links if config["explore_links"] is set.
         """
 
+        # Get current depth
+        cur_depth = 0
+        if 'curdepth' in response.meta:
+            cur_depth = response.meta['curdepth']
+
         responses = [response]
         if type(response.request) is PuppeteerRequest:
             responses = [self.page_to_response(page, response) 
                             for page in list(response.request.meta["pages"].values())]
-        
-        for response in responses:
 
-            if self.config.get("explore_links", False):
+        for response in responses:
+            # Limit depth if required
+            max_depth = self.config.get("link_extractor_max_depth")
+            if max_depth is not None and cur_depth >= max_depth:
+                message = "Not crawling links in '{}' because cur_depth={} >= maxdepth={}"
+                self._logger.debug(message.format(response.url, cur_depth, max_depth))
+            elif self.config.get("explore_links", False):
                 for link in self.extract_links(response):
                     yield Request(url=link,
                                 callback=self.parse,
@@ -201,7 +210,8 @@ class StaticPageSpider(BaseSpider):
                                     "attrs": {
                                         'referer': response.url,
                                         'instance_id': self.config["instance_id"]
-                                    }
+                                    },
+                                    'curdepth': response.meta['curdepth'] + 1
                                 },
                                 errback=self.errback_httpbin)
 
