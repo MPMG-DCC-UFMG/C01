@@ -8,9 +8,10 @@ from download_request import DownloadRequest
 
 import settings
 
+
 class FileDownloader:
     def __init__(self) -> None:
-        self.__producer =  KafkaProducer(bootstrap_servers=settings.KAFKA_HOSTS,
+        self.__producer = KafkaProducer(bootstrap_servers=settings.KAFKA_HOSTS,
                                         value_serializer=lambda m: ujson.dumps(m).encode('utf-8'))
 
     def __parse_message(self, message: dict) -> DownloadRequest:
@@ -50,7 +51,7 @@ class FileDownloader:
         thread = threading.Thread(target=self.__run_listener, args=(topic,), daemon=True)
         thread.start()
 
-    def feed(self, crawled_data: dict, data_path = str):
+    def feed(self, crawled_data: dict, data_path=str):
         urls = crawled_data['files_found'] + crawled_data['images_found']
 
         referer = crawled_data['url']
