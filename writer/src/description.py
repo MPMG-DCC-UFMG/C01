@@ -1,6 +1,7 @@
 import os
 import ujson
 
+
 class Description:
     def __init__(self,
                 description_path: str,
