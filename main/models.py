@@ -447,7 +447,7 @@ class ResponseHandler(models.Model):
 
 class CrawlerInstance(TimeStamped):
     crawler = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE,
-                                   related_name='instances')
+                                related_name='instances')
     instance_id = models.BigIntegerField(primary_key=True)
 
     number_files_found = models.PositiveIntegerField(default=0, null=True, blank=True)
