@@ -104,6 +104,8 @@ services:
             dockerfile: ./docker/spider_manager/Dockerfile
         env_file:
             - ./docker/config/.env
+        volumes:
+            - data:/data
         depends_on:
             redis:
                 condition: service_healthy

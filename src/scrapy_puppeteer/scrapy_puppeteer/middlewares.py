@@ -274,9 +274,9 @@ class PuppeteerMiddleware:
         """Generates descriptions for downloaded files."""
 
         # list all files in crawl data folder, except file_description.jsonl
-        files = glob(f'{self.download_path}*[!jsonl]')
+        files = glob(os.path.join(self.download_path, '*[!jsonl]'))
 
-        with open(f'{self.download_path}file_description.jsonl', 'w') as f:
+        with open(os.path.join(self.download_path, 'file_description.jsonl'), 'w') as f:
             for file in files:
                 # Get timestamp from file download
                 fname = pathlib.Path(file)
