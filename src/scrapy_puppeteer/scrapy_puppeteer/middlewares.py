@@ -74,11 +74,15 @@ class PuppeteerMiddleware:
             'logLevel': crawler.settings.get('LOG_LEVEL')
         })
 
-        data_path = crawler.settings.get('DATA_PATH')
-
-        middleware.download_path = f'{data_path}/data/files/'
         middleware.crawler_id = crawler.settings.get('CRAWLER_ID')
         middleware.instance_id = crawler.settings.get('INSTANCE_ID')
+
+        data_path = crawler.settings.get('DATA_PATH')
+        output_folder = crawler.settings.get('OUTPUT_FOLDER')
+        instance_path = os.path.join(output_folder, data_path,
+            str(middleware.instance_id))
+
+        middleware.download_path = os.path.join(instance_path, 'data', 'files')
 
         page = await middleware.browser.newPage()
 

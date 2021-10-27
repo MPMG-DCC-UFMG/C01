@@ -1,9 +1,10 @@
-import mimetypes
-import string
-import re 
-import hashlib
 from datetime import datetime
+import hashlib
+import mimetypes
+import os
+import re
 import requests
+import string
 import time
 
 import settings
@@ -15,14 +16,14 @@ MAX_ATTEMPTS = 3
 INTERVAL_BETWEEN_ATTEMPTS = 30
 
 class DownloadRequest:
-    def __init__(self, 
-                url: str, 
-                data_path: str, 
-                crawler_id: str, 
+    def __init__(self,
+                url: str,
+                data_path: str,
+                crawler_id: str,
                 instance_id: str,
-                referer: str, 
-                filename: str = '', 
-                filetype: str = '', 
+                referer: str,
+                filename: str = '',
+                filetype: str = '',
                 crawled_at_date: str = '') -> None:
 
         self.url = url
@@ -31,12 +32,13 @@ class DownloadRequest:
         self.referer = referer
         self.filetype = filetype if bool(filetype) else self.__detect_filetype()
         self.filename = filename if bool(filename) else self.__generate_filename()
-        self.path_to_save = f'{data_path}/data/files/{self.filename}'
+        self.path_to_save = os.path.join(settings.OUTPUT_FOLDER, data_path,
+            str(instance_id), 'data', 'files', self.filename)
         self.data_path = data_path
         self.crawled_at_date = crawled_at_date
 
 
-    def __generate_filename(self) -> str:        
+    def __generate_filename(self) -> str:
         filename = hashlib.md5(self.url.encode()).hexdigest()
         filename += '.' + self.filetype if bool(self.filetype) else ''
         return filename
@@ -74,7 +76,7 @@ class DownloadRequest:
             return filetype
 
         response = requests.head(self.url, allow_redirects=True, headers=settings.REQUEST_HEADERS)
-        
+
         content_type = response.headers.get("Content-type", "")
         content_disposition = response.headers.get("Content-Disposition", "")
 
@@ -88,7 +90,7 @@ class DownloadRequest:
 
     def exec_download(self) -> bool:
         print(f"Downloading {self.url}")
-        
+
         attempt = 0
         while attempt < MAX_ATTEMPTS:
             with requests.get(self.url, stream=True, allow_redirects=True, headers=settings.REQUEST_HEADERS) as req:
@@ -100,8 +102,8 @@ class DownloadRequest:
                 with open(self.path_to_save, "wb") as f:
                     for chunk in req.iter_content(chunk_size=8192):
                         f.write(chunk)
-                    break 
-                
+                    break
+
         if attempt == MAX_ATTEMPTS:
             notify_file_downloaded_with_error(self.instance_id)
             return False 

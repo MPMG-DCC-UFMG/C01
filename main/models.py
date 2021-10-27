@@ -26,11 +26,14 @@ class CrawlRequest(TimeStamped):
     source_name = models.CharField(max_length=200)
     base_url = models.CharField(max_length=200)
     obey_robots = models.BooleanField(blank=True, null=True)
-    pathValid = RegexValidator(r'^[0-9a-zA-Z\/\\-_]*$',
-                               'This is not a valid path.')
-    data_path = models.CharField(max_length=2000,
-                                 blank=True, null=True,
-                                 validators=[pathValid])
+
+    # This regex is a bit convolute, but in summary: it allows numbers,
+    # letters, dashes and underlines. It allows forward and backward slashes
+    # unless it occurs in the first character (since we don't allow absolute
+    # paths).
+    pathValid = RegexValidator(r'^[0-9a-zA-Z\-_][0-9a-zA-Z\/\\\-_]*$',
+                               'Esse não é um caminho relativo válido.')
+    data_path = models.CharField(max_length=2000, validators=[pathValid])
 
     REQUEST_TYPES = [
         ('GET', 'GET'),
@@ -297,13 +300,8 @@ class CrawlRequest(TimeStamped):
         del config['creation_date']
         del config['last_modified']
 
-        if config["data_path"] is None:
-            config["data_path"] = CURR_FOLDER_FROM_ROOT
-        else:
-            if config["data_path"][-1] == "/":
-                config["data_path"] = config["data_path"][:-1]
-            else:
-                config["data_path"] = config["data_path"]
+        if config["data_path"][-1] == "/":
+            config["data_path"] = config["data_path"][:-1]
 
         # Include information on parameter handling
         param_list = crawler.parameter_handlers.values()
@@ -448,7 +446,7 @@ class ResponseHandler(models.Model):
 
 
 class CrawlerInstance(TimeStamped):
-    crawler_id = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE,
+    crawler = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE,
                                    related_name='instances')
     instance_id = models.BigIntegerField(primary_key=True)
 

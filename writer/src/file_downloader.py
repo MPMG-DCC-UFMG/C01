@@ -1,6 +1,7 @@
+import os
 import threading
-
 import ujson
+
 from kafka import KafkaConsumer, KafkaProducer
 
 from download_request import DownloadRequest
@@ -16,11 +17,12 @@ class FileDownloader:
         return DownloadRequest(**message)
 
     def __feed_download_description(self, content: dict):
-        data_path = f'{content["data_path"]}/data/files/'
+        description_path = os.path.join(settings.OUTPUT_FOLDER,
+            content["data_path"], content["instance_id"], 'data', 'files')
         del content['data_path']
 
         self.__producer.send(settings.FILE_DESCRIPTOR_TOPIC, {
-            'data_path': data_path,
+            'description_path': description_path,
             'content': content
         })
 
@@ -34,7 +36,7 @@ class FileDownloader:
 
         for message in consumer:
             download_request = self.__parse_message(message.value)
-            
+
             if download_request.exec_download():
                 description = download_request.get_description()
                 self.__feed_download_description(description)
@@ -50,11 +52,11 @@ class FileDownloader:
 
     def feed(self, crawled_data: dict, data_path = str):
         urls = crawled_data['files_found'] + crawled_data['images_found']
-        
-        referer = crawled_data['url'] 
-        crawler_id = crawled_data['crawler_id'] 
-        instace_id = crawled_data['instance_id'] 
-        
+
+        referer = crawled_data['url']
+        crawler_id = crawled_data['crawler_id']
+        instace_id = crawled_data['instance_id']
+
         topic = f'{settings.FILE_DOWNLOADER_PREFIX}_{crawler_id}'
 
         for url in urls:
@@ -67,11 +69,11 @@ class FileDownloader:
                 'filename': '',
                 'data_path': data_path,
                 'crawled_at_date': ''
-            } 
+            }
 
             self.__producer.send(topic, message)
         self.__producer.flush()
 
     def run(self):
         thread = threading.Thread(target=self.__run_consumer, daemon=True)
-        thread.start() 
+        thread.start()

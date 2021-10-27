@@ -1,7 +1,7 @@
 import threading
 import ujson
 import hashlib
-import os 
+import os
 
 import requests
 from kafka import KafkaConsumer
@@ -32,30 +32,31 @@ class Writer:
         self.__file_downloader = FileDownloader()
 
     def __create_folder_structure(self, config: dict):
-        data_path = config['data_path']
-        
+        instance_path = os.path.join(settings.OUTPUT_FOLDER,
+            config['data_path'], str(config['instance_id']))
+
         folders = [
-            f'{data_path}/config/',
-            f'{data_path}/flags/',
-            f'{data_path}/log/',
-            f'{data_path}/webdriver/',
-            f'{data_path}/data/raw_pages/',
-            f'{data_path}/data/csv/',
-            f'{data_path}/data/files/'
+            f'{instance_path}/config/',
+            f'{instance_path}/flags/',
+            f'{instance_path}/log/',
+            f'{instance_path}/webdriver/',
+            f'{instance_path}/data/raw_pages/',
+            f'{instance_path}/data/csv/',
+            f'{instance_path}/data/files/'
         ]
 
         for folder in folders:
             if not os.path.exists(folder):
                 os.makedirs(folder)
-        
-        with open(f'{data_path}/config/{config["instance_id"]}.json', 'w') as f:
+
+        with open(f'{instance_path}/config/{config["instance_id"]}.json', 'w') as f:
             f.write(ujson.dumps(config, indent=4))
 
         print(f'Folder structure for "{config["source_name"]}" created...')
 
     def __register_crawl(self, config: dict):
         crawler_id = str(config['crawler_id'])
-        
+
         self.__crawls_running[crawler_id] = config
         self.__create_folder_structure(config)
 
@@ -79,10 +80,13 @@ class Writer:
         hsh = hashlib.md5(key.encode()).hexdigest()
 
         data_path = self.__crawls_running[crawler_id]['data_path']
-        relative_path = f'{data_path}/data/raw_pages/{hsh}.html'
+        instance_path = os.path.join(settings.OUTPUT_FOLDER, data_path,
+            str(crawled_data['instance_id']))
+        relative_path = os.path.join(instance_path, 'data', 'raw_pages',
+            f'{hsh}.html')
 
         with open(file=relative_path, mode="w+", errors='ignore') as f:
-            f.write(body)   
+            f.write(body)
 
         description = {
             "file_name": f"{hsh}.html",
@@ -96,7 +100,7 @@ class Writer:
         }
 
         notify_page_crawled_successfully(crawled_data['instance_id'])
-        self.__file_descriptor.feed(f'{data_path}/data/raw_pages/', description)
+        self.__file_descriptor.feed(f'{instance_path}/data/raw_pages/', description)
 
     def __process_crawled_data(self, crawled_data: dict):
         print(f'Processing crawled data...')

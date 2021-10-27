@@ -29,9 +29,9 @@ class FileDescriptor:
         thread = threading.Thread(target=self.__run_consumer, daemon=True)
         thread.start()
 
-    def feed(self, data_path: str, content: dict) -> None:
+    def feed(self, description_path: str, content: dict) -> None:
         self.__producer.send(settings.FILE_DESCRIPTOR_TOPIC, {
-            'data_path': data_path,
+            'description_path': description_path,
             'content': content
         })
         self.__producer.flush()
