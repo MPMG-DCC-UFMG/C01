@@ -2,24 +2,24 @@
 This file is responsible for managing the creation and closure of spiders
 """
 
+import settings
+from kafka_logger import KafkaLogger
+from crawling.spiders.static_page import StaticPageSpider
+from scrapy.spiders import Spider
+from scrapy.crawler import CrawlerProcess
+from kafka import KafkaProducer
+import ujson
+import scrapy
+from multiprocessing import Process
+import sys
+import os
 import asyncio
 from twisted.internet import asyncioreactor
 asyncioreactor.install(asyncio.get_event_loop())
 
-import os
-import sys
-from multiprocessing import Process
 
-import scrapy
-import ujson
-from kafka import KafkaProducer
-from scrapy.crawler import CrawlerProcess
-from scrapy.spiders import Spider
 
-from crawling.spiders.static_page import StaticPageSpider
-from kafka_logger import KafkaLogger
 
-import settings
 
 # with open('base_config.json') as f:
 #     base_config = ujson.loads(f.read())

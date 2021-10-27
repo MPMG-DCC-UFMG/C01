@@ -15,6 +15,7 @@ from file_descriptor import FileDescriptor
 
 from crawling_utils import notify_page_crawled_successfully
 
+
 class Writer:
     def __init__(self) -> None:
         self.__crawls_running = dict()
@@ -60,14 +61,14 @@ class Writer:
         self.__crawls_running[crawler_id] = config
         self.__create_folder_structure(config)
 
-        # we just need create a thread to download files if the crawler settings is defined  
+        # we just need create a thread to download files if the crawler settings is defined
         # to crawl files
         if config['download_files'] or config['download_imgs']:
             self.__file_downloader.new_crawler_listener(crawler_id)
 
     def __persist_html(self, crawled_data: dict):
         print('Persisting crawled data')
-        crawler_id = str(crawled_data['crawler_id']) 
+        crawler_id = str(crawled_data['crawler_id'])
 
         cleaner = Cleaner(
             style=True, links=False, scripts=True,
@@ -106,7 +107,7 @@ class Writer:
         print(f'Processing crawled data...')
 
         self.__persist_html(crawled_data)
-        
+
         data_path = self.__crawls_running[crawled_data['crawler_id']]['data_path']
         self.__file_downloader.feed(crawled_data, data_path)
 
@@ -121,7 +122,7 @@ class Writer:
             self.__register_crawl(command['register'])
 
     def run(self):
-        thread = threading.Thread(target=self.__run_crawled_consumer, daemon=True)  
+        thread = threading.Thread(target=self.__run_crawled_consumer, daemon=True)
         thread.start()
 
         self.__file_descriptor.run()
@@ -132,6 +133,7 @@ class Writer:
 
             command = message.value
             self.__process_command(command)
+
 
 if __name__ == '__main__':
     writer = Writer()
