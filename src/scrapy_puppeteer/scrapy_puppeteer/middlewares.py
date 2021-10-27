@@ -64,7 +64,6 @@ class PuppeteerMiddleware:
         :crawler(Crawler object): crawler that uses this middleware
         """
 
-
         middleware = cls()
         middleware.browser = await launch({
             'executablePath': chromium_executable(),
@@ -75,7 +74,7 @@ class PuppeteerMiddleware:
         })
 
         data_path = crawler.settings.get('DATA_PATH')
-
+        middleware.data_path = data_path
         middleware.download_path = f'{data_path}/data/files/'
         middleware.crawler_id = crawler.settings.get('CRAWLER_ID')
         middleware.instance_id = crawler.settings.get('INSTANCE_ID')
@@ -208,7 +207,10 @@ class PuppeteerMiddleware:
             await page.waitFor(request.wait_for)
 
         if request.steps:
-            steps = code_g.generate_code(request.steps, functions_file)
+            scrshot_path = os.path.join(self.data_path, "data",
+                "screenshots", str(self.instance_id))
+            steps = code_g.generate_code(request.steps, functions_file,
+                scrshot_path)
             request.meta["pages"] = await steps.execute_steps(pagina=page)
 
         content_type = response.headers['content-type']

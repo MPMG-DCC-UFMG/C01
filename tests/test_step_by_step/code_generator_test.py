@@ -52,7 +52,7 @@ class TestExtractInfo(unittest.TestCase):
         self.assertEqual(expected_result, result)
 
     def test_generate_head(self):
-        result = cg.generate_head(json)
+        result = cg.generate_head(json, "test_path")
         expected_result = "import step_crawler\n"
         expected_result += "from " + "json" + " import *\n\n"
         expected_result += "async def "
@@ -60,6 +60,7 @@ class TestExtractInfo(unittest.TestCase):
         expected_result += "    pages = {}\n"
         expected_result += "    page = missing_arguments['pagina']\n"
         expected_result += "    page_stack = []\n"
+        expected_result += "    scrshot_path = \"test_path\"\n"
         self.assertEqual(expected_result, result)
 
     def test_generate_body(self):

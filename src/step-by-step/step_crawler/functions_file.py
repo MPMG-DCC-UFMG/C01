@@ -1,5 +1,6 @@
 import io
 import asyncio
+import datetime
 import time
 import uuid
 from cssify import cssify
@@ -29,7 +30,7 @@ def imprime(texto):
     print(texto)
     return
 
-
+  
 @step("Repetir")
 def repete(vezes):
     return [i for i in range(vezes)]
@@ -46,6 +47,33 @@ def gera_nome_arquivo():
 
 async def espere_pagina(pagina):
     await pagina.waitForSelector("html")
+
+
+async def fill_iframe_content(page):
+    # based on: https://gist.github.com/jgontrum/5a9060e40c7fc04c2c3bae3f1a9b28ad
+
+    iframes = await page.querySelectorAll('iframe')
+    for iframe in iframes:
+        frame = await iframe.contentFrame()
+
+        # Checks if the element is really an iframe
+        if not frame:
+            continue
+
+        # Extract the content inside the iframe
+        content = await frame.evaluate('''
+            () => {
+                const el = document.querySelector("*");
+                return el.innerHTML;
+            }
+        ''')
+
+        # Inserts iframe content as base page content
+        await page.evaluate('''
+            (iframe, content) => {
+                iframe.innerHTML = content;
+            }
+        ''', iframe, content)
 
 
 @step("Clicar")
@@ -71,6 +99,7 @@ async def selecione(pagina, xpath, opcao):
 
 @step("Salvar página")
 async def salva_pagina(pagina):
+    await fill_iframe_content(pagina)
     content = await pagina.content()
     body = str.encode(content)
     return body
@@ -116,7 +145,6 @@ async def localiza_elementos(pagina, xpath, numero_xpaths=None):
 
     numero_xpaths = len(xpath_list) if not numero_xpaths else numero_xpaths
     return xpath_list[:numero_xpaths]
-
 
 @step("Voltar")
 async def retorna_pagina(pagina):

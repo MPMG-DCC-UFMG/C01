@@ -222,6 +222,13 @@ a.close, a.add_form {
     padding-top: 0.75rem;
 }
 
+.antiblock-wrapper .form-group, #div_id_antiblock_reqs_per_user_agent {
+    margin-bottom: 0;
+}
+
+.antiblock-wrapper .form-group input, .antiblock-wrapper .form-group label{
+    cursor: pointer;
+}
 /* Collapse div */
 .mycollapse {
     display: block;
@@ -273,3 +280,14 @@ a.close, a.add_form {
     margin-left: 0.25em;
 }
 /* End modal styles */
+
+/* Screenshot pagination styles */
+
+.paging_entry_arrow {
+    margin-left: 0.25em;
+}
+
+.paging_entry_number {
+    margin-left: 0.25em;
+}
+/* End screenshot pagination styles */
