@@ -39,12 +39,12 @@ from rest_framework.parsers import JSONParser
 from requests.exceptions import MissingSchema
 
 from formparser.html import HTMLExtractor, HTMLParser
+from scrapy_puppeteer import iframe_loader
 
 # Log the information to the file logger
 logger = logging.getLogger('file')
 
 # Helper methods
-
 
 def process_run_crawl(crawler_id):
     instance = None
@@ -618,6 +618,23 @@ def view_screenshots(request, instance_id, page):
         'data': image_data,
         'total_screenshots': total_screenshots
     }, status=200)
+
+
+def load_iframe(request):
+    url = request.GET['url'].replace('"', '')
+    xpath = request.GET['xpath'].replace('"', '')
+
+    try:
+        content = iframe_loader(url, xpath)
+        return render(request, 'main/iframe_loader.html', {'content': content})
+
+    except Exception as e:
+        ctx = {
+            'url': url,
+            'xpath': xpath,
+            'error': str(e)
+        }
+        return render(request, 'main/error_iframe_loader.html', ctx)
 
 # API
 ########

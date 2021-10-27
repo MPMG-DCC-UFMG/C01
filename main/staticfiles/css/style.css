@@ -164,6 +164,14 @@ table.dataTable thead .sorting_desc_disabled:before {
 
 /* Step styles -----------*/
 
+.bg-iframe-execution-context {
+    background-color: #CEE5D0;
+}
+
+.bg-tab-execution-context {
+    background-color: #E8F6EF;
+}
+
 #dynamic-processing-item-wrap.disabled {
     opacity: .5;
     pointer-events: none;
@@ -291,3 +299,4 @@ a.close, a.add_form {
     margin-left: 0.25em;
 }
 /* End screenshot pagination styles */
+

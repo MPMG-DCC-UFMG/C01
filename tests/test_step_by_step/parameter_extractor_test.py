@@ -9,6 +9,7 @@ class TestExtractInfo(unittest.TestCase):
     expected_results = [
         {
             "name": "mandatory_and_optional_params",
+            "executable_contexts": ["page", "tab", "iframe"],
             "name_display": "Mandatory and optional params",
             "mandatory_params": [
                 "some",
@@ -21,6 +22,7 @@ class TestExtractInfo(unittest.TestCase):
         },
         {
             "name": "only_mandatory_params",
+            "executable_contexts": ["page", "tab", "iframe"],
             "name_display": "Only mandatory params",
             "mandatory_params": [
                 "some",
@@ -32,6 +34,7 @@ class TestExtractInfo(unittest.TestCase):
         },
         {
             "name": "only_optional_params",
+            "executable_contexts": ["page", "tab", "iframe"],
             "name_display": "Only optional params",
             "mandatory_params": [],
             "optional_params": {
@@ -43,6 +46,7 @@ class TestExtractInfo(unittest.TestCase):
         },
         {
             "name": "no_params",
+            "executable_contexts": ["page", "tab", "iframe"],
             "name_display": "No params",
             "mandatory_params": [],
             "optional_params": {}
