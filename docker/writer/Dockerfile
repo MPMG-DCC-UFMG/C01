@@ -5,12 +5,13 @@ RUN mkdir -p /usr/src/app
 
 COPY src/crawling_utils /usr/src/crawling_utils
 
-COPY writer/src /usr/src/app
 COPY writer/requirements.txt /usr/src/app/
 
 WORKDIR /usr/src/app
 
 # install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+
+COPY writer/src /usr/src/app
 
 ENTRYPOINT [ "python", "writer.py" ]
