@@ -15,6 +15,7 @@ PUNCTUATIONS = "[{}]".format(string.punctuation)
 MAX_ATTEMPTS = 3
 INTERVAL_BETWEEN_ATTEMPTS = 30
 
+
 class DownloadRequest:
     def __init__(self,
                 url: str,
@@ -106,7 +107,7 @@ class DownloadRequest:
 
         if attempt == MAX_ATTEMPTS:
             notify_file_downloaded_with_error(self.instance_id)
-            return False 
+            return False
 
         else:
             self.crawled_at_date = str(datetime.today())
