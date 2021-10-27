@@ -96,7 +96,13 @@ class PuppeteerMiddleware:
         :crawler(Crawler object): crawler that uses this middleware
         """
 
-        loop = asyncio.get_event_loop()
+        try:
+            loop = asyncio.get_event_loop()
+
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
         middleware = loop.run_until_complete(
             asyncio.ensure_future(cls._from_crawler(crawler))
         )
@@ -215,7 +221,11 @@ class PuppeteerMiddleware:
 
         content_type = response.headers['content-type']
         _, params = cgi.parse_header(content_type)
-        encoding = params['charset']
+
+        # If encoding info is not avaible in response headers, use default utf-8 to encode content
+        encoding = 'utf-8'
+        if 'charset' in params:
+            encoding = params['charset']
 
         content = await page.content()
         body = str.encode(content, encoding=encoding, errors='ignore')
