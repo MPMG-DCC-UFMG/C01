@@ -26,6 +26,8 @@ function load_steps_interface(interface_root_element_id, output_element_id, json
         step_list = step_list.concat(JSON.parse('{"name": "executar_em_iframe", "name_display" : "Executar em iframe", "executable_contexts": ["page", "tab"], "mandatory_params":["xpath"], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name": "sair_de_iframe", "name_display" : "Sair de iframe", "executable_contexts": ["iframe"], "mandatory_params":[], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name":"screenshot", "name_display" : "Screenshot", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name":"horizontal_scroll", "name_display" : "Scroll horizontal", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name":"vertical_scroll", "name_display" : "Scroll vertical", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
 
         step_list_complete = step_list
         
