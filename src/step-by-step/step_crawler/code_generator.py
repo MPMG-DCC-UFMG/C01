@@ -139,6 +139,27 @@ def generate_executar_em_iframe(child, module):
     return code
 
 
+def generate_horizontal_scroll(child,module):
+    code = "\n"
+    code += child['depth'] * '    ' + "keep_running = True\n"
+    code += child['depth'] * '    ' + "while keep_running:\n"
+    code += (child['depth'] + 1) * '    ' + "keep_running = await page.evaluate('''() => { let table = $('.tableExContainer .bodyCells')[0]; let tableVisibleWidth = table.offsetWidth; let lastLeftOffset = table.scrollLeft;table.scrollLeft += tableVisibleWidth; return lastLeftOffset != table.scrollLeft}''')\n\n"
+
+    return code
+
+def generate_vertical_scroll(child,module):
+    code = "\n"
+    code += child['depth'] * '    ' + "table = ''\n"
+    code += child['depth'] * '    ' + "while True:\n"
+    code += (child['depth'] + 1) * '    ' + "keep_running, content = await page.evaluate('''() => { let table = $('.tableExContainer .bodyCells')[0]; let tableVisibleHeight = table.offsetHeight; let lastTopOffset = table.scrollTop; table.scrollTop += tableVisibleHeight; return [lastTopOffset != table.scrollTop, table.innerHTML]; } ''')\n\n"
+    code += (child['depth'] + 1) * '    ' + "if keep_running:\n"
+    code += (child['depth'] + 2) * '    ' + "table += '' + content\n"
+    code += (child['depth'] + 1) * '    ' + "else:\n"
+    code += (child['depth'] + 2) * '    ' + "break\n"
+    code += (child['depth'] + 1) * '    ' + "time.sleep(1)\n\n"
+    # print(code)
+    return code
+
 def generate_sair_de_iframe(child, module):
     code = "\n"
     code += child['depth'] * '    ' + "### Início: Saindo do contexto de iframe ###\n"
@@ -194,7 +215,6 @@ def generate_head(module, scrshot_path):
         + "    iframe = None\n"\
         + "    scrshot_path = \"" + scrshot_path + "\"\n"
     return code
-
 
 def generate_body(recipe, module):
     """
