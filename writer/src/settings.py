@@ -12,3 +12,5 @@ FILE_DESCRIPTOR_TOPIC = os.getenv('FILE_DESCRIPTOR_TOPIC', KAFKA_TOPIC_PREFIX + 
 
 CRAWLED_TOPIC = os.getenv('CRAWLED_TOPIC', KAFKA_TOPIC_PREFIX + '.scrapy_cluster.crawled_firehose')
 WRITER_TOPIC = os.getenv('WRITER_TOPIC', KAFKA_TOPIC_PREFIX + '.writer')
+
+OUTPUT_FOLDER = os.getenv('OUTPUT_FOLDER', '/data')

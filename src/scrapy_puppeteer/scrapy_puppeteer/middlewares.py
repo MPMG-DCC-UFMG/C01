@@ -74,11 +74,15 @@ class PuppeteerMiddleware:
             'logLevel': crawler.settings.get('LOG_LEVEL')
         })
 
-        data_path = crawler.settings.get('DATA_PATH')
-
-        middleware.download_path = f'{data_path}/data/files/'
         middleware.crawler_id = crawler.settings.get('CRAWLER_ID')
         middleware.instance_id = crawler.settings.get('INSTANCE_ID')
+
+        data_path = crawler.settings.get('DATA_PATH')
+        output_folder = crawler.settings.get('OUTPUT_FOLDER')
+        instance_path = os.path.join(output_folder, data_path,
+            str(middleware.instance_id))
+
+        middleware.download_path = os.path.join(instance_path, 'data', 'files')
 
         page = await middleware.browser.newPage()
 
@@ -270,9 +274,9 @@ class PuppeteerMiddleware:
         """Generates descriptions for downloaded files."""
 
         # list all files in crawl data folder, except file_description.jsonl
-        files = glob(f'{self.download_path}*[!jsonl]')
+        files = glob(os.path.join(self.download_path, '*[!jsonl]'))
 
-        with open(f'{self.download_path}file_description.jsonl', 'w') as f:
+        with open(os.path.join(self.download_path, 'file_description.jsonl'), 'w') as f:
             for file in files:
                 # Get timestamp from file download
                 fname = pathlib.Path(file)

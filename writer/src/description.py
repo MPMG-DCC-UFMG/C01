@@ -1,11 +1,12 @@
+import os
 import ujson
+
 
 class Description:
     def __init__(self,
-                data_path: str,
+                description_path: str,
                 content: dict) -> None:
-                
-        self.file_address = f'{data_path}file_description.jsonl'
+        self.file_address = os.path.join(description_path, 'file_description.jsonl')
         self.content = content
 
     def persist(self):

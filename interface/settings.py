@@ -30,6 +30,7 @@ env = environ.Env(
     SQL_PASSWORD=(str, "password"),
     SQL_HOST=(str, "localhost"),
     SQL_PORT=(str, "5432"),
+    OUTPUT_FOLDER=(str, '/data')
 )
 
 # Quick-start development settings - unsuitable for production
@@ -188,3 +189,6 @@ if env('LOG_TO_FILE'):
             },
         },
     }
+
+# Folder where collector outputs are stored
+OUTPUT_FOLDER = env('OUTPUT_FOLDER')
