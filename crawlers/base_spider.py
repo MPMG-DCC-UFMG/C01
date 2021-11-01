@@ -13,7 +13,6 @@ import json
 import itertools
 import os
 import re
-from lxml.html.clean import Cleaner
 import mimetypes
 import requests
 import string
@@ -262,14 +261,8 @@ class BaseSpider(scrapy.Spider):
                 f.write(raw_body)
 
         else:
-            cleaner = Cleaner(
-                style=True, links=False, scripts=True,
-                comments=True, page_structure=False
-            )
-
-            body = cleaner.clean_html(raw_body.decode(encoding))
             with open(file=relative_path, mode="w+", encoding=encoding, errors='ignore') as f:
-                f.write(body)
+                f.write(raw_body.decode(encoding))
 
 
         self.feed_file_description(
