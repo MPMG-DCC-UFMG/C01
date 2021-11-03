@@ -100,7 +100,7 @@ class StaticPageSpider(BaseSpider):
             tags=self.config.get("download_files_tags", ('a', 'area')),
             attrs=self.config.get("download_files_attrs", ('href', )),
             process_value=self.config.get("download_files_process_value"),
-            deny_extensions=self.config.get("download_files_deny_extensions")
+            deny_extensions=self.config.get("download_files_deny_extensions", [])
         )
 
         urls_found = set(link.url for link in links_extractor.extract_links(response))
