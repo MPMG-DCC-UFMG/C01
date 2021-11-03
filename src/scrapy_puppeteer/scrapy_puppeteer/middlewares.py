@@ -217,12 +217,7 @@ class PuppeteerMiddleware:
             await page.waitFor(request.wait_for)
 
         if request.steps:
-
-            if not os.path.exists(self.scrshot_path):
-                os.makedirs(self.scrshot_path)
-
             steps = code_g.generate_code(request.steps, functions_file, self.scrshot_path)
-
             request.meta["pages"] = await steps.execute_steps(pagina=page)
 
         content_type = response.headers['content-type']

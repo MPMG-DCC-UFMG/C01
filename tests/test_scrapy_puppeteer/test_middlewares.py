@@ -122,6 +122,7 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
         # _from_crawler call (using mock values)
         middleware.data_path = ""
         middleware.instance_id = 0
+        middleware.scrshot_path = ""
 
         return middleware
 
