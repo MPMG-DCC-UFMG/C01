@@ -580,10 +580,12 @@ def view_screenshots(request, instance_id, page):
     IMGS_PER_PAGE = 20
 
     instance = get_object_or_404(CrawlerInstance, pk=instance_id)
-    data_path = instance.crawler_id.data_path
+    
+    output_folder = os.getenv('OUTPUT_FOLDER', '/data')
+    data_path = instance.crawler.data_path
+    instance_path = os.path.join(output_folder, data_path, str(instance_id))
 
-    screenshot_dir = os.path.join(data_path, "data", "screenshots",
-        str(instance_id))
+    screenshot_dir = os.path.join(instance_path, "data", "screenshots")
 
     if not os.path.isdir(screenshot_dir):
         return JsonResponse({

@@ -4,7 +4,6 @@ import hashlib
 import os 
 from datetime import datetime
 
-from pykafka import KafkaClient
 from kafka import KafkaConsumer
 
 from lxml.html.clean import Cleaner
@@ -59,7 +58,8 @@ class Writer:
             f'{instance_path}/webdriver/',
             f'{instance_path}/data/raw_pages/',
             f'{instance_path}/data/csv/',
-            f'{instance_path}/data/files/'
+            f'{instance_path}/data/files/',
+            f'{instance_path}/data/screenshots/',
         ]
 
         for folder in folders:

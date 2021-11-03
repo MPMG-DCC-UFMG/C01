@@ -81,7 +81,7 @@ class PuppeteerMiddleware:
         instance_path = os.path.join(output_folder, data_path, str(middleware.instance_id))
 
         middleware.download_path = os.path.join(instance_path, 'data', 'files')
-        middleware.scrshot_path = os.path.join(instance_path, "data", "screenshots", str(middleware.instance_id))
+        middleware.scrshot_path = os.path.join(instance_path, "data", "screenshots")
 
         page = await middleware.browser.newPage()
 
