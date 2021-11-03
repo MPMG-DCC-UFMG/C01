@@ -104,6 +104,8 @@ services:
             dockerfile: ./docker/spider_manager/Dockerfile
         env_file:
             - ./docker/config/.env
+        volumes:
+            - data:/data
         depends_on:
             redis:
                 condition: service_healthy
@@ -126,4 +128,9 @@ services:
 volumes:
     static_volume:
     data:
+        driver: local
+        driver_opts:
+            type: 'none'
+            o: 'bind'
+            device: './data'
     postgres_data:

@@ -73,11 +73,15 @@ class PuppeteerMiddleware:
             'logLevel': crawler.settings.get('LOG_LEVEL')
         })
 
-        data_path = crawler.settings.get('DATA_PATH')
-        middleware.data_path = data_path
-        middleware.download_path = f'{data_path}/data/files/'
         middleware.crawler_id = crawler.settings.get('CRAWLER_ID')
         middleware.instance_id = crawler.settings.get('INSTANCE_ID')
+
+        data_path = crawler.settings.get('DATA_PATH')
+        output_folder = crawler.settings.get('OUTPUT_FOLDER')
+        instance_path = os.path.join(output_folder, data_path, str(middleware.instance_id))
+
+        middleware.download_path = os.path.join(instance_path, 'data', 'files')
+        middleware.scrshot_path = os.path.join(instance_path, "data", "screenshots", str(middleware.instance_id))
 
         page = await middleware.browser.newPage()
 
@@ -213,14 +217,11 @@ class PuppeteerMiddleware:
             await page.waitFor(request.wait_for)
 
         if request.steps:
-            scrshot_path = os.path.join(self.data_path, "data",
-                "screenshots", str(self.instance_id))
 
-            if not os.path.exists(scrshot_path):
-                os.makedirs(scrshot_path)
+            if not os.path.exists(self.scrshot_path):
+                os.makedirs(self.scrshot_path)
 
-            steps = code_g.generate_code(request.steps, functions_file,
-                scrshot_path)
+            steps = code_g.generate_code(request.steps, functions_file, self.scrshot_path)
 
             request.meta["pages"] = await steps.execute_steps(pagina=page)
 
@@ -236,10 +237,6 @@ class PuppeteerMiddleware:
         # Necessary to bypass the compression middleware (?)
         response.headers.pop('content-encoding', None)
         response.headers.pop('Content-Encoding', None)
-
-        print('%' * 15)
-        print(request.meta)
-        print('%' * 15)
 
         return HtmlResponse(
             page.url,
@@ -287,9 +284,9 @@ class PuppeteerMiddleware:
         """Generates descriptions for downloaded files."""
 
         # list all files in crawl data folder, except file_description.jsonl
-        files = glob(f'{self.download_path}*[!jsonl]')
+        files = glob(os.path.join(self.download_path, '*[!jsonl]'))
 
-        with open(f'{self.download_path}file_description.jsonl', 'w') as f:
+        with open(os.path.join(self.download_path, 'file_description.jsonl'), 'w') as f:
             for file in files:
                 # Get timestamp from file download
                 fname = pathlib.Path(file)

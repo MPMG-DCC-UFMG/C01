@@ -65,6 +65,7 @@ class Executor:
             base_config["DOWNLOADER_MIDDLEWARES"] = {'scrapy_puppeteer.PuppeteerMiddleware': 800}
 
             base_config["DATA_PATH"] = config["data_path"]
+            base_config["OUTPUT_FOLDER"] = settings.OUTPUT_FOLDER
             base_config["CRAWLER_ID"] = config["crawler_id"]
             base_config["INSTANCE_ID"] = config["instance_id"]
 

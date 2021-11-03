@@ -106,9 +106,10 @@ class RawCrawlRequestForm(CrawlRequestForm):
         required=False, label="Obedecer robots.txt")
 
     data_path = forms.CharField(
-        required=False, max_length=2000, label="Caminho para salvar arquivos",
+        required=False, max_length=2000,
+        label="Caminho para salvar os arquivos dentro da pasta de destino",
         widget=forms.TextInput(
-            attrs={'placeholder': '/home/user/Documents/<crawler_name>'}),
+            attrs={'placeholder': '<crawler_type>/<crawler_name>'}),
         validators=[CrawlRequest.pathValid]
     )
 

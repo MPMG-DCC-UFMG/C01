@@ -119,7 +119,7 @@ def getAllData():
 def create_instance(crawler_id, instance_id):
     mother = CrawlRequest.objects.filter(id=crawler_id)
     obj = CrawlerInstance.objects.create(
-        crawler_id=mother[0], instance_id=instance_id, running=True)
+        crawler=mother[0], instance_id=instance_id, running=True)
     return obj
 
 
@@ -208,8 +208,8 @@ def create_crawler(request):
     return render(request, "main/create_crawler.html", context)
 
 
-def edit_crawler(request, id):
-    crawler = get_object_or_404(CrawlRequest, pk=id)
+def edit_crawler(request, crawler_id):
+    crawler = get_object_or_404(CrawlRequest, pk=crawler_id)
 
     form = RawCrawlRequestForm(request.POST or None, instance=crawler)
     templated_parameter_formset, templated_response_formset = \
@@ -244,8 +244,8 @@ def edit_crawler(request, id):
         })
 
 
-def delete_crawler(request, id):
-    crawler = CrawlRequest.objects.get(id=id)
+def delete_crawler(request, crawler_id):
+    crawler = CrawlRequest.objects.get(id=crawler_id)
 
     if request.method == 'POST':
         crawler.delete()
@@ -258,11 +258,10 @@ def delete_crawler(request, id):
     )
 
 
-def detail_crawler(request, id):
-    crawler = CrawlRequest.objects.get(id=id)
+def detail_crawler(request, crawler_id):
+    crawler = CrawlRequest.objects.get(id=crawler_id)
     # order_by("-atribute") orders descending
-    instances = CrawlerInstance.objects.filter(
-        crawler_id=id).order_by("-last_modified")
+    instances = crawler.instances.order_by("-last_modified")
 
     context = {
         'crawler': crawler,
@@ -284,12 +283,12 @@ def create_steps(request):
 def stop_crawl(request, crawler_id):
     from_sm_listener = request.GET.get('from', '') == 'sm_listener'
     process_stop_crawl(crawler_id, from_sm_listener)
-    return redirect(detail_crawler, id=crawler_id)
+    return redirect(detail_crawler, crawler_id=crawler_id)
 
 
 def run_crawl(request, crawler_id):
     process_run_crawl(crawler_id)
-    return redirect(detail_crawler, id=crawler_id)
+    return redirect(detail_crawler, crawler_id=crawler_id)
 
 
 def tail_log_file(request, instance_id):
@@ -362,7 +361,7 @@ def success_download_file(request, instance_id):
         instance.save()
 
         if instance.page_crawling_finished and instance.download_files_finished():
-            process_stop_crawl(instance.crawler_id.id)
+            process_stop_crawl(instance.crawler.id)
 
         return JsonResponse({}, status=status.HTTP_200_OK)
 
@@ -378,7 +377,7 @@ def error_download_file(request, instance_id):
         instance.save()
 
         if instance.page_crawling_finished and instance.download_files_finished():
-            process_stop_crawl(instance.crawler_id.id)
+            process_stop_crawl(instance.crawler.id)
 
         return JsonResponse({}, status=status.HTTP_200_OK)
 
@@ -559,10 +558,11 @@ def load_form_fields(request):
 
 def export_config(request, instance_id):
     instance = get_object_or_404(CrawlerInstance, pk=instance_id)
-    data_path = instance.crawler_id.data_path
+    data_path = instance.crawler.data_path
 
     file_name = f"{instance_id}.json"
-    path = os.path.join(data_path, "config", file_name)
+    rel_path = os.path.join(data_path, str(instance_id), "config", file_name)
+    path = os.path.join(settings.OUTPUT_FOLDER, rel_path)
 
     try:
         response = FileResponse(open(path, 'rb'), content_type='application/json')

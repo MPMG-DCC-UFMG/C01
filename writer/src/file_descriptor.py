@@ -7,6 +7,7 @@ from kafka import KafkaProducer, KafkaConsumer
 import settings
 from description import Description
 
+
 class FileDescriptor:
     def __init__(self) -> None:
         self.__consumer = KafkaConsumer(settings.FILE_DESCRIPTOR_TOPIC,
@@ -14,7 +15,7 @@ class FileDescriptor:
                                 # auto_offset_reset='earliest',
                                 value_deserializer=lambda m: ujson.loads(m.decode('utf-8')))
 
-        self.__producer =  KafkaProducer(bootstrap_servers=settings.KAFKA_HOSTS,
+        self.__producer = KafkaProducer(bootstrap_servers=settings.KAFKA_HOSTS,
                                         value_serializer=lambda m: ujson.dumps(m).encode('utf-8'))
 
     def __parse_message(self, message) -> Description:
@@ -31,9 +32,9 @@ class FileDescriptor:
         thread = threading.Thread(target=self.__run_consumer, daemon=True)
         thread.start()
 
-    def feed(self, data_path: str, content: dict) -> None:
+    def feed(self, description_path: str, content: dict) -> None:
         self.__producer.send(settings.FILE_DESCRIPTOR_TOPIC, {
-            'data_path': data_path,
+            'description_path': description_path,
             'content': content
         })
         self.__producer.flush()

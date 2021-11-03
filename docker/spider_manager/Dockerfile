@@ -16,7 +16,6 @@ COPY src/scrapy_puppeteer /usr/src/scrapy_puppeteer
 COPY src/cssify /usr/src/cssify
 
 COPY spider_manager/scutils /usr/src/scutils
-COPY spider_manager/src /usr/src/app
 
 COPY spider_manager/requirements.txt /usr/src/app/
 
@@ -24,5 +23,7 @@ WORKDIR /usr/src/app
 
 # install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+
+COPY spider_manager/src /usr/src/app
 
 ENTRYPOINT [ "python", "command_listener.py" ]

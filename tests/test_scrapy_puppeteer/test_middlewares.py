@@ -279,7 +279,12 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
         with mock.patch('scrapy_puppeteer.middlewares.launch',
                 side_effect=gen_async(self.mockBrowser)) as mockLaunch:
 
-            self.mockSpider.settings = {}
+            self.mockSpider.settings = {
+                "CRAWLER_ID": 1,
+                "INSTANCE_ID": 1,
+                "DATA_PATH": 'test',
+                "OUTPUT_FOLDER": '/data'
+            }
             self.mockSpider.signals = mock.MagicMock()
             f = scrapy_puppeteer.PuppeteerMiddleware._from_crawler(
                 self.mockSpider
@@ -288,6 +293,8 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
 
             # The result should be an instance of the middleware
             self.assertIsInstance(result, scrapy_puppeteer.PuppeteerMiddleware)
+            # The download path should be set properly
+            self.assertEqual(result.download_path, '/data/test/1/data/files')
             # launch should be called once
             mockLaunch.assert_called_once()
             # browser.newPage should be called once
