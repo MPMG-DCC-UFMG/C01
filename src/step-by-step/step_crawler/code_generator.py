@@ -157,6 +157,8 @@ def generate_vertical_scroll(child,module):
     code += (child['depth'] + 1) * '    ' + "else:\n"
     code += (child['depth'] + 2) * '    ' + "break\n"
     code += (child['depth'] + 1) * '    ' + "time.sleep(1)\n\n"
+    code += child['depth'] * '    ' + "with open('table_iframe.html', 'a') as f:\n"
+    code += (child['depth'] + 1) * '    ' + "f.write(table)\n\n"    
     # print(code)
     return code
 
