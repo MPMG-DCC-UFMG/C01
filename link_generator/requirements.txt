@@ -1,8 +1,7 @@
-../entry_probing/
-../param_injector/
-../range_inference/
-../crawling_utils/
+../src/entry_probing/
+../src/param_injector
+../src/range_inference/
+../src/crawling_utils/
 kafka-python==2.0.2
 redis==3.5.3
 tldextract==3.1.0
-
