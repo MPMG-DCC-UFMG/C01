@@ -17,7 +17,9 @@ from crawling.spiders.base_spider import BaseSpider
 
 
 LARGE_CONTENT_LENGTH = 1e9
-HTTP_HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
+HTTP_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
+
 
 class StaticPageSpider(BaseSpider):
     # nome temporário, que será alterado no __init__
@@ -44,7 +46,7 @@ class StaticPageSpider(BaseSpider):
         def allow(url):
             search_results = re.search(pattern, url)
             return bool(search_results)
-        return list(filter(allow, urls)) 
+        return list(filter(allow, urls))
 
     def filter_urls_by_content_type(self, urls_info: list, content_types: set) -> list:
         def allow(url_info: tuple):
@@ -84,7 +86,7 @@ class StaticPageSpider(BaseSpider):
             urls_info = list(self.get_url_info(url) for url in urls_found)
             urls_info_filtered = self.filter_urls_by_content_type(urls_info, {'html'})
             urls_found = set(url for url, _, _, _ in urls_info_filtered)
-        
+
         else:
             urls_found = set(urls_found)
 
@@ -104,7 +106,7 @@ class StaticPageSpider(BaseSpider):
         )
 
         urls_found = set(link.url for link in links_extractor.extract_links(response))
-        exclude_html_and_php_regex_pattern = r"(.*\.[a-z]{3,4}$)(.*(?<!\.html)$)(.*(?<!\.php)$)" 
+        exclude_html_and_php_regex_pattern = r"(.*\.[a-z]{3,4}$)(.*(?<!\.html)$)(.*(?<!\.php)$)"
         urls_found = self.filter_urls_by_regex(urls_found, exclude_html_and_php_regex_pattern)
 
         broken_urls = urls_found
@@ -143,7 +145,7 @@ class StaticPageSpider(BaseSpider):
             src.append(img_src)
 
         self._logger.info(f"[{self.config['source_name']}] +{len(src)} imgs found at page {response.url}")
-        
+
         return set(src)
 
     def response_to_item(self, response, files_found: set, images_found: set) -> RawResponseItem:
@@ -169,22 +171,27 @@ class StaticPageSpider(BaseSpider):
         item["images_found"] = images_found
 
         return item
-    
+
     def page_to_response(self, page, response) -> HtmlResponse:
         return HtmlResponse(
-                    response.url,
-                    status=response.status,
-                    headers=response.headers,
-                    body=page,
-                    encoding=response.encoding,
-                    request=response.request
-                )
+            response.url,
+            status=response.status,
+            headers=response.headers,
+            body=page,
+            encoding=response.encoding,
+            request=response.request
+        )
 
     def parse(self, response):
         """
         Parse responses of static pages.
         Will try to follow links if config["explore_links"] is set.
         """
+
+        # Get current depth
+        cur_depth = 0
+        if 'curdepth' in response.meta:
+            cur_depth = response.meta['curdepth']
 
         responses = [response]
         if type(response.request) is PuppeteerRequest:
@@ -201,9 +208,11 @@ class StaticPageSpider(BaseSpider):
                                         "attrs": {
                                             'referer': response.url,
                                             'instance_id': self.config["instance_id"]
-                                        }
+                                        },
+                                        'curdepth': response.meta['curdepth'] + 1
                                     },
-                                    errback=self.errback_httpbin)
+                            errback=self.errback_httpbin)
+
 
                 files_found = set()
                 if self.config.get("download_files", False):
@@ -225,5 +234,4 @@ class StaticPageSpider(BaseSpider):
 
             item = self.response_to_item(response, files_found, images_found)
 
-            yield item 
-
+            yield item
