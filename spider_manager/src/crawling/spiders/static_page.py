@@ -206,7 +206,7 @@ class StaticPageSpider(BaseSpider):
                     message = "Not crawling links in '{}' because cur_depth={} >= maxdepth={}"
                     self._logger.debug(message.format(response.url, cur_depth, max_depth))
                     
-                if self.config.get("explore_links", False):
+                elif self.config.get("explore_links", False):
                     for link in self.extract_links(response):
                         yield Request(url=link,
                                     callback=self.parse,
