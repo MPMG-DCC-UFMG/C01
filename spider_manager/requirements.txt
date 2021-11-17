@@ -1,5 +1,6 @@
 ../crawling_utils/
 ../step-by-step/
+../camuflage_scrapy/
 ../captcha_solver/
 ../scrapy_puppeteer/
 ../cssify/

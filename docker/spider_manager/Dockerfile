@@ -12,6 +12,7 @@ RUN mkdir -p /usr/src/app
 COPY src/crawling_utils /usr/src/crawling_utils
 COPY src/step-by-step /usr/src/step-by-step
 COPY src/captcha_solver /usr/src/captcha_solver
+COPY src/camuflage_scrapy /usr/src/camuflage_scrapy
 COPY src/scrapy_puppeteer /usr/src/scrapy_puppeteer
 COPY src/cssify /usr/src/cssify
 
