@@ -224,16 +224,18 @@ async def elemento_existe_na_pagina(pagina, xpath):
 async def open_in_new_tab(pagina, link_xpath):
     await pagina.waitForXPath(link_xpath)
     elements = await pagina.xpath(link_xpath)
-    new_page_promisse = asyncio.get_event_loop().create_future()
-    if len(elements) == 1:
-        pagina.browser.once("targetcreated", lambda target: new_page_promisse.set_result(target))
-        await pagina.evaluate('el => { el.setAttribute("target", "_blank"); el.click();}', elements[0])
-        await pagina.bringToFront()
-    else:
+
+    if len(elements) != 1:
         raise Exception('XPath points to non existent element, or multiple elements!')
 
-    new_page = await (await new_page_promisse).page()
-    await espere_pagina(new_page)
-    await new_page.bringToFront()
+    new_page_promisse = asyncio.get_event_loop().create_future()
+    pagina.browser.once("targetcreated", lambda target: new_page_promisse.set_result(target))
+    await pagina.evaluate('el => { el.setAttribute("target", "_blank"); el.click();}', elements[0])
+    try:
+        new_page = await (await asyncio.wait_for(new_page_promisse, 60)).page()
+        await espere_pagina(new_page)
+        await new_page.bringToFront()
 
-    return new_page
+        return new_page
+    except asyncio.TimeoutError:
+        raise Exception('Process timed out when trying to open xpath "' + link_xpath +'" in a new page!')
