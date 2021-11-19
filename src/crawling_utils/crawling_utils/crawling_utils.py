@@ -6,6 +6,7 @@ import os
 import sys
 from urllib.parse import urlparse
 import requests
+from datetime import datetime
 
 SERVER_ADDRESS = os.getenv('SERVER_ADDRESS', 'http://localhost:8000')
 
@@ -56,10 +57,10 @@ def notify_server(notification_url: str):
     req = SERVER_SESSION.get(notification_url)
 
     if req.status_code == 200:
-        print('Server notified successfully')
+        print(f'[{datetime.now()}] Server Crawled Data Notifier: Server notified successfully')
 
     else:
-        print('Error notifying server')
+        print(f'[{datetime.now()}] Server Crawled Data Notifier: Error notifying server')
 
 
 def notify_new_page_found(instance_id: str, num_pages: int = 1):
@@ -109,7 +110,6 @@ def system_is_deploying() -> bool:
     '''
     return 'makemigrations' in sys.argv or 'migrate' in sys.argv or \
         'collectstatic' in sys.argv
-
 
 # leave as 'chromedriver' if driver is on path
 CHROME_WEBDRIVER_PATH = 'chromedriver'
