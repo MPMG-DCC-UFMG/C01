@@ -159,7 +159,6 @@ def generate_vertical_scroll(child,module):
     code += (child['depth'] + 1) * '    ' + "time.sleep(1)\n\n"
     code += child['depth'] * '    ' + "with open('table_iframe.html', 'a') as f:\n"
     code += (child['depth'] + 1) * '    ' + "f.write(table)\n\n"    
-    # print(code)
     return code
 
 def generate_sair_de_iframe(child, module):
