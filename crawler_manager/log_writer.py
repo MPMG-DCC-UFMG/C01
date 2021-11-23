@@ -1,6 +1,6 @@
 """This file contains the kafka consumer for the spider logs."""
 
-import json
+import ujson
 
 from django.apps import apps
 from kafka import KafkaConsumer
@@ -17,12 +17,14 @@ class LogWriter():
     """
 
     # KafkaConsumer parameters dictionary:
-    DEFAULT_CONSUMER_PARAMS = {
-        'enable_auto_commit': True,
-        'auto_offset_reset': 'latest',
-        'bootstrap_servers': settings.KAFKA_HOSTS,
-        'value_deserializer': lambda m: json.loads(m.decode('utf-8'))
-    }
+    DEFAULT_CONSUMER_PARAMS = dict(bootstrap_servers=settings.KAFKA_HOSTS,            
+                                auto_offset_reset=settings.KAFKA_CONSUMER_AUTO_OFFSET_RESET,
+                                connections_max_idle_ms=settings.KAFKA_CONNECTIONS_MAX_IDLE_MS,
+                                request_timeout_ms=settings.KAFKA_REQUEST_TIMEOUT_MS,
+                                session_timeout_ms=settings.KAFKA_SESSION_TIMEOUT_MS,
+                                auto_commit_interval_ms=settings.KAFKA_CONSUMER_COMMIT_INTERVAL_MS,
+                                enable_auto_commit=settings.KAFKA_CONSUMER_AUTO_COMMIT_ENABLE,
+                                max_partition_fetch_bytes=settings.KAFKA_CONSUMER_FETCH_MESSAGE_MAX_BYTES)
 
     @staticmethod
     def log_consumer(params=DEFAULT_CONSUMER_PARAMS):
@@ -31,20 +33,22 @@ class LogWriter():
 
         """
         consumer = KafkaConsumer(settings.LOGGING_TOPIC, **params)
-        try:
-            for message in consumer:
+        for message in consumer:
+            try:
+                message = ujson.loads(message.value.decode('utf-8'))
+
                 log = {}
-                log['iid'] = message.value['instance_id']
-                log['raw'] = json.dumps(message.value)
-                log['name'] = message.value['name']
-                log['msg'] = message.value['message']
-                log['lvl'] = message.value['levelname']
+                log['iid'] = message['instance_id']
+                log['raw'] = ujson.dumps(message)
+                log['name'] = message['name']
+                log['msg'] = message['message']
+                log['lvl'] = message['levelname']
 
                 LogWriter.log_writer(log)
-
-        finally:
-            consumer.close()
-
+                
+            except Exception as e:
+                print(f'Error processing message: {e}')
+        
     @staticmethod
     def log_writer(log):
         """

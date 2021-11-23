@@ -64,7 +64,6 @@ class PuppeteerMiddleware:
         :crawler(Crawler object): crawler that uses this middleware
         """
 
-
         middleware = cls()
         middleware.browser = await launch({
             'executablePath': chromium_executable(),
@@ -79,10 +78,10 @@ class PuppeteerMiddleware:
 
         data_path = crawler.settings.get('DATA_PATH')
         output_folder = crawler.settings.get('OUTPUT_FOLDER')
-        instance_path = os.path.join(output_folder, data_path,
-            str(middleware.instance_id))
+        instance_path = os.path.join(output_folder, data_path, str(middleware.instance_id))
 
         middleware.download_path = os.path.join(instance_path, 'data', 'files')
+        middleware.scrshot_path = os.path.join(instance_path, "data", "screenshots")
 
         page = await middleware.browser.newPage()
 
@@ -101,7 +100,13 @@ class PuppeteerMiddleware:
         :crawler(Crawler object): crawler that uses this middleware
         """
 
-        loop = asyncio.get_event_loop()
+        try:
+            loop = asyncio.get_event_loop()
+
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
         middleware = loop.run_until_complete(
             asyncio.ensure_future(cls._from_crawler(crawler))
         )
@@ -127,7 +132,11 @@ class PuppeteerMiddleware:
                                         })
             await self.browser.newPage()
             page = await self.browser.newPage()
-
+            
+            # Changes the default file save location.
+            cdp = await page._target.createCDPSession()
+            await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allowAndName', 'downloadPath': self.download_path})
+            
         # Cookies
         if isinstance(request.cookies, dict):
             await page.setCookie(*[
@@ -212,7 +221,7 @@ class PuppeteerMiddleware:
             await page.waitFor(request.wait_for)
 
         if request.steps:
-            steps = code_g.generate_code(request.steps, functions_file)
+            steps = code_g.generate_code(request.steps, functions_file, self.scrshot_path)
             request.meta["pages"] = await steps.execute_steps(pagina=page)
 
         content_type = response.headers['content-type']

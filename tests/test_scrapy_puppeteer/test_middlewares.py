@@ -111,6 +111,23 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
         self.loop.close()
 
 
+    def create_middleware(self):
+        """
+        Creates an instance of the PuppeteerMiddleware with the required
+        attributes preset
+        """
+        middleware = scrapy_puppeteer.PuppeteerMiddleware()
+
+        # Manually set some of the attributes that would be assigned by the
+        # _from_crawler call (using mock values)
+        middleware.data_path = ""
+        middleware.instance_id = 0
+        middleware.scrshot_path = ""
+        middleware.download_path = ""
+
+        return middleware
+
+
     def assert_default_calls(self, mockLaunch: mock.MagicMock):
         """
         Asserts that the minimum required calls have been called
@@ -142,7 +159,7 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
         with mock.patch('scrapy_puppeteer.middlewares.launch',
                 side_effect=gen_async(self.mockBrowser)) as mockLaunch:
 
-            middleware = scrapy_puppeteer.PuppeteerMiddleware()
+            middleware = self.create_middleware()
             f = middleware._process_request(self.mockRequest, self.mockSpider)
             d = self.loop.run_until_complete(f)
 
@@ -157,7 +174,8 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
     def test_process_request_run_and_screenshot(self):
         """
         Tests if the process_request interface works as intended when a
-        screenshot is requested
+        screenshot is requested (using the request parameters, not the
+        screenshot step)
         """
 
         with mock.patch('scrapy_puppeteer.middlewares.launch',
@@ -166,7 +184,7 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
             # Enable the screenshot feature
             self.mockRequest.screenshot = True
 
-            middleware = scrapy_puppeteer.PuppeteerMiddleware()
+            middleware = self.create_middleware()
             f = middleware._process_request(self.mockRequest, self.mockSpider)
             d = self.loop.run_until_complete(f)
 
@@ -190,7 +208,7 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
             # Enable the wait_for feature
             self.mockRequest.wait_for = True
 
-            middleware = scrapy_puppeteer.PuppeteerMiddleware()
+            middleware = self.create_middleware()
             f = middleware._process_request(self.mockRequest, self.mockSpider)
             d = self.loop.run_until_complete(f)
 
@@ -225,7 +243,7 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
             # calls)
             self.mockRequest.steps = {"test": True}
 
-            middleware = scrapy_puppeteer.PuppeteerMiddleware()
+            middleware = self.create_middleware()
             f = middleware._process_request(self.mockRequest, self.mockSpider)
             d = self.loop.run_until_complete(f)
 
@@ -237,7 +255,8 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
             self.mockPage.waitFor.assert_not_called()
             # The methods for step generation and execution should be called
             mockCode_g.generate_code.assert_called_once()
-            mockSteps.execute_steps.assert_called_once_with(pagina=self.mockPage)
+            mockSteps.execute_steps\
+                .assert_called_once_with(pagina=self.mockPage)
 
 
     def test_middleware_closes_browser(self):
@@ -245,7 +264,7 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
         Tests if the middleware properly closes the browser when requested
         """
 
-        middleware = scrapy_puppeteer.PuppeteerMiddleware()
+        middleware = self.create_middleware()
         middleware.browser = self.mockBrowser
         f = middleware._spider_closed()
         d = self.loop.run_until_complete(f)

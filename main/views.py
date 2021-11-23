@@ -20,6 +20,7 @@ from crawler_manager.constants import *
 
 from datetime import datetime
 import json
+import base64
 import itertools
 import json
 import logging
@@ -38,12 +39,12 @@ from rest_framework.parsers import JSONParser
 from requests.exceptions import MissingSchema
 
 from formparser.html import HTMLExtractor, HTMLParser
+from scrapy_puppeteer import iframe_loader
 
 # Log the information to the file logger
 logger = logging.getLogger('file')
 
 # Helper methods
-
 
 def process_run_crawl(crawler_id):
     instance = None
@@ -573,6 +574,69 @@ def export_config(request, instance_id):
         response['Content-Disposition'] = "attachment; filename=%s" % file_name
 
     return response
+
+
+def view_screenshots(request, instance_id, page):
+    IMGS_PER_PAGE = 20
+
+    instance = get_object_or_404(CrawlerInstance, pk=instance_id)
+    
+    output_folder = os.getenv('OUTPUT_FOLDER', '/data')
+    data_path = instance.crawler.data_path
+    instance_path = os.path.join(output_folder, data_path, str(instance_id))
+
+    screenshot_dir = os.path.join(instance_path, "data", "screenshots")
+
+    if not os.path.isdir(screenshot_dir):
+        return JsonResponse({
+            'error': 'Pasta de coleta não encontrada.',
+            'total_screenshots': 0
+        }, status=200)
+
+    screenshot_list = sorted(os.listdir(screenshot_dir))
+    total_screenshots = len(screenshot_list)
+
+    if total_screenshots == 0:
+        return JsonResponse({
+            'error': 'Nenhum screenshot encontrado.',
+            'total_screenshots': 0
+        }, status=200)
+
+    screenshot_list = screenshot_list[(page - 1) * IMGS_PER_PAGE:
+        page * IMGS_PER_PAGE]
+
+    image_data = []
+    for index, screenshot in enumerate(screenshot_list):
+        img_path = os.path.join(screenshot_dir, screenshot)
+        with open(img_path, "rb") as image:
+            curr_img = {
+                'base64': base64.b64encode(image.read()).decode('ascii'),
+                'title': str(1 + index + ((page - 1) * IMGS_PER_PAGE))
+            }
+            image_data.append(curr_img)
+
+
+    return JsonResponse({
+        'data': image_data,
+        'total_screenshots': total_screenshots
+    }, status=200)
+
+
+def load_iframe(request):
+    url = request.GET['url'].replace('"', '')
+    xpath = request.GET['xpath'].replace('"', '')
+
+    try:
+        content = iframe_loader(url, xpath)
+        return render(request, 'main/iframe_loader.html', {'content': content})
+
+    except Exception as e:
+        ctx = {
+            'url': url,
+            'xpath': xpath,
+            'error': str(e)
+        }
+        return render(request, 'main/error_iframe_loader.html', ctx)
 
 # API
 ########
