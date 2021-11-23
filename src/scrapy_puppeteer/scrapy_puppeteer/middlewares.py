@@ -132,7 +132,11 @@ class PuppeteerMiddleware:
                                         })
             await self.browser.newPage()
             page = await self.browser.newPage()
-
+            
+            # Changes the default file save location.
+            cdp = await page._target.createCDPSession()
+            await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allowAndName', 'downloadPath': self.download_path})
+            
         # Cookies
         if isinstance(request.cookies, dict):
             await page.setCookie(*[
