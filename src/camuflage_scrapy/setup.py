@@ -4,16 +4,14 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name='camuflage_scrapy',
+    name='antiblock_scrapy',
     version='0.1',
     scripts=[],
     author="Elves Rodrigues",
-    description=("A scrapy middleware implementing antiblock mechanisms"),
+    author_email="elvesmateusrodrigues@gmail.com",
+    description="Mecanismos antibloqueios para o Scrapy",
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
-    classifiers=[
-        "Programming Language :: Python :: 3"
-    ],
-    install_requires=['scrapy', 'requests', 'stem'],
+    install_requires=["toripchanger", "scrapy-rotating-proxies"]
 )

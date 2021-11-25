@@ -106,10 +106,14 @@ class DownloadRequest:
                     break
 
         if attempt == MAX_ATTEMPTS:
+            print(f"[{datetime.now()}] Download Request - Error downloading {self.url}")
+
             notify_file_downloaded_with_error(self.instance_id)
             return False
 
         else:
+            print(f"[{datetime.now()}] Download Request - Download successfully {self.url}")
+
             self.crawled_at_date = str(datetime.today())
             notify_file_downloaded_successfully(self.instance_id)
             return True

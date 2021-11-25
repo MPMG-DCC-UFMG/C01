@@ -102,7 +102,7 @@ class StaticPageSpider(BaseSpider):
             tags=self.config.get("download_files_tags", ('a', 'area')),
             attrs=self.config.get("download_files_attrs", ('href', )),
             process_value=self.config.get("download_files_process_value"),
-            deny_extensions=self.config.get("download_files_deny_extensions")
+            deny_extensions=self.config.get("download_files_deny_extensions", [])
         )
 
         urls_found = set(link.url for link in links_extractor.extract_links(response))
@@ -162,7 +162,7 @@ class StaticPageSpider(BaseSpider):
         item["encoding"] = response.encoding
 
         item["referer"] = response.meta["attrs"]["referer"]
-        item["content_type"] = response.headers['Content-type'].decode()
+        item["content_type"] = response.headers.get('Content-type', b'').decode()
         item["crawler_id"] = self.config["crawler_id"]
         item["instance_id"] = self.config["instance_id"]
         item["crawled_at_date"] = str(datetime.datetime.today())
@@ -195,39 +195,48 @@ class StaticPageSpider(BaseSpider):
 
         responses = [response]
         if type(response.request) is PuppeteerRequest:
-            responses = [self.page_to_response(page, response)
-                         for page in list(response.request.meta["pages"].values())]
-
+            responses = [self.page_to_response(page, response) 
+                            for page in list(response.request.meta["pages"].values())]
+        
         for response in responses:
-            # Limit depth if required
-            max_depth = self.config.get("link_extractor_max_depth")
-            if max_depth is not None and cur_depth >= max_depth:
-                message = "Not crawling links in '{}' because cur_depth={} >= maxdepth={}"
-                self._logger.debug(message.format(response.url, cur_depth, max_depth))
-            elif self.config.get("explore_links", False):
-                for link in self.extract_links(response):
-                    yield Request(url=link,
-                                callback=self.parse,
-                                meta={
-                                    "attrs": {
-                                        'referer': response.url,
-                                        'instance_id': self.config["instance_id"]
+            try:
+                # Limit depth if required
+                max_depth = self.config.get("link_extractor_max_depth")
+                if max_depth is not None and cur_depth >= max_depth:
+                    message = "Not crawling links in '{}' because cur_depth={} >= maxdepth={}"
+                    self._logger.debug(message.format(response.url, cur_depth, max_depth))
+                    
+                elif self.config.get("explore_links", False):
+                    for link in self.extract_links(response):
+                        yield Request(url=link,
+                                    callback=self.parse,
+                                    meta={
+                                        "attrs": {
+                                            'referer': response.url,
+                                            'instance_id': self.config["instance_id"]
+                                        },
+                                        'curdepth': response.meta['curdepth'] + 1
                                     },
-                                    'curdepth': response.meta['curdepth'] + 1
-                                },
-                        errback=self.errback_httpbin)
+                            errback=self.errback_httpbin)
 
-            files_found = set()
-            if self.config.get("download_files", False):
-                files_found = self.extract_files(response)
+                files_found = set()
+                if self.config.get("download_files", False):
+                    files_found = self.extract_files(response)
 
-            images_found = set()
-            if self.config.get("download_imgs", False):
-                images_found = self.extract_imgs(response)
+                images_found = set()
+                if self.config.get("download_imgs", False):
+                    images_found = self.extract_imgs(response)
 
+            except AttributeError:
+                self._logger.warn(f'The content of URL {response.url} is not text. Either improve your REGEX filter' +  
+                        ' or enable the option to check the content type of a URL to be downloaded in the' + 
+                        ' advanced settings of your crawler.')
+
+                continue    
+                
             num_files = len(files_found) + len(images_found)
             notify_files_found(self.config["instance_id"], num_files)
 
             item = self.response_to_item(response, files_found, images_found)
-
+      
             yield item

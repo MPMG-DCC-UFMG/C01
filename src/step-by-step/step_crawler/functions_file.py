@@ -1,5 +1,6 @@
 import io
 import asyncio
+import datetime
 import time
 import uuid
 from cssify import cssify
@@ -15,10 +16,11 @@ from pyext import RuntimeModule
 """
 
 
-def step(display):
+def step(display, executable_contexts=['page', 'tab', 'iframe']):
     def function(f):
         f.is_step = True
         f.display = display
+        f.executable_contexts = executable_contexts
         return f
 
     return function
@@ -48,17 +50,44 @@ async def espere_pagina(pagina):
     await pagina.waitForSelector("html")
 
 
+async def fill_iframe_content(page):
+    # based on: https://gist.github.com/jgontrum/5a9060e40c7fc04c2c3bae3f1a9b28ad
+
+    iframes = await page.querySelectorAll('iframe')
+    for iframe in iframes:
+        frame = await iframe.contentFrame()
+
+        # Checks if the element is really an iframe
+        if not frame:
+            continue
+
+        # Extract the content inside the iframe
+        content = await frame.evaluate('''
+            () => {
+                const el = document.querySelector("*");
+                return el.innerHTML;
+            }
+        ''')
+
+        # Inserts iframe content as base page content
+        await page.evaluate('''
+            (iframe, content) => {
+                iframe.innerHTML = content;
+            }
+        ''', iframe, content)
+
+
 @step("Clicar")
 async def clique(pagina, elemento):
     if type(elemento) == str:
         await pagina.waitForXPath(elemento)
         elements = await pagina.xpath(elemento)
         if len(elements) == 1:
-            await elements[0].click()
+            await pagina.evaluate('element => { element.click(); }', elements[0])
         else:
             raise Exception('XPath points to non existent element, or multiple elements!')
     else:
-        elemento.click()
+        await pagina.evaluate('element => { element.click(); }', elemento)
     await espere_pagina(pagina)
 
 
@@ -71,6 +100,7 @@ async def selecione(pagina, xpath, opcao):
 
 @step("Salvar página")
 async def salva_pagina(pagina):
+    await fill_iframe_content(pagina)
     content = await pagina.content()
     body = str.encode(content)
     return body
@@ -118,13 +148,14 @@ async def localiza_elementos(pagina, xpath, numero_xpaths=None):
     return xpath_list[:numero_xpaths]
 
 
-@step("Voltar")
+@step("Voltar", executable_contexts=['page', 'tab'])
 async def retorna_pagina(pagina):
     await pagina.goBack()
 
 
 @step("Digitar em")
 async def digite(pagina, xpath, texto):
+    await pagina.querySelectorEval(cssify(xpath), 'el => el.value = ""')
     await pagina.type(cssify(xpath), texto)
 
 
@@ -177,12 +208,17 @@ async def quebrar_captcha_imagem(pagina, xpath_do_elemento_captcha, xpath_do_cam
 
 @step("Checar se elemento existe na página")
 async def elemento_existe_na_pagina(pagina, xpath):
-    """This step returns True if there's any element given a xpath, otherwise, returns False
+    """This step returns True if there's any visible element given a xpath, otherwise, returns False
 
         :param pagina : a pyppeteer page
+        :param xpath : elements xpaths
         :returns bool: True or False
     """
-    return bool(await pagina.xpath(xpath))
+    try:
+        await pagina.waitForXPath(xpath, visible=True, timeout=300)
+    except Exception as e:
+        return False
+    return True
 
 
 async def open_in_new_tab(pagina, link_xpath):
@@ -191,8 +227,7 @@ async def open_in_new_tab(pagina, link_xpath):
     new_page_promisse = asyncio.get_event_loop().create_future()
     if len(elements) == 1:
         pagina.browser.once("targetcreated", lambda target: new_page_promisse.set_result(target))
-        await pagina.evaluate('el => el.setAttribute("target", "_blank")', elements[0])
-        await elements[0].click()
+        await pagina.evaluate('el => { el.setAttribute("target", "_blank"); el.click();}', elements[0])
         await pagina.bringToFront()
     else:
         raise Exception('XPath points to non existent element, or multiple elements!')

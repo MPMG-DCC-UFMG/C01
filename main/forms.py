@@ -43,15 +43,17 @@ class CrawlRequestForm(forms.ModelForm):
             'antiblock_autothrottle_enabled',
             'antiblock_autothrottle_start_delay',
             'antiblock_autothrottle_max_delay',
-            'antiblock_mask_type',
+            'antiblock_ip_rotation_enabled',
             'antiblock_ip_rotation_type',
             'antiblock_max_reqs_per_ip',
             'antiblock_max_reuse_rounds',
             'antiblock_proxy_list',
+            'antiblock_user_agent_rotation_enabled',
             'antiblock_reqs_per_user_agent',
-            'antiblock_user_agents_file',
-            'antiblock_cookies_file',
-            'antiblock_persist_cookies',
+            'antiblock_user_agents_list',
+            'antiblock_insert_cookies_enabled',
+            'antiblock_cookies_list',
+            # 'antiblock_persist_cookies',
 
             'has_webdriver',
             'webdriver_path',
@@ -94,7 +96,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
             attrs={'placeholder': 'Diário oficial do Município'})
     )
     base_url = forms.CharField(
-        label="URL Base", max_length=200,
+        label="URL Base",
         widget=forms.TextInput(attrs={
             'placeholder': 'www.example.com/data/{}',
             'onchange': 'detailBaseUrl();'
@@ -167,6 +169,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
             "auto ajuste está ligado)."
         ),
         initial=2,
+        min_value=0
     )
     antiblock_autothrottle_enabled = forms.BooleanField(
         required=False,
@@ -182,85 +185,131 @@ class RawCrawlRequestForm(CrawlRequestForm):
         required=False,
         label="Intervalo inicial",
         initial=2,
+        min_value=1
     )
     antiblock_autothrottle_max_delay = forms.IntegerField(
         required=False,
         label="Intervalo máximo",
         initial=10,
+        min_value=1
     )
 
     # Options for mask type
-    antiblock_mask_type = forms.ChoiceField(
-        required=False, choices=(
-            ('none', 'None'),
-            # ('ip', 'Rotação de IP'),
-            # ('user_agent', 'Rotação de user-agent'),
-            # ('delay', 'Intervalos entre requisições'),
-            # ('cookies', 'Usar cookies'),
-        ),
-        widget=forms.Select(attrs={'onchange': 'detailAntiblock();'})
-    )
+    # antiblock_mask_type = forms.ChoiceField(
+    #     required=False, choices=(
+    #         ('none', 'None'),
+    #         # ('ip', 'Rotação de IP'),
+    #         # ('user_agent', 'Rotação de user-agent'),
+    #         # ('delay', 'Intervalos entre requisições'),
+    #         # ('cookies', 'Usar cookies'),
+    #     ),
+    #     widget=forms.Select(attrs={'onchange': 'detailAntiblock();'})
+    # )
 
     # Options for IP rotation
-    antiblock_ip_rotation_type = forms.ChoiceField(
-        required=False, choices=(
-            ('tor', 'Tor'),
-            ('proxy', 'Proxy'),
-        ),
-        widget=forms.Select(attrs={'onchange': 'detailIpRotationType();'})
+    antiblock_ip_rotation_type = forms.CharField(
+        required=False,
+        widget=forms.HiddenInput()
     )
-    antiblock_proxy_list = forms.CharField(
-        required=False, max_length=2000, label="Proxy List",
-        widget=forms.TextInput(
+
+    antiblock_ip_rotation_enabled = forms.BooleanField(
+        required=False,
+        label="Rotacionar IPs",
+        widget=forms.CheckboxInput(
             attrs={
-                'placeholder': (
-                    "Cole aqui o conteúdo do seu arquivo de lista"
-                    " de proxies"
-                )
+                "onclick": "ipRotationEnabled();",
             }
         )
     )
+
     antiblock_max_reqs_per_ip = forms.IntegerField(
         required=False,
         label="Máximo de requisições por IP",
         initial=10,
-    )
-    antiblock_max_reuse_rounds = forms.IntegerField(
-        required=False,
-        label="Máximo de vezes que um IP pode ser reusado",
-        initial=10,
+        min_value=1
     )
 
-    # Options for User Agent rotation
-    antiblock_reqs_per_user_agent = forms.IntegerField(
-        required=False, label="Requisições por user-agents"
+    antiblock_max_reuse_rounds = forms.IntegerField(
+        required=False,
+        label="Número de rodadas que um IP pode ser reusado",
+        initial=10,
+        min_value=1
     )
-    antiblock_user_agents_file = forms.CharField(
-        required=False, max_length=2000, label="Arquivo de User-Agents",
-        widget=forms.TextInput(
+
+    antiblock_proxy_list = forms.CharField(
+        required=False, 
+        label="Insira a lista de proxy",
+        widget=forms.Textarea(
             attrs={
                 'placeholder': (
-                    'Cole aqui o conteúdo do seu arquivo'
-                    ' de user-agents'
+                    "Coloque aqui os proxies (um por linha)"
+                )
+            }
+        )
+    )
+    
+
+    # Options for User Agent rotation
+
+    antiblock_user_agent_rotation_enabled = forms.BooleanField(
+        required=False, 
+        label="Rotacionar User-Agents",
+        widget=forms.CheckboxInput(
+            attrs={
+                "onclick": "userAgentRotationEnabled();",
+            }
+        )
+    )
+
+    antiblock_reqs_per_user_agent = forms.IntegerField(
+        required=False, 
+        label="Requisições por User-Agent",
+        initial=100,
+        min_value=1
+    )
+
+    antiblock_user_agents_list = forms.CharField(
+        required=False, 
+        label="Lista de User-Agent",
+        widget=forms.Textarea(
+            attrs={
+                'placeholder': (
+                    'Um user-agent por linha. Ex.:\n'
+                    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)...\n'
+                    'Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0'
                 )
             }
         )
     )
 
     # Options for Cookies
-    antiblock_cookies_file = forms.CharField(
-        required=False, max_length=2000, label="Arquivo de cookies",
-        widget=forms.TextInput(
+    antiblock_insert_cookies_enabled = forms.BooleanField(
+        required=False,
+        label="Inserir cookies",
+        widget=forms.CheckboxInput(
+            attrs={
+                "onclick": "insertCookiesEnabled();",
+            }
+        )
+    )
+
+    antiblock_cookies_list = forms.CharField(
+        required=False,
+        label="Lista de cookie",
+        widget=forms.Textarea(
             attrs={
                 'placeholder': (
-                    'Cole aqui o conteúdo do seu arquivo'
-                    ' de cookies'
+                    'Um cookie por linha como objeto javascript. Ex.:\n'
+                    '{"authenticated": true, "access_token": "a93f31b19257193d49a971023dcd95f7"}\n'
+                    '{"valid_until": 1605225253, "private_key": "429b10192642a52276605047ddda9d45"}'
                 )
             }
         )
     )
-    antiblock_persist_cookies = forms.BooleanField(
-        required=False, label="Manter cookies entre requisições")
+
+    # antiblock_persist_cookies = forms.BooleanField(
+    #     required=False, 
+    #     label="Manter cookies entre requisições")
 
     # CAPTCHA #################################################################
     captcha = forms.ChoiceField(

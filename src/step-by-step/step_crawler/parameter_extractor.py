@@ -18,6 +18,7 @@ def extract_info(func, ignore_params=None):
 
     name = func.__code__.co_name
     name_display = name.capitalize().replace('_', '') if not func.display else func.display
+    executable_contexts = func.executable_contexts
 
     optional_params = dict()
     mandatory_params = list()
@@ -32,8 +33,9 @@ def extract_info(func, ignore_params=None):
     func_info = {
         'name': name,
         'name_display': name_display,
+        'executable_contexts': executable_contexts,
         'mandatory_params': mandatory_params,
-        'optional_params': optional_params
+        'optional_params': optional_params,
     }
     return func_info
 

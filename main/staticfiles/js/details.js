@@ -28,9 +28,7 @@ function tail_logs(instance_id){
     // calls tail log view and set logs
     $.ajax("/tail_log_file/" + instance_id).done(function(data) {
             var response = data;
-
-            console.log(response);
-
+            
             if (response["files_found"] != 0) {
 
                 let success_rate = (response["files_success"] / response["files_found"]) * 100;
