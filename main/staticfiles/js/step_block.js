@@ -58,6 +58,7 @@ function init_block(step_list, depth){
 
     //Setting the estrutural steps builders
     block.turn_to_for_step = turn_to_for_step
+    block.turn_to_while_step = turn_to_while_step
     block.turn_to_attribution_step = turn_to_attribution_step
     block.turn_to_new_tab_step = turn_to_new_tab_step
     block.turn_to_close_tab_step = turn_to_close_tab_step
@@ -314,6 +315,28 @@ function refresh_iterable(){
 }
 
 /**
+ * Refreshes the parameter inputs of an condition when it is changed.
+ * This function is a method of the condition select element.
+ */
+ function refresh_condition(){
+    block = find_parent_with_attr_worth(this, "block")
+    block.condition_step = get_step_info(this.value)
+    block.params = []
+
+    block.delete_lines(1, block.lines.length)
+    block.add_line()
+
+    for(param of block.condition_step.mandatory_params){
+        block.add_param(param)
+    }
+
+    optional_params = Object.keys(block.condition_step.optional_params)
+    if(optional_params.length!=0){
+        block.init_optional_params_button(block.condition_step)
+    }
+}
+
+/**
  * Refreshes the parameter inputs of an source when it is changed.
  * This function is a method of the atributtion step.
  */
@@ -535,6 +558,8 @@ function refresh_step(){
 
     if(this.value=="Para cada"){
         block.turn_to_for_step()
+    }else if(this.value=="Enquanto"){
+        block.turn_to_while_step()
     }else if(this.value=="Atribuição"){
         block.turn_to_attribution_step()
     }else if(this.value=="Abrir em nova aba"){
@@ -624,6 +649,31 @@ function turn_to_for_step(){
 
     iterable_select.onchange = refresh_iterable
     iterable_select.onchange()
+}
+
+/**
+ * Sets the block to the while each step.
+ * This function is a method of the block.
+ */
+ function turn_to_while_step(){
+    block = find_parent_with_attr_worth(this, "block")
+    block.delete_lines(block.lines.length)
+    block.add_line()
+
+    // defines condition step
+    condition_select_box = document.createElement("DIV")
+    condition_select_box.className = "step-config-select"
+    condition_select = document.createElement("select")
+    condition_select.className = "form-control select-step"
+    condition_select.innerHTML = get_this_texts_inside_each_tag(Object.keys(get_step_names(block.step_list)), "<option>")
+    condition_select_box.appendChild(condition_select)
+    block.condition_select = condition_select
+
+    block.lines[0].row.appendChild(condition_select_box)
+    block.lines[0].row.full = true
+
+    condition_select.onchange = refresh_condition
+    condition_select.onchange()
 }
 
 /**

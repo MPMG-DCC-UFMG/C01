@@ -87,9 +87,7 @@ class TestExtractInfo(unittest.TestCase):
 
         result = cg.generate_body(atom.extend(
             recipe_examples['simple_while']['recipe'])[0], ff)
-        expected_result = "    limit = 0\n"
-        expected_result += "    while True == 1 and limit < 5:\n"
-        expected_result += "        limit += 1\n"
+        expected_result = "    while await objeto(**missing_arguments, objeto = True == 1):\n"
         expected_result += "        imprime(texto = \"teste\")\n"
         self.assertEqual(expected_result, result)
 

@@ -2,6 +2,7 @@ import io
 import asyncio
 import datetime
 import time
+import operator
 import uuid
 from cssify import cssify
 from PIL import Image
@@ -220,6 +221,19 @@ async def elemento_existe_na_pagina(pagina, xpath):
         return False
     return True
 
+@step("Comparação")
+async def comparacao(pagina, arg1, comp, arg2):
+    """This step returns the result of comp(arg1, arg2)
+
+        :param arg1 : a python object
+        :param comp : a stringfied version of a comparison operator
+        :param arg1 : a python object
+        :returns bool: True or False
+    """
+    op_dict = {"==" : operator.eq, "<=" : operator.le, ">=" : operator.ge,
+               "<" : operator.lt, ">" : operator.gt, "!=" : operator.ne,}
+
+    return op_dict[comp](arg1, arg2)
 
 async def open_in_new_tab(pagina, link_xpath):
     await pagina.waitForXPath(link_xpath)
