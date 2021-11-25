@@ -216,9 +216,7 @@ class BaseSpider(scrapy.Spider):
             'encoding_detection_method', CrawlRequest.HEADER_ENCODE_DETECTION)
 
         if encoding_detection_method == CrawlRequest.HEADER_ENCODE_DETECTION:
-            content_type = response.headers['Content-type'].decode()
-            _, params = cgi.parse_header(content_type)
-            encoding = params['charset']
+            encoding = response.encoding
 
         elif encoding_detection_method == CrawlRequest.AUTO_ENCODE_DETECTION:
             detection = chardet.detect(response.body)
