@@ -113,6 +113,17 @@ async def extrai_texto(pagina, xpath):
     text = await pagina.Jeval(cssify(xpath), "el => el.textContent")
     return text
 
+@step("Extrair propriedade de")
+async def extrai_propriedade(pagina, xpath, propriedade):
+    await pagina.waitForXPath(xpath)
+    elements = await pagina.xpath(xpath)
+    if len(elements) == 1:
+        text = await pagina.evaluate("el => el.getAttribute(\"" + propriedade + "\")", elements[0])
+    else:
+        raise Exception('XPath points to non existent element, or multiple elements!')
+    
+    return text
+
 
 @step("Opções")
 async def opcoes(pagina, xpath, exceto=None):
