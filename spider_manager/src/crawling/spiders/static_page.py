@@ -14,7 +14,7 @@ from crawling_utils import notify_files_found
 
 from crawling.items import RawResponseItem
 from crawling.spiders.base_spider import BaseSpider
-
+from crawling_utils import notify_page_crawled_with_error
 
 LARGE_CONTENT_LENGTH = 1e9
 HTTP_HEADERS = {
@@ -151,24 +151,28 @@ class StaticPageSpider(BaseSpider):
     def response_to_item(self, response, files_found: set, images_found: set) -> RawResponseItem:
         item = RawResponseItem()
 
-        item['appid'] = response.meta['appid']
-        item['crawlid'] = response.meta['crawlid']
+        try:
+            item['appid'] = response.meta['appid']
+            item['crawlid'] = response.meta['crawlid']
 
-        item["url"] = response.request.url
-        item["response_url"] = response.url
-        item["status_code"] = response.status
+            item["url"] = response.request.url
+            item["response_url"] = response.url
+            item["status_code"] = response.status
 
-        item["body"] = response.body
-        item["encoding"] = response.encoding
+            item["body"] = response.body
+            item["encoding"] = response.encoding
 
-        item["referer"] = response.meta["attrs"]["referer"]
-        item["content_type"] = response.headers.get('Content-type', b'').decode()
-        item["crawler_id"] = self.config["crawler_id"]
-        item["instance_id"] = self.config["instance_id"]
-        item["crawled_at_date"] = str(datetime.datetime.today())
+            item["referer"] = response.meta["attrs"]["referer"]
+            item["content_type"] = response.headers.get('Content-type', b'').decode()
+            item["crawler_id"] = self.config["crawler_id"]
+            item["instance_id"] = self.config["instance_id"]
+            item["crawled_at_date"] = str(datetime.datetime.today())
 
-        item["files_found"] = files_found
-        item["images_found"] = images_found
+            item["files_found"] = files_found
+            item["images_found"] = images_found
+        except Exception as e:
+            print(f'Error processing {response.request.url}: {e}')
+            notify_page_crawled_with_error(self.config["instance_id"]) 
 
         return item
 
@@ -187,6 +191,9 @@ class StaticPageSpider(BaseSpider):
         Parse responses of static pages.
         Will try to follow links if config["explore_links"] is set.
         """
+        self.idleness = 0
+
+        self._logger.info(f'[SPIDER] Processing: {response.request.url}...')
 
         # Get current depth
         cur_depth = 0
