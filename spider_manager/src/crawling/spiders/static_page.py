@@ -219,7 +219,6 @@ class StaticPageSpider(BaseSpider):
                                     },
                             errback=self.errback_httpbin)
 
-
                 files_found = set()
                 if self.config.get("download_files", False):
                     files_found = self.extract_files(response)
