@@ -14,7 +14,7 @@ class PuppeteerRequest(Request):
         :screenshot:If True, a screenshot of the page will be taken and the data of the screenshot
                     will be returned in the response "meta" attribute.
         :wait_for:  A selector, xpath, or function string, or timeout (milliseconds) to be waited for
-        :setps:     A dict containing the steps to be executed in the page
+        :steps:     A dict containing the steps to be executed in the page
         """
 
         self.wait_until = wait_until or 'domcontentloaded'

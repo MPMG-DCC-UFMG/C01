@@ -14,8 +14,15 @@ class CommandListener:
         self.__stop = False
 
         self.__consumer = KafkaConsumer(settings.COMMANDS_TOPIC,
-                                        bootstrap_servers=settings.KAFKA_HOSTS,
-                                        value_deserializer=lambda m: ujson.loads(m.decode('utf-8')))
+                                        bootstrap_servers=settings.KAFKA_HOSTS,            
+                                        auto_offset_reset=settings.KAFKA_CONSUMER_AUTO_OFFSET_RESET,
+                                        connections_max_idle_ms=settings.KAFKA_CONNECTIONS_MAX_IDLE_MS,
+                                        request_timeout_ms=settings.KAFKA_REQUEST_TIMEOUT_MS,
+                                        session_timeout_ms=settings.KAFKA_SESSION_TIMEOUT_MS,
+                                        auto_commit_interval_ms=settings.KAFKA_CONSUMER_COMMIT_INTERVAL_MS,
+                                        enable_auto_commit=settings.KAFKA_CONSUMER_AUTO_COMMIT_ENABLE,
+                                        max_partition_fetch_bytes=settings.KAFKA_CONSUMER_FETCH_MESSAGE_MAX_BYTES)
+                                        # value_deserializer=lambda m: ujson.loads(m.decode('utf-8')))
 
     def __process_commands(self, commands: dict):
         """Process command messages.
@@ -44,11 +51,14 @@ class CommandListener:
 
         print('Waiting for commands...')
         for message in self.__consumer:
-            commands = message.value
-            self.__process_commands(commands)
+            try:
+                commands = ujson.loads(message.value.decode('utf-8'))
+                self.__process_commands(commands)
+            except:
+                print(f'Error processing message')
+
             if self.__stop:
                 break
-
 
 if __name__ == '__main__':
 
