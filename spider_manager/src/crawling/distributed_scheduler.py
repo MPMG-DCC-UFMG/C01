@@ -473,7 +473,8 @@ class DistributedScheduler(object):
                     (req_dict['meta']['expires'] == 0 or
                     curr_time < req_dict['meta']['expires']):
 
-                notify_new_page_found(req_dict['meta']['attrs']['instance_id'])
+                if 'redirect_times' not in request.meta:
+                    notify_new_page_found(req_dict['meta']['attrs']['instance_id'])
 
                 # we may already have the queue in memory
                 if key in self.queue_keys:
