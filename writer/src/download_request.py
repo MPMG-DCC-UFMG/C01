@@ -27,10 +27,10 @@ class DownloadRequest:
                 filetype: str = '',
                 crawled_at_date: str = '',
                 teste: str = '',
-                atrrs: dict = {}) -> None:
+                attrs: dict = {}) -> None:
 
         self.teste = teste,
-        self.attrs = atrrs,
+        self.attrs = attrs,
         self.url = url
         self.crawler_id = crawler_id
         self.instance_id = instance_id
@@ -133,7 +133,7 @@ class DownloadRequest:
             'file_name': self.filename,
             'type': self.filetype,
             'teste': self.teste,
-            'attr': self.attrs,
+            'attrs': self.attrs,
             'crawled_at_date': self.crawled_at_date,
             'extracted_files': [
 
