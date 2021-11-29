@@ -45,7 +45,8 @@ def format_request(url: str, crawler_id: str, instance_id: str, req_body: dict, 
             "referer": "start_requests",
             "instance_id": instance_id,
             "req_body": json.dumps(req_body),
-            "req_method": req_method
+            "req_method": req_method,
+            "teste": "lorem ipsum"
         },
         "priority": 1,
         "maxdepth": 0,

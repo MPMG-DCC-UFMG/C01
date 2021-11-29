@@ -169,6 +169,8 @@ class StaticPageSpider(BaseSpider):
 
         item["files_found"] = files_found
         item["images_found"] = images_found
+        item["teste"] = response.meta["attrs"]["teste"]
+        item["attrs"] = response.meta["attrs"]
 
         return item
 
@@ -197,7 +199,7 @@ class StaticPageSpider(BaseSpider):
         if type(response.request) is PuppeteerRequest:
             responses = [self.page_to_response(page, response) 
                             for page in list(response.request.meta["pages"].values())]
-        
+
         for response in responses:
             try:
                 # Limit depth if required
@@ -205,7 +207,7 @@ class StaticPageSpider(BaseSpider):
                 if max_depth is not None and cur_depth >= max_depth:
                     message = "Not crawling links in '{}' because cur_depth={} >= maxdepth={}"
                     self._logger.debug(message.format(response.url, cur_depth, max_depth))
-                    
+
                 elif self.config.get("explore_links", False):
                     for link in self.extract_links(response):
                         yield Request(url=link,
@@ -213,7 +215,8 @@ class StaticPageSpider(BaseSpider):
                                     meta={
                                         "attrs": {
                                             'referer': response.url,
-                                            'instance_id': self.config["instance_id"]
+                                            'instance_id': self.config["instance_id"],
+                                            'teste': "lorem ipsum2"
                                         },
                                         'curdepth': response.meta['curdepth'] + 1
                                     },
@@ -228,15 +231,15 @@ class StaticPageSpider(BaseSpider):
                     images_found = self.extract_imgs(response)
 
             except AttributeError:
-                self._logger.warn(f'The content of URL {response.url} is not text. Either improve your REGEX filter' +  
-                        ' or enable the option to check the content type of a URL to be downloaded in the' + 
+                self._logger.warn(f'The content of URL {response.url} is not text. Either improve your REGEX filter' +
+                        ' or enable the option to check the content type of a URL to be downloaded in the' +
                         ' advanced settings of your crawler.')
 
-                continue    
-                
+                continue
+
             num_files = len(files_found) + len(images_found)
             notify_files_found(self.config["instance_id"], num_files)
 
             item = self.response_to_item(response, files_found, images_found)
-      
+
             yield item
