@@ -53,7 +53,8 @@ function tail_logs(instance_id){
             if (response["pages_found"] != 0) {
                 let success_rate = (response["pages_success"] / response["pages_found"]) * 100;
                 let error_rate = (response["pages_error"] / response["pages_found"]) * 100;
-                let total_processed = response["pages_error"] + response["pages_success"];
+                let duplicated_rate = (response["pages_duplicated"] / response["pages_found"]) * 100;
+                let total_processed = (response["pages_duplicated"] + response["pages_success"] + response["pages_error"]);
 
                 $('#progress-page-success').css("width", `${success_rate.toFixed(2)}%`);
                 $('#progress-page-success').text(`${success_rate.toFixed(2)}%`);
@@ -62,7 +63,11 @@ function tail_logs(instance_id){
                 $('#progress-page-failure').css("width", `${error_rate.toFixed(2)}%`);
                 $('#progress-page-failure').text(`${error_rate.toFixed(2)}%`);
                 $('#progress-page-failure').prop('title', `${error_rate.toFixed(2)}% (${response["pages_error"]}/${response["pages_found"]}) de erro ao coletar as páginas encontradas`);
-                
+
+                $('#progress-page-duplicated').css("width", `${duplicated_rate.toFixed(2)}%`);
+                $('#progress-page-duplicated').text(`${duplicated_rate.toFixed(2)}%`);
+                $('#progress-page-duplicated').prop('title', `${duplicated_rate.toFixed(2)}% (${response["pages_duplicated"]}/${response["pages_found"]}) de páginas duplicadas encontradas`);
+
                 let remaining_progress = (response['pages_found'] - total_processed) / response['pages_found'] * 100;
 
                 $('#remaining-progress-page').prop('title', `Faltam ${remaining_progress.toFixed(2)}% das páginas para coletar.`);

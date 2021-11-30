@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from scrapy_puppeteer import PuppeteerRequest
-from crawling_utils import notify_new_page_found
+from crawling_utils import notify_new_page_found, notify_page_duplicated_found
 from crawling.redis_global_page_per_domain_filter import \
     RFGlobalPagePerDomainFilter
 from crawling.redis_dupefilter import RFPDupeFilter
@@ -34,11 +34,6 @@ import random
 from future import standard_library
 
 standard_library.install_aliases()
-
-
-
-
-
 
 class DistributedScheduler(object):
     '''
@@ -424,6 +419,9 @@ class DistributedScheduler(object):
 
         # # # # # # # # # # # # # # # # # # Duplicate link Filter # # # # # # # # # # # # # # #
         if not request.dont_filter and self.dupefilter.request_seen(request):
+            # if the redirected url reached a url already seen, notify server
+            if 'redirect_times' in request.meta:
+                notify_page_duplicated_found(request.meta['attrs']['instance_id'])
             self.logger.debug("Request not added back to redis")
             return
 
@@ -472,8 +470,9 @@ class DistributedScheduler(object):
                     domain not in self.black_domains)) and \
                     (req_dict['meta']['expires'] == 0 or
                     curr_time < req_dict['meta']['expires']):
-
-                if 'redirect_times' not in request.meta:
+                
+                # ignoring redirects requests in count of pages to crawl
+                if 'redirect_times' not in request.meta:                    
                     notify_new_page_found(req_dict['meta']['attrs']['instance_id'])
 
                 # we may already have the queue in memory
@@ -541,7 +540,7 @@ class DistributedScheduler(object):
 
         item = self.find_item()
         if item:
-            self.logger.debug(u"Found url to crawl {url}"
+            self.logger.info(u"Found url to crawl {url}"
                     .format(url=item['url']))
             if 'meta' in item:
                 # item is a serialized request
@@ -576,6 +575,7 @@ class DistributedScheduler(object):
         else:
             try:
                 req = Request(item['url'])
+
             except ValueError:
                 # need absolute url
                 # need better url validation here

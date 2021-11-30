@@ -301,6 +301,7 @@ def tail_log_file(request, instance_id):
     pages_found = instance.number_pages_found
     download_page_success = instance.number_pages_success_download
     download_page_error = instance.number_pages_error_download
+    number_pages_duplicated_download = instance.number_pages_duplicated_download
 
     logs = Log.objects.filter(instance_id=instance_id).order_by('-creation_date')
 
@@ -319,6 +320,7 @@ def tail_log_file(request, instance_id):
         "pages_found": pages_found,
         "pages_success": download_page_success,
         "pages_error": download_page_error,
+        "pages_duplicated": number_pages_duplicated_download,
         "out": log_text,
         "err": err_text,
         "time": str(datetime.fromtimestamp(time.time())),
@@ -416,6 +418,18 @@ def error_download_page(request, instance_id):
         instance = CrawlerInstance.objects.get(instance_id=instance_id)
 
         instance.number_pages_error_download += 1
+        instance.save()
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+def duplicated_download_page(request, instance_id):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id=instance_id)
+
+        instance.number_pages_duplicated_download += 1
         instance.save()
 
         return JsonResponse({}, status=status.HTTP_200_OK)
