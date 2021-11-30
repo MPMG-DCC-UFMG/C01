@@ -46,6 +46,7 @@ logger = logging.getLogger('file')
 
 # Helper methods
 
+
 def process_run_crawl(crawler_id):
     instance = None
     instance_info = dict()
@@ -425,6 +426,7 @@ def error_download_page(request, instance_id):
     except:
         return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
 
+
 def duplicated_download_page(request, instance_id):
     try:
         instance = CrawlerInstance.objects.get(instance_id=instance_id)
@@ -594,7 +596,7 @@ def view_screenshots(request, instance_id, page):
     IMGS_PER_PAGE = 20
 
     instance = get_object_or_404(CrawlerInstance, pk=instance_id)
-    
+
     output_folder = os.getenv('OUTPUT_FOLDER', '/data')
     data_path = instance.crawler.data_path
     instance_path = os.path.join(output_folder, data_path, str(instance_id))

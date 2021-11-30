@@ -35,6 +35,7 @@ from future import standard_library
 
 standard_library.install_aliases()
 
+
 class DistributedScheduler(object):
     '''
     Scrapy request scheduler that utilizes Redis Throttled Priority Queues
@@ -470,9 +471,9 @@ class DistributedScheduler(object):
                     domain not in self.black_domains)) and \
                     (req_dict['meta']['expires'] == 0 or
                     curr_time < req_dict['meta']['expires']):
-                
+
                 # ignoring redirects requests in count of pages to crawl
-                if 'redirect_times' not in request.meta:                    
+                if 'redirect_times' not in request.meta:
                     notify_new_page_found(req_dict['meta']['attrs']['instance_id'])
 
                 # we may already have the queue in memory

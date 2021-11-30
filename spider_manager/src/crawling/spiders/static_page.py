@@ -172,7 +172,7 @@ class StaticPageSpider(BaseSpider):
             item["images_found"] = images_found
         except Exception as e:
             print(f'Error processing {response.request.url}: {e}')
-            notify_page_crawled_with_error(self.config["instance_id"]) 
+            notify_page_crawled_with_error(self.config["instance_id"])
 
         return item
 
@@ -202,9 +202,9 @@ class StaticPageSpider(BaseSpider):
 
         responses = [response]
         if type(response.request) is PuppeteerRequest:
-            responses = [self.page_to_response(page, response) 
-                            for page in list(response.request.meta["pages"].values())]
-        
+            responses = [self.page_to_response(page, response)
+                         for page in list(response.request.meta["pages"].values())]
+
         for response in responses:
             try:
                 # Limit depth if required
@@ -212,7 +212,7 @@ class StaticPageSpider(BaseSpider):
                 if max_depth is not None and cur_depth >= max_depth:
                     message = "Not crawling links in '{}' because cur_depth={} >= maxdepth={}"
                     self._logger.debug(message.format(response.url, cur_depth, max_depth))
-                    
+
                 elif self.config.get("explore_links", False):
                     for link in self.extract_links(response):
                         yield Request(url=link,
@@ -235,15 +235,15 @@ class StaticPageSpider(BaseSpider):
                     images_found = self.extract_imgs(response)
 
             except AttributeError:
-                self._logger.warn(f'The content of URL {response.url} is not text. Either improve your REGEX filter' +  
-                        ' or enable the option to check the content type of a URL to be downloaded in the' + 
+                self._logger.warn(f'The content of URL {response.url} is not text. Either improve your REGEX filter' +
+                        ' or enable the option to check the content type of a URL to be downloaded in the' +
                         ' advanced settings of your crawler.')
 
-                continue    
-                
+                continue
+
             num_files = len(files_found) + len(images_found)
             notify_files_found(self.config["instance_id"], num_files)
 
             item = self.response_to_item(response, files_found, images_found)
-      
+
             yield item
