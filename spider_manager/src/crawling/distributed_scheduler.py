@@ -1,37 +1,38 @@
 from __future__ import absolute_import
-import urllib.parse
-import urllib.error
-import urllib.request
-from crawling_utils import notify_new_page_found
 from scrapy_puppeteer import PuppeteerRequest
-from scutils.log_factory import LogFactory
+from crawling_utils import notify_new_page_found
+from crawling.redis_global_page_per_domain_filter import \
+    RFGlobalPagePerDomainFilter
+from crawling.redis_dupefilter import RFPDupeFilter
+from crawling.redis_domain_max_page_filter import RFDomainMaxPageFilter
+from six import string_types
+from scutils.zookeeper_watcher import ZookeeperWatcher
 from scutils.redis_throttled_queue import RedisThrottledQueue
 from scutils.redis_queue import RedisPriorityQueue
-from scutils.zookeeper_watcher import ZookeeperWatcher
-from kazoo.handlers.threading import KazooTimeoutError
-from crawling.redis_domain_max_page_filter import RFDomainMaxPageFilter
-from crawling.redis_global_page_per_domain_filter import RFGlobalPagePerDomainFilter
-from crawling.redis_dupefilter import RFPDupeFilter
-import ujson
-import socket
-import uuid
-import sys
-import yaml
-import re
-import tldextract
-import time
-import random
-import redis
-import requests
-from scrapy.utils.reqser import request_to_dict, request_from_dict
+from scutils.log_factory import LogFactory
+from scrapy.utils.reqser import request_from_dict, request_to_dict
 from scrapy.utils.python import to_unicode
-from scrapy.conf import settings
 from scrapy.http import Request
-from builtins import object
-from six import string_types
+from scrapy.conf import settings
 from past.builtins import basestring
-from builtins import str
+from kazoo.handlers.threading import KazooTimeoutError
+import yaml
+import ujson
+import tldextract
+import redis
+from builtins import object, str
+import uuid
+import urllib.request
+import urllib.parse
+import urllib.error
+import time
+import sys
+import socket
+import re
+import random
+
 from future import standard_library
+
 standard_library.install_aliases()
 
 
@@ -482,12 +483,10 @@ class DistributedScheduler(object):
                     # shoving into a new redis queue, negative b/c of sorted sets
                     # this will populate ourself and other schedulers when
                     # they call create_queues
-
                     self.redis_conn.zadd(key, {ujson.dumps(req_dict): -req_dict['meta']['priority']})
-
-                self.logger.debug("Crawlid: '{id}' Appid: '{appid}' added to queue".format(
-                    appid=req_dict['meta']['appid'], id=req_dict['meta']['crawlid']))
-
+                self.logger.debug("Crawlid: '{id}' Appid: '{appid}' added to queue"
+                    .format(appid=req_dict['meta']['appid'],
+                            id=req_dict['meta']['crawlid']))
             else:
                 self.logger.debug("Crawlid: '{id}' Appid: '{appid}' expired"
                                   .format(appid=req_dict['meta']['appid'],
@@ -564,31 +563,22 @@ class DistributedScheduler(object):
         return None
 
     def request_from_feed(self, item):
-        attrs = item.get('attrs', dict())
-
-        req_body = attrs.get('req_body', '').encode()
-        req_method = attrs.get('req_method', 'GET')
-
-        print('*' * 100)
-        print(req_body)
-        print('*' * 100)
-
         if settings.get('DYNAMIC_PROCESSING'):
+            attrs = item.get('attrs', dict())
+
+            req_body = attrs.get('req_body', '').encode()
+            req_method = attrs.get('req_method', 'GET')
+
             steps = settings.get('DYNAMIC_PROCESSING_STEPS')
             req = PuppeteerRequest(url=item['url'], body=req_body, method=req_method, steps=steps)
 
         else:
             try:
-                print('\---/')
-                req = Request(item['url'], body=req_body, method=req_method,)
-                print('\--/')
-
+                req = Request(item['url'])
             except ValueError:
-                print('\-/')
                 # need absolute url
                 # need better url validation here
-                req = Request('http://' + item['url'], body=req_body, method=req_method)
-
+                req = Request('http://' + item['url'])
 
         # defaults not in schema
         if 'curdepth' not in item:
