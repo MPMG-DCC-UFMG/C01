@@ -857,8 +857,6 @@ function move_down(){
     trigged_index = i
     while(step_board.children[i+1] && trigged_depth < step_board.children[i+1].depth){i++}
     last_child_index = i
-    console.log('trigged index: '+trigged_index)
-    console.log('last_child_index: '+last_child_index)
 
     copy = 0
     while(copy != (last_child_index-trigged_index+1)) {        
