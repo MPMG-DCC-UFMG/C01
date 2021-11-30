@@ -99,13 +99,15 @@ function init_block(step_list, depth){
     block.move_down = move_down
     block.delete_step = delete_step
     block.add_block_bellow = add_block_bellow
+    block.duplicate_blocks = duplicate_blocks
 
     block.controler.children[0].onclick = block.add_block_bellow
     block.controler.children[1].onclick = block.unindent_step
     block.controler.children[2].onclick = block.indent_step
     block.controler.children[3].onclick = block.move_up
     block.controler.children[4].onclick = block.move_down
-    block.controler.children[5].onclick = block.delete_step
+    block.controler.children[5].onclick = block.duplicate_blocks
+    block.controler.children[6].onclick = block.delete_step
 
     return block
 }
@@ -844,6 +846,45 @@ function move_down(){
 }
 
 /**
+ * Duplicates a block that called this method and its children.
+ * This function is a method of the block
+ */
+ function duplicate_blocks(){
+    block = find_parent_with_attr_worth(this, "block") //var block is the triggered one
+    trigged_depth = block.depth
+    i=0
+    while(block != step_board.children[i]){i++}
+    step_board.add_block(step_list, i+1)    //var block is now the added block
+    //fix the depth of the new block
+    block.depth = trigged_depth
+    block.parentElement.current_depth = trigged_depth
+    block.style.left = (block.depth*2-2) +"em"
+    //copies the block type
+    block.select.value = block.previousSibling.select.value
+    block.select.onchange()
+    //gets all selects
+    let new_selects = Array.prototype.slice.apply(block.querySelectorAll("select"))
+    let old_selects = Array.prototype.slice.apply(block.previousSibling.querySelectorAll("select"))
+    //copies all select values
+    new_selects.forEach((select,index) => {
+        if (index !== 0) {
+            select.value = old_selects[index].value
+        }
+    })
+    //get all inputs
+    let new_inputs = Array.prototype.slice.apply(block.querySelectorAll("input"))
+    let old_inputs = Array.prototype.slice.apply(block.previousSibling.querySelectorAll("input"))
+    //copies all input values
+    new_inputs.forEach((input,index) => {
+        input.value = old_inputs[index].value
+    })
+    
+    //to do: add extra (+) fields and values
+    //to do: copy children blocks
+
+}
+
+/**
  * Delete the block that called this method.
  * This function is a method of the block
  */
@@ -885,6 +926,9 @@ function init_block_element(step_list){
                             </div>
                             <div class="col-sm">
                                 <img class="block-controler-button" src="/static/icons/arrow-down-black.svg">
+                            </div>
+                            <div class="col-sm">
+                                <img class="block-controler-button" src="/static/icons/duplicate-black.svg">
                             </div>
                             <div class="col-sm">
                                 <img class="block-controler-button" src="/static/icons/black-x.svg">
