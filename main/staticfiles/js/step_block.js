@@ -854,33 +854,42 @@ function move_down(){
     trigged_depth = block.depth
     i=0
     while(block != step_board.children[i]){i++}
-    step_board.add_block(step_list, i+1)    //var block is now the added block
-    //fix the depth of the new block
-    block.depth = trigged_depth
-    block.parentElement.current_depth = trigged_depth
-    block.style.left = (block.depth*2-2) +"em"
-    //copies the block type
-    block.select.value = block.previousSibling.select.value
-    block.select.onchange()
-    //gets all selects
-    let new_selects = Array.prototype.slice.apply(block.querySelectorAll("select"))
-    let old_selects = Array.prototype.slice.apply(block.previousSibling.querySelectorAll("select"))
-    //copies all select values
-    new_selects.forEach((select,index) => {
-        if (index !== 0) {
-            select.value = old_selects[index].value
-        }
-    })
-    //get all inputs
-    let new_inputs = Array.prototype.slice.apply(block.querySelectorAll("input"))
-    let old_inputs = Array.prototype.slice.apply(block.previousSibling.querySelectorAll("input"))
-    //copies all input values
-    new_inputs.forEach((input,index) => {
-        input.value = old_inputs[index].value
-    })
+    trigged_index = i
+    while(step_board.children[i+1] && trigged_depth < step_board.children[i+1].depth){i++}
+    last_child_index = i
+    console.log('trigged index: '+trigged_index)
+    console.log('last_child_index: '+last_child_index)
+
+    copy = 0
+    while(copy != (last_child_index-trigged_index+1)) {        
+        step_board.add_block(step_list, last_child_index+copy+1)    //var block is now the added block
+        //fix the depth of the new block
+        block.depth = step_board.children[trigged_index+copy].depth
+        block.parentElement.current_depth = block.depth
+        block.style.left = (block.depth*2-2) +"em"
+        //copies the block type
+        block.select.value = step_board.children[trigged_index+copy].select.value
+        block.select.onchange()
+        //gets all selects
+        let new_selects = Array.prototype.slice.apply(block.querySelectorAll("select"))
+        let old_selects = Array.prototype.slice.apply(step_board.children[trigged_index+copy].querySelectorAll("select"))
+        //copies all select values
+        new_selects.forEach((select,index) => {
+            if (index !== 0) {
+                select.value = old_selects[index].value
+            }
+        })
+        //get all inputs
+        let new_inputs = Array.prototype.slice.apply(block.querySelectorAll("input"))
+        let old_inputs = Array.prototype.slice.apply(step_board.children[trigged_index+copy].querySelectorAll("input"))
+        //copies all input values
+        new_inputs.forEach((input,index) => {
+            input.value = old_inputs[index].value
+        })
+        copy++
+    }
     
     //to do: add extra (+) fields and values
-    //to do: copy children blocks
 
 }
 
