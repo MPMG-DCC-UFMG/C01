@@ -289,6 +289,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
         label="Inserir cookies",
         widget=forms.CheckboxInput(
             attrs={
+                "disabled": "true",
                 "onclick": "insertCookiesEnabled();",
             }
         )
