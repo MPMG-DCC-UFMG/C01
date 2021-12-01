@@ -105,6 +105,12 @@ class Executor:
             base_config["DOWNLOADER_MIDDLEWARES"]['scrapy.downloadermiddlewares.useragent.UserAgentMiddleware'] = None
             base_config["DOWNLOADER_MIDDLEWARES"]['antiblock_scrapy.middlewares.RotateUserAgentMiddleware'] = 500
 
+            # Pass the necessary configurations
+            base_config["ROTATE_USER_AGENT_ENABLED"] = True
+            base_config["USER_AGENTS"] = config['antiblock_user_agents_list'].splitlines()
+            base_config["MIN_USER_AGENT_USAGE"] = config['antiblock_reqs_per_user_agent']
+            base_config["MAX_USER_AGENT_USAGE"] = config['antiblock_reqs_per_user_agent']
+
         return base_config
 
     def __parse_config(self, config: dict):
