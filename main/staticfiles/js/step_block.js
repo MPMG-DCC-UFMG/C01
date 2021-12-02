@@ -846,21 +846,23 @@ function move_down(){
 }
 
 /**
- * Duplicates a block that called this method and its children.
+ * Duplicates the block that called this method and its children.
  * This function is a method of the block
  */
  function duplicate_blocks(){
     block = find_parent_with_attr_worth(this, "block") //var block is the triggered one
     trigged_depth = block.depth
     i=0
-    while(block != step_board.children[i]){i++}
+    //finds block to duplicate
+    while(block != step_board.children[i]){i++} 
     trigged_index = i
-    while(step_board.children[i+1] && trigged_depth < step_board.children[i+1].depth){i++}
+    //finds how many children blocks
+    while(step_board.children[i+1] && trigged_depth < step_board.children[i+1].depth){i++} 
     last_child_index = i
-
+    //creates the new blocks
     copy = 0
     while(copy != (last_child_index-trigged_index+1)) {        
-        step_board.add_block(step_list, last_child_index+copy+1)    //var block is now the added block
+        step_board.add_block(step_list, last_child_index+copy+1) //var block is now the added block
         //fix the depth of the new block
         block.depth = step_board.children[trigged_index+copy].depth
         block.parentElement.current_depth = block.depth
@@ -875,8 +877,14 @@ function move_down(){
         new_selects.forEach((select,index) => {
             if (index !== 0) {
                 select.value = old_selects[index].value
+                select.onchange()
             }
         })
+        //checks if it has extra field
+        extra_option =  step_board.children[trigged_index+copy].querySelector('.dropdown-menu')
+        if (extra_option && (step_board.children[trigged_index+copy].querySelector('input[data-param="numero_xpaths"]') || step_board.children[trigged_index+copy].querySelector('input[data-param="xpath_do_campo_a_preencher"]'))) {
+            block.querySelector('.dropdown-menu a').click()
+        }
         //get all inputs
         let new_inputs = Array.prototype.slice.apply(block.querySelectorAll("input"))
         let old_inputs = Array.prototype.slice.apply(step_board.children[trigged_index+copy].querySelectorAll("input"))
@@ -886,9 +894,6 @@ function move_down(){
         })
         copy++
     }
-    
-    //to do: add extra (+) fields and values
-
 }
 
 /**
