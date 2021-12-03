@@ -42,33 +42,21 @@ def generate_elemento_existe_na_pagina(child, module):
 
 def generate_enquanto(child, module):
     code = ''
-    if 'limit' in child['condition']:
-        code += child['depth'] * '    ' + 'limit = 0\n'
     code += child['depth'] * '    ' + 'while '
 
-    if child['negation']:
-        code += 'not '
+    # if child['negation']:
+    #     code += 'not '
 
     if 'call' in child['condition']:
         call = child['condition']['call']
         function = getattr(module, call['step'])
         is_coroutine = inspect.iscoroutinefunction(function)
-        code += generate_call(call['step'], call['arguments'], is_coroutine)
-    elif 'comparison' in child['condition']:
-        code += child['condition']['comparison']
+        code += generate_call(call['step'], call['arguments'], is_coroutine) + ':' + '\n'
     else:
         raise TypeError('This condition is in the wrong format')
 
-    if 'limit' in child['condition']:
-        code += ' and limit < ' + str(child['condition']['limit'])
-        code += ':\n'
-        code += (child['depth'] + 1) * '    ' + 'limit += 1\n'
-    else:
-        code += ':\n'
-
     code += generate_body(child, module)
     return code
-
 
 def generate_atribuicao(child, module):
     code = ""
