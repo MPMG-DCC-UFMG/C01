@@ -25,5 +25,3 @@ class RawResponseItem(Item):
     files_found = Field()
     images_found = Field()
     attrs = Field()
-    steps = Field()
-    steps_req_num = Field()
