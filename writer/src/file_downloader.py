@@ -70,7 +70,6 @@ class FileDownloader:
                 'referer': referer,
                 'filetype': '',
                 'filename': '',
-                "teste": crawled_data['teste'],
                 "attrs": crawled_data['attrs'],
                 'data_path': data_path,
                 'crawled_at_date': ''

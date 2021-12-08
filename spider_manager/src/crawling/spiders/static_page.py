@@ -215,7 +215,8 @@ class StaticPageSpider(BaseSpider):
                                         "attrs": {
                                             'referer': response.url,
                                             'instance_id': self.config["instance_id"],
-                                            'teste': "lorem ipsum2"
+                                            'curdepth': response.meta['curdepth'] + 1
+                                            #adicionar informações da req inicial
                                         },
                                         'curdepth': response.meta['curdepth'] + 1
                                     },

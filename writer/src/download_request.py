@@ -26,10 +26,8 @@ class DownloadRequest:
                 filename: str = '',
                 filetype: str = '',
                 crawled_at_date: str = '',
-                teste: str = '',
                 attrs: dict = {}) -> None:
 
-        self.teste = teste,
         self.attrs = attrs,
         self.url = url
         self.crawler_id = crawler_id
