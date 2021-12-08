@@ -110,7 +110,11 @@ async def salva_pagina(pagina):
 @step("Extrair texto de")
 async def extrai_texto(pagina, xpath):
     await pagina.waitForXPath(xpath)
-    text = await pagina.Jeval(cssify(xpath), "el => el.textContent")
+    elements = await pagina.xpath(xpath)
+    if len(elements) == 1:
+        text = await pagina.evaluate("el => el.textContent", elements[0])
+    else:
+        raise Exception('XPath points to non existent element, or multiple elements!')
     return text
 
 
