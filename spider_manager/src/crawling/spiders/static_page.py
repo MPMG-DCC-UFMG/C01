@@ -148,7 +148,7 @@ class StaticPageSpider(BaseSpider):
 
         return set(src)
 
-    def response_to_item(self, response, files_found: set, images_found: set) -> RawResponseItem:
+    def response_to_item(self, response, files_found: set, images_found: set, idx: int) -> RawResponseItem:
         item = RawResponseItem()
 
         item['appid'] = response.meta['appid']
@@ -170,6 +170,8 @@ class StaticPageSpider(BaseSpider):
         item["files_found"] = files_found
         item["images_found"] = images_found
         item["attrs"] = response.meta["attrs"]
+        item["steps"] = self.config["steps"]
+        item["steps_req_num"] = idx
 
         return item
 
@@ -199,7 +201,7 @@ class StaticPageSpider(BaseSpider):
             responses = [self.page_to_response(page, response) 
                             for page in list(response.request.meta["pages"].values())]
 
-        for response in responses:
+        for idx, response in enumerate(responses):
             try:
                 # Limit depth if required
                 max_depth = self.config.get("link_extractor_max_depth")
@@ -240,6 +242,6 @@ class StaticPageSpider(BaseSpider):
             num_files = len(files_found) + len(images_found)
             notify_files_found(self.config["instance_id"], num_files)
 
-            item = self.response_to_item(response, files_found, images_found)
+            item = self.response_to_item(response, files_found, images_found, idx)
 
             yield item
