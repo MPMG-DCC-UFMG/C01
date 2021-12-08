@@ -169,7 +169,6 @@ class StaticPageSpider(BaseSpider):
 
         item["files_found"] = files_found
         item["images_found"] = images_found
-        item["teste"] = response.meta["attrs"]["teste"]
         item["attrs"] = response.meta["attrs"]
 
         return item

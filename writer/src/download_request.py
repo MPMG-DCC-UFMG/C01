@@ -132,7 +132,6 @@ class DownloadRequest:
             'referer': self.referer,
             'file_name': self.filename,
             'type': self.filetype,
-            'teste': self.teste,
             'attrs': self.attrs,
             'crawled_at_date': self.crawled_at_date,
             'extracted_files': [

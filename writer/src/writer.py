@@ -117,7 +117,6 @@ class Writer:
             "type": crawled_data['content_type'],
             "crawled_at_date": crawled_data['crawled_at_date'],
             "referer": crawled_data['referer'],
-            "teste": crawled_data['teste'],
             "attrs": crawled_data['attrs']
         }
 

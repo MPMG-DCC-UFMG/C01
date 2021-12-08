@@ -25,7 +25,7 @@ except:
     raise Exception("Failed to connect to Redis")
 
 
-def format_request(url: str, crawler_id: str, instance_id: str, req_body: dict, req_method: str) -> dict:
+def format_request(url: str, crawler_id: str, instance_id: str, req_body: dict, req_method: str, templated_param_combination: list) -> dict:
     """Formats a collection request according to Scrapy Cluster standards
 
     Args:
@@ -46,7 +46,7 @@ def format_request(url: str, crawler_id: str, instance_id: str, req_body: dict, 
             "instance_id": instance_id,
             "req_body": json.dumps(req_body),
             "req_method": req_method,
-            "teste": "lorem ipsum"
+            "templated_param_combination": templated_param_combination
         },
         "priority": 1,
         "maxdepth": 0,
@@ -72,8 +72,8 @@ def get_redis_queue_key(base_url: str, crawler_id: str) -> str:
     return key
 
 
-def push_crawl_request_to_redis(redis_queue_key: str, url: str, crawler_id: str, instance_id: str, req_body: dict, req_method: dict):
-    req = format_request(url, crawler_id, instance_id, req_body, req_method)
+def push_crawl_request_to_redis(redis_queue_key: str, url: str, crawler_id: str, instance_id: str, req_body: dict, req_method: dict, templated_param_combination:list):
+    req = format_request(url, crawler_id, instance_id, req_body, req_method, templated_param_combination)
     val = json.dumps(req)
     REDIS_CONN.zadd(redis_queue_key, {val: -req['priority']})
 
@@ -140,7 +140,7 @@ def generate_templated_urls(base_url, crawler_id, instance_id,
                         # If no form data is injected, use the regular
                         # request method set
                         method = req_type
-                    push_crawl_request_to_redis(redis_queue_key, curr_url, crawler_id, instance_id, req_entries, method)
+                    push_crawl_request_to_redis(redis_queue_key, curr_url, crawler_id, instance_id, req_entries, method, templated_param_combination)
 
     print('\tDone')
     REDIS_CONN.close()

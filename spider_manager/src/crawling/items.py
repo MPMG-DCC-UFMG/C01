@@ -24,5 +24,4 @@ class RawResponseItem(Item):
     crawled_at_date = Field()
     files_found = Field()
     images_found = Field()
-    teste = Field()
     attrs = Field()
