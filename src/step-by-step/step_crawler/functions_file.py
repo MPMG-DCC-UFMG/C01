@@ -77,6 +77,51 @@ async def fill_iframe_content(page):
         ''', iframe, content)
 
 
+@step("Salvar Tabela")
+async def salvar_tabela(pagina, xpath):
+    keep_running = True 
+    
+    while keep_running:
+        keep_running = await pagina.evaluate('''
+            () => {
+                let table = $('.tableExContainer .bodyCells')[0];
+                let tableVisibleWidth = table.offsetWidth;
+                let lastLeftOffset = table.scrollLeft;
+                table.scrollLeft += tableVisibleWidth;
+        
+                return lastLeftOffset != table.scrollLeft
+            }
+        ''')
+        time.sleep(1) 
+
+    table = ''
+    while True:
+        keep_running, content = await pagina.evaluate('''
+            () => {
+                let table = $('.tableExContainer .bodyCells')[0];
+                let tableVisibleHeight = table.offsetHeight;
+                let lastTopOffset = table.scrollTop;
+                table.scrollTop += tableVisibleHeight;
+                return [lastTopOffset != table.scrollTop, table.innerHTML];
+            }
+        ''')
+
+        if keep_running:
+            table += '\n' + content
+        
+        else:
+            break
+
+        time.sleep(1)
+
+    content = await pagina.evaluate('''
+            (table) => {
+                document.querySelector('html').innerText = table;
+                const el = document.querySelector("*");
+                return el.innerHTML;
+            }
+        ''', table)
+
 @step("Clicar")
 async def clique(pagina, elemento):
     if type(elemento) == str:
