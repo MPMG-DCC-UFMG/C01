@@ -15,7 +15,7 @@ Home
                     <th scope="col">ID do Coletor</th>
                     <th scope="col">URL Base</th>
                     <th scope="col">Criado em</th>
-                    <th scope="col">Detalhes</th>
+                <th scope="col">Ações</th>
                     <th scope="col">Status</th>
                 </tr>
             </thead>
@@ -26,7 +26,18 @@ Home
                     <td>{{crawler.id}}</td>
                     <td>{{crawler.base_url}}</td>
                     <td>{{crawler.creation_date}}</td>
-                    <td><a class="btn btn-info" href="{% url 'detail_crawler' crawler.id %}">Detalhes</a></td>
+                    <td>
+                        <div class="btn-group">
+                            <a class="btn btn-info" href="{% url 'detail_crawler' crawler.id %}"><i class="fa fa-info-circle" aria-hidden="true"></i>
+                            </a>
+                            <a class="btn btn-success" href="{% url 'run_crawl' crawler.id %}"><i class="fa fa-play" aria-hidden="true"></i>
+                            </a>
+                            <a class="btn btn-danger" href="{% url 'stop_crawl' crawler.id %}"><i class="fa fa-stop" aria-hidden="true"></i>
+                            </a>
+                            <a class="btn btn-primary" href="{% url 'edit_crawler' crawler.id %}"><i class="fa fa-pencil" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                    </td>
                     
                     {% if crawler.running == True %}
                         <td><span style="color: green;">Rodando</span></td>
