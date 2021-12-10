@@ -105,7 +105,7 @@ def process_stop_crawl(crawler_id):
 
 
 def getAllData():
-    return CrawlRequest.objects.all().order_by('-creation_date')
+    return CrawlRequest.objects.all().order_by('-last_modified')
 
 
 def create_instance(crawler_id, instance_id):
