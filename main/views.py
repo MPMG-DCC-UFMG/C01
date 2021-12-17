@@ -190,7 +190,7 @@ def create_crawler(request):
             static_response_formset.instance = instance
             static_response_formset.save()
 
-            return redirect('list_crawlers')
+            return redirect('/detail/'+str(instance.id))
 
     context['form'] = my_form
     context['templated_response_formset'] = templated_response_formset
@@ -224,7 +224,7 @@ def edit_crawler(request, id):
         templated_response_formset.save()
         static_parameter_formset.save()
         static_response_formset.save()
-        return redirect('list_crawlers')
+        return redirect('/detail/'+str(id))
     else:
         return render(request, 'main/create_crawler.html', {
             'form': form,
