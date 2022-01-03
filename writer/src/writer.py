@@ -6,8 +6,6 @@ from datetime import datetime
 
 from kafka import KafkaConsumer
 
-from lxml.html.clean import Cleaner
-
 import settings
 
 from file_downloader import FileDownloader
@@ -112,24 +110,14 @@ class Writer:
 
         if encoding is None:
             description['encoding'] = 'unknown'
-            description["type"] = 'binary'
+            description['type'] = 'binary'
 
-            with open(file=relative_path, mode="wb") as f:
+            with open(file=relative_path, mode='wb') as f:
                 f.write(raw_body)
 
         else:
-            try:
-                cleaner = Cleaner(
-                    style=True, links=False, scripts=True,
-                    comments=True, page_structure=False
-                )
-                body = cleaner.clean_html(raw_body)
-
-            except:
-                body = raw_body
-
-            with open(file=relative_path, mode="w+", encoding=encoding, errors='ignore') as f:
-                f.write(body)
+            with open(file=relative_path, mode='w+', encoding=encoding, errors='ignore') as f:
+                f.write(raw_body)
 
         notify_page_crawled_successfully(crawled_data['instance_id'])
         self.__file_descriptor.feed(f'{instance_path}/data/raw_pages/', description)
