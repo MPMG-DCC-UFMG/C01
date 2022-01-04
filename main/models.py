@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-from django.core.validators import RegexValidator
+from django.core.validators import MinValueValidator, RegexValidator
 
 from crawler_manager.constants import *
 
@@ -49,7 +49,8 @@ class CrawlRequest(TimeStamped):
     sc_scheduler_persist = models.BooleanField(default=True)
 
     # seconds to wait between seeing new queues, cannot be faster than spider_idle time of 5
-    sc_scheduler_queue_refresh = models.PositiveIntegerField(default=10)
+    sc_scheduler_queue_refresh = models.PositiveIntegerField(default=10,
+        validators=[MinValueValidator(5)])
 
     # throttled queue defaults per domain, x hits in a y second window
     sc_queue_hits = models.PositiveIntegerField(default=10)

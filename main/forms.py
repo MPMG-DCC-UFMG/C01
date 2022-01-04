@@ -217,6 +217,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
         label="Rotacionar IPs",
         widget=forms.CheckboxInput(
             attrs={
+                "disabled": "true",
                 "onclick": "ipRotationEnabled();",
             }
         )
@@ -288,6 +289,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
         label="Inserir cookies",
         widget=forms.CheckboxInput(
             attrs={
+                "disabled": "true",
                 "onclick": "insertCookiesEnabled();",
             }
         )
