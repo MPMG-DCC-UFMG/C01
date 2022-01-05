@@ -58,11 +58,32 @@ class Executor:
             base_config['KAFKA_TOPIC_PREFIX'] = base_config['SC_KAFKA_TOPIC_PREFIX']
             del base_config['SC_KAFKA_TOPIC_PREFIX']
 
+        # Scrapy Cluster configuration
+        base_config["SCHEDULER_PERSIST"] = config["sc_scheduler_persist"]
+        base_config["SCHEDULER_QUEUE_REFRESH"] = config["sc_scheduler_queue_refresh"]
+        base_config["QUEUE_MODERATED"] = config["sc_queue_moderated"]
+        base_config["DUPEFILTER_TIMEOUT"] = config["sc_dupefilter_timeout"]
+        base_config["HTTPERROR_ALLOW_ALL"] = config["sc_httperror_allow_all"]
+        base_config["RETRY_TIMES"] = config["sc_retry_times"]
+        base_config["DOWNLOAD_TIMEOUT"] = config["sc_download_timeout"]
+        base_config["QUEUE_HITS"] = config["sc_queue_hits"]
+        base_config["QUEUE_WINDOW"] = config["sc_queue_window"]
+        base_config["SCHEDULER_TYPE_ENABLED"] = config["sc_scheduler_type_enabled"]
+        base_config["SCHEDULER_IP_ENABLED"] = config["sc_scheduler_ip_enabled"]
+        base_config["GLOBAL_PAGE_PER_DOMAIN_LIMIT"] = config["sc_global_page_per_domain_limit"]
+        base_config["GLOBAL_PAGE_PER_DOMAIN_LIMIT_TIMEOUT"] = config["sc_global_page_per_domain_limit_timeout"]
+        base_config["DOMAIN_MAX_PAGE_TIMEOUT"] = config["sc_domain_max_page_timeout"]
+        base_config["SCHEDULER_IP_REFRESH"] = config["sc_scheduler_ip_refresh"]
+        base_config["SCHEDULER_BACKLOG_BLACKLIST"] = config["sc_scheduler_backlog_blacklist"]
+        base_config["SCHEUDLER_ITEM_RETRIES"] = config["sc_scheduler_item_retries"]
+        base_config["SCHEDULER_QUEUE_TIMEOUT"] = config["sc_scheduler_queue_timeout"]
+
+        # Dynamic processing
         base_config["DYNAMIC_PROCESSING"] = False
         base_config["DYNAMIC_PROCESSING_STEPS"] = {}
 
         if config.get("dynamic_processing", False):
-            base_config["DOWNLOADER_MIDDLEWARES"] = {'scrapy_puppeteer.PuppeteerMiddleware': 800}
+            base_config["DOWNLOADER_MIDDLEWARES"]['scrapy_puppeteer.PuppeteerMiddleware'] = 800
 
             base_config["DATA_PATH"] = config["data_path"]
             base_config["OUTPUT_FOLDER"] = settings.OUTPUT_FOLDER
@@ -71,6 +92,24 @@ class Executor:
 
             base_config["DYNAMIC_PROCESSING"] = True
             base_config["DYNAMIC_PROCESSING_STEPS"] = ujson.loads(config["steps"])
+
+        # Antiblock middlewares
+        if config.get("antiblock_ip_rotation_type", "") == "tor":
+            base_config["DOWNLOADER_MIDDLEWARES"]['antiblock_scrapy.middlewares.TorProxyMiddleware'] = 900
+            base_config["DOWNLOADER_MIDDLEWARES"]['scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware'] = 910
+        else:
+            base_config["DOWNLOADER_MIDDLEWARES"]['rotating_proxies.middlewares.RotatingProxyMiddleware'] = 610
+            base_config["DOWNLOADER_MIDDLEWARES"]['rotating_proxies.middlewares.BanDetectionMiddleware'] = 620
+
+        if config.get("antiblock_user_agent_rotation_enabled", False):
+            base_config["DOWNLOADER_MIDDLEWARES"]['scrapy.downloadermiddlewares.useragent.UserAgentMiddleware'] = None
+            base_config["DOWNLOADER_MIDDLEWARES"]['antiblock_scrapy.middlewares.RotateUserAgentMiddleware'] = 500
+
+            # Pass the necessary configurations
+            base_config["ROTATE_USER_AGENT_ENABLED"] = True
+            base_config["USER_AGENTS"] = config['antiblock_user_agents_list'].splitlines()
+            base_config["MIN_USER_AGENT_USAGE"] = config['antiblock_reqs_per_user_agent']
+            base_config["MAX_USER_AGENT_USAGE"] = config['antiblock_reqs_per_user_agent']
 
         return base_config
 

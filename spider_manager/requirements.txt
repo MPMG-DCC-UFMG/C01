@@ -1,10 +1,12 @@
 ../crawling_utils/
 ../step-by-step/
+../camuflage_scrapy/
 ../captcha_solver/
 ../scrapy_puppeteer/
 ../cssify/
 ../scutils/
 attrs==18.1.0  # Updated from 17.2.0'
+cchardet==2.1.7
 cffi==1.11.5  # Updated from 1.10.0
 ConcurrentLogHandler==0.9.1
 cryptography==2.3
