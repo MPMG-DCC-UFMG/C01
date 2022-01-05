@@ -17,7 +17,6 @@ SERVER_FILE_DOWNLOADED_API = SERVER_ADDRESS + '/download/file/{message}/{instanc
 
 SERVER_SESSION = requests.sessions.Session()
 
-
 class StopDownload(Exception):
     """Used in func file_larger_than_giga"""
     pass

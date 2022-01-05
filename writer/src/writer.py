@@ -6,8 +6,6 @@ from datetime import datetime
 
 from kafka import KafkaConsumer
 
-from lxml.html.clean import Cleaner
-
 import settings
 
 from file_downloader import FileDownloader
@@ -84,40 +82,42 @@ class Writer:
 
     def __persist_html(self, crawled_data: dict):
         print('Persisting crawled data')
+
         crawler_id = str(crawled_data['crawler_id'])
+        encoding = crawled_data['encoding']
 
-        try:
-            cleaner = Cleaner(
-                style=True, links=False, scripts=True,
-                comments=True, page_structure=False
-            )
-            body = cleaner.clean_html(crawled_data['body'])
-        
-        except:
-            body = crawled_data['body']
-
-        key = crawled_data['url'] + body
-        hsh = hashlib.md5(key.encode()).hexdigest()
+        raw_body = crawled_data['body']
 
         data_path = self.__crawls_running[crawler_id]['data_path']
-        instance_path = os.path.join(settings.OUTPUT_FOLDER, data_path,
-            str(crawled_data['instance_id']))
-        relative_path = os.path.join(instance_path, 'data', 'raw_pages',
-            f'{hsh}.html')
+        instance_path = os.path.join(settings.OUTPUT_FOLDER, data_path, str(crawled_data['instance_id']))
 
-        with open(file=relative_path, mode="w+", errors='ignore') as f:
-            f.write(body)
+        key = crawled_data['url'] + raw_body
+        hsh = hashlib.md5(key.encode()).hexdigest()
+
+        relative_path = os.path.join(instance_path, 'data', 'raw_pages', f'{hsh}.html')
 
         description = {
-            "file_name": f"{hsh}.html",
-            "relative_path": relative_path,
-            "url": crawled_data['url'],
-            "crawler_id": crawled_data['crawler_id'],
-            "instance_id": crawled_data['instance_id'],
-            "type": crawled_data['content_type'],
-            "crawled_at_date": crawled_data['crawled_at_date'],
-            "referer": crawled_data['referer']
+            'file_name': f"{hsh}.html",
+            'encoding': encoding,
+            'relative_path': relative_path,
+            'url': crawled_data['url'],
+            'crawler_id': crawled_data['crawler_id'],
+            'instance_id': crawled_data['instance_id'],
+            'type': crawled_data['content_type'],
+            'crawled_at_date': crawled_data['crawled_at_date'],
+            'referer': crawled_data['referer']
         }
+
+        if encoding is None:
+            description['encoding'] = 'unknown'
+            description['type'] = 'binary'
+
+            with open(file=relative_path, mode='wb') as f:
+                f.write(raw_body)
+
+        else:
+            with open(file=relative_path, mode='w+', encoding=encoding, errors='ignore') as f:
+                f.write(raw_body)
 
         notify_page_crawled_successfully(crawled_data['instance_id'])
         self.__file_descriptor.feed(f'{instance_path}/data/raw_pages/', description)
