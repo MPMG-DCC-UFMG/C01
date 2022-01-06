@@ -1,7 +1,7 @@
 from django import forms
 from .models import CrawlRequest, ParameterHandler, ResponseHandler
 from django.core.exceptions import ValidationError
-
+from crawling_utils.constants import HEADER_ENCODE_DETECTION
 
 class CrawlRequestForm(forms.ModelForm):
     class Meta:
@@ -217,6 +217,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
         label="Rotacionar IPs",
         widget=forms.CheckboxInput(
             attrs={
+                "disabled": "true",
                 "onclick": "ipRotationEnabled();",
             }
         )
@@ -288,6 +289,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
         label="Inserir cookies",
         widget=forms.CheckboxInput(
             attrs={
+                "disabled": "true",
                 "onclick": "insertCookiesEnabled();",
             }
         )
@@ -468,7 +470,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     # ENCODE DETECTION METHOD
     encoding_detection_method = forms.ChoiceField(choices=CrawlRequest.ENCODE_DETECTION_CHOICES,
                                                   label='Método de detecção de codificação das páginas',
-                                                  initial=CrawlRequest.HEADER_ENCODE_DETECTION,
+                                                  initial=HEADER_ENCODE_DETECTION,
                                                   widget=forms.RadioSelect)
 
 

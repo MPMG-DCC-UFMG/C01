@@ -1,16 +1,17 @@
 import datetime
 import re
-import requests
 
 from scrapy.linkextractors import LinkExtractor
-from scrapy.http import Request, HtmlResponse
+from scrapy.http import Request, HtmlResponse, Response
 from scrapy_puppeteer import PuppeteerRequest
+import cchardet as chardet
 
 # Checks if an url is valid
 import validators
 
 import crawling_utils
 from crawling_utils import notify_files_found
+from crawling_utils.constants import HEADER_ENCODE_DETECTION, AUTO_ENCODE_DETECTION,AUTO_ENCODE_DETECTION_CONFIDENCE_THRESHOLD
 
 from crawling.items import RawResponseItem
 from crawling.spiders.base_spider import BaseSpider
@@ -148,7 +149,36 @@ class StaticPageSpider(BaseSpider):
 
         return set(src)
 
-    def response_to_item(self, response, files_found: set, images_found: set) -> RawResponseItem:
+    def get_encoding(self, response: Response) -> str:
+        encoding = None
+        encoding_detection_method = self.config.get('encoding_detection_method', HEADER_ENCODE_DETECTION)
+
+        if encoding_detection_method == HEADER_ENCODE_DETECTION:
+            encoding = response.encoding
+            self.logger.info(f'Encoding detected by header: {encoding}')
+
+        elif encoding_detection_method == AUTO_ENCODE_DETECTION:
+            detection = chardet.detect(response.body)
+
+            detected_encoding = detection['encoding']
+            confidence = detection['confidence']
+
+            if confidence >= AUTO_ENCODE_DETECTION_CONFIDENCE_THRESHOLD:
+                encoding = detected_encoding
+                self.logger.info(f'Encoding detected automatically: {encoding}')
+
+            else:
+                msg = f'Could not detect page encoding "{response.url}" at the level of confidence "{AUTO_ENCODE_DETECTION_CONFIDENCE_THRESHOLD}"".' + \
+                    f'The predicted encoding was "{detected_encoding}" with "{confidence}" confidence. THE PAGE WILL BE SAVED AS BINARY.'
+                self.logger.warn(msg)
+
+        else:
+            ValueError(
+                f'"{encoding_detection_method}" is not a valid encoding detection method.')
+
+        return encoding
+
+    def response_to_item(self, response: Response, files_found: set, images_found: set) -> RawResponseItem:
         item = RawResponseItem()
 
         try:
@@ -160,7 +190,7 @@ class StaticPageSpider(BaseSpider):
             item["status_code"] = response.status
 
             item["body"] = response.body
-            item["encoding"] = response.encoding
+            item["encoding"] = self.get_encoding(response)
 
             item["referer"] = response.meta["attrs"]["referer"]
             item["content_type"] = response.headers.get('Content-type', b'').decode()
@@ -170,6 +200,7 @@ class StaticPageSpider(BaseSpider):
 
             item["files_found"] = files_found
             item["images_found"] = images_found
+            
         except Exception as e:
             print(f'Error processing {response.request.url}: {e}')
             notify_page_crawled_with_error(self.config["instance_id"])
@@ -202,8 +233,11 @@ class StaticPageSpider(BaseSpider):
 
         responses = [response]
         if type(response.request) is PuppeteerRequest:
-            responses = [self.page_to_response(page, response)
-                         for page in list(response.request.meta["pages"].values())]
+            responses = [self.page_to_response(page, response) 
+                            for page in list(response.request.meta["pages"].values())]
+        
+        files_found = set()
+        images_found = set()
 
         for response in responses:
             try:
@@ -226,11 +260,9 @@ class StaticPageSpider(BaseSpider):
                                     },
                             errback=self.errback_httpbin)
 
-                files_found = set()
                 if self.config.get("download_files", False):
                     files_found = self.extract_files(response)
 
-                images_found = set()
                 if self.config.get("download_imgs", False):
                     images_found = self.extract_imgs(response)
 

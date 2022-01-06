@@ -1,9 +1,9 @@
 from django.db import models
 from django.utils import timezone
-from django.core.validators import RegexValidator
+from django.core.validators import MinValueValidator, RegexValidator
 
 from crawler_manager.constants import *
-
+from crawling_utils.constants import HEADER_ENCODE_DETECTION, AUTO_ENCODE_DETECTION
 
 class TimeStamped(models.Model):
     creation_date = models.DateTimeField()
@@ -49,7 +49,8 @@ class CrawlRequest(TimeStamped):
     sc_scheduler_persist = models.BooleanField(default=True)
 
     # seconds to wait between seeing new queues, cannot be faster than spider_idle time of 5
-    sc_scheduler_queue_refresh = models.PositiveIntegerField(default=10)
+    sc_scheduler_queue_refresh = models.PositiveIntegerField(default=10,
+        validators=[MinValueValidator(5)])
 
     # throttled queue defaults per domain, x hits in a y second window
     sc_queue_hits = models.PositiveIntegerField(default=10)
@@ -190,10 +191,6 @@ class CrawlRequest(TimeStamped):
 
     steps = models.CharField(
         blank=True, null=True, max_length=9999999, default='{}')
-
-    # ENCODING DETECTION =======================================================
-    HEADER_ENCODE_DETECTION = 1
-    AUTO_ENCODE_DETECTION = 2
 
     ENCODE_DETECTION_CHOICES = [
         (HEADER_ENCODE_DETECTION, 'Via cabeçalho da resposta'),
