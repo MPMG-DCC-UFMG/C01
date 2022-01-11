@@ -300,3 +300,23 @@ a.close, a.add_form {
 }
 /* End screenshot pagination styles */
 
+/* Making the layout responsive */
+#list_crawlers td:nth-child(3), #stderr_tail, #stdout_tail {word-wrap: anywhere;}
+@media screen and (max-width:1680px) {
+    #sidebar-container .list-group-mine .list-group-item {padding: 0.75rem 0.25rem; }
+    #sidebar-container .valid-icon, #sidebar-container .sidemenu-items span.fa {margin-right:0px!important;}
+}
+@media screen and (max-width:1390px) {
+    #sidebar-container.sidebar-expanded {
+        width: 85px;
+        flex: 0;
+    }
+    #sidebar-container ul li.list-group-item {display:none !important;}
+    #sidebar-container .sidemenu-items {flex:0;}
+    #sidebar-container span.menu-collapsed {
+        display: none;
+    }
+    #sidebar-container a .md-2 {padding: 0;}
+    #sidebar-container #createButton {width: 85px !important; font-size: .9rem;}
+}
+/* End making the layout responsive */
