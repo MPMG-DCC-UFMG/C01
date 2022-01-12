@@ -437,6 +437,7 @@ class CrawlerInstance(TimeStamped):
     number_pages_found = models.PositiveIntegerField(default=0, null=True, blank=True)
     number_pages_success_download = models.PositiveIntegerField(default=0, null=True, blank=True)
     number_pages_error_download = models.PositiveIntegerField(default=0, null=True, blank=True)
+    number_pages_duplicated_download = models.PositiveIntegerField(default=0, null=True, blank=True)
 
     page_crawling_finished = models.BooleanField(default=False, null=True, blank=True)
 

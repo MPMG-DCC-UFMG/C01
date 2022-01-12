@@ -80,6 +80,12 @@ def notify_page_crawled_with_error(instance_id: str):
     notify_server(server_notification_url)
 
 
+def notify_page_duplicated_found(instance_id: str):
+    server_notification_url = SERVER_PAGE_CRAWLED_API.format(
+        message='duplicated', instance_id=instance_id)
+    notify_server(server_notification_url)
+
+
 def notify_files_found(instance_id: str, num_files: int):
     server_notification_url = SERVER_FILES_FOUND_API.format(
         instance_id=instance_id, num_files=num_files)
