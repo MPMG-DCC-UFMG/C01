@@ -89,8 +89,8 @@ class DownloadRequest:
 
         self.__filetype_from_mimetype(content_type)
 
-    def exec_download(self) -> bool:
-        print(f"Downloading {self.url}")
+    def exec_download(self, worker_name: str) -> bool:
+        print(f"[{datetime.now()}] [FD] {worker_name} Worker: Downloading {self.url}")
 
         attempt = 0
         while attempt < MAX_ATTEMPTS:
@@ -106,14 +106,10 @@ class DownloadRequest:
                     break
 
         if attempt == MAX_ATTEMPTS:
-            print(f"[{datetime.now()}] Download Request - Error downloading {self.url}")
-
             notify_file_downloaded_with_error(self.instance_id)
             return False
 
         else:
-            print(f"[{datetime.now()}] Download Request - Download successfully {self.url}")
-
             self.crawled_at_date = str(datetime.today())
             notify_file_downloaded_successfully(self.instance_id)
             return True

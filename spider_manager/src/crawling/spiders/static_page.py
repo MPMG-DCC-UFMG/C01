@@ -268,5 +268,5 @@ class StaticPageSpider(BaseSpider):
             notify_files_found(self.config["instance_id"], num_files)
 
             item = self.response_to_item(response, files_found, images_found)
-      
+
             yield item
