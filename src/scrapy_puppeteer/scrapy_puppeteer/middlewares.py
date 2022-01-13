@@ -197,7 +197,7 @@ class PuppeteerMiddleware:
         async def stop_request_interceptor(page) -> None:
             await page._networkManager._client.send("Fetch.disable")
 
-        await setup_request_interceptor(page)
+        # await setup_request_interceptor(page)
 
         try:
             response = await page.goto(
@@ -212,7 +212,7 @@ class PuppeteerMiddleware:
             raise IgnoreRequest()
 
         # Stop intercepting following requests
-        await stop_request_interceptor(page)
+        # await stop_request_interceptor(page)
 
         if request.screenshot:
             request.meta['screenshot'] = await page.screenshot()

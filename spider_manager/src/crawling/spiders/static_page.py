@@ -15,7 +15,7 @@ from crawling_utils.constants import HEADER_ENCODE_DETECTION, AUTO_ENCODE_DETECT
 
 from crawling.items import RawResponseItem
 from crawling.spiders.base_spider import BaseSpider
-
+from crawling_utils import notify_page_crawled_with_error
 
 LARGE_CONTENT_LENGTH = 1e9
 HTTP_HEADERS = {
@@ -181,24 +181,29 @@ class StaticPageSpider(BaseSpider):
     def response_to_item(self, response: Response, files_found: set, images_found: set) -> RawResponseItem:
         item = RawResponseItem()
 
-        item['appid'] = response.meta['appid']
-        item['crawlid'] = response.meta['crawlid']
+        try:
+            item['appid'] = response.meta['appid']
+            item['crawlid'] = response.meta['crawlid']
 
-        item["url"] = response.request.url
-        item["response_url"] = response.url
-        item["status_code"] = response.status
+            item["url"] = response.request.url
+            item["response_url"] = response.url
+            item["status_code"] = response.status
 
-        item["body"] = response.body
-        item["encoding"] = self.get_encoding(response)
+            item["body"] = response.body
+            item["encoding"] = self.get_encoding(response)
 
-        item["referer"] = response.meta["attrs"]["referer"]
-        item["content_type"] = response.headers.get('Content-type', b'').decode()
-        item["crawler_id"] = self.config["crawler_id"]
-        item["instance_id"] = self.config["instance_id"]
-        item["crawled_at_date"] = str(datetime.datetime.today())
+            item["referer"] = response.meta["attrs"]["referer"]
+            item["content_type"] = response.headers.get('Content-type', b'').decode()
+            item["crawler_id"] = self.config["crawler_id"]
+            item["instance_id"] = self.config["instance_id"]
+            item["crawled_at_date"] = str(datetime.datetime.today())
 
-        item["files_found"] = files_found
-        item["images_found"] = images_found
+            item["files_found"] = files_found
+            item["images_found"] = images_found
+            
+        except Exception as e:
+            print(f'Error processing {response.request.url}: {e}')
+            notify_page_crawled_with_error(self.config["instance_id"])
 
         return item
 
@@ -217,6 +222,9 @@ class StaticPageSpider(BaseSpider):
         Parse responses of static pages.
         Will try to follow links if config["explore_links"] is set.
         """
+        self.idleness = 0
+
+        self._logger.info(f'[SPIDER] Processing: {response.request.url}...')
 
         # Get current depth
         cur_depth = 0
@@ -230,6 +238,7 @@ class StaticPageSpider(BaseSpider):
         
         files_found = set()
         images_found = set()
+
         for response in responses:
             try:
                 # Limit depth if required
@@ -237,7 +246,7 @@ class StaticPageSpider(BaseSpider):
                 if max_depth is not None and cur_depth >= max_depth:
                     message = "Not crawling links in '{}' because cur_depth={} >= maxdepth={}"
                     self._logger.debug(message.format(response.url, cur_depth, max_depth))
-                    
+
                 elif self.config.get("explore_links", False):
                     for link in self.extract_links(response):
                         yield Request(url=link,
@@ -258,15 +267,15 @@ class StaticPageSpider(BaseSpider):
                     images_found = self.extract_imgs(response)
 
             except AttributeError:
-                self._logger.warn(f'The content of URL {response.url} is not text. Either improve your REGEX filter' +  
-                        ' or enable the option to check the content type of a URL to be downloaded in the' + 
+                self._logger.warn(f'The content of URL {response.url} is not text. Either improve your REGEX filter' +
+                        ' or enable the option to check the content type of a URL to be downloaded in the' +
                         ' advanced settings of your crawler.')
 
-                continue    
-                
+                continue
+
             num_files = len(files_found) + len(images_found)
             notify_files_found(self.config["instance_id"], num_files)
 
             item = self.response_to_item(response, files_found, images_found)
-      
+
             yield item

@@ -79,9 +79,9 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
         self.mockPage = mockPage
 
         # Create the network manager client, which is used internally
-        networkClient = mock.create_autospec(pyppeteer.connection.CDPSession)
-        networkClient.send = mock.MagicMock(side_effect=gen_async(None))
-        self.mockPage._networkManager = mock.MagicMock(_client=networkClient)
+        # networkClient = mock.create_autospec(pyppeteer.connection.CDPSession)
+        # networkClient.send = mock.MagicMock(side_effect=gen_async(None))
+        # self.mockPage._networkManager = mock.MagicMock(_client=networkClient)
 
         # Browser mock
         mockBrowser = mock.create_autospec(BrowserMock)
@@ -146,8 +146,8 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
         # Page should be closed once
         self.mockPage.close.assert_called_once()
         # Request interception routine should be set up
-        self.mockPage._networkManager._client.on.assert_called()
-        self.mockPage._networkManager._client.send.assert_called()
+        # self.mockPage._networkManager._client.on.assert_called()
+        # self.mockPage._networkManager._client.send.assert_called()
 
 
     def test_process_request_run_with_no_extra_options(self):

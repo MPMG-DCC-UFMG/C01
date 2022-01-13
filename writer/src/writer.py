@@ -1,34 +1,22 @@
+from datetime import datetime
 import threading
 import ujson
 import hashlib
-import os 
-from datetime import datetime
+import os
 
 from kafka import KafkaConsumer
+from coolname import generate_slug
 
 import settings
 
 from file_downloader import FileDownloader
 from file_descriptor import FileDescriptor
 
-from crawling_utils import notify_page_crawled_successfully
-
+from crawling_utils import notify_page_crawled_successfully, hash
 
 class Writer:
     def __init__(self) -> None:
         self.__crawls_running = dict()
-
-        self.__crawled_data_consumer = KafkaConsumer(settings.CRAWLED_TOPIC,
-                            # group_id=settings.KAFKA_WRITER_GROUP,
-                            bootstrap_servers=settings.KAFKA_HOSTS,            
-                            auto_offset_reset=settings.KAFKA_CONSUMER_AUTO_OFFSET_RESET,
-                            connections_max_idle_ms=settings.KAFKA_CONNECTIONS_MAX_IDLE_MS,
-                            request_timeout_ms=settings.KAFKA_REQUEST_TIMEOUT_MS,
-                            session_timeout_ms=settings.KAFKA_SESSION_TIMEOUT_MS,
-                            # consumer_timeout_ms=settings.KAFKA_CONSUMER_TIMEOUT_MS,
-                            auto_commit_interval_ms=settings.KAFKA_CONSUMER_COMMIT_INTERVAL_MS,
-                            enable_auto_commit=settings.KAFKA_CONSUMER_AUTO_COMMIT_ENABLE,
-                            max_partition_fetch_bytes=settings.KAFKA_CONSUMER_FETCH_MESSAGE_MAX_BYTES)
 
         self.__command_consumer = KafkaConsumer(settings.WRITER_TOPIC,
                             # group_id=settings.KAFKA_CMD_GROUP,
@@ -45,6 +33,8 @@ class Writer:
         self.__file_descriptor = FileDescriptor()
         self.__file_downloader = FileDownloader()
 
+        self.__crawled_data_consumer_threads = list()
+
     def __create_folder_structure(self, config: dict):
         instance_path = os.path.join(settings.OUTPUT_FOLDER,
             config['data_path'], str(config['instance_id']))
@@ -56,8 +46,7 @@ class Writer:
             f'{instance_path}/webdriver/',
             f'{instance_path}/data/raw_pages/',
             f'{instance_path}/data/csv/',
-            f'{instance_path}/data/files/',
-            f'{instance_path}/data/screenshots/',
+            f'{instance_path}/data/files/'
         ]
 
         for folder in folders:
@@ -67,7 +56,7 @@ class Writer:
         with open(f'{instance_path}/config/{config["instance_id"]}.json', 'w') as f:
             f.write(ujson.dumps(config, indent=4))
 
-        print(f'Folder structure for "{config["source_name"]}" created...')
+        print(f'[{datetime.now()}] Writer: Folder structure for "{config["source_name"]}" created...')
 
     def __register_crawl(self, config: dict):
         crawler_id = str(config['crawler_id'])
@@ -75,14 +64,7 @@ class Writer:
         self.__crawls_running[crawler_id] = config
         self.__create_folder_structure(config)
 
-        # we just need create a thread to download files if the crawler settings is defined
-        # to crawl files
-        if config['download_files'] or config['download_imgs']:
-            self.__file_downloader.new_crawler_listener(crawler_id)
-
     def __persist_html(self, crawled_data: dict):
-        print('Persisting crawled data')
-
         crawler_id = str(crawled_data['crawler_id'])
         encoding = crawled_data['encoding']
 
@@ -123,45 +105,66 @@ class Writer:
         self.__file_descriptor.feed(f'{instance_path}/data/raw_pages/', description)
 
     def __process_crawled_data(self, crawled_data: dict):
-        print(f'Processing crawled data...')
-
         self.__persist_html(crawled_data)
 
         data_path = self.__crawls_running[crawled_data['crawler_id']]['data_path']
         self.__file_downloader.feed(crawled_data, data_path)
 
     def __run_crawled_consumer(self):
-        print(f'[{datetime.now()}] Crawled consumer started...')
-        for message in self.__crawled_data_consumer:
-            print(f'[{datetime.now()}] Message received')
+        # Generates a random name for the consumer
+        worker_name = generate_slug(2).capitalize()
+
+        # CC - Crawled Consumer
+        print(f'[{datetime.now()}] [CC] {worker_name} Worker: Crawled consumer started...')
+
+        consumer = KafkaConsumer(settings.CRAWLED_TOPIC,
+                            group_id=settings.CRAWLED_DATA_CONSUMER_GROUP,
+                            bootstrap_servers=settings.KAFKA_HOSTS,            
+                            auto_offset_reset=settings.KAFKA_CONSUMER_AUTO_OFFSET_RESET,
+                            connections_max_idle_ms=settings.KAFKA_CONNECTIONS_MAX_IDLE_MS,
+                            request_timeout_ms=settings.KAFKA_REQUEST_TIMEOUT_MS,
+                            session_timeout_ms=settings.KAFKA_SESSION_TIMEOUT_MS,
+                            # consumer_timeout_ms=settings.KAFKA_CONSUMER_TIMEOUT_MS,
+                            auto_commit_interval_ms=settings.KAFKA_CONSUMER_COMMIT_INTERVAL_MS,
+                            enable_auto_commit=settings.KAFKA_CONSUMER_AUTO_COMMIT_ENABLE,
+                            max_partition_fetch_bytes=settings.KAFKA_CONSUMER_FETCH_MESSAGE_MAX_BYTES)
+
+        for message in consumer:
             try:
-                crawled_data = ujson.loads(message.value.decode('utf-8'))
+                crawled_data = ujson.loads(message.value.decode('utf-8')) 
+                url_hash =  hash(crawled_data['url'].encode())
+
+                print(f'[{datetime.now()}] [CC] {worker_name} Worker: Processing crawled data with URL hash {url_hash}...')
+                
                 self.__process_crawled_data(crawled_data)
+
             except Exception as e:
-                print(f'\t[{datetime.now()}] Error processing crawled data: {e}')
+                print(f'[{datetime.now()}] [CC] {worker_name} Worker: Error processing crawled data: "{e}"')
+
+    def __create_crawled_data_poll(self):
+        for _ in range(settings.NUM_CRAWLED_DATA_CONSUMERS):
+            thread = threading.Thread(target=self.__run_crawled_consumer, daemon=True)
+            self.__crawled_data_consumer_threads.append(thread)
+            thread.start()
 
     def __process_command(self, command):
         if 'register' in command:
             self.__register_crawl(command['register'])
 
     def run(self):
-        thread = threading.Thread(target=self.__run_crawled_consumer, daemon=True)
-        thread.start()
-
+        self.__create_crawled_data_poll()
         self.__file_descriptor.run()
+        self.__file_downloader.run()
 
-        print('Waiting for commands...')
+        print(f'[{datetime.now()}] Writer: Waiting for commands...')
+        
         for message in self.__command_consumer:
-            print('New command received')
+            print(f'[{datetime.now()}] Writer: New command received')
 
-            try:
-                command = ujson.loads(message.value.decode('utf-8'))
-                self.__process_command(command)
-            except Exception as e:
-                print(f'[{datetime.now()}] Error processing command: {e}') 
+            command = ujson.loads(message.value.decode('utf-8')) 
+            self.__process_command(command)
 
 
 if __name__ == '__main__':
     writer = Writer()
     writer.run()
-
