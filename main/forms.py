@@ -8,14 +8,14 @@ class CrawlRequestForm(forms.ModelForm):
         model = CrawlRequest
 
         labels = {
-            'request_type': 'Método da requisição',
+            # 'request_type': 'Método da requisição',
             'form_request_type': 'Método da requisição ao injetar em formulários',
         }
 
         fields = [
             'source_name',
             'base_url',
-            'request_type',
+            # 'request_type',
             'form_request_type',
             'obey_robots',
             'captcha',

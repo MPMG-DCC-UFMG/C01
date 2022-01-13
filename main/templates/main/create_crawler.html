@@ -264,9 +264,6 @@ New Crawler
                                 {{ form.source_name | as_crispy_field}}
                                 {{ form.base_url | as_crispy_field}}
                                 <p>A URL pode conter espaços para parâmetros, representados como um conjunto de chaves vazias</p>
-                                {% comment "At the moment we don't allow setting the request type" %}
-                                    {{ form.request_type | as_crispy_field}}
-                                {% endcomment %}
                                 {{ form.obey_robots | as_crispy_field}}
                                 {{ form.data_path | as_crispy_field}}
                                 <p>* Esse caminho deve ser único para cada coletor</p>
