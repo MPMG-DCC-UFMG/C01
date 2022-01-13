@@ -126,6 +126,7 @@ def generate_executar_em_iframe(child, module):
     code += child['depth'] * '    ' + "### Fim: Passando o contexto de execução para iframe ###\n"
     return code
 
+
 def generate_sair_de_iframe(child, module):
     code = "\n"
     code += child['depth'] * '    ' + "### Início: Saindo do contexto de iframe ###\n"
@@ -181,6 +182,7 @@ def generate_head(module, scrshot_path):
         + "    iframe = None\n"\
         + "    scrshot_path = \"" + scrshot_path + "\"\n"
     return code
+
 
 def generate_body(recipe, module):
     """
