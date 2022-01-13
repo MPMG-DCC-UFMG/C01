@@ -78,7 +78,7 @@ async def fill_iframe_content(page):
 
 
 @step("Salvar Tabela")
-async def salvar_tabela(pagina, xpath):
+async def salvar_tabela(pagina):
     keep_running = True 
     
     while keep_running:
