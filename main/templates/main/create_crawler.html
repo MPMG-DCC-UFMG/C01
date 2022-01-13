@@ -112,6 +112,7 @@ New Crawler
                         </div>
                     </div>
                 </a>
+                <!--
                 <a onClick="showBlock(this.id)" href="#"
                     class="button-block bg-dark list-group-item list-group-item-action"
                     id="static_form-item">
@@ -126,6 +127,7 @@ New Crawler
                         </div>
                     </div>
                 </a>
+                -->
                 <!-- Separator with title -->
                 <li class="list-group-item sidebar-separator-title text-muted d-flex align-items-center menu-collapsed">
                     <small>CONFIGURAÇÕES DA RESPOSTA</small>
@@ -262,7 +264,9 @@ New Crawler
                                 {{ form.source_name | as_crispy_field}}
                                 {{ form.base_url | as_crispy_field}}
                                 <p>A URL pode conter espaços para parâmetros, representados como um conjunto de chaves vazias</p>
-                                {{ form.request_type | as_crispy_field}}
+                                {% comment "At the moment we don't allow setting the request type" %}
+                                    {{ form.request_type | as_crispy_field}}
+                                {% endcomment %}
                                 {{ form.obey_robots | as_crispy_field}}
                                 {{ form.data_path | as_crispy_field}}
                                 <p>* Esse caminho deve ser único para cada coletor</p>
