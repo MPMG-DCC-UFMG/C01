@@ -25,9 +25,8 @@ function load_steps_interface(interface_root_element_id, output_element_id, json
         step_list = step_list.concat(JSON.parse('{"name": "fechar_aba", "name_display" : "Fechar aba", "executable_contexts": ["tab"], "mandatory_params":[], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name": "executar_em_iframe", "name_display" : "Executar em iframe", "executable_contexts": ["page", "tab"], "mandatory_params":["xpath"], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name": "sair_de_iframe", "name_display" : "Sair de iframe", "executable_contexts": ["iframe"], "mandatory_params":[], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name":"screenshot", "name_display" : "Screenshot", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name":"horizontal_scroll", "name_display" : "Scroll horizontal", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name":"vertical_scroll", "name_display" : "Scroll vertical", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "screenshot", "name_display" : "Screenshot", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "enquanto", "name_display" : "Enquanto", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
 
         step_list_complete = step_list
         
@@ -144,7 +143,7 @@ function get_last_depth(){
         step_board = find_parent_with_attr_worth(this, "step_board")
         if(step_board.children.length>0){
             last_step = step_board.children[step_board.children.length-1]
-            if(last_step.step.name == "para_cada" || last_step.step.name == "elemento_existe_na_pagina" ){
+            if(last_step.step.name == "para_cada" || last_step.step.name == "elemento_existe_na_pagina" || last_step.step.name == "enquanto"){
                 return last_step.depth + 1
             }else{
                 return last_step.depth
@@ -192,6 +191,15 @@ function load_steps(json_steps, step_list){
             this.load_steps(child, step_list)
         }
 
+    }else if(json_steps.step == "enquanto"){
+        let condition = Object.keys(name_dict).find(key => name_dict[key] === json_steps.condition.call.step)
+        block.condition_select.value = condition
+        block.condition_select.onchange()
+        args = json_steps.condition.call.arguments
+
+        for(let child of json_steps.children){
+            this.load_steps(child, step_list)
+        }
     }else if(json_steps.step == "atribuicao"){
         block.target_input.value = json_steps.target
         let source = Object.keys(name_dict).find(key => name_dict[key] === json_steps.source.call.step)
@@ -298,6 +306,13 @@ function get_step_json_format(block){
         step_dict.iterable = {call:{}}
         step_dict.iterable.call = {
             step: steps_names[block.iterable_select.value],
+            arguments: load_param_dict(block)
+        }
+    }else if(param_name == "enquanto"){
+        step_dict.children = []
+        step_dict.condition = {call:{}}
+        step_dict.condition.call = {
+            step: steps_names[block.condition_select.value],
             arguments: load_param_dict(block)
         }
     }else if(param_name == "elemento_existe_na_pagina"){
