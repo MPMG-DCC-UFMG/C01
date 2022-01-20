@@ -21,11 +21,9 @@ jobs:
         run: |
           coverage run -m pytest
           coverage report -i
-          pwd
-          ls
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
           fail_ci_if_error: true
           verbose: true
-          files: ./coverage
+          files: ./.coverage
