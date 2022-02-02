@@ -114,7 +114,7 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
 
 
 def getAllData():
-    return CrawlRequest.objects.all().order_by('-creation_date')
+    return CrawlRequest.objects.all().order_by('-last_modified')
 
 
 def create_instance(crawler_id, instance_id):
@@ -199,7 +199,7 @@ def create_crawler(request):
             static_response_formset.instance = instance
             static_response_formset.save()
 
-            return redirect('list_crawlers')
+            return redirect(detail_crawler, crawler_id=instance.id)
 
     context['form'] = my_form
     context['templated_response_formset'] = templated_response_formset
@@ -233,7 +233,7 @@ def edit_crawler(request, crawler_id):
         templated_response_formset.save()
         static_parameter_formset.save()
         static_response_formset.save()
-        return redirect('list_crawlers')
+        return redirect(detail_crawler, crawler_id=crawler_id)
     else:
         return render(request, 'main/create_crawler.html', {
             'form': form,

@@ -296,10 +296,13 @@
             "children": [
                 {
                     "step": "enquanto",
-                    "negation": false,
                     "condition": {
-                        "comparison": "True == 1",
-                        "limit": "5"
+                        "call": {
+                            "step":"objeto",
+                            "arguments": {
+                                "objeto":"True == 1"
+                                }
+                            }
                     },
                     "depth": 1,
                     "children": [
