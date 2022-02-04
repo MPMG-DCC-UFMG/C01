@@ -30,10 +30,14 @@ Home
                         <div class="btn-group">
                             <a title="Detalhes" class="btn btn-info" href="{% url 'detail_crawler' crawler.id %}"><i class="fa fa-info-circle" aria-hidden="true"></i>
                             </a>
-                            <a title="Começar" class="btn btn-success" href="{% url 'run_crawl' crawler.id %}"><i class="fa fa-play" aria-hidden="true"></i>
-                            </a>
-                            <a title="Parar" class="btn btn-danger" href="{% url 'stop_crawl' crawler.id %}"><i class="fa fa-stop" aria-hidden="true"></i>
-                            </a>
+                            {% if crawler.running == True %}
+                                <a title="Parar" class="btn btn-danger" href="{% url 'stop_crawl' crawler.id %}"><i class="fa fa-stop" aria-hidden="true"></i>
+                                </a>
+                            {% else %}
+                                <a title="Começar" class="btn btn-success" href="{% url 'run_crawl' crawler.id %}"><i class="fa fa-play" aria-hidden="true"></i>
+                                </a>
+                            {% endif %}
+                            
                             <a title="Editar" class="btn btn-primary" href="{% url 'edit_crawler' crawler.id %}"><i class="fa fa-pencil" aria-hidden="true"></i>
                             </a>
                         </div>
