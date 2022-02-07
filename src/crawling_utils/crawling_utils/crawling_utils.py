@@ -6,6 +6,7 @@ import os
 import sys
 from urllib.parse import urlparse
 import requests
+from datetime import datetime
 
 SERVER_ADDRESS = os.getenv('SERVER_ADDRESS', 'http://localhost:8000')
 
@@ -16,7 +17,6 @@ SERVER_FILES_FOUND_API = SERVER_ADDRESS + '/download/files/found/{instance_id}/{
 SERVER_FILE_DOWNLOADED_API = SERVER_ADDRESS + '/download/file/{message}/{instance_id}'
 
 SERVER_SESSION = requests.sessions.Session()
-
 
 class StopDownload(Exception):
     """Used in func file_larger_than_giga"""
@@ -56,10 +56,10 @@ def notify_server(notification_url: str):
     req = SERVER_SESSION.get(notification_url)
 
     if req.status_code == 200:
-        print('Server notified successfully')
+        print(f'[{datetime.now()}] Server Crawled Data Notifier: Server notified successfully')
 
     else:
-        print('Error notifying server')
+        print(f'[{datetime.now()}] Server Crawled Data Notifier: Error notifying server')
 
 
 def notify_new_page_found(instance_id: str, num_pages: int = 1):
@@ -77,6 +77,12 @@ def notify_page_crawled_successfully(instance_id: str):
 def notify_page_crawled_with_error(instance_id: str):
     server_notification_url = SERVER_PAGE_CRAWLED_API.format(
         message='error', instance_id=instance_id)
+    notify_server(server_notification_url)
+
+
+def notify_page_duplicated_found(instance_id: str):
+    server_notification_url = SERVER_PAGE_CRAWLED_API.format(
+        message='duplicated', instance_id=instance_id)
     notify_server(server_notification_url)
 
 
@@ -109,7 +115,6 @@ def system_is_deploying() -> bool:
     '''
     return 'makemigrations' in sys.argv or 'migrate' in sys.argv or \
         'collectstatic' in sys.argv
-
 
 # leave as 'chromedriver' if driver is on path
 CHROME_WEBDRIVER_PATH = 'chromedriver'

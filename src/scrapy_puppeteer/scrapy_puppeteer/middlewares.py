@@ -197,7 +197,7 @@ class PuppeteerMiddleware:
         async def stop_request_interceptor(page) -> None:
             await page._networkManager._client.send("Fetch.disable")
 
-        await setup_request_interceptor(page)
+        # await setup_request_interceptor(page)
 
         try:
             response = await page.goto(
@@ -212,7 +212,7 @@ class PuppeteerMiddleware:
             raise IgnoreRequest()
 
         # Stop intercepting following requests
-        await stop_request_interceptor(page)
+        # await stop_request_interceptor(page)
 
         if request.screenshot:
             request.meta['screenshot'] = await page.screenshot()
@@ -226,7 +226,11 @@ class PuppeteerMiddleware:
 
         content_type = response.headers['content-type']
         _, params = cgi.parse_header(content_type)
-        encoding = params['charset']
+
+        # If encoding info is not avaible in response headers, use default utf-8 to encode content
+        encoding = 'utf-8'
+        if 'charset' in params:
+            encoding = params['charset']
 
         content = await page.content()
         body = str.encode(content, encoding=encoding, errors='ignore')

@@ -1,20 +1,21 @@
 import datetime
 import re
-import requests
 
 from scrapy.linkextractors import LinkExtractor
-from scrapy.http import Request, HtmlResponse
+from scrapy.http import Request, HtmlResponse, Response
 from scrapy_puppeteer import PuppeteerRequest
+import cchardet as chardet
 
 # Checks if an url is valid
 import validators
 
 import crawling_utils
 from crawling_utils import notify_files_found
+from crawling_utils.constants import HEADER_ENCODE_DETECTION, AUTO_ENCODE_DETECTION,AUTO_ENCODE_DETECTION_CONFIDENCE_THRESHOLD
 
 from crawling.items import RawResponseItem
 from crawling.spiders.base_spider import BaseSpider
-
+from crawling_utils import notify_page_crawled_with_error
 
 LARGE_CONTENT_LENGTH = 1e9
 HTTP_HEADERS = {
@@ -148,30 +149,63 @@ class StaticPageSpider(BaseSpider):
 
         return set(src)
 
-    def response_to_item(self, response, files_found: set, images_found: set, idx: int) -> RawResponseItem:
+    def get_encoding(self, response: Response) -> str:
+        encoding = None
+        encoding_detection_method = self.config.get('encoding_detection_method', HEADER_ENCODE_DETECTION)
+
+        if encoding_detection_method == HEADER_ENCODE_DETECTION:
+            encoding = response.encoding
+            self.logger.info(f'Encoding detected by header: {encoding}')
+
+        elif encoding_detection_method == AUTO_ENCODE_DETECTION:
+            detection = chardet.detect(response.body)
+
+            detected_encoding = detection['encoding']
+            confidence = detection['confidence']
+
+            if confidence >= AUTO_ENCODE_DETECTION_CONFIDENCE_THRESHOLD:
+                encoding = detected_encoding
+                self.logger.info(f'Encoding detected automatically: {encoding}')
+
+            else:
+                msg = f'Could not detect page encoding "{response.url}" at the level of confidence "{AUTO_ENCODE_DETECTION_CONFIDENCE_THRESHOLD}"".' + \
+                    f'The predicted encoding was "{detected_encoding}" with "{confidence}" confidence. THE PAGE WILL BE SAVED AS BINARY.'
+                self.logger.warn(msg)
+
+        else:
+            ValueError(
+                f'"{encoding_detection_method}" is not a valid encoding detection method.')
+
+        return encoding
+
+    def response_to_item(self, response: Response, files_found: set, images_found: set) -> RawResponseItem:
         item = RawResponseItem()
 
-        item['appid'] = response.meta['appid']
-        item['crawlid'] = response.meta['crawlid']
+        try:
+            item['appid'] = response.meta['appid']
+            item['crawlid'] = response.meta['crawlid']
 
-        item["url"] = response.request.url
-        item["response_url"] = response.url
-        item["status_code"] = response.status
+            item["url"] = response.request.url
+            item["response_url"] = response.url
+            item["status_code"] = response.status
 
-        item["body"] = response.body
-        item["encoding"] = response.encoding
+            item["body"] = response.body
+            item["encoding"] = self.get_encoding(response)
 
-        item["referer"] = response.meta["attrs"]["referer"]
-        item["content_type"] = response.headers.get('Content-type', b'').decode()
-        item["crawler_id"] = self.config["crawler_id"]
-        item["instance_id"] = self.config["instance_id"]
-        item["crawled_at_date"] = str(datetime.datetime.today())
+            item["referer"] = response.meta["attrs"]["referer"]
+            item["content_type"] = response.headers.get('Content-type', b'').decode()
+            item["crawler_id"] = self.config["crawler_id"]
+            item["instance_id"] = self.config["instance_id"]
+            item["crawled_at_date"] = str(datetime.datetime.today())
 
-        item["files_found"] = files_found
-        item["images_found"] = images_found
-        item["attrs"] = response.meta["attrs"]
-        item["attrs"]["steps"] = self.config["steps"]
-        item["attrs"]["steps_req_num"] = idx
+            item["files_found"] = files_found
+            item["images_found"] = images_found
+            item["attrs"] = response.meta["attrs"]
+            item["attrs"]["steps"] = self.config["steps"]
+            item["attrs"]["steps_req_num"] = idx
+        except Exception as e:
+            print(f'Error processing {response.request.url}: {e}')
+            notify_page_crawled_with_error(self.config["instance_id"])
 
         return item
 
@@ -190,6 +224,9 @@ class StaticPageSpider(BaseSpider):
         Parse responses of static pages.
         Will try to follow links if config["explore_links"] is set.
         """
+        self.idleness = 0
+
+        self._logger.info(f'[SPIDER] Processing: {response.request.url}...')
 
         # Get current depth
         cur_depth = 0
@@ -200,6 +237,10 @@ class StaticPageSpider(BaseSpider):
         if type(response.request) is PuppeteerRequest:
             responses = [self.page_to_response(page, response) 
                             for page in list(response.request.meta["pages"].values())]
+
+
+        files_found = set()
+        images_found = set()
 
         for idx, response in enumerate(responses):
             try:
@@ -224,11 +265,9 @@ class StaticPageSpider(BaseSpider):
                                     },
                             errback=self.errback_httpbin)
 
-                files_found = set()
                 if self.config.get("download_files", False):
                     files_found = self.extract_files(response)
 
-                images_found = set()
                 if self.config.get("download_imgs", False):
                     images_found = self.extract_imgs(response)
 

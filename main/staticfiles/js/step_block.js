@@ -58,6 +58,7 @@ function init_block(step_list, depth){
 
     //Setting the estrutural steps builders
     block.turn_to_for_step = turn_to_for_step
+    block.turn_to_while_step = turn_to_while_step
     block.turn_to_attribution_step = turn_to_attribution_step
     block.turn_to_new_tab_step = turn_to_new_tab_step
     block.turn_to_close_tab_step = turn_to_close_tab_step
@@ -99,13 +100,15 @@ function init_block(step_list, depth){
     block.move_down = move_down
     block.delete_step = delete_step
     block.add_block_bellow = add_block_bellow
+    block.duplicate_blocks = duplicate_blocks
 
     block.controler.children[0].onclick = block.add_block_bellow
     block.controler.children[1].onclick = block.unindent_step
     block.controler.children[2].onclick = block.indent_step
     block.controler.children[3].onclick = block.move_up
     block.controler.children[4].onclick = block.move_down
-    block.controler.children[5].onclick = block.delete_step
+    block.controler.children[5].onclick = block.duplicate_blocks
+    block.controler.children[6].onclick = block.delete_step
 
     return block
 }
@@ -310,6 +313,28 @@ function refresh_iterable(){
     optional_params = Object.keys(block.iterable_step.optional_params)
     if(optional_params.length!=0){
         block.init_optional_params_button(block.iterable_step)
+    }
+}
+
+/**
+ * Refreshes the parameter inputs of an condition when it is changed.
+ * This function is a method of the condition select element.
+ */
+ function refresh_condition(){
+    block = find_parent_with_attr_worth(this, "block")
+    block.condition_step = get_step_info(this.value)
+    block.params = []
+
+    block.delete_lines(1, block.lines.length)
+    block.add_line()
+
+    for(param of block.condition_step.mandatory_params){
+        block.add_param(param)
+    }
+
+    optional_params = Object.keys(block.condition_step.optional_params)
+    if(optional_params.length!=0){
+        block.init_optional_params_button(block.condition_step)
     }
 }
 
@@ -535,6 +560,8 @@ function refresh_step(){
 
     if(this.value=="Para cada"){
         block.turn_to_for_step()
+    }else if(this.value=="Enquanto"){
+        block.turn_to_while_step()
     }else if(this.value=="Atribuição"){
         block.turn_to_attribution_step()
     }else if(this.value=="Abrir em nova aba"){
@@ -624,6 +651,31 @@ function turn_to_for_step(){
 
     iterable_select.onchange = refresh_iterable
     iterable_select.onchange()
+}
+
+/**
+ * Sets the block to the while each step.
+ * This function is a method of the block.
+ */
+ function turn_to_while_step(){
+    block = find_parent_with_attr_worth(this, "block")
+    block.delete_lines(block.lines.length)
+    block.add_line()
+
+    // defines condition step
+    condition_select_box = document.createElement("DIV")
+    condition_select_box.className = "step-config-select"
+    condition_select = document.createElement("select")
+    condition_select.className = "form-control select-step"
+    condition_select.innerHTML = get_this_texts_inside_each_tag(Object.keys(get_step_names(block.step_list)), "<option>")
+    condition_select_box.appendChild(condition_select)
+    block.condition_select = condition_select
+
+    block.lines[0].row.appendChild(condition_select_box)
+    block.lines[0].row.full = true
+
+    condition_select.onchange = refresh_condition
+    condition_select.onchange()
 }
 
 /**
@@ -844,6 +896,57 @@ function move_down(){
 }
 
 /**
+ * Duplicates the block that called this method and its children.
+ * This function is a method of the block
+ */
+ function duplicate_blocks(){
+    block = find_parent_with_attr_worth(this, "block") //var block is the triggered one
+    trigged_depth = block.depth
+    i=0
+    //finds block to duplicate
+    while(block != step_board.children[i]){i++} 
+    trigged_index = i
+    //finds how many children blocks
+    while(step_board.children[i+1] && trigged_depth < step_board.children[i+1].depth){i++} 
+    last_child_index = i
+    //creates the new blocks
+    copy = 0
+    while(copy != (last_child_index-trigged_index+1)) {        
+        step_board.add_block(step_list, last_child_index+copy+1) //var block is now the added block
+        //fix the depth of the new block
+        block.depth = step_board.children[trigged_index+copy].depth
+        block.parentElement.current_depth = block.depth
+        block.style.left = (block.depth*2-2) +"em"
+        //copies the block type
+        block.select.value = step_board.children[trigged_index+copy].select.value
+        block.select.onchange()
+        //gets all selects
+        let new_selects = Array.prototype.slice.apply(block.querySelectorAll("select"))
+        let old_selects = Array.prototype.slice.apply(step_board.children[trigged_index+copy].querySelectorAll("select"))
+        //copies all select values
+        new_selects.forEach((select,index) => {
+            if (index !== 0) {
+                select.value = old_selects[index].value
+                select.onchange()
+            }
+        })
+        //checks if it has extra field
+        extra_option =  step_board.children[trigged_index+copy].querySelector('.dropdown-menu')
+        if (extra_option && (step_board.children[trigged_index+copy].querySelector('input[data-param="numero_xpaths"]') || step_board.children[trigged_index+copy].querySelector('input[data-param="xpath_do_campo_a_preencher"]'))) {
+            block.querySelector('.dropdown-menu a').click()
+        }
+        //get all inputs
+        let new_inputs = Array.prototype.slice.apply(block.querySelectorAll("input"))
+        let old_inputs = Array.prototype.slice.apply(step_board.children[trigged_index+copy].querySelectorAll("input"))
+        //copies all input values
+        new_inputs.forEach((input,index) => {
+            input.value = old_inputs[index].value
+        })
+        copy++
+    }
+}
+
+/**
  * Delete the block that called this method.
  * This function is a method of the block
  */
@@ -885,6 +988,9 @@ function init_block_element(step_list){
                             </div>
                             <div class="col-sm">
                                 <img class="block-controler-button" src="/static/icons/arrow-down-black.svg">
+                            </div>
+                            <div class="col-sm">
+                                <img class="block-controler-button" src="/static/icons/duplicate-black.svg">
                             </div>
                             <div class="col-sm">
                                 <img class="block-controler-button" src="/static/icons/black-x.svg">

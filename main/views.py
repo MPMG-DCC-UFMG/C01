@@ -46,6 +46,7 @@ logger = logging.getLogger('file')
 
 # Helper methods
 
+
 def process_run_crawl(crawler_id):
     instance = None
     instance_info = dict()
@@ -113,7 +114,7 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
 
 
 def getAllData():
-    return CrawlRequest.objects.all().order_by('-creation_date')
+    return CrawlRequest.objects.all().order_by('-last_modified')
 
 
 def create_instance(crawler_id, instance_id):
@@ -198,7 +199,7 @@ def create_crawler(request):
             static_response_formset.instance = instance
             static_response_formset.save()
 
-            return redirect('list_crawlers')
+            return redirect(detail_crawler, crawler_id=instance.id)
 
     context['form'] = my_form
     context['templated_response_formset'] = templated_response_formset
@@ -232,7 +233,7 @@ def edit_crawler(request, crawler_id):
         templated_response_formset.save()
         static_parameter_formset.save()
         static_response_formset.save()
-        return redirect('list_crawlers')
+        return redirect(detail_crawler, crawler_id=crawler_id)
     else:
         return render(request, 'main/create_crawler.html', {
             'form': form,
@@ -301,6 +302,7 @@ def tail_log_file(request, instance_id):
     pages_found = instance.number_pages_found
     download_page_success = instance.number_pages_success_download
     download_page_error = instance.number_pages_error_download
+    number_pages_duplicated_download = instance.number_pages_duplicated_download
 
     logs = Log.objects.filter(instance_id=instance_id).order_by('-creation_date')
 
@@ -319,6 +321,7 @@ def tail_log_file(request, instance_id):
         "pages_found": pages_found,
         "pages_success": download_page_success,
         "pages_error": download_page_error,
+        "pages_duplicated": number_pages_duplicated_download,
         "out": log_text,
         "err": err_text,
         "time": str(datetime.fromtimestamp(time.time())),
@@ -416,6 +419,19 @@ def error_download_page(request, instance_id):
         instance = CrawlerInstance.objects.get(instance_id=instance_id)
 
         instance.number_pages_error_download += 1
+        instance.save()
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def duplicated_download_page(request, instance_id):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id=instance_id)
+
+        instance.number_pages_duplicated_download += 1
         instance.save()
 
         return JsonResponse({}, status=status.HTTP_200_OK)
@@ -580,7 +596,7 @@ def view_screenshots(request, instance_id, page):
     IMGS_PER_PAGE = 20
 
     instance = get_object_or_404(CrawlerInstance, pk=instance_id)
-    
+
     output_folder = os.getenv('OUTPUT_FOLDER', '/data')
     data_path = instance.crawler.data_path
     instance_path = os.path.join(output_folder, data_path, str(instance_id))
