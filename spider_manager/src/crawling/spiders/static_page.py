@@ -178,7 +178,7 @@ class StaticPageSpider(BaseSpider):
 
         return encoding
 
-    def response_to_item(self, response: Response, files_found: set, images_found: set) -> RawResponseItem:
+    def response_to_item(self, response: Response, files_found: set, images_found: set, idx: int) -> RawResponseItem:
         item = RawResponseItem()
 
         try:
