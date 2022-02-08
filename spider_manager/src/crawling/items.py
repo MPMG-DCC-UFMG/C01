@@ -9,7 +9,7 @@ class RawResponseItem(Item):
     # default
     appid = Field()
     crawlid = Field()
-    
+
     url = Field()
     response_url = Field()
     status_code = Field()
@@ -24,3 +24,4 @@ class RawResponseItem(Item):
     crawled_at_date = Field()
     files_found = Field()
     images_found = Field()
+    attrs = Field()

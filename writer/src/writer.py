@@ -20,7 +20,7 @@ class Writer:
 
         self.__command_consumer = KafkaConsumer(settings.WRITER_TOPIC,
                             # group_id=settings.KAFKA_CMD_GROUP,
-                            bootstrap_servers=settings.KAFKA_HOSTS,            
+                            bootstrap_servers=settings.KAFKA_HOSTS,
                             auto_offset_reset=settings.KAFKA_CONSUMER_AUTO_OFFSET_RESET,
                             connections_max_idle_ms=settings.KAFKA_CONNECTIONS_MAX_IDLE_MS,
                             request_timeout_ms=settings.KAFKA_REQUEST_TIMEOUT_MS,
@@ -87,7 +87,8 @@ class Writer:
             'instance_id': crawled_data['instance_id'],
             'type': crawled_data['content_type'],
             'crawled_at_date': crawled_data['crawled_at_date'],
-            'referer': crawled_data['referer']
+            'referer': crawled_data['referer'],
+            "attrs": crawled_data['attrs']
         }
 
         if encoding is None:
@@ -119,7 +120,7 @@ class Writer:
 
         consumer = KafkaConsumer(settings.CRAWLED_TOPIC,
                             group_id=settings.CRAWLED_DATA_CONSUMER_GROUP,
-                            bootstrap_servers=settings.KAFKA_HOSTS,            
+                            bootstrap_servers=settings.KAFKA_HOSTS,
                             auto_offset_reset=settings.KAFKA_CONSUMER_AUTO_OFFSET_RESET,
                             connections_max_idle_ms=settings.KAFKA_CONNECTIONS_MAX_IDLE_MS,
                             request_timeout_ms=settings.KAFKA_REQUEST_TIMEOUT_MS,
@@ -135,7 +136,7 @@ class Writer:
                 url_hash =  hash(crawled_data['url'].encode())
 
                 print(f'[{datetime.now()}] [CC] {worker_name} Worker: Processing crawled data with URL hash {url_hash}...')
-                
+
                 self.__process_crawled_data(crawled_data)
 
             except Exception as e:
@@ -157,7 +158,7 @@ class Writer:
         self.__file_downloader.run()
 
         print(f'[{datetime.now()}] Writer: Waiting for commands...')
-        
+
         for message in self.__command_consumer:
             print(f'[{datetime.now()}] Writer: New command received')
 

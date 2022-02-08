@@ -178,7 +178,7 @@ class StaticPageSpider(BaseSpider):
 
         return encoding
 
-    def response_to_item(self, response: Response, files_found: set, images_found: set) -> RawResponseItem:
+    def response_to_item(self, response: Response, files_found: set, images_found: set, idx: int) -> RawResponseItem:
         item = RawResponseItem()
 
         try:
@@ -200,7 +200,9 @@ class StaticPageSpider(BaseSpider):
 
             item["files_found"] = files_found
             item["images_found"] = images_found
-            
+            item["attrs"] = response.meta["attrs"]
+            item["attrs"]["steps"] = self.config["steps"]
+            item["attrs"]["steps_req_num"] = idx
         except Exception as e:
             print(f'Error processing {response.request.url}: {e}')
             notify_page_crawled_with_error(self.config["instance_id"])
@@ -235,11 +237,12 @@ class StaticPageSpider(BaseSpider):
         if type(response.request) is PuppeteerRequest:
             responses = [self.page_to_response(page, response) 
                             for page in list(response.request.meta["pages"].values())]
-        
+
+
         files_found = set()
         images_found = set()
 
-        for response in responses:
+        for idx, response in enumerate(responses):
             try:
                 # Limit depth if required
                 max_depth = self.config.get("link_extractor_max_depth")
@@ -254,7 +257,9 @@ class StaticPageSpider(BaseSpider):
                                     meta={
                                         "attrs": {
                                             'referer': response.url,
-                                            'instance_id': self.config["instance_id"]
+                                            'instance_id': self.config["instance_id"],
+                                            'curdepth': response.meta['curdepth'] + 1
+                                            #adicionar informações da req inicial
                                         },
                                         'curdepth': response.meta['curdepth'] + 1
                                     },
@@ -276,6 +281,6 @@ class StaticPageSpider(BaseSpider):
             num_files = len(files_found) + len(images_found)
             notify_files_found(self.config["instance_id"], num_files)
 
-            item = self.response_to_item(response, files_found, images_found)
+            item = self.response_to_item(response, files_found, images_found, idx)
 
             yield item

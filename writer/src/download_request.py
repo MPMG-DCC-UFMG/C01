@@ -25,8 +25,10 @@ class DownloadRequest:
                 referer: str,
                 filename: str = '',
                 filetype: str = '',
-                crawled_at_date: str = '') -> None:
+                crawled_at_date: str = '',
+                attrs: dict = {}) -> None:
 
+        self.attrs = attrs,
         self.url = url
         self.crawler_id = crawler_id
         self.instance_id = instance_id
@@ -124,6 +126,7 @@ class DownloadRequest:
             'referer': self.referer,
             'file_name': self.filename,
             'type': self.filetype,
+            'attrs': self.attrs,
             'crawled_at_date': self.crawled_at_date,
             'extracted_files': [
 
