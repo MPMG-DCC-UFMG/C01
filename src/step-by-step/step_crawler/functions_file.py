@@ -172,6 +172,8 @@ async def retorna_pagina(pagina):
 @step("Digitar em")
 async def digite(pagina, xpath, texto):
     await pagina.querySelectorEval(cssify(xpath), 'el => el.value = ""')
+    await pagina.click(cssify(xpath))
+    time.sleep(1)
     await pagina.type(cssify(xpath), texto)
 
 
