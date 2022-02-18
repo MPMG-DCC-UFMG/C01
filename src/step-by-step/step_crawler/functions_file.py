@@ -4,6 +4,7 @@ import datetime
 import time
 import operator
 import uuid
+import validators
 from cssify import cssify
 from PIL import Image
 from captcha_solver.image_solver import ImageSolver
@@ -251,20 +252,30 @@ async def comparacao(pagina, arg1, comp, arg2):
     return op_dict[comp](arg1, arg2)
 
 async def open_in_new_tab(pagina, link_xpath):
-    await pagina.waitForXPath(link_xpath)
-    elements = await pagina.xpath(link_xpath)
-
-    if len(elements) != 1:
-        raise Exception('XPath points to non existent element, or multiple elements!')
-
-    new_page_promisse = asyncio.get_event_loop().create_future()
-    pagina.browser.once("targetcreated", lambda target: new_page_promisse.set_result(target))
-    await pagina.evaluate('el => { el.setAttribute("target", "_blank"); el.click();}', elements[0])
-    try:
-        new_page = await (await asyncio.wait_for(new_page_promisse, 60)).page()
+    if validators.url(link_xpath):
+        #We have a link
+        new_page = await pagina.browser.newPage()
+        await new_page.goto(link_xpath)
         await espere_pagina(new_page)
         await new_page.bringToFront()
 
         return new_page
-    except asyncio.TimeoutError:
-        raise Exception('Process timed out when trying to open xpath "' + link_xpath +'" in a new page!')
+    else:
+        #We have a xpath
+        await pagina.waitForXPath(link_xpath)
+        elements = await pagina.xpath(link_xpath)
+
+        if len(elements) != 1:
+            raise Exception('XPath points to non existent element, or multiple elements!')
+
+        new_page_promisse = asyncio.get_event_loop().create_future()
+        pagina.browser.once("targetcreated", lambda target: new_page_promisse.set_result(target))
+        await pagina.evaluate('el => { el.setAttribute("target", "_blank"); el.click();}', elements[0])
+        try:
+            new_page = await (await asyncio.wait_for(new_page_promisse, 60)).page()
+            await espere_pagina(new_page)
+            await new_page.bringToFront()
+
+            return new_page
+        except asyncio.TimeoutError:
+            raise Exception('Process timed out when trying to open xpath "' + link_xpath +'" in a new page!')
