@@ -267,4 +267,7 @@ async def open_in_new_tab(pagina, link_xpath):
 
         return new_page
     except asyncio.TimeoutError:
-        raise Exception('Process timed out when trying to open xpath "' + link_xpath +'" in a new page!')
+        # raise Exception('Process timed out when trying to open xpath "' + link_xpath +'" in a new page!')
+        print('Process timed out when trying to open xpath "' + link_xpath +'" in a new page!')
+        await pagina.close()
+        return None
