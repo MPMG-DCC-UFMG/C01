@@ -23,15 +23,18 @@ def generate_para_cada(child, module):
     return code
 
 
-def generate_elemento_existe_na_pagina(child, module):
+def generate_se(child, module):
     code = ''
     code += child['depth'] * '    ' + 'if '
-    if child['arguments'] != '':
-        call = child
+
+    # if child['negation']:
+    #     code += 'not '
+
+    if 'call' in child['condition']:
+        call = child['condition']['call']
         function = getattr(module, call['step'])
         is_coroutine = inspect.iscoroutinefunction(function)
-        code += generate_call(call['step'], call['arguments'], is_coroutine)
-        code += ':\n'
+        code += generate_call(call['step'], call['arguments'], is_coroutine) + ':' + '\n'
     else:
         raise TypeError('This condition is in the wrong format')
 
