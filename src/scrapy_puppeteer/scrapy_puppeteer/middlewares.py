@@ -1,6 +1,7 @@
 """This module contains the ``PuppeteerMiddleware`` scrapy middleware"""
 import asyncio
 import json
+import signal
 
 from twisted.internet import asyncioreactor
 
@@ -65,13 +66,13 @@ class PuppeteerMiddleware:
         """
 
         middleware = cls()
-        middleware.browser = await launch({
-            'executablePath': chromium_executable(),
-            'headless': True,
-            'args': ['--no-sandbox'],
-            'dumpio': True,
-            'logLevel': crawler.settings.get('LOG_LEVEL')
-        })
+        # middleware.browser = await launch({
+        #     'executablePath': chromium_executable(),
+        #     'headless': True,
+        #     'args': ['--no-sandbox'], # '--single-process', '--no-zygote', 
+        #     'dumpio': True,
+        #     'logLevel': crawler.settings.get('LOG_LEVEL')
+        # })
 
         data_path = crawler.settings.get('DATA_PATH')
         middleware.data_path = data_path
@@ -79,11 +80,11 @@ class PuppeteerMiddleware:
         middleware.crawler_id = crawler.settings.get('CRAWLER_ID')
         middleware.instance_id = crawler.settings.get('INSTANCE_ID')
 
-        page = await middleware.browser.newPage()
+        # page = await middleware.browser.newPage()
 
         # Changes the default file save location.
-        cdp = await page._target.createCDPSession()
-        await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allowAndName', 'downloadPath': middleware.download_path})
+        # cdp = await page._target.createCDPSession()
+        # await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allowAndName', 'downloadPath': middleware.download_path})
 
         crawler.signals.connect(middleware.spider_closed, signals.spider_closed)
 
@@ -119,11 +120,11 @@ class PuppeteerMiddleware:
         try:
             page = await self.browser.newPage()
 
-        except:
+        except Exception as e:
             self.browser = await launch({
                                         'executablePath': chromium_executable(),
                                         'headless': True,
-                                        'args': ['--no-sandbox'],
+                                        'args': ['--no-sandbox'], #'--single-process', '--no-zygote', 
                                         'dumpio': True
                                         })
             await self.browser.newPage()

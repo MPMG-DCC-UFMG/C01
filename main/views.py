@@ -23,7 +23,7 @@ import json
 import subprocess
 import time
 import os
-
+import multiprocessing as mp
 from datetime import datetime
 
 import crawlers.crawler_manager as crawler_manager
@@ -99,9 +99,17 @@ def process_stop_crawl(crawler_id):
     crawler_manager.update_instances_info(
         config["data_path"], str(instance_id), instance_info)
 
-    crawler_manager.stop_crawler(instance_id, config)
+    crawler_manager.stop_crawler(crawler_id, instance_id, config)
 
     return instance
+
+
+def list_process(request):
+    text = ''
+    for p in mp.active_children():
+        text += f"child {p.name} is PID {p.pid}<br>"
+    
+    return HttpResponse(text)
 
 
 def getAllData():

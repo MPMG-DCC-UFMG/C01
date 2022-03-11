@@ -10,6 +10,7 @@ import requests
 import shutil
 import sys
 import time
+import multiprocessing as mp
 from multiprocessing import Process
 
 # Project libs
@@ -104,6 +105,7 @@ def get_crawler_base_settings(config: dict):
     """Returns scrapy base configurations."""
 
     settings = {
+        "CRAWLER_ID": config["crawler_id"],
         "BOT_NAME": "crawlers",
         "DOWNLOADER_MIDDLEWARES": {},
         "ROBOTSTXT_OBEY": config["obey_robots"],
@@ -139,17 +141,6 @@ def crawler_process(config):
     
     process = CrawlerProcess(settings=get_crawler_base_settings(config))
     process.crawl(PageSpider, config=json.dumps(config))
-
-    def update_database():
-        # TODO: get port as variable
-        port = 8000
-        requests.get(
-            f'http://localhost:{port}/detail/stop_crawl/{crawler_id}')
-
-    for crawler in process.crawlers:
-        crawler.signals.connect(
-            update_database, signal=scrapy.signals.spider_closed)
-
     process.start()
 
 def gen_key():
@@ -173,17 +164,22 @@ def start_crawler(config: dict):
         f.write(json.dumps({"stop": False}))
 
     # starts new process
-    p = Process(target=crawler_process, args=(config,))
+    p = Process(name='Crawler-'+str(config['crawler_id']), target=crawler_process, args=(config,))
     p.start()
 
     return config["instance_id"]
 
-def stop_crawler(instance_id: str, config: dict):
+def stop_crawler(crawler_id: str, instance_id: str, config: dict):
     """Sets the flags of a crawler to stop."""
 
     data_path = config["data_path"]
     with open(f"{data_path}/flags/{instance_id}.json", "w+") as f:
         f.write(json.dumps({"stop": True}))
+    
+    # iterate over the running processes and explicitly terminate it
+    for p in mp.active_children():
+        if p.name == 'Crawler-'+str(crawler_id):
+            p.terminate()
 
 def remove_crawler(instance_id: str, are_you_sure: bool =False):
     """

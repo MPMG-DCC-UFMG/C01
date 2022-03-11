@@ -29,6 +29,8 @@ urlpatterns = [
 
     path("iframe/load", views.load_iframe, name="load_iframe"),
 
+    path('list_process', views.list_process, name="list_process"),
+
     # Includes the API endpoints in the URLs
     url(r'^api/', include(api_router.urls)),
 ]
