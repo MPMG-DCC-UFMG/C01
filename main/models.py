@@ -133,8 +133,8 @@ class CrawlRequest(TimeStamped):
 
     steps = models.CharField(
         blank=True, null=True, max_length=9999999, default='{}')
-    
-    # ENCODING DETECTION ======================================================= 
+
+    # ENCODING DETECTION =======================================================
     HEADER_ENCODE_DETECTION = 1
     AUTO_ENCODE_DETECTION = 2
 
@@ -344,7 +344,7 @@ class ParameterHandler(models.Model):
                                  default='D')
 
     value_const_param = models.CharField(max_length=5000, blank=True)
-    value_list_param = models.CharField(max_length=5000, blank=True)
+    value_list_param = models.CharField(max_length=50000, blank=True)
 
 
 class ResponseHandler(models.Model):
