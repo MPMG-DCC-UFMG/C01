@@ -96,9 +96,9 @@ def generate_abrir_em_nova_aba(child, module):
     code += child['depth'] * '    ' + \
         'missing_arguments["pagina"] = await open_in_new_tab(**missing_arguments, ' + \
         'link_xpath = ' + child['link_xpath'] + ')\n'
-    code += child['depth'] * '    ' + 'if missing_arguments["pagina"] is None:\n'
-    code += (child['depth'] + 1) * '    ' + 'missing_arguments["pagina"] = page\n'
-    code += (child['depth'] + 1) * '    ' + 'page_stack.pop()\n'
+    #code += child['depth'] * '    ' + 'if missing_arguments["pagina"] is None:\n'
+    #code += (child['depth'] + 1) * '    ' + 'missing_arguments["pagina"] = page\n'
+    #code += (child['depth'] + 1) * '    ' + 'page_stack.pop()\n'
     code += child['depth'] * '    ' + 'page = missing_arguments["pagina"]\n'
     return code
 
