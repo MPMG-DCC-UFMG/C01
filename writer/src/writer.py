@@ -46,7 +46,8 @@ class Writer:
             f'{instance_path}/webdriver/',
             f'{instance_path}/data/raw_pages/',
             f'{instance_path}/data/csv/',
-            f'{instance_path}/data/files/'
+            f'{instance_path}/data/files/',
+            f'{instance_path}/data/screenshots/',
         ]
 
         for folder in folders:

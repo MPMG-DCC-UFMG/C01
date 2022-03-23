@@ -48,15 +48,15 @@ def gera_nome_arquivo():
 
 
 async def espere_pagina(pagina):
-    await pagina.waitForSelector("html")
+    await pagina.wait_for_selector("html")
 
 
 async def fill_iframe_content(page):
     # based on: https://gist.github.com/jgontrum/5a9060e40c7fc04c2c3bae3f1a9b28ad
 
-    iframes = await page.querySelectorAll('iframe')
+    iframes = await page.query_selector_all('iframe')
     for iframe in iframes:
-        frame = await iframe.contentFrame()
+        frame = await iframe.content_frame()
 
         # Checks if the element is really an iframe
         if not frame:
@@ -81,8 +81,9 @@ async def fill_iframe_content(page):
 @step("Clicar")
 async def clique(pagina, elemento):
     if type(elemento) == str:
-        await pagina.waitForXPath(elemento)
-        elements = await pagina.xpath(elemento)
+        el_locator = pagina.locator(f'xpath={elemento}')
+        await el_locator.wait_for()
+        elements = await el_locator.element_handles()
         if len(elements) == 1:
             await pagina.evaluate('element => { element.click(); }', elements[0])
         else:
@@ -94,8 +95,9 @@ async def clique(pagina, elemento):
 
 @step("Selecionar")
 async def selecione(pagina, xpath, opcao):
-    await pagina.waitForXPath(xpath)
-    await pagina.type(cssify(xpath), opcao)
+    el_locator = pagina.locator(f'xpath={xpath}')
+    await el_locator.wait_for()
+    await el_locator.type(opcao)
     await espere_pagina(pagina)
 
 
@@ -109,8 +111,9 @@ async def salva_pagina(pagina):
 
 @step("Extrair texto de")
 async def extrai_texto(pagina, xpath):
-    await pagina.waitForXPath(xpath)
-    text = await pagina.Jeval(cssify(xpath), "el => el.textContent")
+    el_locator = pagina.locator(f'xpath={xpath}')
+    await el_locator.wait_for()
+    text = await el_locator.text_content()
     return text
 
 
@@ -119,9 +122,13 @@ async def opcoes(pagina, xpath, exceto=None):
     if exceto is None:
         exceto = []
     options = []
-    await pagina.waitForXPath(xpath)
-    for option in (await pagina.xpath(xpath + "/option")):
-        value = await option.getProperty("text")
+
+
+    el_locator = pagina.locator(f'xpath={xpath}')
+    await el_locator.wait_for()
+
+    for option in (await pagina.locator(f'xpath={xpath + "/option"}').element_handles()):
+        value = await option.get_attribute("text")
         options.append(value.toString().split(":")[-1])
     return [value for value in options if value not in exceto]
 
@@ -140,7 +147,7 @@ async def localiza_elementos(pagina, xpath, numero_xpaths=None):
     base_xpath = xpath.split("[*]")[0]
 
     xpath_list = []
-    for i in range(len(await pagina.xpath(base_xpath))):
+    for i in range(await pagina.locator(f'xpath={base_xpath}').count()):
         candidate_xpath = xpath.replace("*", str(i + 1))
         if await elemento_existe_na_pagina(pagina, candidate_xpath):
             xpath_list.append(candidate_xpath)
@@ -151,13 +158,14 @@ async def localiza_elementos(pagina, xpath, numero_xpaths=None):
 
 @step("Voltar", executable_contexts=['page', 'tab'])
 async def retorna_pagina(pagina):
-    await pagina.goBack()
+    await pagina.go_back()
 
 
 @step("Digitar em")
 async def digite(pagina, xpath, texto):
-    await pagina.querySelectorEval(cssify(xpath), 'el => el.value = ""')
-    await pagina.type(cssify(xpath), texto)
+    el_locator = pagina.locator(f'xpath={xpath}')
+    await el_locator.evaluate('el => el.value = ""')
+    await el_locator.type(texto)
 
 
 @step("Objeto")
@@ -167,14 +175,16 @@ async def objeto(pagina, objeto):
 
 @step("Está escrito")
 async def nesse_elemento_esta_escrito(pagina, xpath, texto):
-    elements = await pagina.xpath(xpath)
-    if len(elements):
-        element = elements[0]
+    el_locator = pagina.locator(f'xpath={xpath}')
+
+    if el_locator.count() > 0:
+        element = el_locator.element_handle()
     else:
         return 0
 
-    element_text_content = await element.getProperty('textContent')
-    element_text = await (element_text_content).jsonValue()
+    # element_text_content = await element.text_content()
+    # element_text = await (element_text_content).jsonValue()
+    element_text = await element.text_content()
     if texto in element_text:
         return True
     else:
@@ -192,7 +202,7 @@ async def quebrar_captcha_imagem(pagina, xpath_do_elemento_captcha, xpath_do_cam
                                          before character recognition. Defaults to None.
         :returns text: the string representing the captcha characters
     """
-
+    # TODO
     element = (await pagina.xpath(xpath_do_elemento_captcha))[0]
     image_data = await element.screenshot(type='jpeg')
     image = Image.open(io.BytesIO(image_data))
@@ -216,7 +226,8 @@ async def elemento_existe_na_pagina(pagina, xpath):
         :returns bool: True or False
     """
     try:
-        await pagina.waitForXPath(xpath, visible=True, timeout=300)
+        el_locator = pagina.locator(f'xpath={xpath}')
+        await el_locator.wait_for('visible', timeout=300)
     except Exception as e:
         return False
     return True
@@ -236,6 +247,7 @@ async def comparacao(pagina, arg1, comp, arg2):
     return op_dict[comp](arg1, arg2)
 
 async def open_in_new_tab(pagina, link_xpath):
+    # TODO
     await pagina.waitForXPath(link_xpath)
     elements = await pagina.xpath(link_xpath)
 

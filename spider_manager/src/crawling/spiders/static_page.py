@@ -1,9 +1,11 @@
+import cgi
 import datetime
+import json
+import os
 import re
 
 from scrapy.linkextractors import LinkExtractor
 from scrapy.http import Request, HtmlResponse, Response
-from scrapy_puppeteer import PuppeteerRequest
 import cchardet as chardet
 
 # Checks if an url is valid
@@ -16,6 +18,8 @@ from crawling_utils.constants import HEADER_ENCODE_DETECTION, AUTO_ENCODE_DETECT
 from crawling.items import RawResponseItem
 from crawling.spiders.base_spider import BaseSpider
 from crawling_utils import notify_page_crawled_with_error
+from step_crawler import code_generator as code_g
+from step_crawler import functions_file
 
 LARGE_CONTENT_LENGTH = 1e9
 HTTP_HEADERS = {
@@ -219,7 +223,182 @@ class StaticPageSpider(BaseSpider):
             request=response.request
         )
 
-    def parse(self, response):
+
+
+
+
+
+
+    async def dynamic_processing(self, response):
+        """
+        Runs the dynamic processing steps
+
+        :response: The response obtained from Scrapy
+        """
+
+        crawler_id = self.config["crawler_id"]
+        instance_id = self.config["instance_id"]
+
+        # print(self.config)
+        data_path = self.config['DATA_PATH']
+        output_folder = self.config['OUTPUT_FOLDER']
+        instance_path = os.path.join(output_folder, data_path, str(instance_id))
+
+        download_path = os.path.join(instance_path, 'data', 'files')
+        scrshot_path = os.path.join(instance_path, "data", "screenshots")
+
+        page = response.meta["playwright_page"]
+        request = response.request
+
+        # page = browser.new_page()
+
+        # try:
+            # page = browser.new_page()
+
+        # except:
+
+            # browser = await launch({
+            #                        'executablePath': chromium_executable(),
+            #                        'headless': True,
+            #                        'args': ['--no-sandbox'],
+            #                        'dumpio': True
+            #                        })
+            # async with async_playwright() as p:
+            #     self.browser = await p.chromium.launch()
+            # browser = playwright.chromium.launch()
+
+            # self.browser.new_page()
+            # page = self.browser.new_page()
+
+            # Changes the default file save location.
+            # cdp = await page._target.createCDPSession()
+            # await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allowAndName', 'downloadPath': self.download_path})
+
+        # Cookies
+        # if isinstance(request.cookies, dict):
+        #     await page.setCookie(*[
+        #         {'name': k, 'value': v}
+        #         for k, v in request.cookies.items()
+        #     ])
+        # else:
+        #     await page.setCookie(request.cookies)
+
+        # The request method and data must be set using request interception
+        # For some reason the regular method with setRequestInterception and
+        # page.on('request', callback) doesn't work, I had to use this instead.
+        # This directly manipulates the lower level modules in the pyppeteer
+        # page to achieve the results. Details on this workaround here (I have
+        # changed the code so it no longer uses the deprecated 'Network'
+        # domain, using 'Fetch' instead):
+        # https://github.com/pyppeteer/pyppeteer/issues/198#issuecomment-750221057
+        """async def setup_request_interceptor(page) -> None:
+            client = page._networkManager._client
+
+            async def intercept(event) -> None:
+                request_id = event["requestId"]
+
+                try:
+                    int_req = event["request"]
+                    url = int_req["url"]
+
+                    options = {"requestId": request_id}
+                    options['method'] = request.method
+
+                    if request.body:
+                        # The post data must be base64 encoded
+                        b64_encoded = base64.b64encode(request.body)
+                        options['postData'] = b64_encoded.decode('utf-8')
+
+                    await client.send("Fetch.continueRequest", options)
+                except:
+                    # If everything fails we need to be sure to continue the
+                    # request anyway, else the browser hangs
+                    options = {
+                        "requestId": request_id,
+                        "errorReason": "BlockedByClient"
+                    }
+                    await client.send("Fetch.failRequest", options)
+
+
+            # Setup request interception for all requests.
+            client.on("Fetch.requestPaused",
+                lambda event: client._loop.create_task(intercept(event)),
+                      )
+
+            # Set this up so that only the initial request is intercepted
+            # (else it would capture requests for external resources such as
+            # scripts, stylesheets, images, etc)
+            patterns = [{"urlPattern": request.url}]
+            await client.send("Fetch.enable", {"patterns": patterns})
+
+        async def stop_request_interceptor(page) -> None:
+            await page._networkManager._client.send("Fetch.disable")"""
+
+        # await setup_request_interceptor(page)
+
+        """try:
+            response = page.goto(
+                request.url,
+                wait_until=request.wait_until,
+            )
+
+        except:
+            page.close()
+            raise IgnoreRequest()"""
+
+        # Stop intercepting following requests
+        # await stop_request_interceptor(page)
+
+        # if request.screenshot:
+        #     request.meta['screenshot'] = await page.screenshot()
+
+        # if request.wait_for:
+        #     await page.waitFor(request.wait_for)
+
+        if request.meta['steps']:
+            steps = request.meta['steps'] # json.loads(request.meta['steps'])
+            steps = code_g.generate_code(steps, functions_file, scrshot_path)
+            page_list = await steps.execute_steps(pagina=page)
+
+        content_type = response.headers['content-type']
+        # _, params = cgi.parse_header(content_type)
+        # encoding = params['charset']
+        # TODO remove line below and fix commented lines above
+        encoding = 'ascii'
+
+        content = await page.content()
+        body = str.encode(content, encoding=encoding, errors='ignore')
+
+        # TODO check if page is closed by middleware or if we must do it
+        # manually here
+        # page.close()
+
+        # Necessary to bypass the compression middleware (?)
+        response.headers.pop('content-encoding', None)
+        response.headers.pop('Content-Encoding', None)
+
+        results = []
+
+        for entry in list(page_list.values()):
+            results.append(self.page_to_response(entry, response))
+
+        return results
+
+        """return HtmlResponse(
+            page.url,
+            status=response.status,
+            headers=response.headers,
+            body=body,
+            encoding=encoding,
+            request=request
+        )"""
+
+
+
+
+
+
+    async def parse(self, response):
         """
         Parse responses of static pages.
         Will try to follow links if config["explore_links"] is set.
@@ -234,10 +413,8 @@ class StaticPageSpider(BaseSpider):
             cur_depth = response.meta['curdepth']
 
         responses = [response]
-        if type(response.request) is PuppeteerRequest:
-            responses = [self.page_to_response(page, response) 
-                            for page in list(response.request.meta["pages"].values())]
-
+        if "playwright_page" in response.meta:
+            responses = await self.dynamic_processing(response)
 
         files_found = set()
         images_found = set()

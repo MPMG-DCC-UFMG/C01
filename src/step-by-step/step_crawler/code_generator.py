@@ -108,14 +108,14 @@ def generate_fechar_aba(child, module):
 def generate_screenshot(child, module):
     code = ""
     code += child['depth'] * '    ' + "await page.screenshot"
-    code += "({'path': f\"{scrshot_path}/{datetime.datetime.now()}.png\", "
-    code += "'fullPage': True })\n"
+    code += "(path=f\"{scrshot_path}/{datetime.datetime.now()}.png\", "
+    code += ")\n"
     return code
 
 
 def generate_executar_em_iframe(child, module):
+    # TODO
     xpath = child['arguments']['xpath']
-
     code = "\n"
     code += child['depth'] * '    ' + "### Início: Passando o contexto de execução para iframe ###\n"
     code += child['depth'] * '    ' + 'page_stack.append(page)\n'
@@ -128,6 +128,7 @@ def generate_executar_em_iframe(child, module):
 
 
 def generate_sair_de_iframe(child, module):
+    # TODO
     code = "\n"
     code += child['depth'] * '    ' + "### Início: Saindo do contexto de iframe ###\n"
     code += child['depth'] * '    ' + 'missing_arguments["pagina"] = page\n'

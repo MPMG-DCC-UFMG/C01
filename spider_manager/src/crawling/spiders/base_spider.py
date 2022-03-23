@@ -39,7 +39,7 @@ class BaseSpider(RedisSpider):
         self.preprocess_link_configs()
         self.preprocess_download_configs()
 
-    def parse(self, response):
+    async def parse(self, response):
         """
         A function to treat the responses from a request.
         Should check self.stop() at every call.

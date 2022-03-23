@@ -2,9 +2,9 @@
 This file is responsible for managing the creation and closure of spiders
 """
 
-import asyncio
-from twisted.internet import asyncioreactor
-asyncioreactor.install(asyncio.get_event_loop())
+# import asyncio
+# from twisted.internet import asyncioreactor
+# asyncioreactor.install(asyncio.get_event_loop())
 
 import os
 import sys
@@ -15,6 +15,7 @@ import ujson
 from kafka import KafkaProducer
 from scrapy.crawler import CrawlerProcess
 from scrapy.spiders import Spider
+from scrapy.utils.reactor import install_reactor
 
 from crawling.spiders.static_page import StaticPageSpider
 from kafka_logger import KafkaLogger
@@ -83,7 +84,13 @@ class Executor:
         base_config["DYNAMIC_PROCESSING_STEPS"] = {}
 
         if config.get("dynamic_processing", False):
-            base_config["DOWNLOADER_MIDDLEWARES"]['scrapy_puppeteer.PuppeteerMiddleware'] = 800
+            # base_config["DOWNLOADER_MIDDLEWARES"]['scrapy_playwright.PlaywrightMiddleware'] = 800
+            base_config["TWISTED_REACTOR"] = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
+
+            base_config["DOWNLOAD_HANDLERS"] = {
+                "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+                "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+            }
 
             base_config["DATA_PATH"] = config["data_path"]
             base_config["OUTPUT_FOLDER"] = settings.OUTPUT_FOLDER
@@ -142,13 +149,14 @@ class Executor:
 
         logger_name = f'Worker: {self.__container_id}-{crawler_id}'
 
+        sys.stdout = KafkaLogger(instance_id, logger_name, 'out')
+        sys.stderr = KafkaLogger(instance_id, logger_name, 'err')
+
         base_settings = self.__get_spider_base_settings(config)
         self.__parse_config(base_settings)
 
+        install_reactor('twisted.internet.asyncioreactor.AsyncioSelectorReactor')
         process = CrawlerProcess(settings=base_settings)
-
-        sys.stdout = KafkaLogger(instance_id, logger_name, 'out')
-        sys.stderr = KafkaLogger(instance_id, logger_name, 'err')
 
         process.crawl(StaticPageSpider,
                       name=crawler_id,
@@ -218,6 +226,7 @@ class Executor:
 
         self.__processes[crawler_id] = Process(target=self.__new_spider, args=(config, ))
         self.__processes[crawler_id].start()
+        # self.__new_spider(config)
 
         self.__notify_start(crawler_id)
 
