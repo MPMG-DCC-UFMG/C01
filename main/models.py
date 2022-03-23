@@ -393,7 +393,7 @@ class ParameterHandler(models.Model):
                                  default='D')
 
     value_const_param = models.CharField(max_length=5000, blank=True)
-    value_list_param = models.CharField(max_length=5000, blank=True)
+    value_list_param = models.CharField(max_length=50000, blank=True)
 
 
 class ResponseHandler(models.Model):
