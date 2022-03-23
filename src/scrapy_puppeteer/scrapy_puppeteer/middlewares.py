@@ -1,6 +1,7 @@
 """This module contains the ``PuppeteerMiddleware`` scrapy middleware"""
 import asyncio
 import json
+import signal
 
 from twisted.internet import asyncioreactor
 
@@ -65,29 +66,25 @@ class PuppeteerMiddleware:
         """
 
         middleware = cls()
-        middleware.browser = await launch({
-            'executablePath': chromium_executable(),
-            'headless': True,
-            'args': ['--no-sandbox'],
-            'dumpio': True,
-            'logLevel': crawler.settings.get('LOG_LEVEL')
-        })
+        # middleware.browser = await launch({
+        #     'executablePath': chromium_executable(),
+        #     'headless': True,
+        #     'args': ['--no-sandbox'], # '--single-process', '--no-zygote', 
+        #     'dumpio': True,
+        #     'logLevel': crawler.settings.get('LOG_LEVEL')
+        # })
 
+        data_path = crawler.settings.get('DATA_PATH')
+        middleware.data_path = data_path
+        middleware.download_path = f'{data_path}/data/files/'
         middleware.crawler_id = crawler.settings.get('CRAWLER_ID')
         middleware.instance_id = crawler.settings.get('INSTANCE_ID')
 
-        data_path = crawler.settings.get('DATA_PATH')
-        output_folder = crawler.settings.get('OUTPUT_FOLDER')
-        instance_path = os.path.join(output_folder, data_path, str(middleware.instance_id))
-
-        middleware.download_path = os.path.join(instance_path, 'data', 'files')
-        middleware.scrshot_path = os.path.join(instance_path, "data", "screenshots")
-
-        page = await middleware.browser.newPage()
+        # page = await middleware.browser.newPage()
 
         # Changes the default file save location.
-        cdp = await page._target.createCDPSession()
-        await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allowAndName', 'downloadPath': middleware.download_path})
+        # cdp = await page._target.createCDPSession()
+        # await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allowAndName', 'downloadPath': middleware.download_path})
 
         crawler.signals.connect(middleware.spider_closed, signals.spider_closed)
 
@@ -123,20 +120,20 @@ class PuppeteerMiddleware:
         try:
             page = await self.browser.newPage()
 
-        except:
+        except Exception as e:
             self.browser = await launch({
                                         'executablePath': chromium_executable(),
                                         'headless': True,
-                                        'args': ['--no-sandbox'],
+                                        'args': ['--no-sandbox'], #'--single-process', '--no-zygote', 
                                         'dumpio': True
                                         })
             await self.browser.newPage()
             page = await self.browser.newPage()
-            
+
             # Changes the default file save location.
             cdp = await page._target.createCDPSession()
             await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allowAndName', 'downloadPath': self.download_path})
-            
+
         # Cookies
         if isinstance(request.cookies, dict):
             await page.setCookie(*[
@@ -197,7 +194,7 @@ class PuppeteerMiddleware:
         async def stop_request_interceptor(page) -> None:
             await page._networkManager._client.send("Fetch.disable")
 
-        # await setup_request_interceptor(page)
+        await setup_request_interceptor(page)
 
         try:
             response = await page.goto(
@@ -212,7 +209,7 @@ class PuppeteerMiddleware:
             raise IgnoreRequest()
 
         # Stop intercepting following requests
-        # await stop_request_interceptor(page)
+        await stop_request_interceptor(page)
 
         if request.screenshot:
             request.meta['screenshot'] = await page.screenshot()
@@ -221,7 +218,10 @@ class PuppeteerMiddleware:
             await page.waitFor(request.wait_for)
 
         if request.steps:
-            steps = code_g.generate_code(request.steps, functions_file, self.scrshot_path)
+            scrshot_path = os.path.join(self.data_path, "data",
+                "screenshots", str(self.instance_id))
+            steps = code_g.generate_code(request.steps, functions_file,
+                scrshot_path)
             request.meta["pages"] = await steps.execute_steps(pagina=page)
 
         content_type = response.headers['content-type']
@@ -287,9 +287,9 @@ class PuppeteerMiddleware:
         """Generates descriptions for downloaded files."""
 
         # list all files in crawl data folder, except file_description.jsonl
-        files = glob(os.path.join(self.download_path, '*[!jsonl]'))
+        files = glob(f'{self.download_path}*[!jsonl]')
 
-        with open(os.path.join(self.download_path, 'file_description.jsonl'), 'w') as f:
+        with open(f'{self.download_path}file_description.jsonl', 'w') as f:
             for file in files:
                 # Get timestamp from file download
                 fname = pathlib.Path(file)
