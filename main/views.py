@@ -11,9 +11,10 @@ from rest_framework.decorators import action
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm,\
     ResponseHandlerFormSet, ParameterHandlerFormSet
-from .models import CrawlRequest, CrawlerInstance
+from .models import CrawlRequest, CrawlerInstance, CrawlerQueue, CrawlerQueueItem
 
-from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer
+from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer,\
+     CrawlerQueueItemSerializer, CrawlerQueueSerializer
 
 from crawlers.constants import *
 
@@ -40,6 +41,7 @@ from formparser.html import HTMLExtractor, HTMLParser
 from scrapy_puppeteer import iframe_loader
 # Helper methods
 
+CRAWLER_QUEUE = CrawlerQueue.object()
 
 def process_run_crawl(crawler_id):
     instance = None
@@ -519,6 +521,7 @@ def load_iframe(request):
         }
         return render(request, 'main/error_iframe_loader.html', ctx)
 
+
 # API
 ########
 
@@ -597,3 +600,8 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = CrawlerInstance.objects.all()
     serializer_class = CrawlerInstanceSerializer
+
+
+class CrawlerQueueViewSet(viewsets.ModelViewSet):
+    queryset = CrawlerQueueItem.objects.all()
+    serializer_class = CrawlerQueueItemSerializer

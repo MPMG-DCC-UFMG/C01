@@ -384,7 +384,7 @@ class CrawlerInstance(TimeStamped):
     running = models.BooleanField()
 
 class CrawlerQueue(models.Model):
-    max_running = models.PositiveIntegerField(default=5, blank=True)
+    max_crawlers_running = models.PositiveIntegerField(default=5, blank=True)
 
     @classmethod
     def object(cls):
@@ -399,12 +399,21 @@ class CrawlerQueue(models.Model):
     def num_crawlers(self):
         return self.items.all().count()
 
+    def get_next(self):
+        next_crawlers = list()
+       
+        if self.num_crawlers_running >= self.max_crawlers_running:
+            return next_crawlers
+        
+        candidates = self.items.filter(running=True).values()
+        return candidates
+        
+
     def save(self, *args, **kwargs):
         self.pk = self.id = 1
         return super().save(*args, **kwargs)
 
-class CrawlerQueueItem(models.Model):
-    queue = models.ForeignKey(CrawlerQueue, on_delete=models.CASCADE, related_name='items')
+class CrawlerQueueItem(TimeStamped):
+    queue = models.ForeignKey(CrawlerQueue, on_delete=models.CASCADE, default=1, related_name='items')
     crawl_request = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE)
-    position = models.IntegerField(default=1, blank=True)
     running = models.BooleanField(default=False, blank=True)

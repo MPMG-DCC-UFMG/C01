@@ -8,6 +8,7 @@ from . import views
 api_router = routers.DefaultRouter()
 api_router.register(r'crawlers', views.CrawlerViewSet)
 api_router.register(r'instances', views.CrawlerInstanceViewSet)
+api_router.register(r'crawler_queue', views.CrawlerQueueViewSet)
 
 urlpatterns = [
     path("", views.list_crawlers, name="list_crawlers"),
