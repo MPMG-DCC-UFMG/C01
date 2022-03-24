@@ -1,4 +1,5 @@
 from ast import parse
+from urllib import response
 from django.conf import settings
 from django.utils import timezone
 from django.db import transaction
@@ -351,7 +352,7 @@ def stop_crawl(request, crawler_id):
 
 def run_crawl(request, crawler_id):
     add_crawl_request(request, crawler_id)
-    # unqueue_crawl_requests()
+    unqueue_crawl_requests()
     return redirect(detail_crawler, id=crawler_id)
 
 
@@ -675,3 +676,14 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
 class CrawlerQueueViewSet(viewsets.ModelViewSet):
     queryset = CrawlerQueue.objects.all()
     serializer_class = CrawlerQueueSerializer
+    http_method_names = ['get','put']
+
+    def update(self, request, pk=None):
+        response = super().update(request, pk=pk)
+        
+        global CRAWLER_QUEUE
+        CRAWLER_QUEUE = CrawlerQueue.object()
+        
+        unqueue_crawl_requests()
+
+        return response

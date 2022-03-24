@@ -1,5 +1,13 @@
 var SERVER_ADDRESS = window.location.origin;
 
+// when this variable equals true, it blocks the interface update to prevent 
+// the data being changed from being rewritten by the interface update
+var UPDATING_MAX_CRAWLERS = false;
+
+// the queue always has id = 1 as it is unique and designed that way
+var CRAWLER_QUEUE_API_ADDRESS = SERVER_ADDRESS + '/api/crawler_queue/1/';
+
+
 var RUNNING_EMPTY_HTML = `<li class="border rounded p-3">
                             <p class="text-center m-0 font-weight-bold">
                                 <i class="fa fa-exclamation-triangle" aria-hidden="true" style="font-size: 2em;"></i>
@@ -66,7 +74,7 @@ function get_running_li_html(item) {
     return `<li class="border rounded p-3 mt-3">
         <div class="d-flex justify-content-between p-0">
             <a href="${SERVER_ADDRESS + '/detail/' + item.crawler_id}"> ${ item.crawler_name } </a>
-            <small class=""> <i class="fa fa-clock-o fa-lg" aria-hidden="true"></i> ${countdown(elapsed_time)}</small>
+            <small class="" title="Tempo gasto coletando"> <i class="fa fa-clock-o fa-lg" aria-hidden="true"></i> ${countdown(elapsed_time)}</small>
         </div>
         <small>Coletando desde: ${timestamp_converter(item.last_modified)} </small>
     </li>`;
@@ -80,20 +88,26 @@ function get_waiting_li_html(item) {
     return `<li class="border rounded p-3 mt-3">
                 <div class="d-flex justify-content-between p-0">
                     <a href="${SERVER_ADDRESS + '/detail/' + item.crawler_id}"> ${ item.crawler_name } </a>
-                    <small class=""> <i class="fa fa-clock-o fa-lg" aria-hidden="true"></i> ${countdown(elapsed_time)}</small>
+                    <small class="" title="Tempo de fila"> <i class="fa fa-clock-o fa-lg" aria-hidden="true"></i> ${countdown(elapsed_time)}</small>
                 </div>
                 <small>Aguardando desde: ${timestamp_converter(item.creation_date)} </small>
             </li>`;
 }
 
 function update_ui() {
-    let crawler_queue_api_address = SERVER_ADDRESS + '/api/crawler_queue/1';
+    if (UPDATING_MAX_CRAWLERS)
+        return;
 
-    
     $.ajax({
-        url: crawler_queue_api_address,
+        url: CRAWLER_QUEUE_API_ADDRESS,
         type: 'get',
         success: function (data) {
+            
+            $('#max-crawlers-running').text(data.max_crawlers_running);
+            
+            $('#in_max_crawler_number').val(data.max_crawlers_running);
+            $('#in_max_crawler').val(data.max_crawlers_running);
+
             let items = data.items;
 
             let running = items.filter(function (item) {
@@ -139,6 +153,57 @@ function update_ui() {
     });
 }
 
+function openEditMaxCrawlersModal() {
+    UPDATING_MAX_CRAWLERS = true;
+    $('#editMaxCrawler').modal('show');
+}
+
+function closeMaxCrawlersModal() {
+    UPDATING_MAX_CRAWLERS = false;
+    $('#editMaxCrawler').modal('hide');
+}
+
+function updateMaxCrawlers() {
+    $('#editMaxCrawler').modal('hide');
+
+    let num_max_crawlers = $('#in_max_crawler_number').val();
+
+    if (num_max_crawlers < 1 || num_max_crawlers > 10000) {
+        alert('Escolha um intervalo entre 1 e 1000');
+        return;
+    }
+
+    $.ajax({
+        url: CRAWLER_QUEUE_API_ADDRESS,
+        type: 'put',
+        dataType: 'json',
+        async: false,
+        data: {
+            max_crawlers_running: num_max_crawlers,
+        },
+        success: function (data) {
+            UPDATING_MAX_CRAWLERS = false;
+        },
+        error: function (data) {
+            alert('Houve um erro ao editar o campo!');
+        }
+    });
+}
+
 $(document).ready(function() {
     update_ui();
+
+    setInterval(function(){update_ui()},5000);
+
+    $('#in_max_crawler').on('input', function() {
+        $('#in_max_crawler_number').val(this.value);
+    });
+
+    $('#in_max_crawler_number').on('input', function () {
+        if (this.value > 1000)
+            this.value = 1000;
+
+        $('#in_max_crawler').val(this.value);
+    });
+
 });
