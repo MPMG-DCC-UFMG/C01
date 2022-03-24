@@ -30,6 +30,10 @@ urlpatterns = [
 
     path("iframe/load", views.load_iframe, name="load_iframe"),
 
+    path("crawler_queue/", views.crawler_queue, name="crawler_queue"),
+    path("crawler_queue/remove/<int:crawler_id>", views.remove_crawl_request_view, name="remove_crawl_request"),
+    path("crawler_queue/run_next", views.run_next_crawl_requests_view, name="run_next_crawl_request"),
+
     # Includes the API endpoints in the URLs
     url(r'^api/', include(api_router.urls)),
 ]
