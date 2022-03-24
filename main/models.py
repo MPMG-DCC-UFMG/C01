@@ -1,3 +1,4 @@
+from statistics import mode
 from django.db import models
 from django.utils import timezone
 from django.core.validators import RegexValidator
@@ -381,3 +382,29 @@ class CrawlerInstance(TimeStamped):
                                    related_name='instances')
     instance_id = models.BigIntegerField(primary_key=True)
     running = models.BooleanField()
+
+class CrawlerQueue(models.Model):
+    max_running = models.PositiveIntegerField(default=5, blank=True)
+
+    @classmethod
+    def object(cls):
+        if cls._default_manager.all().count() == 0:
+            CrawlerQueue().save()
+
+        return cls._default_manager.all().first()
+
+    def num_crawlers_running(self):
+        return self.items.filter(running=True).count()
+
+    def num_crawlers(self):
+        return self.items.all().count()
+
+    def save(self, *args, **kwargs):
+        self.pk = self.id = 1
+        return super().save(*args, **kwargs)
+
+class CrawlerQueueItem(models.Model):
+    queue = models.ForeignKey(CrawlerQueue, on_delete=models.CASCADE, related_name='items')
+    crawl_request = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE)
+    position = models.IntegerField(default=1, blank=True)
+    running = models.BooleanField(default=False, blank=True)
