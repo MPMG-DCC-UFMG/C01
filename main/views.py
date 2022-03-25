@@ -13,12 +13,7 @@ from .forms import CrawlRequestForm, RawCrawlRequestForm,\
     ResponseHandlerFormSet, ParameterHandlerFormSet
 from .models import CrawlRequest, CrawlerInstance, CrawlerQueue, CrawlerQueueItem
 
-<<<<<<< HEAD
 from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer, CrawlerQueueSerializer
-=======
-from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer,\
-    CrawlerQueueItemSerializer, CrawlerQueueSerializer
->>>>>>> 3a1e53e7c670bd072849c8868de058cea12e84ed
 
 from crawlers.constants import *
 
@@ -97,14 +92,6 @@ def remove_crawl_request(crawler_id):
     if in_queue:
         queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
         queue_item.delete()
-<<<<<<< HEAD
-=======
-        return True
-
-    else:
-        return False
-
->>>>>>> 3a1e53e7c670bd072849c8868de058cea12e84ed
 
 def remove_crawl_request_view(request, crawler_id):
     remove_crawl_request(crawler_id)
