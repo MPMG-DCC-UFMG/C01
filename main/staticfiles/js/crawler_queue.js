@@ -148,7 +148,7 @@ function update_ui() {
             
         },
         error: function () {
-            alert('Não foi possível atualizar a Interface!');
+            console.error('Não foi possível atualizar a Interface!');
         }
     });
 }

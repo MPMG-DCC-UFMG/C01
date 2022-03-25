@@ -83,16 +83,14 @@ def process_run_crawl(crawler_id):
 
     return instance
 
-def add_crawl_request(request, crawler_id):
+def add_crawl_request(crawler_id):
     already_in_queue = CrawlerQueueItem.objects.filter(crawl_request_id = crawler_id).exists()
 
     if already_in_queue:
-        return JsonResponse({'message': f'"{crawler_id}" já está na fila de coletas!'}, status=status.HTTP_400_BAD_REQUEST)
-    
+        return 
+
     queue_item = CrawlerQueueItem(crawl_request_id = crawler_id)
     queue_item.save()
-
-    return JsonResponse({'message': 'Item adicionado a fila com sucesso!'}, status=status.HTTP_201_CREATED)
 
 def remove_crawl_request(crawler_id):
     in_queue = CrawlerQueueItem.objects.filter(crawl_request_id = crawler_id).exists()
@@ -351,7 +349,7 @@ def stop_crawl(request, crawler_id):
     return redirect(detail_crawler, id=crawler_id)
 
 def run_crawl(request, crawler_id):
-    add_crawl_request(request, crawler_id)
+    add_crawl_request(crawler_id)
     unqueue_crawl_requests()
     return redirect(detail_crawler, id=crawler_id)
 
@@ -630,9 +628,12 @@ class CrawlerViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def run(self, request, pk):
-        instance = None
+
+        # instance = None
         try:
-            instance = process_run_crawl(pk)
+            add_crawl_request(pk)
+            unqueue_crawl_requests()
+            
         except Exception as e:
             data = {
                 'status': settings.API_ERROR,
@@ -642,8 +643,9 @@ class CrawlerViewSet(viewsets.ModelViewSet):
 
         data = {
             'status': settings.API_SUCCESS,
-            'instance': CrawlerInstanceSerializer(instance).data
+            'message': f'Crawler added to crawler queue'
         }
+
         return JsonResponse(data)
 
     @action(detail=True, methods=['get'])
