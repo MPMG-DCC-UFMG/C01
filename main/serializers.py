@@ -14,14 +14,17 @@ class CrawlRequestSerializer(serializers.ModelSerializer):
     instances = CrawlerInstanceSerializer(many=True, read_only=True)
     running = serializers.ReadOnlyField()
     waiting_on_queue = serializers.ReadOnlyField()
+
     class Meta:
         model = CrawlRequest
         read_only_fields = ["id", "creation_date", "last_modified", "running", "waiting_on_queue"]
         fields = '__all__'
 
+
 class TimestampField(serializers.Field):
     def to_representation(self, value):
-        return round(value.timestamp()*1000)
+        return round(value.timestamp() * 1000)
+
 
 class CrawlerQueueItemSerializer(serializers.ModelSerializer):
     # crawl_request = CrawlRequestSerializer(many=False, read_only=True)
@@ -35,9 +38,11 @@ class CrawlerQueueItemSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "creation_date", "last_modified", "queue", "running"]
         fields = ["id", "creation_date", "last_modified", "crawler_id", "crawler_name", "running"]
 
+
 class CrawlerQueueSerializer(serializers.ModelSerializer):
     items = CrawlerQueueItemSerializer(many=True, read_only=True)
+
     class Meta:
         model = CrawlerQueue
 
-        fields = '__all__' 
+        fields = '__all__'
