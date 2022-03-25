@@ -13,7 +13,12 @@ from .forms import CrawlRequestForm, RawCrawlRequestForm,\
     ResponseHandlerFormSet, ParameterHandlerFormSet
 from .models import CrawlRequest, CrawlerInstance, CrawlerQueue, CrawlerQueueItem
 
+<<<<<<< HEAD
 from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer, CrawlerQueueSerializer
+=======
+from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer,\
+    CrawlerQueueItemSerializer, CrawlerQueueSerializer
+>>>>>>> 3a1e53e7c670bd072849c8868de058cea12e84ed
 
 from crawlers.constants import *
 
@@ -40,12 +45,12 @@ from scrapy_puppeteer import iframe_loader
 
 try:
     CRAWLER_QUEUE = CrawlerQueue.object()
-    
-    # clears all items from the queue when starting the system 
+
+    # clears all items from the queue when starting the system
     CrawlerQueueItem.objects.all().delete()
 
 except:
-    pass 
+    pass
 
 def process_run_crawl(crawler_id):
     instance = None
@@ -75,50 +80,63 @@ def process_run_crawl(crawler_id):
 
     return instance
 
+
 def add_crawl_request(crawler_id):
-    already_in_queue = CrawlerQueueItem.objects.filter(crawl_request_id = crawler_id).exists()
+    already_in_queue = CrawlerQueueItem.objects.filter(crawl_request_id=crawler_id).exists()
 
     if already_in_queue:
-        return 
+        return
 
-    queue_item = CrawlerQueueItem(crawl_request_id = crawler_id)
+    queue_item = CrawlerQueueItem(crawl_request_id=crawler_id)
     queue_item.save()
 
+
 def remove_crawl_request(crawler_id):
-    in_queue = CrawlerQueueItem.objects.filter(crawl_request_id = crawler_id).exists()
-    
+    in_queue = CrawlerQueueItem.objects.filter(crawl_request_id=crawler_id).exists()
+
     if in_queue:
-        queue_item = CrawlerQueueItem.objects.get(crawl_request_id = crawler_id)
+        queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
         queue_item.delete()
+<<<<<<< HEAD
+=======
+        return True
+
+    else:
+        return False
+
+>>>>>>> 3a1e53e7c670bd072849c8868de058cea12e84ed
 
 def remove_crawl_request_view(request, crawler_id):
     remove_crawl_request(crawler_id)
-    return redirect('/detail/'+str(crawler_id))
+    return redirect('/detail/' + str(crawler_id))
+
 
 def unqueue_crawl_requests():
     crawlers_runnings = list()
-    
+
     for queue_item in CRAWLER_QUEUE.get_next():
         queue_item_id = queue_item['id']
         crawler_id = queue_item['crawl_request_id']
 
         instance = process_run_crawl(crawler_id)
-        
+
         crawlers_runnings.append({
             'crawler_id': crawler_id,
             'instance_id': instance.pk
         })
 
-        queue_item = CrawlerQueueItem.objects.get(pk = queue_item_id)
-        queue_item.running = True 
+        queue_item = CrawlerQueueItem.objects.get(pk=queue_item_id)
+        queue_item.running = True
         queue_item.save()
 
     response = {'crawlers_added_to_run': crawlers_runnings}
     return response
 
+
 def run_next_crawl_requests_view(request):
     response = unqueue_crawl_requests()
     return JsonResponse(response, status=status.HTTP_200_OK)
+
 
 def process_stop_crawl(crawler_id):
     instance = CrawlRequest.objects.filter(
@@ -141,7 +159,7 @@ def process_stop_crawl(crawler_id):
         instance.finished_at = timezone.now()
         instance.save()
 
-        queue_item = CrawlerQueueItem.objects.get(crawl_request_id = crawler_id)
+        queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
         queue_item.delete()
 
     # As soon as the instance is created, it starts to collect and is only modified when it stops,
@@ -154,13 +172,15 @@ def process_stop_crawl(crawler_id):
 
     crawler_manager.stop_crawler(instance_id, config)
 
-    # 
+    #
     unqueue_crawl_requests()
 
     return instance
 
+
 def crawler_queue(request):
     return render(request, 'main/crawler_queue.html')
+
 
 def getAllData():
     return CrawlRequest.objects.all().order_by('-last_modified')
@@ -248,7 +268,7 @@ def create_crawler(request):
             static_response_formset.instance = instance
             static_response_formset.save()
 
-            return redirect('/detail/'+str(instance.id))
+            return redirect('/detail/' + str(instance.id))
 
     context['form'] = my_form
     context['templated_response_formset'] = templated_response_formset
@@ -282,7 +302,7 @@ def edit_crawler(request, id):
         templated_response_formset.save()
         static_parameter_formset.save()
         static_response_formset.save()
-        return redirect('/detail/'+str(id))
+        return redirect('/detail/' + str(id))
     else:
         return render(request, 'main/create_crawler.html', {
             'form': form,
@@ -334,6 +354,7 @@ def create_steps(request):
 def stop_crawl(request, crawler_id):
     process_stop_crawl(crawler_id)
     return redirect(detail_crawler, id=crawler_id)
+
 
 def run_crawl(request, crawler_id):
     add_crawl_request(crawler_id)
@@ -665,14 +686,14 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
 class CrawlerQueueViewSet(viewsets.ModelViewSet):
     queryset = CrawlerQueue.objects.all()
     serializer_class = CrawlerQueueSerializer
-    http_method_names = ['get','put']
+    http_method_names = ['get', 'put']
 
     def update(self, request, pk=None):
         response = super().update(request, pk=pk)
-        
+
         global CRAWLER_QUEUE
         CRAWLER_QUEUE = CrawlerQueue.object()
-        
+
         unqueue_crawl_requests()
 
         return response
