@@ -2,7 +2,6 @@ from django import forms
 from .models import CrawlRequest, ParameterHandler, ResponseHandler
 from django.core.exceptions import ValidationError
 
-
 class CrawlRequestForm(forms.ModelForm):
     class Meta:
         model = CrawlRequest
@@ -80,7 +79,8 @@ class RawCrawlRequestForm(CrawlRequestForm):
         widget=forms.TextInput(attrs={
             'placeholder': 'www.example.com/data/{}',
             'onchange': 'detailBaseUrl();'
-        })
+        }),
+        help_text = "A URL pode conter espaços para parâmetros, representados como um conjunto de chaves vazias {}. Os parâmetros são configurados na aba URL Parametrizada."
     )
     obey_robots = forms.BooleanField(
         required=False, label="Obedecer robots.txt")
@@ -89,6 +89,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
         required=False, max_length=2000, label="Caminho para salvar arquivos",
         widget=forms.TextInput(
             attrs={'placeholder': '/home/user/Documents/<crawler_name>'}),
+        help_text = "Esse caminho deve ser único para cada coletor. Caso a pasta não esteja criada, o coletor a criará automaticamente.",
         validators=[CrawlRequest.pathValid]
     )
 
@@ -100,12 +101,14 @@ class RawCrawlRequestForm(CrawlRequestForm):
             "Intervalo médio em segundos (ou intervalo mínimo se "
             "auto ajuste está ligado)."
         ),
+        help_text = "Se auto ajuste está desligado, esse parâmetro vai funcionar como o intervalo base entre chamadas. O intervalo real vai ser um valor entre 0.5*intervalo e 1.5*intervalo.",
         initial=2,
         min_value=0
     )
     antiblock_autothrottle_enabled = forms.BooleanField(
         required=False,
         label="Habilitar auto ajuste de intervalo",
+        help_text = "Essa opção ajusta automaticamente o intervalo entre as chamadas para se adaptar ao tempo de resposta do servidor.",
 
         widget=forms.CheckboxInput(
             attrs={
@@ -147,6 +150,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     antiblock_ip_rotation_enabled = forms.BooleanField(
         required=False,
         label="Rotacionar IPs",
+        help_text = "Utiliza Tor ou uma lista de proxy para que IPs diferentes sejam utilizados durante a coleta.",
         widget=forms.CheckboxInput(
             attrs={
                 "onclick": "ipRotationEnabled();",
@@ -171,6 +175,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     antiblock_proxy_list = forms.CharField(
         required=False, 
         label="Insira a lista de proxy",
+        help_text = "Um proxy da lista será escolhido aleatoriamente em cada requisição feita.",
         widget=forms.Textarea(
             attrs={
                 'placeholder': (
@@ -186,6 +191,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     antiblock_user_agent_rotation_enabled = forms.BooleanField(
         required=False, 
         label="Rotacionar User-Agents",
+        help_text = "Altera o identificador das requisições feitas periodicamente. Útil se o site possui alguma restrição relacionada aos dispositivos/ferramentas que podem acessá-lo.",
         widget=forms.CheckboxInput(
             attrs={
                 "onclick": "userAgentRotationEnabled();",
@@ -196,6 +202,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     antiblock_reqs_per_user_agent = forms.IntegerField(
         required=False, 
         label="Requisições por User-Agent",
+        help_text = "O user-agent será alterado em intervalos aleatórios entre 0.5x e 1.5x o valor deste campo",
         initial=100,
         min_value=1
     )
@@ -218,6 +225,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     antiblock_insert_cookies_enabled = forms.BooleanField(
         required=False,
         label="Inserir cookies",
+        help_text = "Útil se o site a ser coletado possui algum tipo de autenticação para acessar determinado conteúdo. Com esta opção, cookies de acesso são enviados em cada requisição contornando tal restrição.",
         widget=forms.CheckboxInput(
             attrs={
                 "onclick": "insertCookiesEnabled();",
@@ -286,14 +294,13 @@ class RawCrawlRequestForm(CrawlRequestForm):
     # Crawler Type - Static
     link_extractor_max_depth = forms.IntegerField(
         required=False,
-        label="Profundidade máxima do link (deixe em branco para não limitar):",
+        label="Profundidade máxima do link:",
+        help_text="Deixe em branco para não limitar"
     )
     link_extractor_allow_url = forms.CharField(
         required=False, max_length=2000,
-        label=(
-            "Permitir urls que casem com o regex:"
-            " (deixe em branco para não filtrar)"
-        ),
+        label="Permitir urls que casem com o regex:",
+        help_text="Deixe em branco para não filtrar",
         widget=forms.TextInput(
             attrs={'placeholder': 'Regex para permitir urls'})
     )
@@ -308,13 +315,15 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
     link_extractor_tags = forms.CharField(
         required=False, max_length=2000,
-        label="Extrair links de tags do tipo: (separado por vírgula)",
+        label="Extrair links de tags do tipo:",
+        help_text="separado por vírgula",
         widget=forms.TextInput(
             attrs={'placeholder': 'a'})
     )
     link_extractor_attrs = forms.CharField(
         required=False, max_length=2000,
-        label="Extrair urls dos atributos: (separado por vírgula)",
+        label="Extrair urls dos atributos:",
+        help_text="separado por vírgula",
         widget=forms.TextInput(
             attrs={'placeholder': 'href'})
     )
@@ -335,46 +344,43 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
     download_files_allow_url = forms.CharField(
         required=False, max_length=2000,
-        label=(
-            "Baixar arquivos de url que casem com o regex:"
-            " (deixe em branco para não filtrar)"
-        ),
+        label="Baixar arquivos de url que casem com o regex:",
+        help_text="Deixe em branco para não filtrar",
         widget=forms.TextInput(
             attrs={'placeholder': 'Regex para permitir urls'})
     )
     download_files_allow_extensions = forms.CharField(
         required=False, max_length=2000,
-        label="Extensões de arquivo permitidas (separado por vírgula):",
+        label="Extensões de arquivo permitidas",
+        help_text= "Separado por vírgula",
         widget=forms.TextInput(attrs={'placeholder': 'pdf,xml'})
     )
     download_files_allow_domains = forms.CharField(
         required=False, max_length=2000,
-        label=(
-            "Permitir só urls dos domínios:"
-            "(em branco para não filtrar) (separado por vírgula)"
-        ),
+        label="Permitir só urls dos domínios:",
+        help_text="Separado por vírgula. Em branco para não filtrar.",
         widget=forms.TextInput(
             attrs={'placeholder': ''})
     )
     download_files_tags = forms.CharField(
         required=False, max_length=2000,
-        label="Extrair links de tags do tipo: (separado por vírgula)",
+        label="Extrair links de tags do tipo",
+        help_text="Separado por vírgula",
         widget=forms.TextInput(
             attrs={'placeholder': 'a'})
     )
     download_files_attrs = forms.CharField(
         required=False, max_length=2000,
-        label="Extrair urls dos atributos: (separado por vírgula)",
+        label="Extrair urls dos atributos",
+        help_text="Separado por vírgula",
         widget=forms.TextInput(
             attrs={'placeholder': 'href'})
     )
 
     download_files_process_value = forms.CharField(
         required=False, max_length=2000,
-        label=(
-            "Função python para processar os atributos: "
-            "(A função será chamada como 'eval(func)(attr)')"
-        ),
+        label="Função python para processar os atributos",
+        help_text="A função será chamada como 'eval(func)(attr)'",
         widget=forms.Textarea(
             attrs={'placeholder': 'lambda x: x'})
     )

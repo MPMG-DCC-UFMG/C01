@@ -1,0 +1,11 @@
+{% if field.help_text %}
+    {% if help_text_inline %}
+        <button type="button" class="popover-icon btn btn-link" data-toggle="popover" data-trigger="click" data-content="{{field.help_text|safe}}">
+            <i class="fa fa-info-circle" aria-hidden="true"></i>
+        </button>
+    {% else %}
+        <button type="button" class="popover-icon btn btn-link" data-toggle="popover" data-trigger="click" data-content="{{field.help_text|safe}}">
+            <i class="fa fa-info-circle" aria-hidden="true"></i>
+        </button>
+    {% endif %}
+{% endif %}
