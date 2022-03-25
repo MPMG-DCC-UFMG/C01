@@ -114,7 +114,7 @@ function update_ui() {
                 return item.running;
             });
 
-            $('#running-label').text(`Em execucação (${running.length})`);
+            $('#running-label').text(`Em execução (${running.length})`);
 
             if (running.length == 0) {
                 $('#running-list').html(RUNNING_EMPTY_HTML);
