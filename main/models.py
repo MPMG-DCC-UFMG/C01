@@ -5,6 +5,7 @@ from django.core.validators import RegexValidator
 
 from crawlers.constants import *
 
+
 class TimeStamped(models.Model):
     creation_date = models.DateTimeField()
     last_modified = models.DateTimeField()
@@ -255,10 +256,10 @@ class CrawlRequest(TimeStamped):
 
     @property
     def waiting_on_queue(self):
-        on_queue = CrawlerQueueItem.objects.filter(crawl_request_id = self.pk).exists() 
+        on_queue = CrawlerQueueItem.objects.filter(crawl_request_id=self.pk).exists()
         if on_queue:
-            return not CrawlerQueueItem.objects.get(crawl_request_id = self.pk).running
-        return False 
+            return not CrawlerQueueItem.objects.get(crawl_request_id=self.pk).running
+        return False
 
     @property
     def running_instance(self):
@@ -390,6 +391,7 @@ class CrawlerInstance(TimeStamped):
     instance_id = models.BigIntegerField(primary_key=True)
     running = models.BooleanField()
 
+
 class CrawlerQueue(models.Model):
     max_crawlers_running = models.PositiveIntegerField(default=5, blank=True)
 
@@ -408,18 +410,19 @@ class CrawlerQueue(models.Model):
 
     def get_next(self):
         next_crawlers = list()
-       
+
         if self.num_crawlers_running() >= self.max_crawlers_running:
             return next_crawlers
-        
+
         candidates = self.items.filter(running=False).values()
         limit = max(0, self.max_crawlers_running - self.num_crawlers_running())
         return candidates[:limit]
-        
+
 
     def save(self, *args, **kwargs):
         self.pk = self.id = 1
         return super().save(*args, **kwargs)
+
 
 class CrawlerQueueItem(TimeStamped):
     queue = models.ForeignKey(CrawlerQueue, on_delete=models.CASCADE, default=1, related_name='items')
