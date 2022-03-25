@@ -1,15 +1,11 @@
-from ast import parse
-from urllib import response
 from django.conf import settings
 from django.utils import timezone
 from django.db import transaction
-from django.db.models import Q
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, \
+from django.http import HttpResponseRedirect, JsonResponse, \
     FileResponse, HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404, redirect
 
 from rest_framework import viewsets
-from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
 
@@ -17,8 +13,7 @@ from .forms import CrawlRequestForm, RawCrawlRequestForm,\
     ResponseHandlerFormSet, ParameterHandlerFormSet
 from .models import CrawlRequest, CrawlerInstance, CrawlerQueue, CrawlerQueueItem
 
-from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer,\
-     CrawlerQueueItemSerializer, CrawlerQueueSerializer
+from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer, CrawlerQueueSerializer
 
 from crawlers.constants import *
 
@@ -29,15 +24,13 @@ import subprocess
 import time
 import os
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import crawlers.crawler_manager as crawler_manager
 
 from crawlers.injector_tools import create_probing_object,\
     create_parameter_generators
 
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.parsers import JSONParser
 from requests.exceptions import MissingSchema
 
 from formparser.html import HTMLExtractor, HTMLParser
@@ -53,7 +46,6 @@ try:
 
 except:
     pass 
-
 
 def process_run_crawl(crawler_id):
     instance = None
@@ -98,11 +90,6 @@ def remove_crawl_request(crawler_id):
     if in_queue:
         queue_item = CrawlerQueueItem.objects.get(crawl_request_id = crawler_id)
         queue_item.delete()
-        return True
-
-    else: 
-        return False
-
 
 def remove_crawl_request_view(request, crawler_id):
     remove_crawl_request(crawler_id)
@@ -633,7 +620,7 @@ class CrawlerViewSet(viewsets.ModelViewSet):
         try:
             add_crawl_request(pk)
             unqueue_crawl_requests()
-            
+
         except Exception as e:
             data = {
                 'status': settings.API_ERROR,
