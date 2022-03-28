@@ -74,11 +74,15 @@ class PuppeteerMiddleware:
         #     'logLevel': crawler.settings.get('LOG_LEVEL')
         # })
 
-        data_path = crawler.settings.get('DATA_PATH')
-        middleware.data_path = data_path
-        middleware.download_path = f'{data_path}/data/files/'
         middleware.crawler_id = crawler.settings.get('CRAWLER_ID')
         middleware.instance_id = crawler.settings.get('INSTANCE_ID')
+
+        data_path = crawler.settings.get('DATA_PATH')
+        output_folder = crawler.settings.get('OUTPUT_FOLDER')
+        instance_path = os.path.join(output_folder, data_path, str(middleware.instance_id))
+
+        middleware.download_path = os.path.join(instance_path, 'data', 'files')
+        middleware.scrshot_path = os.path.join(instance_path, "data", "screenshots")
 
         # page = await middleware.browser.newPage()
 
@@ -194,7 +198,7 @@ class PuppeteerMiddleware:
         async def stop_request_interceptor(page) -> None:
             await page._networkManager._client.send("Fetch.disable")
 
-        await setup_request_interceptor(page)
+        # await setup_request_interceptor(page)
 
         try:
             response = await page.goto(
@@ -209,7 +213,7 @@ class PuppeteerMiddleware:
             raise IgnoreRequest()
 
         # Stop intercepting following requests
-        await stop_request_interceptor(page)
+        # await stop_request_interceptor(page)
 
         if request.screenshot:
             request.meta['screenshot'] = await page.screenshot()
@@ -218,10 +222,7 @@ class PuppeteerMiddleware:
             await page.waitFor(request.wait_for)
 
         if request.steps:
-            scrshot_path = os.path.join(self.data_path, "data",
-                "screenshots", str(self.instance_id))
-            steps = code_g.generate_code(request.steps, functions_file,
-                scrshot_path)
+            steps = code_g.generate_code(request.steps, functions_file, self.scrshot_path)
             request.meta["pages"] = await steps.execute_steps(pagina=page)
 
         content_type = response.headers['content-type']
