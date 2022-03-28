@@ -20,10 +20,14 @@ Crawler "{{ crawler.source_name }}"
                 <li>URL base: <strong>{{ crawler.base_url }}</strong></li>
                 <li>Data de criação: <strong>{{ crawler.creation_date }}</strong></li>
                 <li id="crawler_ status">Status:
-                {% if crawler.running == True %}
-                  <span class="badge badge-success">Rodando</span>
-                {% elif crawler.running == False %}
-                  <span class="badge badge-warning">Parado</span>
+                {% if crawler.waiting_on_queue%}
+                    <span class="badge badge-info">Aguardando na fila de coletas</span>
+                {% else %}
+                    {% if crawler.running == True %}
+                    <span class="badge badge-success">Rodando</span>
+                    {% elif crawler.running == False %}
+                    <span class="badge badge-warning">Parado</span>
+                    {% endif %}
                 {% endif %}
                 </li>
                 <!-- <li id="status_badge">Status: <img src="{% static 'gif/loading-png-gif.gif' %}" style="height: 15px"></li> -->
@@ -95,6 +99,13 @@ Crawler "{{ crawler.source_name }}"
 
     <!-- Run/Stop/Del/Edit Buttons -->
     <div class="row">
+        {% if crawler.waiting_on_queue %}
+        <div class="col">
+            <a href="/crawler_queue" class="border btn btn-info font-weight-bold"><i class="fa fa-clock-o fa-lg mr-1"></i> Aguardando na fila de coletas</a>
+            <a href="{% url 'remove_crawl_request' crawler.id %}" class="btn border font-weight-bold"> <i class="fa fa-times fa-lg mr-1"></i> Sair da fila</a>
+        </div>
+        {% else %}
+
         <div class="col">
             {% if crawler.running == True %}
 
@@ -118,6 +129,8 @@ Crawler "{{ crawler.source_name }}"
             <a class="btn btn-info" href="{% url 'edit_crawler' crawler.id %}" class="btn btn-primary">Editar</a>
             <a class="btn btn-secondary" href="{% url 'delete_crawler' crawler.id %}">Excluir</a>
         </div>
+        {% endif %}
+
     </div>
     {% if last_instance is not None %}
     <!-- Log header -->
@@ -276,6 +289,9 @@ Crawler "{{ crawler.source_name }}"
 {% endblock %}
 
 {% block js %}
+<script>
+    var WAITING_ON_QUEUE =  {% if crawler.waiting_on_queue %} true {% else %} false {% endif %};
+</script>
 <script  type="text/javascript" src="https://cdn.jsdelivr.net/npm/nanogallery2@3/dist/jquery.nanogallery2.min.js"></script>
 
 <script src="{% static 'js/jquery.paging.min.js' %}"></script>
