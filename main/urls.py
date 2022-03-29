@@ -1,5 +1,4 @@
 from django.urls import include, path
-from django.conf.urls import url
 from rest_framework import routers
 
 from . import views
@@ -30,5 +29,5 @@ urlpatterns = [
     path("iframe/load", views.load_iframe, name="load_iframe"),
 
     # Includes the API endpoints in the URLs
-    url(r'^api/', include(api_router.urls)),
+    path(r'^api/', include(api_router.urls)),
 ]
