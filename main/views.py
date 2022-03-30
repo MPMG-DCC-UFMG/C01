@@ -168,14 +168,10 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
 
     crawler_manager.update_instances_info(
         config["data_path"], str(instance_id), instance_info)
+    
+    crawler_manager.stop_crawler(crawler_id)
 
-    crawler_manager.stop_crawler(instance_id, config)
-
-    #
     unqueue_crawl_requests()
-
-    return instance
-
 
 def crawler_queue(request):
     return render(request, 'main/crawler_queue.html')
