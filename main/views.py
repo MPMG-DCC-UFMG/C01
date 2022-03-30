@@ -131,7 +131,7 @@ def run_next_crawl_requests_view(request):
     return JsonResponse(response, status=status.HTTP_200_OK)
 
 
-def process_stop_crawl(crawler_id):
+def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
     instance = CrawlRequest.objects.filter(
         id=crawler_id).get().running_instance
     # instance = CrawlerInstance.objects.get(instance_id=instance_id)
