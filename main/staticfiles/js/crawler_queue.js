@@ -74,7 +74,7 @@ function get_running_li_html(item) {
     return `<li class="border rounded p-3 mt-3">
         <div class="d-flex justify-content-between p-0">
             <a href="${SERVER_ADDRESS + '/detail/' + item.crawler_id}"> ${ item.crawler_name } </a>
-            <small class="" title="Tempo gasto coletando"> <i class="fa fa-clock-o fa-lg" aria-hidden="true"></i> ${countdown(elapsed_time)}</small>
+            <small class="" title="Tempo gasto coletando"> <i class="far fa-clock fa-lg" aria-hidden="true"></i> ${countdown(elapsed_time)}</small>
         </div>
         <small>Coletando desde: ${timestamp_converter(item.last_modified)} </small>
     </li>`;
@@ -88,7 +88,7 @@ function get_waiting_li_html(item) {
     return `<li class="border rounded p-3 mt-3">
                 <div class="d-flex justify-content-between p-0">
                     <a href="${SERVER_ADDRESS + '/detail/' + item.crawler_id}"> ${ item.crawler_name } </a>
-                    <small class="" title="Tempo de fila"> <i class="fa fa-clock-o fa-lg" aria-hidden="true"></i> ${countdown(elapsed_time)}</small>
+                    <small class="" title="Tempo de fila"> <i class="far fa-clock fa-lg" aria-hidden="true"></i> ${countdown(elapsed_time)}</small>
                 </div>
                 <small>Aguardando desde: ${timestamp_converter(item.creation_date)} </small>
             </li>`;
