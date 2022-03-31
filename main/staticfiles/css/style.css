@@ -2,12 +2,16 @@
     box-sizing: border-box;
 }
 
-.navbar{
-    background-color: #286f99;
-}
-
 body {
     padding-top: 56px;
+}
+
+body > .navbar {
+    background-color: #646464;
+}
+
+body > .navbar a {
+    color: #ffffff;
 }
 
 .selected{

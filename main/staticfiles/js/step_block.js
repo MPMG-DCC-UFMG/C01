@@ -1109,8 +1109,9 @@ function add_block_tooltip() {
     if (tooltip != "") {
         tooltip_element = document.createElement("DIV")
         tooltip_element.className = "block_tooltip"
-        tooltip_element.innerHTML = '<button type="button" class="popover-icon btn btn-link" data-toggle="popover" data-trigger="hover" data-content="'+tooltip+'"><i class="fa fa-info-circle" aria-hidden="true"></i></button>';
-        block.firstChild.appendChild(tooltip_element);
-        $('[data-toggle="popover"]').popover();
+        tooltip_element.innerHTML = '<button type="button" class="popover-icon btn btn-link start_tooltip" data-toggle="popover" data-trigger="hover" data-content="'+tooltip+'"><i class="fa fa-info-circle" aria-hidden="true"></i></button>';
+        block.firstChild.childNodes[1].appendChild(tooltip_element);
+        setTimeout(() => {$('.start_tooltip').popover();$('.start_tooltip').removeClass('start_tooltip');}, 800);
+        
     } 
 }
