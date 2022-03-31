@@ -1,0 +1,45 @@
+# .coveragerc to control coverage.py
+[run]
+branch = True
+source_pkgs = 
+    antiblock_drivers
+    antiblock_scrapy
+    auto_scheduler
+    captcha_solver
+    crawl_prioritizer
+    request_filter
+    crawled_request_filter
+    cssify
+    entry_probing
+    formparser
+    param_injector
+    range_inference
+    scrapy_puppeteer
+    step_crawler
+
+[report]
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: no cover
+
+    # Don't complain about missing debug-only code:
+    def __repr__
+    if self\.debug
+
+    # Don't complain if tests don't hit defensive assertion code:
+    raise AssertionError
+    raise NotImplementedError
+
+    # Don't complain if non-runnable code isn't run:
+    if 0:
+    if __name__ == .__main__.:
+
+    # Don't complain about abstract methods, they aren't run:
+    @(abc\.)?abstractmethod
+
+ignore_errors = True
+
+
+[html]
+directory = coverage_html_report
