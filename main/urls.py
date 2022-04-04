@@ -7,6 +7,7 @@ from . import views
 api_router = routers.DefaultRouter()
 api_router.register(r'crawlers', views.CrawlerViewSet)
 api_router.register(r'instances', views.CrawlerInstanceViewSet)
+api_router.register(r'crawler_queue', views.CrawlerQueueViewSet)
 
 urlpatterns = [
     path("", views.list_crawlers, name="list_crawlers"),
@@ -27,6 +28,10 @@ urlpatterns = [
     path("info/screenshots/<str:instance_id>/<int:page>", views.view_screenshots, name="view_screenshots"),
 
     path("iframe/load", views.load_iframe, name="load_iframe"),
+
+    path("crawler_queue/", views.crawler_queue, name="crawler_queue"),
+    path("crawler_queue/remove/<int:crawler_id>", views.remove_crawl_request_view, name="remove_crawl_request"),
+    path("crawler_queue/run_next", views.run_next_crawl_requests_view, name="run_next_crawl_request"),
 
     # Includes the API endpoints in the URLs
     path(r'^api/', include(api_router.urls)),

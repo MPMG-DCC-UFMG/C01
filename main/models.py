@@ -1,8 +1,10 @@
+from statistics import mode
 from django.db import models
 from django.utils import timezone
 from django.core.validators import RegexValidator
 
 from crawlers.constants import *
+
 
 class TimeStamped(models.Model):
     creation_date = models.DateTimeField()
@@ -253,6 +255,13 @@ class CrawlRequest(TimeStamped):
         return self.instances.filter(running=True).exists()
 
     @property
+    def waiting_on_queue(self):
+        on_queue = CrawlerQueueItem.objects.filter(crawl_request_id=self.pk).exists()
+        if on_queue:
+            return not CrawlerQueueItem.objects.get(crawl_request_id=self.pk).running
+        return False
+
+    @property
     def running_instance(self):
         inst_query = self.instances.filter(running=True)
         if inst_query.exists():
@@ -381,3 +390,41 @@ class CrawlerInstance(TimeStamped):
                                    related_name='instances')
     instance_id = models.BigIntegerField(primary_key=True)
     running = models.BooleanField()
+
+
+class CrawlerQueue(models.Model):
+    max_crawlers_running = models.PositiveIntegerField(default=5, blank=True)
+
+    @classmethod
+    def object(cls):
+        if cls._default_manager.all().count() == 0:
+            CrawlerQueue().save()
+
+        return cls._default_manager.all().first()
+
+    def num_crawlers_running(self):
+        return self.items.filter(running=True).count()
+
+    def num_crawlers(self):
+        return self.items.all().count()
+
+    def get_next(self):
+        next_crawlers = list()
+
+        if self.num_crawlers_running() >= self.max_crawlers_running:
+            return next_crawlers
+
+        candidates = self.items.filter(running=False).values()
+        limit = max(0, self.max_crawlers_running - self.num_crawlers_running())
+        return candidates[:limit]
+
+
+    def save(self, *args, **kwargs):
+        self.pk = self.id = 1
+        return super().save(*args, **kwargs)
+
+
+class CrawlerQueueItem(TimeStamped):
+    queue = models.ForeignKey(CrawlerQueue, on_delete=models.CASCADE, default=1, related_name='items')
+    crawl_request = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE, unique=True)
+    running = models.BooleanField(default=False, blank=True)
