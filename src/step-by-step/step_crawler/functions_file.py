@@ -118,6 +118,7 @@ async def extrai_texto(pagina, xpath):
         raise Exception('XPath points to non existent element, or multiple elements!')
     return text
 
+
 @step("Extrair propriedade de")
 async def extrai_propriedade(pagina, xpath, propriedade):
     await pagina.waitForXPath(xpath)
@@ -126,7 +127,7 @@ async def extrai_propriedade(pagina, xpath, propriedade):
         text = await pagina.evaluate("el => el.getAttribute(\"" + propriedade + "\")", elements[0])
     else:
         raise Exception('XPath points to non existent element, or multiple elements!')
-    
+
     return text
 
 
@@ -239,6 +240,7 @@ async def elemento_existe_na_pagina(pagina, xpath):
         return False
     return True
 
+
 @step("Comparação")
 async def comparacao(pagina, arg1, comp, arg2):
     """This step returns the result of comp(arg1, arg2)
@@ -248,14 +250,15 @@ async def comparacao(pagina, arg1, comp, arg2):
         :param arg1 : a python object
         :returns bool: True or False
     """
-    op_dict = {"==" : operator.eq, "<=" : operator.le, ">=" : operator.ge,
-               "<" : operator.lt, ">" : operator.gt, "!=" : operator.ne,}
+    op_dict = {"==": operator.eq, "<=": operator.le, ">=": operator.ge,
+               "<": operator.lt, ">": operator.gt, "!=": operator.ne, }
 
     return op_dict[comp](arg1, arg2)
 
+
 async def open_in_new_tab(pagina, link_xpath):
     if validators.url(link_xpath):
-        #We have a link
+        # We have a link
         new_page = await pagina.browser.newPage()
         await new_page.goto(link_xpath)
         await espere_pagina(new_page)
@@ -263,7 +266,7 @@ async def open_in_new_tab(pagina, link_xpath):
 
         return new_page
     else:
-        #We have a xpath
+        # We have a xpath
         await pagina.waitForXPath(link_xpath)
         elements = await pagina.xpath(link_xpath)
 
@@ -289,7 +292,7 @@ async def open_in_new_tab(pagina, link_xpath):
             # Get current target for comparison with previous ones
             targets = set(pagina.browser._targets.values())
 
-            print('Process timed out when trying to open xpath "' + link_xpath +'" in a new page!')
+            print('Process timed out when trying to open xpath "' + link_xpath + '" in a new page!')
 
             # Find hanging targets and stop/close them
             for target in targets.difference(prev_targets):
