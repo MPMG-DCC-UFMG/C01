@@ -271,17 +271,17 @@ async def open_in_new_tab(pagina, link_xpath):
             raise Exception('XPath points to non existent element, or multiple elements!')
 
         def set_res(target):
-            return new_page_promisse.set_result(target)
+            return new_page_promise.set_result(target)
 
         # Get current targets for comparison in case of a timeout
         prev_targets = set(pagina.browser._targets.values())
 
-        new_page_promisse = asyncio.get_event_loop().create_future()
+        new_page_promise = asyncio.get_event_loop().create_future()
         pagina.browser.once("targetcreated", set_res)
         await pagina.evaluate('el => { el.setAttribute("target", "_blank"); el.click();}', elements[0])
 
         try:
-            new_page = await (await asyncio.wait_for(new_page_promisse, 60)).page()
+            new_page = await (await asyncio.wait_for(new_page_promise, 60)).page()
             await espere_pagina(new_page)
         except asyncio.TimeoutError:
             # Remove target creation listener to avoid an invalid state
