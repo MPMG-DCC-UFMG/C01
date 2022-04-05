@@ -270,18 +270,38 @@ async def open_in_new_tab(pagina, link_xpath):
         if len(elements) != 1:
             raise Exception('XPath points to non existent element, or multiple elements!')
 
+        def set_res(target):
+            return new_page_promisse.set_result(target)
+
+        # Get current targets for comparison in case of a timeout
+        prev_targets = set(pagina.browser._targets.values())
+
         new_page_promisse = asyncio.get_event_loop().create_future()
-        pagina.browser.once("targetcreated", lambda target: new_page_promisse.set_result(target))
+        pagina.browser.once("targetcreated", set_res)
         await pagina.evaluate('el => { el.setAttribute("target", "_blank"); el.click();}', elements[0])
+
         try:
             new_page = await (await asyncio.wait_for(new_page_promisse, 60)).page()
             await espere_pagina(new_page)
-            await new_page.bringToFront()
-
-            return new_page
         except asyncio.TimeoutError:
-            # raise Exception('Process timed out when trying to open xpath "' + link_xpath +'" in a new page!')
-            print('Process timed out when trying to open xpath "' + link_xpath +'" in a new page!')
-            await pagina.close()
-            return None
+            # Remove target creation listener to avoid an invalid state
+            pagina.browser.remove_listener('targetcreated', set_res)
+            # Get current target for comparison with previous ones
+            targets = set(pagina.browser._targets.values())
 
+            print('Process timed out when trying to open xpath "' + link_xpath +'" in a new page!')
+
+            # Find hanging targets and stop/close them
+            for target in targets.difference(prev_targets):
+                if not target._isInitialized and target.type == 'page':
+                    hanging_page = await target.page()
+                    await hanging_page._client.send("Page.stopLoading")
+                    hanging_page.close()
+
+            # Return an empty new page to keep a valid collector state
+            new_page = await pagina.browser.newPage()
+            await espere_pagina(new_page)
+
+        await new_page.bringToFront()
+
+        return new_page
