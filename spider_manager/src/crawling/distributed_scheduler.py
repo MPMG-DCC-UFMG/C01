@@ -418,8 +418,10 @@ class DistributedScheduler(object):
         Pushes a request from the spider into the proper throttled queue
         '''
 
+        request_seen = self.dupefilter.request_seen(request)
+
         # # # # # # # # # # # # # # # # # # Duplicate link Filter # # # # # # # # # # # # # # #
-        if not request.dont_filter and self.dupefilter.request_seen(request):
+        if not request.dont_filter and request_seen:
             # if the redirected url reached a url already seen, notify server
             if 'redirect_times' in request.meta:
                 notify_page_duplicated_found(request.meta['attrs']['instance_id'])
@@ -472,8 +474,9 @@ class DistributedScheduler(object):
                     (req_dict['meta']['expires'] == 0 or
                     curr_time < req_dict['meta']['expires']):
 
-                # ignoring redirects requests in count of pages to crawl
-                if 'redirect_times' not in request.meta:
+                print(
+                    f'Dupefilter {request.url} @ seen? {request_seen}')
+                if not request_seen:
                     notify_new_page_found(req_dict['meta']['attrs']['instance_id'])
 
                 # we may already have the queue in memory

@@ -171,7 +171,7 @@ class KafkaPipeline(object):
         item['exception'] = exception if exception else traceback.format_exc()
         item['spiderid'] = spider.name
         item = self._clean_item(item)
-        self.logger.error("Failed to send page to Kafka", item)
+        self.logger.error(f"Failed to send page to Kafka because: {item['exception']}", item)
 
     def process_item(self, item, spider):
         try:

@@ -10,7 +10,6 @@ import cchardet as chardet
 import validators
 
 import crawling_utils
-from crawling_utils import notify_files_found
 from crawling_utils.constants import HEADER_ENCODE_DETECTION, AUTO_ENCODE_DETECTION,AUTO_ENCODE_DETECTION_CONFIDENCE_THRESHOLD
 
 from crawling.items import RawResponseItem
@@ -277,9 +276,6 @@ class StaticPageSpider(BaseSpider):
                         ' advanced settings of your crawler.')
 
                 continue
-
-            num_files = len(files_found) + len(images_found)
-            notify_files_found(self.config["instance_id"], num_files)
 
             item = self.response_to_item(response, files_found, images_found, idx)
 

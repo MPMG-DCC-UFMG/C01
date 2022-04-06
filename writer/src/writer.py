@@ -60,9 +60,17 @@ class Writer:
 
     def __register_crawl(self, config: dict):
         crawler_id = str(config['crawler_id'])
+        crawler_source_name = config['source_name']
+
+        print(f'[{datetime.now()}] Writer: Registering crawler "{crawler_source_name}" with ID {crawler_id}')
 
         self.__crawls_running[crawler_id] = config
         self.__create_folder_structure(config)
+        self.__file_downloader.add_crawler_source(crawler_id)
+        
+    def __stop_crawl(self, crawler_id: str):
+        print(f'[{datetime.now()}] Writer: Stoping crawler with ID {crawler_id}')
+        self.__file_downloader.remove_crawler_source(crawler_id)
 
     def __persist_html(self, crawled_data: dict):
         crawler_id = str(crawled_data['crawler_id'])
@@ -150,7 +158,12 @@ class Writer:
 
     def __process_command(self, command):
         if 'register' in command:
-            self.__register_crawl(command['register'])
+            crawler_config = command['register']
+            self.__register_crawl(crawler_config)
+
+        elif 'stop' in command:
+            crawler_id = str(command['stop'])
+            self.__stop_crawl(crawler_id)
 
     def run(self):
         self.__create_crawled_data_poll()
