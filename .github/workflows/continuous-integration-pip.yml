@@ -18,4 +18,12 @@ jobs:
         run: |
           python install.py
       - name: Test with pytest
-        run: pytest tests
+        run: |
+          coverage run -m pytest
+          coverage report -i
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
+          verbose: true
+          files: ./.coverage

@@ -1,19 +1,19 @@
 from django.conf import settings
 from django.utils import timezone
 from django.db import transaction
-from django.db.models import Q
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, \
-    FileResponse, HttpResponseNotFound
+from django.http import HttpResponseRedirect, JsonResponse, \
+    FileResponse, HttpResponseNotFound, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 
 from rest_framework import viewsets
+from rest_framework import status
 from rest_framework.decorators import action
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm,\
     ResponseHandlerFormSet, ParameterHandlerFormSet
-from .models import CrawlRequest, CrawlerInstance
+from .models import CrawlRequest, CrawlerInstance, CrawlerQueue, CrawlerQueueItem
 
-from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer
+from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer, CrawlerQueueSerializer
 
 from crawlers.constants import *
 
@@ -31,8 +31,6 @@ import crawlers.crawler_manager as crawler_manager
 from crawlers.injector_tools import create_probing_object,\
     create_parameter_generators
 
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.parsers import JSONParser
 from requests.exceptions import MissingSchema
 
 from formparser.html import HTMLExtractor, HTMLParser
@@ -40,6 +38,14 @@ from formparser.html import HTMLExtractor, HTMLParser
 from scrapy_puppeteer import iframe_loader
 # Helper methods
 
+try:
+    CRAWLER_QUEUE = CrawlerQueue.object()
+
+    # clears all items from the queue when starting the system
+    CrawlerQueueItem.objects.all().delete()
+
+except:
+    pass
 
 def process_run_crawl(crawler_id):
     instance = None
@@ -70,6 +76,55 @@ def process_run_crawl(crawler_id):
     return instance
 
 
+def add_crawl_request(crawler_id):
+    already_in_queue = CrawlerQueueItem.objects.filter(crawl_request_id=crawler_id).exists()
+
+    if already_in_queue:
+        return
+
+    queue_item = CrawlerQueueItem(crawl_request_id=crawler_id)
+    queue_item.save()
+
+
+def remove_crawl_request(crawler_id):
+    in_queue = CrawlerQueueItem.objects.filter(crawl_request_id=crawler_id).exists()
+
+    if in_queue:
+        queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
+        queue_item.delete()
+
+def remove_crawl_request_view(request, crawler_id):
+    remove_crawl_request(crawler_id)
+    return redirect('/detail/' + str(crawler_id))
+
+
+def unqueue_crawl_requests():
+    crawlers_runnings = list()
+
+    for queue_item in CRAWLER_QUEUE.get_next():
+        queue_item_id = queue_item['id']
+        crawler_id = queue_item['crawl_request_id']
+
+        instance = process_run_crawl(crawler_id)
+
+        crawlers_runnings.append({
+            'crawler_id': crawler_id,
+            'instance_id': instance.pk
+        })
+
+        queue_item = CrawlerQueueItem.objects.get(pk=queue_item_id)
+        queue_item.running = True
+        queue_item.save()
+
+    response = {'crawlers_added_to_run': crawlers_runnings}
+    return response
+
+
+def run_next_crawl_requests_view(request):
+    response = unqueue_crawl_requests()
+    return JsonResponse(response, status=status.HTTP_200_OK)
+
+
 def process_stop_crawl(crawler_id):
     instance = CrawlRequest.objects.filter(
         id=crawler_id).get().running_instance
@@ -91,6 +146,9 @@ def process_stop_crawl(crawler_id):
         instance.finished_at = timezone.now()
         instance.save()
 
+        queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
+        queue_item.delete()
+
     # As soon as the instance is created, it starts to collect and is only modified when it stops,
     # we use these fields to define when a collection started and ended
     instance_info["started_at"] = str(instance.creation_date)
@@ -101,6 +159,9 @@ def process_stop_crawl(crawler_id):
 
     crawler_manager.stop_crawler(crawler_id, instance_id, config)
 
+    #
+    unqueue_crawl_requests()
+
     return instance
 
 
@@ -110,6 +171,9 @@ def list_process(request):
         text += f"child {p.name} is PID {p.pid}<br>"
     
     return HttpResponse(text)
+
+def crawler_queue(request):
+    return render(request, 'main/crawler_queue.html')
 
 
 def getAllData():
@@ -198,7 +262,7 @@ def create_crawler(request):
             static_response_formset.instance = instance
             static_response_formset.save()
 
-            return redirect('/detail/'+str(instance.id))
+            return redirect('/detail/' + str(instance.id))
 
     context['form'] = my_form
     context['templated_response_formset'] = templated_response_formset
@@ -232,7 +296,7 @@ def edit_crawler(request, id):
         templated_response_formset.save()
         static_parameter_formset.save()
         static_response_formset.save()
-        return redirect('/detail/'+str(id))
+        return redirect('/detail/' + str(id))
     else:
         return render(request, 'main/create_crawler.html', {
             'form': form,
@@ -287,7 +351,8 @@ def stop_crawl(request, crawler_id):
 
 
 def run_crawl(request, crawler_id):
-    process_run_crawl(crawler_id)
+    add_crawl_request(crawler_id)
+    unqueue_crawl_requests()
     return redirect(detail_crawler, id=crawler_id)
 
 
@@ -527,6 +592,7 @@ def load_iframe(request):
         }
         return render(request, 'main/error_iframe_loader.html', ctx)
 
+
 # API
 ########
 
@@ -564,9 +630,12 @@ class CrawlerViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def run(self, request, pk):
-        instance = None
+
+        # instance = None
         try:
-            instance = process_run_crawl(pk)
+            add_crawl_request(pk)
+            unqueue_crawl_requests()
+
         except Exception as e:
             data = {
                 'status': settings.API_ERROR,
@@ -576,8 +645,9 @@ class CrawlerViewSet(viewsets.ModelViewSet):
 
         data = {
             'status': settings.API_SUCCESS,
-            'instance': CrawlerInstanceSerializer(instance).data
+            'message': f'Crawler added to crawler queue'
         }
+
         return JsonResponse(data)
 
     @action(detail=True, methods=['get'])
@@ -605,3 +675,19 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = CrawlerInstance.objects.all()
     serializer_class = CrawlerInstanceSerializer
+
+
+class CrawlerQueueViewSet(viewsets.ModelViewSet):
+    queryset = CrawlerQueue.objects.all()
+    serializer_class = CrawlerQueueSerializer
+    http_method_names = ['get', 'put']
+
+    def update(self, request, pk=None):
+        response = super().update(request, pk=pk)
+
+        global CRAWLER_QUEUE
+        CRAWLER_QUEUE = CrawlerQueue.object()
+
+        unqueue_crawl_requests()
+
+        return response
