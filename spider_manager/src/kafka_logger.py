@@ -35,6 +35,7 @@ class KafkaLogger:
             'instance_id': self.__instance_id,
             'message': message
         })
+        self.__producer.flush()
 
 
     def flush(self):
@@ -43,4 +44,6 @@ class KafkaLogger:
 
     def close(self):
         """Sets the closed property, just to follow IO stream conventions"""
+        self.__producer.flush()
+        self.__producer.close()
         self.closed = True

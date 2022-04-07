@@ -110,7 +110,6 @@ class DistributedScheduler(object):
 
         # if we need better uuid's mod this line
         self.my_uuid = str(uuid.uuid4()).split('-')[4]
-        # self.count = 0
 
     def setup_zookeeper(self):
         self.assign_path = self.spider.crawler.settings.get('ZOOKEEPER_ASSIGN_PATH', "")
@@ -550,18 +549,6 @@ class DistributedScheduler(object):
 
         item = self.find_item()
 
-        # if self.count == 0:
-        #     item = {
-        #         'url': 'http://www.uberaba.mg.gov.br/portal/conteudo,416',
-        #         'curdepth': 0,
-        #         'retry_times': 0,
-        #     }
-
-        # self.count = 1
-
-        self.logger.info('Im inside next_request')
-        self.logger.info(type(item))
-        self.logger.info(item)
         if item:
             self.logger.info(u"Found url to crawl {url}"
                     .format(url=item['url']))
@@ -593,15 +580,16 @@ class DistributedScheduler(object):
             req_method = attrs.get('req_method', 'GET')
 
             steps = self.spider.crawler.settings.get('DYNAMIC_PROCESSING_STEPS')
-            """req = PlaywrightRequest(url=item['url'], body=req_body, \
-                method=req_method, steps=steps, meta={"playwright": True,
-                "playwright_include_page": True})"""
-            req = Request(url=item['url'], body=req_body, \
-                method=req_method, meta={
-                "playwright": True,
-                "playwright_include_page": True,
-                "steps": steps})
-
+            req = Request(url=item['url'],
+                body=req_body,
+                method=req_method,
+                dont_filter=True,
+                meta={
+                    "playwright": True,
+                    "playwright_include_page": True,
+                    "steps": steps
+                }
+            )
         else:
             try:
                 req = Request(item['url'])

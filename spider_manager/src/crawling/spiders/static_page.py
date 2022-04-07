@@ -1,8 +1,15 @@
 import cgi
 import datetime
 import json
+import magic
+import mimetypes
 import os
+import pathlib
 import re
+import shutil
+import time
+
+from glob import glob
 
 from scrapy.linkextractors import LinkExtractor
 from scrapy.http import Request, HtmlResponse, Response
@@ -25,6 +32,9 @@ LARGE_CONTENT_LENGTH = 1e9
 HTTP_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
 
+# System waits for up to DOWNLOAD_START_TIMEOUT seconds for a download to
+# begin. The value below is arbitrary
+DOWNLOAD_START_TIMEOUT = 7
 
 class StaticPageSpider(BaseSpider):
     # nome temporário, que será alterado no __init__
@@ -213,6 +223,74 @@ class StaticPageSpider(BaseSpider):
 
         return item
 
+    def block_until_downloads_complete(self, download_path):
+        """
+        Blocks the flow of execution until all files are downloaded, and then
+        moves files from the temporary folder to the final one.
+        """
+
+        temp_download_path = os.path.join(download_path, 'temp')
+        if not os.path.exists(temp_download_path):
+            os.makedirs(temp_download_path)
+
+        def pending_downloads_exist():
+            # Pending downloads in chrome have the .crdownload extension.
+            # So, if any of these files exist, we know that a download is
+            # running.
+            pending_downloads = glob(f'{temp_download_path}*.crdownload')
+            return len(pending_downloads) > 0
+
+        for _ in range(DOWNLOAD_START_TIMEOUT):
+            time.sleep(1)
+            if pending_downloads_exist():
+                break
+
+        while pending_downloads_exist():
+            time.sleep(1)
+
+        # Copy files to proper location
+        allfiles = os.listdir(temp_download_path)
+        for f in allfiles:
+            os.rename(os.path.join(temp_download_path, f), os.path.join(download_path, f))
+
+        shutil.rmtree(temp_download_path)
+
+    def generate_file_descriptions(self, download_path):
+        """Generates descriptions for downloaded files."""
+
+        # list all files in crawl data folder, except file_description.jsonl
+        files = glob(os.path.join(download_path, '*[!jsonl]'))
+
+        with open(os.path.join(download_path, 'file_description.jsonl'), 'w') as f:
+            for file in files:
+                # Get timestamp from file download
+                fname = pathlib.Path(file)
+                creation_time = datetime.datetime.fromtimestamp(fname.stat().st_ctime)
+
+                mimetype = magic.from_file(file, mime=True)
+                guessed_extension = mimetypes.guess_extension(mimetype)
+
+                ext = '' if guessed_extension is None else guessed_extension
+
+                file_with_extension = file + ext
+                os.rename(file, file_with_extension)
+
+                # A typical file will be: /home/user/folder/filename.ext
+                # So, we get only the filename.ext in the next line
+                file_name = file_with_extension.split('/')[-1]
+
+                description = {
+                    'url': '<triggered by dynamic page click>',
+                    'file_name': file_name,
+                    'crawler_id': crawler_id,
+                    'instance_id': instance_id,
+                    'crawled_at_date': str(creation_time),
+                    'referer': '<from unique dynamic crawl>',
+                    'type': ext.replace('.', '') if ext != '' else '<unknown>',
+                }
+
+                f.write(json.dumps(description) + '\n')
+
     def page_to_response(self, page, response) -> HtmlResponse:
         return HtmlResponse(
             response.url,
@@ -222,12 +300,6 @@ class StaticPageSpider(BaseSpider):
             encoding=response.encoding,
             request=response.request
         )
-
-
-
-
-
-
 
     async def dynamic_processing(self, response):
         """
@@ -239,9 +311,8 @@ class StaticPageSpider(BaseSpider):
         crawler_id = self.config["crawler_id"]
         instance_id = self.config["instance_id"]
 
-        # print(self.config)
-        data_path = self.config['DATA_PATH']
-        output_folder = self.config['OUTPUT_FOLDER']
+        data_path = self.config['data_path']
+        output_folder = self.settings['OUTPUT_FOLDER']
         instance_path = os.path.join(output_folder, data_path, str(instance_id))
 
         download_path = os.path.join(instance_path, 'data', 'files')
@@ -250,128 +321,24 @@ class StaticPageSpider(BaseSpider):
         page = response.meta["playwright_page"]
         request = response.request
 
-        # page = browser.new_page()
-
-        # try:
-            # page = browser.new_page()
-
-        # except:
-
-            # browser = await launch({
-            #                        'executablePath': chromium_executable(),
-            #                        'headless': True,
-            #                        'args': ['--no-sandbox'],
-            #                        'dumpio': True
-            #                        })
-            # async with async_playwright() as p:
-            #     self.browser = await p.chromium.launch()
-            # browser = playwright.chromium.launch()
-
-            # self.browser.new_page()
-            # page = self.browser.new_page()
-
-            # Changes the default file save location.
-            # cdp = await page._target.createCDPSession()
-            # await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allowAndName', 'downloadPath': self.download_path})
-
-        # Cookies
-        # if isinstance(request.cookies, dict):
-        #     await page.setCookie(*[
-        #         {'name': k, 'value': v}
-        #         for k, v in request.cookies.items()
-        #     ])
-        # else:
-        #     await page.setCookie(request.cookies)
-
-        # The request method and data must be set using request interception
-        # For some reason the regular method with setRequestInterception and
-        # page.on('request', callback) doesn't work, I had to use this instead.
-        # This directly manipulates the lower level modules in the pyppeteer
-        # page to achieve the results. Details on this workaround here (I have
-        # changed the code so it no longer uses the deprecated 'Network'
-        # domain, using 'Fetch' instead):
-        # https://github.com/pyppeteer/pyppeteer/issues/198#issuecomment-750221057
-        """async def setup_request_interceptor(page) -> None:
-            client = page._networkManager._client
-
-            async def intercept(event) -> None:
-                request_id = event["requestId"]
-
-                try:
-                    int_req = event["request"]
-                    url = int_req["url"]
-
-                    options = {"requestId": request_id}
-                    options['method'] = request.method
-
-                    if request.body:
-                        # The post data must be base64 encoded
-                        b64_encoded = base64.b64encode(request.body)
-                        options['postData'] = b64_encoded.decode('utf-8')
-
-                    await client.send("Fetch.continueRequest", options)
-                except:
-                    # If everything fails we need to be sure to continue the
-                    # request anyway, else the browser hangs
-                    options = {
-                        "requestId": request_id,
-                        "errorReason": "BlockedByClient"
-                    }
-                    await client.send("Fetch.failRequest", options)
-
-
-            # Setup request interception for all requests.
-            client.on("Fetch.requestPaused",
-                lambda event: client._loop.create_task(intercept(event)),
-                      )
-
-            # Set this up so that only the initial request is intercepted
-            # (else it would capture requests for external resources such as
-            # scripts, stylesheets, images, etc)
-            patterns = [{"urlPattern": request.url}]
-            await client.send("Fetch.enable", {"patterns": patterns})
-
-        async def stop_request_interceptor(page) -> None:
-            await page._networkManager._client.send("Fetch.disable")"""
-
-        # await setup_request_interceptor(page)
-
-        """try:
-            response = page.goto(
-                request.url,
-                wait_until=request.wait_until,
-            )
-
-        except:
-            page.close()
-            raise IgnoreRequest()"""
-
-        # Stop intercepting following requests
-        # await stop_request_interceptor(page)
-
-        # if request.screenshot:
-        #     request.meta['screenshot'] = await page.screenshot()
-
-        # if request.wait_for:
-        #     await page.waitFor(request.wait_for)
-
         if request.meta['steps']:
-            steps = request.meta['steps'] # json.loads(request.meta['steps'])
+            steps = request.meta['steps']
             steps = code_g.generate_code(steps, functions_file, scrshot_path)
-            page_list = await steps.execute_steps(pagina=page)
+            page_dict = await steps.execute_steps(pagina=page)
 
         content_type = response.headers['content-type']
         # _, params = cgi.parse_header(content_type)
-        # encoding = params['charset']
-        # TODO remove line below and fix commented lines above
-        encoding = 'ascii'
+
+        # If encoding info is not avaible in response headers, use default utf-8 to encode content
+        encoding = 'utf-8'
+        # if 'charset' in params:
+        #     encoding = params['charset']
+        # TODO uncomment and fix above
 
         content = await page.content()
+        # TODO this body goes nowhere, how is it saving the page? What about
+        # the other pages? And how does it know the names?
         body = str.encode(content, encoding=encoding, errors='ignore')
-
-        # TODO check if page is closed by middleware or if we must do it
-        # manually here
-        # page.close()
 
         # Necessary to bypass the compression middleware (?)
         response.headers.pop('content-encoding', None)
@@ -379,8 +346,23 @@ class StaticPageSpider(BaseSpider):
 
         results = []
 
-        for entry in list(page_list.values()):
+        for entry in list(page_dict.values()):
             results.append(self.page_to_response(entry, response))
+
+        # Maybe move this to the end of the whole parsing method
+        self.block_until_downloads_complete(download_path)
+        self.generate_file_descriptions(download_path)
+
+        # TODO ideally the page would be closed here or at the end of the parse
+        # method, but then we get the following error:
+        #
+        # playwright._impl._api_types.Error: Target page, context or browser has been closed
+        #
+        # In any case I suppose the browser will be killed at the end of the
+        # spider execution so this shouldn't be a critical issue. Still, we
+        # should investigate in the future.
+
+        # await page.close()
 
         return results
 
@@ -392,11 +374,6 @@ class StaticPageSpider(BaseSpider):
             encoding=encoding,
             request=request
         )"""
-
-
-
-
-
 
     async def parse(self, response):
         """

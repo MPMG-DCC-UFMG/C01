@@ -72,10 +72,10 @@ async def fill_iframe_content(page):
 
         # Inserts iframe content as base page content
         await page.evaluate('''
-            (iframe, content) => {
+            ([iframe, content]) => {
                 iframe.innerHTML = content;
             }
-        ''', iframe, content)
+        ''', [iframe, content])
 
 
 @step("Clicar")

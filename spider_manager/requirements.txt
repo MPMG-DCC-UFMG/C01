@@ -45,3 +45,4 @@ w3lib==1.19.0  # Updated from 1.18.0
 zope.interface==5.0.0  # Updated from 4.4.2
 playwright>=1.8.0a1
 scrapy-playwright==0.0.9 # Playwright interface
+python-magic

@@ -84,7 +84,6 @@ class Executor:
         base_config["DYNAMIC_PROCESSING_STEPS"] = {}
 
         if config.get("dynamic_processing", False):
-            # base_config["DOWNLOADER_MIDDLEWARES"]['scrapy_playwright.PlaywrightMiddleware'] = 800
             base_config["TWISTED_REACTOR"] = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 
             base_config["DOWNLOAD_HANDLERS"] = {
@@ -99,6 +98,15 @@ class Executor:
 
             base_config["DYNAMIC_PROCESSING"] = True
             base_config["DYNAMIC_PROCESSING_STEPS"] = ujson.loads(config["steps"])
+
+            instance_path = os.path.join(settings.OUTPUT_FOLDER, config["data_path"], str(config["instance_id"]))
+            download_path = os.path.join(instance_path, 'data', 'files', 'temp')
+            base_config["PLAYWRIGHT_LAUNCH_OPTIONS"] = {
+                'downloads_path': download_path,
+                # uncommenting the following line causes some collector
+                # instances to fail
+                # 'args': ['--no-sandbox']
+            }
 
         # Antiblock middlewares
         if config.get("antiblock_ip_rotation_type", "") == "tor":
