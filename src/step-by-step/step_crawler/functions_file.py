@@ -115,7 +115,7 @@ async def salvar_tabela(pagina):
 
         time.sleep(1)
 
-    content = await pagina.evaluate('''
+    await pagina.evaluate('''
             (table) => {
                 document.querySelector('html').innerText = table;
                 const el = document.querySelector("*");
