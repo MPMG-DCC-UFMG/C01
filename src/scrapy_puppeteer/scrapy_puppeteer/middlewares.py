@@ -69,7 +69,7 @@ class PuppeteerMiddleware:
         # middleware.browser = await launch({
         #     'executablePath': chromium_executable(),
         #     'headless': True,
-        #     'args': ['--no-sandbox'], # '--single-process', '--no-zygote', 
+        #     'args': ['--no-sandbox'], # '--single-process', '--no-zygote',
         #     'dumpio': True,
         #     'logLevel': crawler.settings.get('LOG_LEVEL')
         # })
@@ -124,7 +124,7 @@ class PuppeteerMiddleware:
             self.browser = await launch({
                                         'executablePath': chromium_executable(),
                                         'headless': True,
-                                        'args': ['--no-sandbox'], #'--single-process', '--no-zygote', 
+                                        'args': ['--no-sandbox'],  # '--single-process', '--no-zygote',
                                         'dumpio': True
                                         })
             await self.browser.newPage()

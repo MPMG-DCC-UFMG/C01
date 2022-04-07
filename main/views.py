@@ -47,6 +47,7 @@ try:
 except:
     pass
 
+
 def process_run_crawl(crawler_id):
     instance = None
     instance_id = None
@@ -92,6 +93,7 @@ def remove_crawl_request(crawler_id):
     if in_queue:
         queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
         queue_item.delete()
+
 
 def remove_crawl_request_view(request, crawler_id):
     remove_crawl_request(crawler_id)
@@ -169,8 +171,9 @@ def list_process(request):
     text = ''
     for p in mp.active_children():
         text += f"child {p.name} is PID {p.pid}<br>"
-    
+
     return HttpResponse(text)
+
 
 def crawler_queue(request):
     return render(request, 'main/crawler_queue.html')
