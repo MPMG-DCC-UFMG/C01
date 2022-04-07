@@ -2,7 +2,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.db import transaction
 from django.http import HttpResponseRedirect, JsonResponse, \
-    FileResponse, HttpResponseNotFound
+    FileResponse, HttpResponseNotFound, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 
 from rest_framework import viewsets
@@ -23,7 +23,7 @@ import json
 import subprocess
 import time
 import os
-
+import multiprocessing as mp
 from datetime import datetime
 
 import crawlers.crawler_manager as crawler_manager
@@ -46,6 +46,7 @@ try:
 
 except:
     pass
+
 
 def process_run_crawl(crawler_id):
     instance = None
@@ -92,6 +93,7 @@ def remove_crawl_request(crawler_id):
     if in_queue:
         queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
         queue_item.delete()
+
 
 def remove_crawl_request_view(request, crawler_id):
     remove_crawl_request(crawler_id)
@@ -157,12 +159,20 @@ def process_stop_crawl(crawler_id):
     crawler_manager.update_instances_info(
         config["data_path"], str(instance_id), instance_info)
 
-    crawler_manager.stop_crawler(instance_id, config)
+    crawler_manager.stop_crawler(crawler_id, instance_id, config)
 
     #
     unqueue_crawl_requests()
 
     return instance
+
+
+def list_process(request):
+    text = ''
+    for p in mp.active_children():
+        text += f"child {p.name} is PID {p.pid}<br>"
+
+    return HttpResponse(text)
 
 
 def crawler_queue(request):
