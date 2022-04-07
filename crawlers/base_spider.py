@@ -89,7 +89,7 @@ class BaseSpider(scrapy.Spider):
         spider = super(BaseSpider, cls).from_crawler(crawler, *args, **kwargs)
         crawler.signals.connect(spider.spider_closed, signal=scrapy.signals.spider_closed)
         return spider
-    
+
     def start_requests(self):
         """
         Should be implemented by child class.
@@ -464,7 +464,7 @@ class BaseSpider(scrapy.Spider):
 
     def spider_closed(self, spider):
         crawler_id = spider.crawler.settings.get('CRAWLER_ID')
-            
+
         # TODO: get port as variable
         port = 8000
         requests.get(
