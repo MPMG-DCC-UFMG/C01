@@ -289,7 +289,7 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
 
             # The result should be an instance of the middleware
             self.assertIsInstance(result, scrapy_puppeteer.PuppeteerMiddleware)
-            
+
             # crawler.signals.connect should be called once with the expected
             # arguments
             self.mockSpider.signals.connect.assert_called_once_with(
