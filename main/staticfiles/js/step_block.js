@@ -62,6 +62,8 @@ function init_block(step_list, depth){
     block.turn_to_attribution_step = turn_to_attribution_step
     block.turn_to_new_tab_step = turn_to_new_tab_step
     block.turn_to_close_tab_step = turn_to_close_tab_step
+    block.turn_to_if_step = turn_to_if_step
+
 
     //Setting the border functions
     block.onmouseout = function(){
@@ -564,6 +566,8 @@ function refresh_step(){
         block.turn_to_for_step()
     }else if(this.value=="Enquanto"){
         block.turn_to_while_step()
+    }else if(this.value=="Se"){
+        block.turn_to_if_step()
     }else if(this.value=="Atribuição"){
         block.turn_to_attribution_step()
     }else if(this.value=="Abrir em nova aba"){
@@ -663,6 +667,31 @@ function turn_to_for_step(){
  * This function is a method of the block.
  */
  function turn_to_while_step(){
+    block = find_parent_with_attr_worth(this, "block")
+    block.delete_lines(block.lines.length)
+    block.add_line()
+
+    // defines condition step
+    condition_select_box = document.createElement("DIV")
+    condition_select_box.className = "step-config-select"
+    condition_select = document.createElement("select")
+    condition_select.className = "form-control select-step"
+    condition_select.innerHTML = get_this_texts_inside_each_tag(Object.keys(get_step_names(block.step_list)), "<option>")
+    condition_select_box.appendChild(condition_select)
+    block.condition_select = condition_select
+
+    block.lines[0].row.appendChild(condition_select_box)
+    block.lines[0].row.full = true
+
+    condition_select.onchange = refresh_condition
+    condition_select.onchange()
+}
+
+/**
+ * Sets the block to the if each step.
+ * This function is a method of the block.
+ */
+ function turn_to_if_step(){
     block = find_parent_with_attr_worth(this, "block")
     block.delete_lines(block.lines.length)
     block.add_line()

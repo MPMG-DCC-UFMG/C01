@@ -10,6 +10,7 @@ import requests
 import shutil
 import sys
 import time
+import multiprocessing as mp
 from multiprocessing import Process
 
 # Project libs
@@ -25,6 +26,7 @@ def file_descriptor_process():
     sys.stderr = open(f"crawlers/log/file_descriptor.err", "w+", buffering=1)
     FileDescriptor.description_consumer()
 
+
 def create_folders(data_path: dict):
     """Create essential folders for crawlers if they do not exists"""
     files = [
@@ -38,34 +40,36 @@ def create_folders(data_path: dict):
     for f in files:
         crawling_utils.check_file_path(f)
 
+
 def get_ip_rotation_settings(config: dict, settings: dict):
     """Updates the settings for ip rotation."""
 
     if config["antiblock_ip_rotation_enabled"]:
         # rotação de IPs via Tor
         if config["antiblock_ip_rotation_type"] == "tor":
-            settings["DOWNLOADER_MIDDLEWARES"]["antiblock_scrapy.middlewares.TorProxyMiddleware"] = 900 
-            settings["DOWNLOADER_MIDDLEWARES"]["scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware"] = 910 
+            settings["DOWNLOADER_MIDDLEWARES"]["antiblock_scrapy.middlewares.TorProxyMiddleware"] = 900
+            settings["DOWNLOADER_MIDDLEWARES"]["scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware"] = 910
 
             settings["TOR_IPROTATOR_CHANGE_AFTER"] = config["antiblock_max_reqs_per_ip"]
             settings["TOR_IPROTATOR_ALLOW_REUSE_IP_AFTER"] = config["antiblock_max_reuse_rounds"]
-            
+
             settings["TOR_IPROTATOR_ENABLED"] = True
 
         # rotação de IPs via lista de proxies
-        else: 
-            settings["DOWNLOADER_MIDDLEWARES"]["rotating_proxies.middlewares.RotatingProxyMiddleware"] = 610 
-            settings["DOWNLOADER_MIDDLEWARES"]["rotating_proxies.middlewares.BanDetectionMiddleware"] = 620 
+        else:
+            settings["DOWNLOADER_MIDDLEWARES"]["rotating_proxies.middlewares.RotatingProxyMiddleware"] = 610
+            settings["DOWNLOADER_MIDDLEWARES"]["rotating_proxies.middlewares.BanDetectionMiddleware"] = 620
 
             config["antiblock_proxy_list"] = config["antiblock_proxy_list"].split('\r\n')
 
             settings["ROTATING_PROXY_LIST"] = config["antiblock_proxy_list"]
 
+
 def get_user_agent_rotation_settings(config: dict, settings: dict):
     """Updates the settings for user-agent rotation."""
 
     if config["antiblock_user_agent_rotation_enabled"]:
-        settings["DOWNLOADER_MIDDLEWARES"]["scrapy.downloadermiddlewares.useragent.UserAgentMiddleware"] = None 
+        settings["DOWNLOADER_MIDDLEWARES"]["scrapy.downloadermiddlewares.useragent.UserAgentMiddleware"] = None
         settings["DOWNLOADER_MIDDLEWARES"]["antiblock_scrapy.middlewares.RotateUserAgentMiddleware"] = 500
 
         settings["USER_AGENTS"] = config["antiblock_user_agents_list"].split('\r\n')
@@ -75,15 +79,17 @@ def get_user_agent_rotation_settings(config: dict, settings: dict):
 
         settings["ROTATE_USER_AGENT_ENABLED"] = True
 
+
 def get_insert_cookies_settings(config: dict, settings: dict):
     """Updates the settings for inserting cookies."""
 
     if config["antiblock_insert_cookies_enabled"]:
-        cookies = [json.loads(cookie) for cookie in config["antiblock_cookies_list"].split('\r\n')] 
+        cookies = [json.loads(cookie) for cookie in config["antiblock_cookies_list"].split('\r\n')]
         config["antiblock_cookies_list"] = cookies
 
     else:
         config["antiblock_cookies_list"] = None
+
 
 def get_autothrottle_settings(config: dict, settings: dict):
     """Updates the settings to AUTOTHROTTLE."""
@@ -91,6 +97,7 @@ def get_autothrottle_settings(config: dict, settings: dict):
     settings["AUTOTHROTTLE_ENABLED"] = config["antiblock_autothrottle_enabled"]
     settings["AUTOTHROTTLE_START_DELAY"] = config["antiblock_autothrottle_start_delay"]
     settings["AUTOTHROTTLE_MAX_DELAY"] = config["antiblock_autothrottle_max_delay"]
+
 
 def get_dynamic_processing_settings(config: dict, settings: dict):
 
@@ -100,10 +107,12 @@ def get_dynamic_processing_settings(config: dict, settings: dict):
         settings["CRAWLER_ID"] = config["crawler_id"]
         settings["INSTANCE_ID"] = config["instance_id"]
 
+
 def get_crawler_base_settings(config: dict):
     """Returns scrapy base configurations."""
 
     settings = {
+        "CRAWLER_ID": config["crawler_id"],
         "BOT_NAME": "crawlers",
         "DOWNLOADER_MIDDLEWARES": {},
         "ROBOTSTXT_OBEY": config["obey_robots"],
@@ -124,6 +133,7 @@ def get_crawler_base_settings(config: dict):
 
     return settings
 
+
 def crawler_process(config):
     """Starts crawling."""
     import scrapy_puppeteer
@@ -136,25 +146,16 @@ def crawler_process(config):
     # Redirects process logs to files
     sys.stdout = open(f"{data_path}/log/{instance_id}.out", "a", buffering=1)
     sys.stderr = open(f"{data_path}/log/{instance_id}.err", "a", buffering=1)
-    
+
     process = CrawlerProcess(settings=get_crawler_base_settings(config))
     process.crawl(PageSpider, config=json.dumps(config))
-
-    def update_database():
-        # TODO: get port as variable
-        port = 8000
-        requests.get(
-            f'http://localhost:{port}/detail/stop_crawl/{crawler_id}')
-
-    for crawler in process.crawlers:
-        crawler.signals.connect(
-            update_database, signal=scrapy.signals.spider_closed)
-
     process.start()
+
 
 def gen_key():
     """Generates a unique key based on time and a random seed."""
     return str(int(time.time() * 100)) + str((int(random.random() * 1000)))
+
 
 def start_crawler(config: dict):
     """Create and starts a crawler as a new process."""
@@ -173,19 +174,26 @@ def start_crawler(config: dict):
         f.write(json.dumps({"stop": False}))
 
     # starts new process
-    p = Process(target=crawler_process, args=(config,))
+    p = Process(name='Crawler-' + str(config['crawler_id']), target=crawler_process, args=(config,))
     p.start()
 
     return config["instance_id"]
 
-def stop_crawler(instance_id: str, config: dict):
+
+def stop_crawler(crawler_id: str, instance_id: str, config: dict):
     """Sets the flags of a crawler to stop."""
 
     data_path = config["data_path"]
     with open(f"{data_path}/flags/{instance_id}.json", "w+") as f:
         f.write(json.dumps({"stop": True}))
 
-def remove_crawler(instance_id: str, are_you_sure: bool =False):
+    # iterate over the running processes and explicitly terminate it
+    for p in mp.active_children():
+        if p.name == 'Crawler-' + str(crawler_id):
+            p.terminate()
+
+
+def remove_crawler(instance_id: str, are_you_sure: bool = False):
     """
     CAUTION: Delete ALL files and folders created by a crawler run.
     This includes all data stored under

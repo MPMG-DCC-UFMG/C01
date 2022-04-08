@@ -6,12 +6,14 @@ document.addEventListener('DOMContentLoaded',
         
         if(instance_id != "None"){
             tail_logs(instance_id);
-            status_instance(instance_id);
+            if (!WAITING_ON_QUEUE)
+                status_instance(instance_id);
         }
 
         if(last_as_running){
             tail_f_logs(instance_id);
-            status_f_instance(instance_id);
+            if (!WAITING_ON_QUEUE)
+                status_f_instance(instance_id);
         }
     },
     false
