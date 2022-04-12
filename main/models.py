@@ -146,6 +146,15 @@ class CrawlRequest(TimeStamped):
     ]
 
     encoding_detection_method = models.IntegerField(choices=ENCODE_DETECTION_CHOICES, default=HEADER_ENCODE_DETECTION)
+    
+    # CRAWLER QUEUE ============================================================ 
+    EXP_RUNTIME_CAT_CHOICES = [
+        ('fast', 'Rápido'),
+        ('medium', 'Médio'),
+        ('slow', 'Lento'),
+    ]
+
+    expected_runtime_category = models.CharField(null=False, max_length=8, default='medium', choices=EXP_RUNTIME_CAT_CHOICES)
 
     @staticmethod
     def process_parameter_data(param_list):
@@ -393,7 +402,9 @@ class CrawlerInstance(TimeStamped):
 
 
 class CrawlerQueue(models.Model):
-    max_crawlers_running = models.PositiveIntegerField(default=5, blank=True)
+    max_fast_runtime_crawlers_running = models.PositiveIntegerField(default=3, blank=True)
+    max_medium_runtime_crawlers_running = models.PositiveIntegerField(default=2, blank=True)
+    max_slow_runtime_crawlers_running = models.PositiveIntegerField(default=1, blank=True)
 
     @classmethod
     def object(cls):
@@ -402,21 +413,52 @@ class CrawlerQueue(models.Model):
 
         return cls._default_manager.all().first()
 
-    def num_crawlers_running(self):
-        return self.items.filter(running=True).count()
+    def num_crawlers_running(self, queue_type: str) -> int:
+        return self.items.filter(queue_type=queue_type, running=True).count()
 
-    def num_crawlers(self):
+    def num_crawlers(self) -> int:
         return self.items.all().count()
 
-    def get_next(self):
+    def __get_next(self, queue_type: str, max_crawlers_running: int):
         next_crawlers = list()
-
-        if self.num_crawlers_running() >= self.max_crawlers_running:
+        num_crawlers_running = self.num_crawlers_running(queue_type) 
+        
+        if num_crawlers_running >= max_crawlers_running:
             return next_crawlers
 
-        candidates = self.items.filter(running=False).values()
-        limit = max(0, self.max_crawlers_running - self.num_crawlers_running())
+
+        candidates = self.items.filter(queue_type=queue_type, running=False).order_by('position').values()
+        limit = max(0, max_crawlers_running - num_crawlers_running)
         return candidates[:limit]
+
+    def get_next(self, queue_type: str):
+        next_crawlers = list()
+
+        if queue_type == 'fast':
+            next_crawlers = self.__get_next('fast', self.max_fast_runtime_crawlers_running) 
+
+        elif queue_type == 'medium':
+            next_crawlers = self.__get_next('medium', self.max_medium_runtime_crawlers_running)
+            
+            # we run fast crawlers if are not medium runtime crawlers to run
+            if len(next_crawlers) == 0:
+                next_crawlers = self.__get_next('fast', self.max_medium_runtime_crawlers_running) 
+
+        elif queue_type == 'slow':
+            next_crawlers = self.__get_next('slow', self.max_slow_runtime_crawlers_running)
+
+            # we run medium runtime crawlers if are not slow crawlers to run
+            if len(next_crawlers) == 0:
+                next_crawlers = self.__get_next('medium', self.max_slow_runtime_crawlers_running)
+
+            # we run fast crawlers if are not medium runtime crawlers to run
+            if len(next_crawlers) == 0:
+                next_crawlers = self.__get_next('fast', self.max_slow_runtime_crawlers_running) 
+
+        else:
+            raise ValueError('Queue type must be fast, medium or slow.')
+
+        return next_crawlers
 
 
     def save(self, *args, **kwargs):
@@ -426,5 +468,7 @@ class CrawlerQueue(models.Model):
 
 class CrawlerQueueItem(TimeStamped):
     queue = models.ForeignKey(CrawlerQueue, on_delete=models.CASCADE, default=1, related_name='items')
+    queue_type = models.CharField(max_length=8)
     crawl_request = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE, unique=True)
     running = models.BooleanField(default=False, blank=True)
+    position = models.PositiveIntegerField(null=False, default=1)

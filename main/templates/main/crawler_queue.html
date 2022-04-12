@@ -38,16 +38,38 @@ Fila de coletas
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title font-weight-bold" id="editMaxCrawlerLabel">Máximo de coletores em execução simultânea</h5>
+                <h5 class="modal-title font-weight-bold" id="editMaxCrawlerLabel">Editar fila de coletas</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <div class="d-flex justify-content-center mb-3">
-                    <input type="number" min="1" max="1000" id="in_max_crawler_number" value="" class="text-center border-0" style="font-size: 2.2rem; width: 7rem;">
+                <div class="">
+                    <h6>Máximo de coletores rápidos ao mesmo tempo</h6>
+                    <div class="d-flex">
+                        <input class="w-100" type="range" id="in_max_fast_crawler" name="in_max_fast_crawler" min="1" max="1000">
+                        <input type="number" min="1" max="1000" id="in_max_fast_crawler_number" value="" class="text-center border-0" style="font-size: 1.2rem; width: 4.5rem;">
+                    </div>
                 </div>
-                <input class="w-100" type="range" id="in_max_crawler" name="in_max_crawler" min="1" max="1000">
+                <hr>
+                <div class="">
+                    <h6>Máximo de coletores médios ao mesmo tempo</h6>
+                    <div class="d-flex">
+                        <input class="w-100" type="range" id="in_max_medium_crawler" name="in_max_medium_crawler" min="1" max="1000">
+                        <input type="number" min="1" max="1000" id="in_max_medium_crawler_number" value="" class="text-center border-0"
+                            style="font-size: 1.2rem; width: 4.5rem;">
+                    </div>
+                </div>
+                <hr>
+                <div class="">
+                    <h6>Máximo de coletores lentos ao mesmo tempo</h6>
+                    <div class="d-flex">
+                        <input class="w-100" type="range" id="in_max_slow_crawler" name="in_max_slow_crawler" min="1" max="1000">
+                        <input type="number" min="1" max="1000" id="in_max_slow_crawler_number" value="" class="text-center border-0"
+                            style="font-size: 1.2rem; width: 4.5rem;">
+                    </div>
+                </div>
+
             </div>
             <div class="modal-footer d-flex justify-content-end">
                 <div class="">

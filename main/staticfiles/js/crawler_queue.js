@@ -7,6 +7,9 @@ var UPDATING_MAX_CRAWLERS = false;
 // the queue always has id = 1 as it is unique and designed that way
 var CRAWLER_QUEUE_API_ADDRESS = SERVER_ADDRESS + '/api/crawler_queue/1/';
 
+var MAX_FAST_CRAWLERS;
+var MAX_MEDIUM_CRAWLERS;
+var MAX_SLOW_CRAWLERS;
 
 var RUNNING_EMPTY_HTML = `<li class="border rounded p-3">
                             <p class="text-center m-0 font-weight-bold">
@@ -103,10 +106,21 @@ function update_ui() {
         type: 'get',
         success: function (data) {
             
-            $('#max-crawlers-running').text(data.max_crawlers_running);
+            // $('#max-crawlers-running').text(data.max_crawlers_running);
             
-            $('#in_max_crawler_number').val(data.max_crawlers_running);
-            $('#in_max_crawler').val(data.max_crawlers_running);
+            $('#in_max_fast_crawler').val(data.max_fast_runtime_crawlers_running);
+            $('#in_max_fast_crawler_number').val(data.max_fast_runtime_crawlers_running);
+
+            $('#in_max_medium_crawler').val(data.max_medium_runtime_crawlers_running)
+            $('#in_max_medium_crawler_number').val(data.max_medium_runtime_crawlers_running);
+
+            $('#in_max_slow_crawler').val(data.max_slow_runtime_crawlers_running)
+            $('#in_max_slow_crawler_number').val(data.max_slow_runtime_crawlers_running);
+
+
+            MAX_FAST_CRAWLERS = data.max_fast_runtime_crawlers_running;
+            MAX_MEDIUM_CRAWLERS = data.max_medium_runtime_crawlers_running;
+            MAX_SLOW_CRAWLERS = data.max_slow_runtime_crawlers_running;
 
             let items = data.items;
 
@@ -166,21 +180,27 @@ function closeMaxCrawlersModal() {
 function updateMaxCrawlers() {
     $('#editMaxCrawler').modal('hide');
 
-    let num_max_crawlers = $('#in_max_crawler_number').val();
+    let num_max_fast_crawlers = $('#in_max_fast_crawler_number').val();
+    let num_max_medium_crawlers = $('#in_max_medium_crawler_number').val();
+    let num_max_slow_crawlers = $('#in_max_slow_crawler_number').val();
 
-    if (num_max_crawlers < 1 || num_max_crawlers > 10000) {
-        alert('Escolha um intervalo entre 1 e 1000');
-        return;
-    }
+    data = {}
+
+    if (num_max_fast_crawlers != MAX_FAST_CRAWLERS)
+        data.max_fast_runtime_crawlers_running = num_max_fast_crawlers;
+
+    if (num_max_medium_crawlers)
+        data.max_medium_runtime_crawlers_running = num_max_medium_crawlers;
+
+    if (num_max_slow_crawlers)
+        data.max_slow_runtime_crawlers_running = num_max_slow_crawlers;
 
     $.ajax({
         url: CRAWLER_QUEUE_API_ADDRESS,
         type: 'put',
         dataType: 'json',
         async: false,
-        data: {
-            max_crawlers_running: num_max_crawlers,
-        },
+        data: data,
         success: function (data) {
             UPDATING_MAX_CRAWLERS = false;
         },
@@ -195,8 +215,16 @@ $(document).ready(function() {
 
     setInterval(function(){update_ui()},5000);
 
-    $('#in_max_crawler').on('input', function() {
-        $('#in_max_crawler_number').val(this.value);
+    $('#in_max_fast_crawler').on('input', function() {
+        $('#in_max_fast_crawler_number').val(this.value);
+    });
+
+    $('#in_max_medium_crawler').on('input', function () {
+        $('#in_max_medium_crawler_number').val(this.value);
+    }); 
+    
+    $('#in_max_slow_crawler').on('input', function () {
+        $('#in_max_slow_crawler_number').val(this.value);
     });
 
     $('#in_max_crawler_number').on('input', function () {

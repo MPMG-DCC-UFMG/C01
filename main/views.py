@@ -83,7 +83,21 @@ def add_crawl_request(crawler_id):
     if already_in_queue:
         return
 
-    queue_item = CrawlerQueueItem(crawl_request_id=crawler_id)
+    crawl_request = CrawlRequest.objects.get(pk=crawler_id)
+    cr_expec_runtime_cat = crawl_request.expected_runtime_category
+
+    # The new element of the crawler queue must be in the correct position (after the last added) and
+    # in the correct queue: fast, normal or slow
+
+    position = 1
+    last_queue_item_created = CrawlerQueueItem.objects.filter(queue_type = cr_expec_runtime_cat).last()
+
+    if last_queue_item_created:
+        position = last_queue_item_created.position + 1
+
+    queue_item = CrawlerQueueItem(crawl_request_id=crawler_id, 
+                                position=position,
+                                queue_type=cr_expec_runtime_cat)
     queue_item.save()
 
 
@@ -100,10 +114,10 @@ def remove_crawl_request_view(request, crawler_id):
     return redirect('/detail/' + str(crawler_id))
 
 
-def unqueue_crawl_requests():
+def unqueue_crawl_requests(queue_type: str):
     crawlers_runnings = list()
 
-    for queue_item in CRAWLER_QUEUE.get_next():
+    for queue_item in CRAWLER_QUEUE.get_next(queue_type):
         queue_item_id = queue_item['id']
         crawler_id = queue_item['crawl_request_id']
 
@@ -121,12 +135,6 @@ def unqueue_crawl_requests():
     response = {'crawlers_added_to_run': crawlers_runnings}
     return response
 
-
-def run_next_crawl_requests_view(request):
-    response = unqueue_crawl_requests()
-    return JsonResponse(response, status=status.HTTP_200_OK)
-
-
 def process_stop_crawl(crawler_id):
     instance = CrawlRequest.objects.filter(
         id=crawler_id).get().running_instance
@@ -141,6 +149,8 @@ def process_stop_crawl(crawler_id):
 
     instance = None
     instance_info = {}
+    queue_type = None  
+    
     with transaction.atomic():
         # Execute DB commands atomically
         instance = CrawlerInstance.objects.get(instance_id=instance_id)
@@ -149,6 +159,7 @@ def process_stop_crawl(crawler_id):
         instance.save()
 
         queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
+        queue_type = queue_item.queue_type
         queue_item.delete()
 
     # As soon as the instance is created, it starts to collect and is only modified when it stops,
@@ -162,7 +173,7 @@ def process_stop_crawl(crawler_id):
     crawler_manager.stop_crawler(crawler_id, instance_id, config)
 
     #
-    unqueue_crawl_requests()
+    unqueue_crawl_requests(queue_type)
 
     return instance
 
@@ -355,7 +366,12 @@ def stop_crawl(request, crawler_id):
 
 def run_crawl(request, crawler_id):
     add_crawl_request(crawler_id)
-    unqueue_crawl_requests()
+    
+    crawl_request = CrawlRequest.objects.get(pk = crawler_id)
+    queue_type = crawl_request.expected_runtime_category
+
+    unqueue_crawl_requests(queue_type)
+    
     return redirect(detail_crawler, id=crawler_id)
 
 
@@ -688,9 +704,22 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
     def update(self, request, pk=None):
         response = super().update(request, pk=pk)
 
+        # the size of queue of type fast changed, may is possible run 
+        # more crawlers
+        if 'max_fast_runtime_crawlers_running' in request.data:
+            unqueue_crawl_requests('fast')
+
+        # the size of queue of type normal changed, may is possible run 
+        # more crawlers
+        if 'max_normal_runtime_crawlers_running' in request.data:
+            unqueue_crawl_requests('normal')
+
+        # the size of queue of type slow changed, may is possible run 
+        # more crawlers
+        if 'max_slow_runtime_crawlers_running' in request.data:
+            unqueue_crawl_requests('slow')
+
         global CRAWLER_QUEUE
         CRAWLER_QUEUE = CrawlerQueue.object()
-
-        unqueue_crawl_requests()
 
         return response

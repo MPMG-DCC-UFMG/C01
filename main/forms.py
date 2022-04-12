@@ -64,7 +64,8 @@ class CrawlRequestForm(forms.ModelForm):
             'steps',
             'data_path',
 
-            'encoding_detection_method'
+            'encoding_detection_method',
+            'expected_runtime_category'
         ]
 
 class RawCrawlRequestForm(CrawlRequestForm):
@@ -401,6 +402,15 @@ class RawCrawlRequestForm(CrawlRequestForm):
     encoding_detection_method = forms.ChoiceField(choices=CrawlRequest.ENCODE_DETECTION_CHOICES, 
                                                     label='Método de detecção de codificação das páginas',
                                                     initial=CrawlRequest.HEADER_ENCODE_DETECTION,
+                                                    widget=forms.RadioSelect)
+
+    expected_runtime_category = forms.ChoiceField(choices = (
+                                                        ('fast', 'Rápido (até algumas horas)'),
+                                                        ('medium', 'Médio (até um dia)'),
+                                                        ('slow', 'Lento (mais de um dia)'),
+                                                    ), 
+                                                    label='Expectativa de tempo de execução',
+                                                    initial='medium',
                                                     widget=forms.RadioSelect)
 
 class ResponseHandlerForm(forms.ModelForm):
