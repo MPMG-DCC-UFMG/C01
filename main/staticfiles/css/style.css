@@ -6,6 +6,10 @@
     background-color: #286f99;
 }
 
+.active-tab-color {
+    background-color: #286f99;
+}
+
 body {
     padding-top: 56px;
 }

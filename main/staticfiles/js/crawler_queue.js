@@ -11,6 +11,9 @@ var MAX_FAST_CRAWLERS;
 var MAX_MEDIUM_CRAWLERS;
 var MAX_SLOW_CRAWLERS;
 
+var FILTER_RUNNING_CRAWLERS_ACTIVE = 'all';
+var FILTER_WAITING_CRAWLERS_ACTIVE = 'all';
+
 var RUNNING_EMPTY_HTML = `<li class="border rounded p-3">
                             <p class="text-center m-0 font-weight-bold">
                                 <i class="fa fa-exclamation-triangle" aria-hidden="true" style="font-size: 2em;"></i>
@@ -106,8 +109,6 @@ function update_ui() {
         type: 'get',
         success: function (data) {
             
-            // $('#max-crawlers-running').text(data.max_crawlers_running);
-            
             $('#in_max_fast_crawler').val(data.max_fast_runtime_crawlers_running);
             $('#in_max_fast_crawler_number').val(data.max_fast_runtime_crawlers_running);
 
@@ -128,8 +129,6 @@ function update_ui() {
                 return item.running;
             });
 
-            $('#running-label').text(`Em execução (${running.length})`);
-
             if (running.length == 0) {
                 $('#running-list').html(RUNNING_EMPTY_HTML);
             } else {
@@ -145,8 +144,6 @@ function update_ui() {
             let waiting = items.filter(function (item) {
                 return !item.running;
             }); 
-
-            $('#waiting-label').text(`Aguardando execução (${waiting.length})`);
 
             if (waiting.length == 0) {
                 $('#waiting-list').html(WAITING_EMPTY_HTML);
@@ -208,6 +205,45 @@ function updateMaxCrawlers() {
             alert('Houve um erro ao editar o campo!');
         }
     });
+}
+
+function deactive_filter_btn(btn_id) {
+    let btn_ref = $(`#${btn_id}`);
+
+    btn_ref.removeClass('active-tab-color');
+    btn_ref.removeClass('text-white');
+    btn_ref.removeClass('font-weight-bold');
+    btn_ref.addClass('text-muted');
+}
+
+function active_filter_btn(btn_id) {
+    let btn_ref = $(`#${btn_id}`);
+
+    btn_ref.removeClass('text-muted');
+    btn_ref.addClass('active-tab-color');
+    btn_ref.addClass('text-white');
+    btn_ref.addClass('font-weight-bold');
+}
+
+function filter_running_crawlers(filter) {
+    if (FILTER_RUNNING_CRAWLERS_ACTIVE == filter)
+        return;
+
+    deactive_filter_btn(`btn_running_filter_${FILTER_RUNNING_CRAWLERS_ACTIVE}`);
+    active_filter_btn(`btn_running_filter_${filter}`);
+
+    FILTER_RUNNING_CRAWLERS_ACTIVE = filter;
+
+}
+
+function filter_waiting_crawlers(filter) {
+    if (FILTER_WAITING_CRAWLERS_ACTIVE == filter)
+        return;
+
+    deactive_filter_btn(`btn_waiting_filter_${FILTER_WAITING_CRAWLERS_ACTIVE}`);
+    active_filter_btn(`btn_waiting_filter_${filter}`);
+
+    FILTER_WAITING_CRAWLERS_ACTIVE = filter;
 }
 
 $(document).ready(function() {
