@@ -20,7 +20,7 @@ jobs:
       - name: Test with pytest
         run: |
           coverage run -m pytest
-          coverage report -i
+          coverage report
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
