@@ -160,17 +160,9 @@ function update_waiting_queue(items) {
         return !item.running;
     });
 
-    let waiting_fast = waiting_all.filter(function (item) {
-        return item.queue_type == 'fast';
-    });
-
-    let waiting_medium = waiting_all.filter(function (item) {
-        return item.queue_type == 'medium';
-    });
-
-    let waiting_slow = waiting_all.filter(function (item) {
-        return item.queue_type == 'slow';
-    });
+    let waiting_fast = filter_by_queue_type(waiting_all, 'fast');
+    let waiting_medium = filter_by_queue_type(waiting_all, 'medium');
+    let waiting_slow = filter_by_queue_type(waiting_all, 'slow');
 
     let item;
     let waiting_html = [];
@@ -231,17 +223,9 @@ function update_running_queue(items) {
         return item.running;
     });
     
-    let running_fast = running_all.filter(function (item) {
-        return item.queue_type == 'fast';
-    });
-
-    let running_medium = running_all.filter(function (item) {
-        return item.queue_type == 'medium';
-    });
-
-    let running_slow = running_all.filter(function (item) {
-        return item.queue_type == 'slow';
-    });
+    let running_fast = filter_by_queue_type(running_all, 'fast');
+    let running_medium = filter_by_queue_type(running_all, 'medium');
+    let running_slow = filter_by_queue_type(running_all, 'slow');
 
     $('#qtd_running_crawler_fast').text(running_fast.length);
     $('#qtd_running_crawler_medium').text(running_medium.length);
@@ -440,7 +424,73 @@ function openForceExecutionConfirmModal(queue_item_to_force_exec) {
     $('#force-execution-modal').modal('show');
 }
 
+function filter_by_queue_type(list, queue_type) {
+    return list.filter(function (item) {
+        return item.queue_type == queue_type;
+    });
+} 
+
+function get_default_active_tab() {
+    $.ajax({
+        url: CRAWLER_QUEUE_API_ADDRESS,
+        type: 'get',
+        async: false,
+        success: function (data) {
+            let items = data.items;
+
+            let waiting_all = items.filter(function (item) {
+                return !item.running;
+            });
+
+            let waiting_fast = filter_by_queue_type(waiting_all, 'fast');
+            let waiting_medium = filter_by_queue_type(waiting_all, 'medium');
+            let waiting_slow = filter_by_queue_type(waiting_all, 'slow');
+
+            deactive_filter_btn(`btn_waiting_filter_${FILTER_WAITING_CRAWLERS_ACTIVE}`);
+
+            if (waiting_fast.length > 0)
+                FILTER_WAITING_CRAWLERS_ACTIVE = 'fast';
+            
+            else if (waiting_medium.length > 0) {
+                FILTER_WAITING_CRAWLERS_ACTIVE = 'medium';
+            }
+
+            else if (waiting_slow.length > 0)
+                FILTER_WAITING_CRAWLERS_ACTIVE = 'slow';
+
+            active_filter_btn(`btn_waiting_filter_${FILTER_WAITING_CRAWLERS_ACTIVE}`);
+
+            let running_all = items.filter(function (item) {
+                return item.running;
+            });
+
+            let running_fast = filter_by_queue_type(running_all, 'fast');
+            let running_medium = filter_by_queue_type(running_all, 'medium');
+            let running_slow = filter_by_queue_type(running_all, 'slow');
+
+            deactive_filter_btn(`btn_running_filter_${FILTER_RUNNING_CRAWLERS_ACTIVE}`);
+
+            if (running_fast.length > 0)
+                FILTER_RUNNING_CRAWLERS_ACTIVE = 'fast';
+
+            else if (running_medium.length > 0)
+                FILTER_RUNNING_CRAWLERS_ACTIVE = 'medium';
+
+            else if (running_slow.length > 0)
+                FILTER_RUNNING_CRAWLERS_ACTIVE = 'slow';
+
+            active_filter_btn(`btn_running_filter_${FILTER_RUNNING_CRAWLERS_ACTIVE}`);
+
+        },
+        error: function () {
+            console.error('Não foi possível obter a fila de coletas!');
+        }
+    });
+}
+
 $(document).ready(function() {
+    get_default_active_tab();
+
     update_ui();
 
     setInterval(function(){update_ui()},5000);
