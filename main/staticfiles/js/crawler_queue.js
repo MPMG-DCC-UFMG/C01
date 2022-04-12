@@ -11,8 +11,8 @@ var MAX_FAST_CRAWLERS;
 var MAX_MEDIUM_CRAWLERS;
 var MAX_SLOW_CRAWLERS;
 
-var FILTER_RUNNING_CRAWLERS_ACTIVE = 'all';
-var FILTER_WAITING_CRAWLERS_ACTIVE = 'all';
+var FILTER_RUNNING_CRAWLERS_ACTIVE = 'fast';
+var FILTER_WAITING_CRAWLERS_ACTIVE = 'fast';
 
 var QUEUE_ITEM_TO_FORCE_EXEC;
 
@@ -79,9 +79,17 @@ function get_running_li_html(item) {
     let now = Date.now();
     let elapsed_time = Math.floor((now - item.last_modified) / 1000);
 
+    let forced_execution_badge = '';
+
+    if (item.forced_execution)
+        forced_execution_badge = '<span class="badge badge-danger">Execução forçada</span>';
+
     return `<li class="border rounded p-3 mt-3">
         <div class="d-flex justify-content-between p-0">
-            <a href="${SERVER_ADDRESS + '/detail/' + item.crawler_id}"> ${ item.crawler_name } </a>
+            <div>
+                ${forced_execution_badge}
+                <a href="${SERVER_ADDRESS + '/detail/' + item.crawler_id}"> ${ item.crawler_name } </a>
+            </div>
             <small class="" title="Tempo gasto coletando"> <i class="fa fa-clock-o fa-lg" aria-hidden="true"></i> ${countdown(elapsed_time)}</small>
         </div>
         <small>Coletando desde: ${timestamp_converter(item.last_modified)} </small>
@@ -92,16 +100,6 @@ function get_waiting_li_html(item, above_queue_item, bellow_queue_item) {
 
     let now = Date.now();
     let elapsed_time = Math.floor((now - item.creation_date) / 1000);
-    let queue_type;
-
-    if (item.queue_type == 'fast')
-        queue_type = '<span class="badge badge-success">Rápido</span>'
-
-    if (item.queue_type == 'medium')
-        queue_type = '<span class="badge badge-warning">Médio</span>'
-
-    if (item.queue_type == 'slow')
-        queue_type = '<span class="badge badge-danger">Lento</span>'
 
     let btn_previous = '';
     if (bellow_queue_item) {
@@ -109,7 +107,7 @@ function get_waiting_li_html(item, above_queue_item, bellow_queue_item) {
             <button
                 title="Trocar posição com o de baixo"
                 onclick="switch_position('${item.id}','${bellow_queue_item}')"
-                class="border-0 rounded-left bg-white text-muted p-0 mr-1">
+                class="border-0 rounded-left bg-white text-muted p-0 mx-1">
                 <i class="fa fa-chevron-down" aria-hidden="true"></i>
             </button>
         `;
@@ -121,7 +119,7 @@ function get_waiting_li_html(item, above_queue_item, bellow_queue_item) {
             <button
                 title="Trocar posição com o de cima"
                 onclick="switch_position('${item.id}','${above_queue_item}')"
-                class="border-0 rounded-right bg-white text-muted p-0 ml-1">
+                class="border-0 rounded-right bg-white text-muted p-0 mx-1">
                 <i class="fa fa-chevron-up" aria-hidden="true"></i>
             </button>   
         `;
@@ -139,10 +137,7 @@ function get_waiting_li_html(item, above_queue_item, bellow_queue_item) {
 
     return `<li class="border rounded p-3 mt-3">
                 <div class="d-flex justify-content-between p-0">
-                    <div>
-                        ${queue_type}
-                        <a href="${SERVER_ADDRESS + '/detail/' + item.crawler_id}"> ${ item.crawler_name } </a>
-                    </div>
+                    <a href="${SERVER_ADDRESS + '/detail/' + item.crawler_id}"> ${ item.crawler_name } </a>
                     <small class="" title="Tempo de fila"> <i class="fa fa-clock-o fa-lg" aria-hidden="true"></i> ${countdown(elapsed_time)}</small>
                 </div>
                 <div class="d-flex justify-content-between align-items-center">
@@ -160,6 +155,135 @@ function get_waiting_li_html(item, above_queue_item, bellow_queue_item) {
             </li>`;
 }
 
+function update_waiting_queue(items) {
+    let waiting_all = items.filter(function (item) {
+        return !item.running;
+    });
+
+    let waiting_fast = waiting_all.filter(function (item) {
+        return item.queue_type == 'fast';
+    });
+
+    let waiting_medium = waiting_all.filter(function (item) {
+        return item.queue_type == 'medium';
+    });
+
+    let waiting_slow = waiting_all.filter(function (item) {
+        return item.queue_type == 'slow';
+    });
+
+    let item;
+    let waiting_html = [];
+
+    $('#qtd_waiting_crawler_fast').text(waiting_fast.length);
+    $('#qtd_waiting_crawler_medium').text(waiting_medium.length);
+    $('#qtd_waiting_crawler_slow').text(waiting_slow.length);
+
+    if (FILTER_WAITING_CRAWLERS_ACTIVE == 'fast')
+        waiting = waiting_fast;
+
+    else if (FILTER_WAITING_CRAWLERS_ACTIVE == 'medium')
+        waiting = waiting_medium;
+
+    else 
+        waiting = waiting_slow;
+
+    if (waiting.length == 0) {
+        $('#waiting-list').html(WAITING_EMPTY_HTML);
+    } else {
+        waiting.sort((a, b) => (a.position > b.position) ? 1 : -1);
+
+        let above_queue_item = null, bellow_queue_item;
+        item = waiting[0];
+
+        if (waiting.length == 1) {
+            bellow_queue_item = null;
+            waiting_html.push(get_waiting_li_html(item, above_queue_item, bellow_queue_item));
+
+        } else {
+            bellow_queue_item = waiting[1].id;
+            waiting_html.push(get_waiting_li_html(item, above_queue_item, bellow_queue_item));
+
+            let i;
+
+            for (i = 1; i < waiting.length - 1; i++) {
+                above_queue_item = waiting[i - 1].id;
+                bellow_queue_item = waiting[i + 1].id;
+
+                item = waiting[i];
+                waiting_html.push(get_waiting_li_html(item, above_queue_item, bellow_queue_item));
+            }
+
+            bellow_queue_item = null;
+            above_queue_item = waiting[i - 1].id;
+
+            item = waiting[i];
+
+            waiting_html.push(get_waiting_li_html(item, above_queue_item, bellow_queue_item));
+        }
+
+        $('#waiting-list').html(waiting_html);
+    }
+}
+
+function update_running_queue(items) {
+    let running_all = items.filter(function (item) {
+        return item.running;
+    });
+    
+    let running_fast = running_all.filter(function (item) {
+        return item.queue_type == 'fast';
+    });
+
+    let running_medium = running_all.filter(function (item) {
+        return item.queue_type == 'medium';
+    });
+
+    let running_slow = running_all.filter(function (item) {
+        return item.queue_type == 'slow';
+    });
+
+    $('#qtd_running_crawler_fast').text(running_fast.length);
+    $('#qtd_running_crawler_medium').text(running_medium.length);
+    $('#qtd_running_crawler_slow').text(running_slow.length);
+
+    if (FILTER_RUNNING_CRAWLERS_ACTIVE == 'fast')
+        running = running_fast;
+
+    else if (FILTER_RUNNING_CRAWLERS_ACTIVE == 'medium')
+        running = running_medium;
+
+    else
+        running = running_slow;
+
+    if (running.length == 0) {
+        $('#running-list').html(RUNNING_EMPTY_HTML);
+    } else {
+        let item;
+        let running_html = [];
+        for (let i = 0; i < running.length; i++) {
+            item = running[i];
+            running_html.push(get_running_li_html(item));
+        }
+        $('#running-list').html(running_html);
+    }
+}
+
+function update_scheduler_config(data) {
+    $('#in_max_fast_crawler').val(data.max_fast_runtime_crawlers_running);
+    $('#in_max_fast_crawler_number').val(data.max_fast_runtime_crawlers_running);
+
+    $('#in_max_medium_crawler').val(data.max_medium_runtime_crawlers_running)
+    $('#in_max_medium_crawler_number').val(data.max_medium_runtime_crawlers_running);
+
+    $('#in_max_slow_crawler').val(data.max_slow_runtime_crawlers_running)
+    $('#in_max_slow_crawler_number').val(data.max_slow_runtime_crawlers_running);
+
+    MAX_FAST_CRAWLERS = data.max_fast_runtime_crawlers_running;
+    MAX_MEDIUM_CRAWLERS = data.max_medium_runtime_crawlers_running;
+    MAX_SLOW_CRAWLERS = data.max_slow_runtime_crawlers_running;
+}
+
 function update_ui() {
     if (UPDATING_SCHEDULER_CONFIG)
         return;
@@ -168,112 +292,12 @@ function update_ui() {
         url: CRAWLER_QUEUE_API_ADDRESS,
         type: 'get',
         success: function (data) {
-            
-            $('#in_max_fast_crawler').val(data.max_fast_runtime_crawlers_running);
-            $('#in_max_fast_crawler_number').val(data.max_fast_runtime_crawlers_running);
-
-            $('#in_max_medium_crawler').val(data.max_medium_runtime_crawlers_running)
-            $('#in_max_medium_crawler_number').val(data.max_medium_runtime_crawlers_running);
-
-            $('#in_max_slow_crawler').val(data.max_slow_runtime_crawlers_running)
-            $('#in_max_slow_crawler_number').val(data.max_slow_runtime_crawlers_running);
-
-
-            MAX_FAST_CRAWLERS = data.max_fast_runtime_crawlers_running;
-            MAX_MEDIUM_CRAWLERS = data.max_medium_runtime_crawlers_running;
-            MAX_SLOW_CRAWLERS = data.max_slow_runtime_crawlers_running;
+            update_scheduler_config(data);
 
             let items = data.items;
 
-            let running = items.filter(function (item) {
-                return item.running;
-            });
-
-            if (running.length == 0) {
-                $('#running-list').html(RUNNING_EMPTY_HTML);
-            } else {
-                let item;
-                let running_html = [];
-                for (let i=0;i<running.length;i++) {
-                    item = running[i];
-                    running_html.push(get_running_li_html(item));
-                }
-                $('#running-list').html(running_html);
-            }
-
-            let waiting_all = items.filter(function (item) {
-                return !item.running;
-            }); 
-
-            if (waiting_all.length == 0) {
-                $('#waiting-list').html(WAITING_EMPTY_HTML);
-            } else {
-                let waiting_fast = waiting_all.filter(function (item) {
-                    return item.queue_type == 'fast';
-                });
-    
-                let waiting_medium = waiting_all.filter(function (item) {
-                    return item.queue_type == 'medium';
-                }); 
-                
-                let waiting_slow = waiting_all.filter(function (item) {
-                    return item.queue_type == 'slow';
-                }); 
-
-                let item;
-                let waiting_html = [];
-
-                $('#qtd_waiting_crawler_all').text(waiting_all.length);
-                $('#qtd_waiting_crawler_fast').text(waiting_fast.length);
-                $('#qtd_waiting_crawler_medium').text(waiting_medium.length);
-                $('#qtd_waiting_crawler_slow').text(waiting_slow.length);
-
-                if (FILTER_WAITING_CRAWLERS_ACTIVE == 'all')
-                    waiting = waiting_all;
-
-                else if (FILTER_WAITING_CRAWLERS_ACTIVE == 'fast')
-                    waiting = waiting_fast;
-
-                else if (FILTER_WAITING_CRAWLERS_ACTIVE == 'medium')
-                    waiting = waiting_medium;
-
-                else if (FILTER_WAITING_CRAWLERS_ACTIVE == 'slow')
-                    waiting = waiting_slow;
-                
-                waiting.sort((a, b) => (a.position > b.position) ? 1 : -1);
-                
-                let above_queue_item = null, bellow_queue_item;
-                item = waiting[0];
-
-                if (waiting.length == 1) {
-                    bellow_queue_item = null;
-                    waiting_html.push(get_waiting_li_html(item, above_queue_item, bellow_queue_item));
-
-                } else {
-                    bellow_queue_item = waiting[1].id;
-                    waiting_html.push(get_waiting_li_html(item, above_queue_item, bellow_queue_item));
-                    
-                    let i;
-
-                    for (i = 1; i < waiting.length - 1; i++) {
-                        above_queue_item = waiting[i - 1].id;
-                        bellow_queue_item = waiting[i + 1].id;
-    
-                        item = waiting[i];
-                        waiting_html.push(get_waiting_li_html(item, above_queue_item, bellow_queue_item));
-                    }
-
-                    bellow_queue_item = null;
-                    above_queue_item = waiting[i - 1].id;
-
-                    item = waiting[i];
-
-                    waiting_html.push(get_waiting_li_html(item, above_queue_item, bellow_queue_item));
-                }    
-
-                $('#waiting-list').html(waiting_html);
-            }
-            
+            update_running_queue(items);
+            update_waiting_queue(items);        
         },
         error: function () {
             console.error('Não foi possível atualizar a Interface!');
@@ -351,6 +375,7 @@ function filter_running_crawlers(filter) {
 
     FILTER_RUNNING_CRAWLERS_ACTIVE = filter;
 
+    update_ui();
 }
 
 function filter_waiting_crawlers(filter) {

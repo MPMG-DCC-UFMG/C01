@@ -21,31 +21,24 @@ Fila de coletas
             <h3 class="h5" id="running-label">Em execução</h3>
             <ul class="d-flex mb-3" id="running-filter-list" style="list-style: none;">
                 <li>
-                    <button id="btn_running_filter_all"
-                            onclick="filter_running_crawlers('all')"
-                            class="rounded border rounded-pill px-2 active-tab-color text-white">
-                        Tudo (7)
-                    </button>
-                </li>
-                <li>
                     <button id="btn_running_filter_fast"
                             onclick="filter_running_crawlers('fast')"
-                            class="rounded border rounded-pill text-muted px-2 ml-2">
-                        Rápidos (2)
+                            class="rounded border rounded-pill active-tab-color text-white font-weight-bold px-2 ml-2">
+                        Rápido (<span id="qtd_running_crawler_fast">0</span>)
                     </button>
                 </li>
                 <li>
                     <button id="btn_running_filter_medium" 
                             onclick="filter_running_crawlers('medium')"
                             class="rounded border rounded-pill text-muted px-2 ml-2">
-                        Médios (1)
+                        Médio (<span id="qtd_running_crawler_medium">0</span>)
                     </button>
                 </li>
                 <li>
                     <button id="btn_running_filter_slow" 
                             onclick="filter_running_crawlers('slow')"
                             class="rounded border rounded-pill text-muted px-2 ml-2">
-                        Lentos (8)
+                        Lento (<span id="qtd_running_crawler_slow">0</span>)
                     </button>
                 </li>
             </ul>
@@ -60,27 +53,26 @@ Fila de coletas
             <h3 class="h5" id="waiting-label">Aguardando execução</h3>
             <ul class="d-flex" id="waiting-filter-list" style="list-style: none;">
                 <li>
-                    <button id="btn_waiting_filter_all" onclick="filter_waiting_crawlers('all')"
-                        class="rounded border rounded-pill px-2 active-tab-color text-white">
-                        Tudo (<span id="qtd_waiting_crawler_all">0</span>)
-                    </button>
-                </li>
-                <li>
                     <button id="btn_waiting_filter_fast" onclick="filter_waiting_crawlers('fast')"
-                        class="rounded border rounded-pill text-muted px-2 ml-2">
-                        Rápidos (<span id="qtd_waiting_crawler_fast">0</span>)
+                        title="Fila de coletores rápidos"
+                        class="rounded border rounded-pill active-tab-color text-white font-weight-bold px-2 ml-2">
+                        Rápido (<span id="qtd_waiting_crawler_fast">0</span>)
                     </button>
                 </li>
                 <li>
-                    <button id="btn_waiting_filter_medium" onclick="filter_waiting_crawlers('medium')"
+                    <button id="btn_waiting_filter_medium" 
+                        onclick="filter_waiting_crawlers('medium')"
+                        title="Fila de coletores de tempo de execução médio"
                         class="rounded border rounded-pill text-muted px-2 ml-2">
-                        Médios (<span id="qtd_waiting_crawler_medium">0</span>)
+                        Médio (<span id="qtd_waiting_crawler_medium">0</span>)
                     </button>
                 </li>
                 <li>
-                    <button id="btn_waiting_filter_slow" onclick="filter_waiting_crawlers('slow')"
+                    <button id="btn_waiting_filter_slow" 
+                        onclick="filter_waiting_crawlers('slow')"
+                        title="Fila de coletores lentos"
                         class="rounded border rounded-pill text-muted px-2 ml-2">
-                        Lentos (<span id="qtd_waiting_crawler_slow">0</span>)
+                        Lento (<span id="qtd_waiting_crawler_slow">0</span>)
                     </button>
                 </li>
             </ul>

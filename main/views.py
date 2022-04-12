@@ -4,6 +4,7 @@ from django.db import transaction
 from django.http import HttpResponseRedirect, JsonResponse, \
     FileResponse, HttpResponseNotFound, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
+from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework import viewsets
 from rest_framework import status
@@ -700,6 +701,63 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
     queryset = CrawlerQueue.objects.all()
     serializer_class = CrawlerQueueSerializer
     http_method_names = ['get', 'put']
+
+    @action(detail=True, methods=['get'])
+    def switch_position(self, request, pk):
+        a = request.GET['a']
+        b = request.GET['b']
+        
+        with transaction.atomic():
+            try:
+                queue_item_a = CrawlerQueueItem.objects.get(pk=a)
+            
+            except ObjectDoesNotExist:
+                return JsonResponse({'message': f'Crawler queue item {a} not found!'}, status=status.HTTP_404_NOT_FOUND)
+
+            try:
+                queue_item_b = CrawlerQueueItem.objects.get(pk=b)
+
+            except ObjectDoesNotExist:
+                return JsonResponse({'message': f'Crawler queue item {b} not found!'}, status=status.HTTP_404_NOT_FOUND)
+
+            if queue_item_a.queue_type != queue_item_b.queue_type:
+                return JsonResponse({'message': 'Crawler queue items must be in same queue!'}, status=status.HTTP_400_BAD_REQUEST)
+
+            position_aux = queue_item_a.position
+
+            queue_item_a.position = queue_item_b.position
+            queue_item_b.position = position_aux
+
+            queue_item_a.save()
+            queue_item_b.save()
+        
+        return JsonResponse({'message': 'success'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'])
+    def force_execution(self, request, pk):
+        queue_item_id = request.GET['queue_item_id']
+
+        with transaction.atomic():
+            try:
+                queue_item = CrawlerQueueItem.objects.get(pk=queue_item_id)
+            
+            except ObjectDoesNotExist:
+                return JsonResponse({'message': f'Crawler queue item {queue_item_id} not found!'}, status=status.HTTP_404_NOT_FOUND)
+
+            crawler_id = queue_item.crawl_request.id
+            
+            instance = process_run_crawl(crawler_id)
+            
+            queue_item.forced_execution = True
+            queue_item.running = True
+            queue_item.save()
+
+            data = {
+                'crawler_id': crawler_id,
+                'instance_id': instance.pk
+            }
+
+        return JsonResponse(data, status=status.HTTP_200_OK)
 
     def update(self, request, pk=None):
         response = super().update(request, pk=pk)
