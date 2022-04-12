@@ -17,7 +17,7 @@ Fila de coletas
     </div>
 
     <ul class="mt-3" style="padding: 0; list-style: none;">
-        <div class="d-flex justify-content-between">
+        <div class="d-flex justify-content-between align-items-center">
             <h3 class="h5" id="running-label">Em execução</h3>
             <ul class="d-flex mb-3" id="running-filter-list" style="list-style: none;">
                 <li>
@@ -56,31 +56,31 @@ Fila de coletas
     </ul>
 
     <ul class="mt-3" style="padding: 0; list-style: none;">
-        <div class="d-flex justify-content-between">
+        <div class="d-flex justify-content-between align-items-center">
             <h3 class="h5" id="waiting-label">Aguardando execução</h3>
-            <ul class="d-flex mb-3" id="waiting-filter-list" style="list-style: none;">
+            <ul class="d-flex" id="waiting-filter-list" style="list-style: none;">
                 <li>
                     <button id="btn_waiting_filter_all" onclick="filter_waiting_crawlers('all')"
                         class="rounded border rounded-pill px-2 active-tab-color text-white">
-                        Tudo (7)
+                        Tudo (<span id="qtd_waiting_crawler_all">0</span>)
                     </button>
                 </li>
                 <li>
                     <button id="btn_waiting_filter_fast" onclick="filter_waiting_crawlers('fast')"
                         class="rounded border rounded-pill text-muted px-2 ml-2">
-                        Rápidos (2)
+                        Rápidos (<span id="qtd_waiting_crawler_fast">0</span>)
                     </button>
                 </li>
                 <li>
                     <button id="btn_waiting_filter_medium" onclick="filter_waiting_crawlers('medium')"
                         class="rounded border rounded-pill text-muted px-2 ml-2">
-                        Médios (1)
+                        Médios (<span id="qtd_waiting_crawler_medium">0</span>)
                     </button>
                 </li>
                 <li>
                     <button id="btn_waiting_filter_slow" onclick="filter_waiting_crawlers('slow')"
                         class="rounded border rounded-pill text-muted px-2 ml-2">
-                        Lentos (8)
+                        Lentos (<span id="qtd_waiting_crawler_slow">0</span>)
                     </button>
                 </li>
             </ul>
@@ -140,6 +140,27 @@ Fila de coletas
     </div>
 </div>
 
+<div class="modal fade" id="force-execution-modal" tabindex="-1" aria-labelledby="force-execution-modal-Label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title font-weight-bold" id="force-execution-modal-Label">Forçar execução</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja forçar a execução do coletor?</p>
+            </div>
+            <div class="modal-footer d-flex justify-content-end">
+                <div class="">
+                    <button type="button" class="btn btn-secondary" onclick="closeForceExecutionModal()">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="forceExecution()">Sim, continuar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block js %}

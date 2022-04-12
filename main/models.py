@@ -433,6 +433,7 @@ class CrawlerQueue(models.Model):
 
     def get_next(self, queue_type: str):
         next_crawlers = list()
+        return next_crawlers
 
         if queue_type == 'fast':
             next_crawlers = self.__get_next('fast', self.max_fast_runtime_crawlers_running) 
@@ -470,5 +471,6 @@ class CrawlerQueueItem(TimeStamped):
     queue = models.ForeignKey(CrawlerQueue, on_delete=models.CASCADE, default=1, related_name='items')
     queue_type = models.CharField(max_length=8)
     crawl_request = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE, unique=True)
+    forced_execution = models.BooleanField(default=False)
     running = models.BooleanField(default=False, blank=True)
     position = models.PositiveIntegerField(null=False, default=1)

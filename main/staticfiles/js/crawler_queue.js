@@ -2,7 +2,7 @@ var SERVER_ADDRESS = window.location.origin;
 
 // when this variable equals true, it blocks the interface update to prevent 
 // the data being changed from being rewritten by the interface update
-var UPDATING_MAX_CRAWLERS = false;
+var UPDATING_SCHEDULER_CONFIG = false;
 
 // the queue always has id = 1 as it is unique and designed that way
 var CRAWLER_QUEUE_API_ADDRESS = SERVER_ADDRESS + '/api/crawler_queue/1/';
@@ -13,6 +13,8 @@ var MAX_SLOW_CRAWLERS;
 
 var FILTER_RUNNING_CRAWLERS_ACTIVE = 'all';
 var FILTER_WAITING_CRAWLERS_ACTIVE = 'all';
+
+var QUEUE_ITEM_TO_FORCE_EXEC;
 
 var RUNNING_EMPTY_HTML = `<li class="border rounded p-3">
                             <p class="text-center m-0 font-weight-bold">
@@ -86,22 +88,80 @@ function get_running_li_html(item) {
     </li>`;
 }
 
-function get_waiting_li_html(item) {
+function get_waiting_li_html(item, above_queue_item, bellow_queue_item) {
 
     let now = Date.now();
     let elapsed_time = Math.floor((now - item.creation_date) / 1000);
+    let queue_type;
+
+    if (item.queue_type == 'fast')
+        queue_type = '<span class="badge badge-success">Rápido</span>'
+
+    if (item.queue_type == 'medium')
+        queue_type = '<span class="badge badge-warning">Médio</span>'
+
+    if (item.queue_type == 'slow')
+        queue_type = '<span class="badge badge-danger">Lento</span>'
+
+    let btn_previous = '';
+    if (bellow_queue_item) {
+        btn_previous = `
+            <button
+                title="Trocar posição com o de baixo"
+                onclick="switch_position('${item.id}','${bellow_queue_item}')"
+                class="border-0 rounded-left bg-white text-muted p-0 mr-1">
+                <i class="fa fa-chevron-down" aria-hidden="true"></i>
+            </button>
+        `;
+    }
+
+    let btn_next = '';
+    if (above_queue_item) {
+        btn_next = `
+            <button
+                title="Trocar posição com o de cima"
+                onclick="switch_position('${item.id}','${above_queue_item}')"
+                class="border-0 rounded-right bg-white text-muted p-0 ml-1">
+                <i class="fa fa-chevron-up" aria-hidden="true"></i>
+            </button>   
+        `;
+    }
+
+    let switch_position = '';
+    if (above_queue_item || bellow_queue_item) {
+        switch_position = `
+            <div class="rounded border px-2 py-0 mr-2">
+                ${btn_previous}
+                ${btn_next}   
+            </div>
+        `
+    }
 
     return `<li class="border rounded p-3 mt-3">
                 <div class="d-flex justify-content-between p-0">
-                    <a href="${SERVER_ADDRESS + '/detail/' + item.crawler_id}"> ${ item.crawler_name } </a>
+                    <div>
+                        ${queue_type}
+                        <a href="${SERVER_ADDRESS + '/detail/' + item.crawler_id}"> ${ item.crawler_name } </a>
+                    </div>
                     <small class="" title="Tempo de fila"> <i class="fa fa-clock-o fa-lg" aria-hidden="true"></i> ${countdown(elapsed_time)}</small>
                 </div>
-                <small>Aguardando desde: ${timestamp_converter(item.creation_date)} </small>
+                <div class="d-flex justify-content-between align-items-center">
+                    <small>Aguardando desde: ${timestamp_converter(item.creation_date)} </small>
+                    <div class="d-flex justify-content-end mt-2" style="flex: auto;">
+                        ${switch_position}
+                        <button
+                            title="Forçar execução"
+                            onclick="openForceExecutionConfirmModal('${item.id}')"
+                            class="border rounded-circle bg-light text-muted">
+                            <i class="fa fa-power-off" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
             </li>`;
 }
 
 function update_ui() {
-    if (UPDATING_MAX_CRAWLERS)
+    if (UPDATING_SCHEDULER_CONFIG)
         return;
 
     $.ajax({
@@ -141,19 +201,76 @@ function update_ui() {
                 $('#running-list').html(running_html);
             }
 
-            let waiting = items.filter(function (item) {
+            let waiting_all = items.filter(function (item) {
                 return !item.running;
             }); 
 
-            if (waiting.length == 0) {
+            if (waiting_all.length == 0) {
                 $('#waiting-list').html(WAITING_EMPTY_HTML);
             } else {
+                let waiting_fast = waiting_all.filter(function (item) {
+                    return item.queue_type == 'fast';
+                });
+    
+                let waiting_medium = waiting_all.filter(function (item) {
+                    return item.queue_type == 'medium';
+                }); 
+                
+                let waiting_slow = waiting_all.filter(function (item) {
+                    return item.queue_type == 'slow';
+                }); 
+
                 let item;
                 let waiting_html = [];
-                for (let i=0;i<waiting.length;i++) {
+
+                $('#qtd_waiting_crawler_all').text(waiting_all.length);
+                $('#qtd_waiting_crawler_fast').text(waiting_fast.length);
+                $('#qtd_waiting_crawler_medium').text(waiting_medium.length);
+                $('#qtd_waiting_crawler_slow').text(waiting_slow.length);
+
+                if (FILTER_WAITING_CRAWLERS_ACTIVE == 'all')
+                    waiting = waiting_all;
+
+                else if (FILTER_WAITING_CRAWLERS_ACTIVE == 'fast')
+                    waiting = waiting_fast;
+
+                else if (FILTER_WAITING_CRAWLERS_ACTIVE == 'medium')
+                    waiting = waiting_medium;
+
+                else if (FILTER_WAITING_CRAWLERS_ACTIVE == 'slow')
+                    waiting = waiting_slow;
+                
+                waiting.sort((a, b) => (a.position > b.position) ? 1 : -1);
+                
+                let above_queue_item = null, bellow_queue_item;
+                item = waiting[0];
+
+                if (waiting.length == 1) {
+                    bellow_queue_item = null;
+                    waiting_html.push(get_waiting_li_html(item, above_queue_item, bellow_queue_item));
+
+                } else {
+                    bellow_queue_item = waiting[1].id;
+                    waiting_html.push(get_waiting_li_html(item, above_queue_item, bellow_queue_item));
+                    
+                    let i;
+
+                    for (i = 1; i < waiting.length - 1; i++) {
+                        above_queue_item = waiting[i - 1].id;
+                        bellow_queue_item = waiting[i + 1].id;
+    
+                        item = waiting[i];
+                        waiting_html.push(get_waiting_li_html(item, above_queue_item, bellow_queue_item));
+                    }
+
+                    bellow_queue_item = null;
+                    above_queue_item = waiting[i - 1].id;
+
                     item = waiting[i];
-                    waiting_html.push(get_waiting_li_html(item));
-                }
+
+                    waiting_html.push(get_waiting_li_html(item, above_queue_item, bellow_queue_item));
+                }    
+
                 $('#waiting-list').html(waiting_html);
             }
             
@@ -165,12 +282,12 @@ function update_ui() {
 }
 
 function openEditMaxCrawlersModal() {
-    UPDATING_MAX_CRAWLERS = true;
+    UPDATING_SCHEDULER_CONFIG = true;
     $('#editMaxCrawler').modal('show');
 }
 
 function closeMaxCrawlersModal() {
-    UPDATING_MAX_CRAWLERS = false;
+    UPDATING_SCHEDULER_CONFIG = false;
     $('#editMaxCrawler').modal('hide');
 }
 
@@ -199,7 +316,7 @@ function updateMaxCrawlers() {
         async: false,
         data: data,
         success: function (data) {
-            UPDATING_MAX_CRAWLERS = false;
+            UPDATING_SCHEDULER_CONFIG = false;
         },
         error: function (data) {
             alert('Houve um erro ao editar o campo!');
@@ -244,6 +361,58 @@ function filter_waiting_crawlers(filter) {
     active_filter_btn(`btn_waiting_filter_${filter}`);
 
     FILTER_WAITING_CRAWLERS_ACTIVE = filter;
+
+    update_ui();
+}
+
+function switch_position(a, b) {
+    UPDATING_SCHEDULER_CONFIG = true;
+    let switch_position_address = CRAWLER_QUEUE_API_ADDRESS + `switch_position/?a=${a}&b=${b}`;
+    
+    $.ajax({
+        url: switch_position_address,
+        type: 'get',
+        dataType: 'json',
+        async: false,
+        success: function (data) {
+            UPDATING_SCHEDULER_CONFIG = false;
+            update_ui();
+        },
+        error: function (data) {
+            alert('Houve um erro ao trocar posições na fila!');
+        }
+    });
+}
+
+function forceExecution() {
+    let force_exec_address = CRAWLER_QUEUE_API_ADDRESS + `force_execution/?queue_item_id=${QUEUE_ITEM_TO_FORCE_EXEC}`;
+
+    $.ajax({
+        url: force_exec_address,
+        type: 'get',
+        dataType: 'json',
+        async: false,
+        success: function (data) {
+            UPDATING_SCHEDULER_CONFIG = false;
+            update_ui();
+        },
+        error: function (data) {
+            alert('Houve um erro ao forçar execução do coletor!');
+        }
+    });
+    $('#force-execution-modal').modal('hide');
+}
+
+function closeForceExecutionModal() {
+    UPDATING_SCHEDULER_CONFIG = false;
+    $('#force-execution-modal').modal('hide');
+}
+
+function openForceExecutionConfirmModal(queue_item_to_force_exec) {
+    QUEUE_ITEM_TO_FORCE_EXEC = queue_item_to_force_exec;
+
+    UPDATING_SCHEDULER_CONFIG = true;
+    $('#force-execution-modal').modal('show');
 }
 
 $(document).ready(function() {
