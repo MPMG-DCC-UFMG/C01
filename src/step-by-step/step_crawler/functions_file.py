@@ -118,6 +118,7 @@ async def extrai_texto(pagina, xpath):
         raise Exception('XPath points to non existent element, or multiple elements!')
     return text
 
+
 @step("Extrair propriedade de")
 async def extrai_propriedade(pagina, xpath, propriedade):
     await pagina.waitForXPath(xpath)
@@ -126,7 +127,7 @@ async def extrai_propriedade(pagina, xpath, propriedade):
         text = await pagina.evaluate("el => el.getAttribute(\"" + propriedade + "\")", elements[0])
     else:
         raise Exception('XPath points to non existent element, or multiple elements!')
-    
+
     return text
 
 
@@ -239,6 +240,7 @@ async def elemento_existe_na_pagina(pagina, xpath):
         return False
     return True
 
+
 @step("Comparação")
 async def comparacao(pagina, arg1, comp, arg2):
     """This step returns the result of comp(arg1, arg2)
@@ -248,14 +250,15 @@ async def comparacao(pagina, arg1, comp, arg2):
         :param arg1 : a python object
         :returns bool: True or False
     """
-    op_dict = {"==" : operator.eq, "<=" : operator.le, ">=" : operator.ge,
-               "<" : operator.lt, ">" : operator.gt, "!=" : operator.ne,}
+    op_dict = {"==": operator.eq, "<=": operator.le, ">=": operator.ge,
+               "<": operator.lt, ">": operator.gt, "!=": operator.ne, }
 
     return op_dict[comp](arg1, arg2)
 
+
 async def open_in_new_tab(pagina, link_xpath):
     if validators.url(link_xpath):
-        #We have a link
+        # We have a link
         new_page = await pagina.browser.newPage()
         await new_page.goto(link_xpath)
         await espere_pagina(new_page)
@@ -263,21 +266,45 @@ async def open_in_new_tab(pagina, link_xpath):
 
         return new_page
     else:
-        #We have a xpath
+        # We have a xpath
         await pagina.waitForXPath(link_xpath)
         elements = await pagina.xpath(link_xpath)
 
         if len(elements) != 1:
             raise Exception('XPath points to non existent element, or multiple elements!')
 
-        new_page_promisse = asyncio.get_event_loop().create_future()
-        pagina.browser.once("targetcreated", lambda target: new_page_promisse.set_result(target))
-        await pagina.evaluate('el => { el.setAttribute("target", "_blank"); el.click();}', elements[0])
-        try:
-            new_page = await (await asyncio.wait_for(new_page_promisse, 60)).page()
-            await espere_pagina(new_page)
-            await new_page.bringToFront()
+        def set_res(target):
+            return new_page_promise.set_result(target)
 
-            return new_page
+        # Get current targets for comparison in case of a timeout
+        prev_targets = set(pagina.browser._targets.values())
+
+        new_page_promise = asyncio.get_event_loop().create_future()
+        pagina.browser.once("targetcreated", set_res)
+        await pagina.evaluate('el => { el.setAttribute("target", "_blank"); el.click();}', elements[0])
+
+        try:
+            new_page = await (await asyncio.wait_for(new_page_promise, 60)).page()
+            await espere_pagina(new_page)
         except asyncio.TimeoutError:
-            raise Exception('Process timed out when trying to open xpath "' + link_xpath +'" in a new page!')
+            # Remove target creation listener to avoid an invalid state
+            pagina.browser.remove_listener('targetcreated', set_res)
+            # Get current target for comparison with previous ones
+            targets = set(pagina.browser._targets.values())
+
+            print('Process timed out when trying to open xpath "' + link_xpath + '" in a new page!')
+
+            # Find hanging targets and stop/close them
+            for target in targets.difference(prev_targets):
+                if not target._isInitialized and target.type == 'page':
+                    hanging_page = await target.page()
+                    await hanging_page._client.send("Page.stopLoading")
+                    hanging_page.close()
+
+            # Return an empty new page to keep a valid collector state
+            new_page = await pagina.browser.newPage()
+            await espere_pagina(new_page)
+
+        await new_page.bringToFront()
+
+        return new_page
