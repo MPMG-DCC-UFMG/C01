@@ -472,12 +472,8 @@ class CrawlerQueue(models.Model):
         next_crawlers = list()
         source_queue = queue_type
 
-        print('>>', source_queue, '<<')
-
         if queue_type == 'fast':
-            print(queue_type, self.max_fast_runtime_crawlers_running)
             next_crawlers = self.__get_next('fast', self.max_fast_runtime_crawlers_running) 
-            print(next_crawlers)
 
         elif queue_type == 'medium':
             next_crawlers = self.__get_next('medium', self.max_medium_runtime_crawlers_running)
