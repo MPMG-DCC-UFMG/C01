@@ -16,7 +16,7 @@ var FILTER_WAITING_CRAWLERS_ACTIVE = 'fast';
 
 var QUEUE_ITEM_TO_FORCE_EXEC;
 
-var RUNNING_EMPTY_HTML = `<li class="border rounded p-3">
+var RUNNING_EMPTY_HTML = `<li class="border rounded p-3 mt-3">
                             <p class="text-center m-0 font-weight-bold">
                                 <i class="fa fa-exclamation-triangle" aria-hidden="true" style="font-size: 2em;"></i>
                                 <br>
@@ -24,13 +24,16 @@ var RUNNING_EMPTY_HTML = `<li class="border rounded p-3">
                             </p>
                         </li>`;
 
-var WAITING_EMPTY_HTML = `<li class="border rounded p-3">
+var WAITING_EMPTY_HTML = `<li class="border rounded p-3 mt-3">
                             <p class="text-center m-0 font-weight-bold">
                                 <i class="fa fa-exclamation-triangle" aria-hidden="true" style="font-size: 2em;"></i>
                                 <br>
                                 Sem coletores aguardando execução.
                             </p>
                         </li>`;
+
+var WAITING_LIST_FILTER_REF = $('#waiting-filter-list');
+var RUNNING_LIST_FILTER_REF = $('#running-filter-list');
 
 function countdown(seconds) {
     let days = Math.floor(seconds / (3600 * 24));
@@ -155,6 +158,26 @@ function get_waiting_li_html(item, above_queue_item, bellow_queue_item) {
             </li>`;
 }
 
+function hide_waiting_filters() {
+    WAITING_LIST_FILTER_REF.removeClass('d-flex');
+    WAITING_LIST_FILTER_REF.addClass('d-none');
+}
+
+function show_waiting_filters() {
+    WAITING_LIST_FILTER_REF.removeClass('d-none');
+    WAITING_LIST_FILTER_REF.addClass('d-flex');
+}
+
+function hide_running_filters() {
+    RUNNING_LIST_FILTER_REF.removeClass('d-flex');
+    RUNNING_LIST_FILTER_REF.addClass('d-none');
+}
+
+function show_running_filters() {
+    RUNNING_LIST_FILTER_REF.removeClass('d-none');
+    RUNNING_LIST_FILTER_REF.addClass('d-flex');
+}
+
 function update_waiting_queue(items) {
     let waiting_all = items.filter(function (item) {
         return !item.running;
@@ -182,7 +205,13 @@ function update_waiting_queue(items) {
 
     if (waiting.length == 0) {
         $('#waiting-list').html(WAITING_EMPTY_HTML);
+
+        if (waiting_fast.length == 0 && waiting_medium.length == 0 && waiting_slow.length == 0) 
+            hide_waiting_filters();
+
     } else {
+        show_waiting_filters();
+
         waiting.sort((a, b) => (a.position > b.position) ? 1 : -1);
 
         let above_queue_item = null, bellow_queue_item;
@@ -227,9 +256,9 @@ function update_running_queue(items) {
     let running_medium = filter_by_queue_type(running_all, 'medium');
     let running_slow = filter_by_queue_type(running_all, 'slow');
 
-    $('#qtd_running_crawler_fast').text(running_fast.length);
-    $('#qtd_running_crawler_medium').text(running_medium.length);
-    $('#qtd_running_crawler_slow').text(running_slow.length);
+    $('#qtd_running_crawler_fast').text(`${running_fast.length} / ${MAX_FAST_CRAWLERS}`);
+    $('#qtd_running_crawler_medium').text(`${running_medium.length} / ${MAX_MEDIUM_CRAWLERS}`);
+    $('#qtd_running_crawler_slow').text(`${running_slow.length} / ${MAX_SLOW_CRAWLERS}`);
 
     if (FILTER_RUNNING_CRAWLERS_ACTIVE == 'fast')
         running = running_fast;
@@ -242,7 +271,13 @@ function update_running_queue(items) {
 
     if (running.length == 0) {
         $('#running-list').html(RUNNING_EMPTY_HTML);
+
+        if (running_fast.length == 0 && running_medium.length == 0 && running_slow.length == 0)
+            hide_running_filters();
+
     } else {
+        show_running_filters();
+
         let item;
         let running_html = [];
         for (let i = 0; i < running.length; i++) {

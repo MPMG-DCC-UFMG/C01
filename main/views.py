@@ -118,7 +118,9 @@ def remove_crawl_request_view(request, crawler_id):
 def unqueue_crawl_requests(queue_type: str):
     crawlers_runnings = list()
 
-    for queue_item in CRAWLER_QUEUE.get_next(queue_type):
+    source_queue, queue_items = CRAWLER_QUEUE.get_next(queue_type)
+
+    for queue_item in queue_items:
         queue_item_id = queue_item['id']
         crawler_id = queue_item['crawl_request_id']
 
@@ -131,6 +133,12 @@ def unqueue_crawl_requests(queue_type: str):
 
         queue_item = CrawlerQueueItem.objects.get(pk=queue_item_id)
         queue_item.running = True
+
+        if source_queue != queue_type:
+            with open('test.log', 'w') as f:
+                f.write(f'updated queue type: {source_queue} <> {queue_type}\n')
+            queue_item.queue_type = queue_type
+
         queue_item.save()
 
     response = {'crawlers_added_to_run': crawlers_runnings}

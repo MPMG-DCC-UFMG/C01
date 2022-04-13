@@ -1,10 +1,10 @@
-from statistics import mode
 from django.db import models
 from django.utils import timezone
 from django.core.validators import RegexValidator
+from django.db import transaction
+from django.db.models.query import QuerySet
 
 from crawlers.constants import *
-
 
 class TimeStamped(models.Model):
     creation_date = models.DateTimeField()
@@ -419,13 +419,20 @@ class CrawlerQueue(models.Model):
     def num_crawlers(self) -> int:
         return self.items.all().count()
 
-    def __get_next(self, queue_type: str, max_crawlers_running: int):
+    def __get_next(self, queue_type: str, max_crawlers_running: int, source_queue: str = None):
         next_crawlers = list()
-        num_crawlers_running = self.num_crawlers_running(queue_type) 
+
+        # um coletor irá executar na fila que não seria a sua. Como no caso onde 
+        # a fila de coletores lentos em execução está vazia e ele pode alocar para executar
+        # coletores médios e curtos
+        if source_queue:
+            num_crawlers_running = self.num_crawlers_running(source_queue)
+        
+        else:
+            num_crawlers_running = self.num_crawlers_running(queue_type)
         
         if num_crawlers_running >= max_crawlers_running:
             return next_crawlers
-
 
         candidates = self.items.filter(queue_type=queue_type, running=False).order_by('position').values()
         limit = max(0, max_crawlers_running - num_crawlers_running)
@@ -433,7 +440,7 @@ class CrawlerQueue(models.Model):
 
     def get_next(self, queue_type: str):
         next_crawlers = list()
-        return next_crawlers
+        source_queue = queue_type
 
         if queue_type == 'fast':
             next_crawlers = self.__get_next('fast', self.max_fast_runtime_crawlers_running) 
@@ -443,29 +450,31 @@ class CrawlerQueue(models.Model):
             
             # we run fast crawlers if are not medium runtime crawlers to run
             if len(next_crawlers) == 0:
-                next_crawlers = self.__get_next('fast', self.max_medium_runtime_crawlers_running) 
+                next_crawlers = self.__get_next('fast', self.max_medium_runtime_crawlers_running, 'medium') 
+                source_queue = 'fast'
 
         elif queue_type == 'slow':
             next_crawlers = self.__get_next('slow', self.max_slow_runtime_crawlers_running)
 
             # we run medium runtime crawlers if are not slow crawlers to run
             if len(next_crawlers) == 0:
-                next_crawlers = self.__get_next('medium', self.max_slow_runtime_crawlers_running)
+                next_crawlers = self.__get_next('medium', self.max_slow_runtime_crawlers_running, 'slow')
+                source_queue = 'medium'
 
             # we run fast crawlers if are not medium runtime crawlers to run
             if len(next_crawlers) == 0:
-                next_crawlers = self.__get_next('fast', self.max_slow_runtime_crawlers_running) 
+                next_crawlers = self.__get_next('fast', self.max_slow_runtime_crawlers_running, 'slow') 
+                source_queue = 'fast'
 
         else:
             raise ValueError('Queue type must be fast, medium or slow.')
 
-        return next_crawlers
+        return source_queue, next_crawlers
 
 
     def save(self, *args, **kwargs):
         self.pk = self.id = 1
         return super().save(*args, **kwargs)
-
 
 class CrawlerQueueItem(TimeStamped):
     queue = models.ForeignKey(CrawlerQueue, on_delete=models.CASCADE, default=1, related_name='items')
