@@ -153,16 +153,45 @@ async def for_clicavel(pagina, xpath):
 
 
 @step("Localizar elementos")
-async def localiza_elementos(pagina, xpath, numero_xpaths=None):
-    base_xpath = xpath.split("[*]")[0]
-
+async def localiza_elementos(pagina, xpath, numero_xpaths=None, modo='simples'):
     xpath_list = []
-    for i in range(len(await pagina.xpath(base_xpath))):
-        candidate_xpath = xpath.replace("*", str(i + 1))
-        if await elemento_existe_na_pagina(pagina, candidate_xpath):
-            xpath_list.append(candidate_xpath)
+
+    if modo == 'complexo':
+        elements = await pagina.xpath(xpath)
+        for el in elements:
+            text = await pagina.evaluate("""el => { 
+                var getXpathOfNode = (domNode, bits) => {
+                    bits = bits ? bits : [];
+                    var c = 0;
+                    var b = domNode.nodeName;
+                    var p = domNode.parentNode;
+
+                    if (p) {
+                        var els = p.getElementsByTagName(b);
+                        if (els.length >  1) {
+                        while (els[c] !== domNode) c++;
+                        b += "[" + (c+1) + "]";
+                        }
+                        bits.push(b);
+                        return getXpathOfNode(p, bits);
+                    }
+                    return bits.reverse().join("/");
+                }; 
+                return getXpathOfNode(el);
+            }""", el)
+
+            xpath_list.append(text.lower())
+        
+    elif modo == 'simples':
+        base_xpath = xpath.split("[*]")[0]
+
+        for i in range(len(await pagina.xpath(base_xpath))):
+            candidate_xpath = xpath.replace("*", str(i + 1))
+            if await elemento_existe_na_pagina(pagina, candidate_xpath):
+                xpath_list.append(candidate_xpath)
 
     numero_xpaths = len(xpath_list) if not numero_xpaths else numero_xpaths
+
     return xpath_list[:numero_xpaths]
 
 
