@@ -110,7 +110,7 @@ function get_waiting_li_html(item, above_queue_item, bellow_queue_item) {
             <button
                 title="Trocar posição com o de baixo"
                 onclick="switch_position('${item.id}','${bellow_queue_item}')"
-                class="border-0 rounded-left bg-white text-muted p-0 mx-1">
+                class="border-0 rounded-left bg-white crawler-queue-switch-position p-0 mx-1">
                 <i class="fa fa-chevron-down" aria-hidden="true"></i>
             </button>
         `;
@@ -122,7 +122,7 @@ function get_waiting_li_html(item, above_queue_item, bellow_queue_item) {
             <button
                 title="Trocar posição com o de cima"
                 onclick="switch_position('${item.id}','${above_queue_item}')"
-                class="border-0 rounded-right bg-white text-muted p-0 mx-1">
+                class="border-0 rounded-right bg-white crawler-queue-switch-position p-0 mx-1">
                 <i class="fa fa-chevron-up" aria-hidden="true"></i>
             </button>   
         `;
@@ -148,10 +148,16 @@ function get_waiting_li_html(item, above_queue_item, bellow_queue_item) {
                     <div class="d-flex justify-content-end mt-2" style="flex: auto;">
                         ${switch_position}
                         <button
+                            title="Remover da fila"
+                            onclick="remove_item_from_queue('${item.id}')"
+                            class="border py-0 rounded-circle bg-light crawler-queue-remove-item mr-2">
+                            <i class="fa fa-times" aria-hidden="true"></i>
+                        </button>
+                        <button
                             title="Forçar execução"
                             onclick="openForceExecutionConfirmModal('${item.id}')"
-                            class="border rounded-circle bg-light text-muted">
-                            <i class="fa fa-power-off" aria-hidden="true"></i>
+                            class="px-2 py-0 border rounded-circle bg-light crawler-queue-force-execution">
+                            <i class="fa fa-bolt" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
@@ -256,9 +262,9 @@ function update_running_queue(items) {
     let running_medium = filter_by_queue_type(running_all, 'medium');
     let running_slow = filter_by_queue_type(running_all, 'slow');
 
-    $('#qtd_running_crawler_fast').text(`${running_fast.length} / ${MAX_FAST_CRAWLERS}`);
-    $('#qtd_running_crawler_medium').text(`${running_medium.length} / ${MAX_MEDIUM_CRAWLERS}`);
-    $('#qtd_running_crawler_slow').text(`${running_slow.length} / ${MAX_SLOW_CRAWLERS}`);
+    $('#qtd_running_crawler_fast').text(`${running_fast.length}/${MAX_FAST_CRAWLERS}`);
+    $('#qtd_running_crawler_medium').text(`${running_medium.length}/${MAX_MEDIUM_CRAWLERS}`);
+    $('#qtd_running_crawler_slow').text(`${running_slow.length}/${MAX_SLOW_CRAWLERS}`);
 
     if (FILTER_RUNNING_CRAWLERS_ACTIVE == 'fast')
         running = running_fast;
@@ -370,7 +376,7 @@ function updateMaxCrawlers() {
 function deactive_filter_btn(btn_id) {
     let btn_ref = $(`#${btn_id}`);
 
-    btn_ref.removeClass('active-tab-color');
+    btn_ref.removeClass('crawler-queue-active-tab-color');
     btn_ref.removeClass('text-white');
     btn_ref.removeClass('font-weight-bold');
     btn_ref.addClass('text-muted');
@@ -380,7 +386,7 @@ function active_filter_btn(btn_id) {
     let btn_ref = $(`#${btn_id}`);
 
     btn_ref.removeClass('text-muted');
-    btn_ref.addClass('active-tab-color');
+    btn_ref.addClass('crawler-queue-active-tab-color');
     btn_ref.addClass('text-white');
     btn_ref.addClass('font-weight-bold');
 }
@@ -429,7 +435,7 @@ function switch_position(a, b) {
 }
 
 function forceExecution() {
-    let force_exec_address = CRAWLER_QUEUE_API_ADDRESS + `force_execution/?queue_item_id=${QUEUE_ITEM_TO_FORCE_EXEC}`;
+    let force_exec_address = CRAWLER_QUEUE_API_ADDRESS + `force_execution?queue_item_id=${QUEUE_ITEM_TO_FORCE_EXEC}`;
 
     $.ajax({
         url: force_exec_address,
@@ -445,6 +451,25 @@ function forceExecution() {
         }
     });
     $('#force-execution-modal').modal('hide');
+}
+
+function remove_item_from_queue(queue_item_id) {
+    let remove_queue_item_address = CRAWLER_QUEUE_API_ADDRESS + `remove_item?queue_item_id=${queue_item_id}`;
+    UPDATING_SCHEDULER_CONFIG = true;
+
+    $.ajax({
+        url: remove_queue_item_address,
+        type: 'get',
+        dataType: 'json',
+        async: false,
+        success: function (data) {
+            UPDATING_SCHEDULER_CONFIG = false;
+            update_ui();
+        },
+        error: function (data) {
+            alert('Houve um erro ao remover o item da fila!');
+        }
+    });
 }
 
 function closeForceExecutionModal() {

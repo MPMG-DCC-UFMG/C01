@@ -772,6 +772,19 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
 
         return JsonResponse(data, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=['get'])
+    def remove_item(self, request, pk):
+        queue_item_id = request.GET['queue_item_id']
+
+        try:
+            queue_item = CrawlerQueueItem.objects.get(pk=queue_item_id)
+            queue_item.delete()
+        
+        except ObjectDoesNotExist:
+            return JsonResponse({'message': f'Crawler queue item {queue_item_id} not found!'}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     def update(self, request, pk=None):
         response = super().update(request, pk=CRAWLER_QUEUE_DB_ID)
 

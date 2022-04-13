@@ -102,8 +102,9 @@ Crawler "{{ crawler.source_name }}"
     <div class="row">
         {% if crawler.waiting_on_queue %}
         <div class="col">
-            <a href="/crawler_queue" class="border btn btn-info font-weight-bold"><i class="fa fa-clock-o fa-lg mr-1"></i> Aguardando na fila de coletas</a>
-            <a href="{% url 'remove_crawl_request' crawler.id %}" class="btn border font-weight-bold"> <i class="fa fa-times fa-lg mr-1"></i> Sair da fila</a>
+            <!-- <a href="/crawler_queue" class="border btn btn-info font-weight-bold"><i class="fa fa-clock-o fa-lg mr-1"></i> Aguardando na fila de coletas</a> -->
+            <a class="btn btn-info" href="{% url 'edit_crawler' crawler.id %}" class="btn btn-primary">Editar</a>
+            <a href="{% url 'remove_crawl_request' crawler.id %}" class="btn border font-weight-bold"> <i class="fa fa-times fa-lg mr-1"></i> Sair da fila de coletas</a>
         </div>
         {% else %}
 

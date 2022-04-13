@@ -6,8 +6,32 @@
     background-color: #286f99;
 }
 
-.active-tab-color {
+.crawler-queue-active-tab-color {
     background-color: #286f99;
+}
+
+.crawler-queue-switch-position {
+    color: #6c757d;
+}
+
+.crawler-queue-switch-position:hover {
+    color: #343a40;
+}
+
+.crawler-queue-remove-item {
+    color: #6c757d;
+}
+
+.crawler-queue-remove-item:hover {
+    color: #dc3545;
+}
+
+.crawler-queue-force-execution {
+    color: #6c757d;
+}
+
+.crawler-queue-force-execution:hover {
+    color: #28a745;
 }
 
 body {
