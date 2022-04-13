@@ -9,10 +9,11 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import viewsets
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm,\
     ResponseHandlerFormSet, ParameterHandlerFormSet
-from .models import CrawlRequest, CrawlerInstance, CrawlerQueue, CrawlerQueueItem
+from .models import CrawlRequest, CrawlerInstance, CrawlerQueue, CrawlerQueueItem, CRAWLER_QUEUE_DB_ID
 
 from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer, CrawlerQueueSerializer
 
@@ -38,6 +39,7 @@ from formparser.html import HTMLExtractor, HTMLParser
 
 from scrapy_puppeteer import iframe_loader
 # Helper methods
+
 
 try:
     CRAWLER_QUEUE = CrawlerQueue.object()
@@ -118,7 +120,9 @@ def remove_crawl_request_view(request, crawler_id):
 def unqueue_crawl_requests(queue_type: str):
     crawlers_runnings = list()
 
+    print('Unqueue getting')
     source_queue, queue_items = CRAWLER_QUEUE.get_next(queue_type)
+    print(source_queue, queue_items)
 
     for queue_item in queue_items:
         queue_item_id = queue_item['id']
@@ -135,8 +139,6 @@ def unqueue_crawl_requests(queue_type: str):
         queue_item.running = True
 
         if source_queue != queue_type:
-            with open('test.log', 'w') as f:
-                f.write(f'updated queue type: {source_queue} <> {queue_type}\n')
             queue_item.queue_type = queue_type
 
         queue_item.save()
@@ -710,6 +712,13 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
     serializer_class = CrawlerQueueSerializer
     http_method_names = ['get', 'put']
 
+    def list(self, request):
+        return self.retrieve(request)
+
+    def retrieve(self, request, pk=None):
+        crawler_queue = CrawlerQueue.to_dict()
+        return Response(crawler_queue)
+    
     @action(detail=True, methods=['get'])
     def switch_position(self, request, pk):
         a = request.GET['a']
@@ -768,7 +777,7 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
         return JsonResponse(data, status=status.HTTP_200_OK)
 
     def update(self, request, pk=None):
-        response = super().update(request, pk=pk)
+        response = super().update(request, pk=CRAWLER_QUEUE_DB_ID)
 
         # the size of queue of type fast changed, may is possible run 
         # more crawlers

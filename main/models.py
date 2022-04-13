@@ -2,9 +2,11 @@ from django.db import models
 from django.utils import timezone
 from django.core.validators import RegexValidator
 from django.db import transaction
-from django.db.models.query import QuerySet
+from django.db.models.base import ModelBase
 
 from crawlers.constants import *
+
+CRAWLER_QUEUE_DB_ID = 1
 
 class TimeStamped(models.Model):
     creation_date = models.DateTimeField()
@@ -407,11 +409,39 @@ class CrawlerQueue(models.Model):
     max_slow_runtime_crawlers_running = models.PositiveIntegerField(default=1, blank=True)
 
     @classmethod
-    def object(cls):
+    def object(cls: ModelBase):
         if cls._default_manager.all().count() == 0:
-            CrawlerQueue().save()
+            crawler_queue = CrawlerQueue.objects.create(id=CRAWLER_QUEUE_DB_ID)
+            crawler_queue.save()
 
-        return cls._default_manager.all().first()
+        return CrawlerQueue.objects.get(id=CRAWLER_QUEUE_DB_ID)
+
+    @classmethod
+    def to_dict(cls: ModelBase) -> dict:
+        crawler_queue = CrawlerQueue.object()
+
+        queue_items = list()
+        for queue_item in crawler_queue.items.all():
+            queue_items.append({
+                'id': queue_item.id,
+                'creation_date': round(queue_item.creation_date.timestamp() * 1000),
+                'last_modified': round(queue_item.last_modified.timestamp() * 1000),
+                'crawler_id': queue_item.crawl_request.id,
+                'crawler_name': queue_item.crawl_request.source_name,
+                'queue_type': queue_item.queue_type,
+                'position': queue_item.position,
+                'forced_execution': queue_item.forced_execution,
+                'running': queue_item.running
+            })
+
+        data = {
+            'max_fast_runtime_crawlers_running': crawler_queue.max_fast_runtime_crawlers_running,
+            'max_medium_runtime_crawlers_running': crawler_queue.max_medium_runtime_crawlers_running,
+            'max_slow_runtime_crawlers_running': crawler_queue.max_slow_runtime_crawlers_running,
+            'items': queue_items
+        }
+
+        return data 
 
     def num_crawlers_running(self, queue_type: str) -> int:
         return self.items.filter(queue_type=queue_type, running=True).count()
@@ -442,8 +472,12 @@ class CrawlerQueue(models.Model):
         next_crawlers = list()
         source_queue = queue_type
 
+        print('>>', source_queue, '<<')
+
         if queue_type == 'fast':
+            print(queue_type, self.max_fast_runtime_crawlers_running)
             next_crawlers = self.__get_next('fast', self.max_fast_runtime_crawlers_running) 
+            print(next_crawlers)
 
         elif queue_type == 'medium':
             next_crawlers = self.__get_next('medium', self.max_medium_runtime_crawlers_running)
