@@ -119,26 +119,22 @@ def remove_crawl_request_view(request, crawler_id):
 
 def unqueue_crawl_requests(queue_type: str):
     crawlers_runnings = list()
+    has_items_from_another_queue, queue_items = CRAWLER_QUEUE.get_next(queue_type)
 
-    print('Unqueue getting')
-    source_queue, queue_items = CRAWLER_QUEUE.get_next(queue_type)
-    print(source_queue, queue_items)
+    for queue_item_id, crawl_request_id in queue_items:
 
-    for queue_item in queue_items:
-        queue_item_id = queue_item['id']
-        crawler_id = queue_item['crawl_request_id']
+        # instance = process_run_crawl(crawler_id)
 
-        instance = process_run_crawl(crawler_id)
-
-        crawlers_runnings.append({
-            'crawler_id': crawler_id,
-            'instance_id': instance.pk
-        })
+        # crawlers_runnings.append({
+        #     'crawler_id': crawler_id,
+        #     'instance_id': instance.pk
+        # })
 
         queue_item = CrawlerQueueItem.objects.get(pk=queue_item_id)
         queue_item.running = True
 
-        if source_queue != queue_type:
+        # the crawlers from the another queue "will be insert in the queue with vacancy" 
+        if has_items_from_another_queue:
             queue_item.queue_type = queue_type
 
         queue_item.save()
@@ -779,6 +775,10 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
     def update(self, request, pk=None):
         response = super().update(request, pk=CRAWLER_QUEUE_DB_ID)
 
+        # updade crawler queue instance with new configs
+        global CRAWLER_QUEUE
+        CRAWLER_QUEUE = CrawlerQueue.object()
+
         # the size of queue of type fast changed, may is possible run 
         # more crawlers
         if 'max_fast_runtime_crawlers_running' in request.data:
@@ -786,15 +786,12 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
 
         # the size of queue of type normal changed, may is possible run 
         # more crawlers
-        if 'max_normal_runtime_crawlers_running' in request.data:
-            unqueue_crawl_requests('normal')
+        if 'max_medium_runtime_crawlers_running' in request.data:
+            unqueue_crawl_requests('medium')
 
         # the size of queue of type slow changed, may is possible run 
         # more crawlers
         if 'max_slow_runtime_crawlers_running' in request.data:
             unqueue_crawl_requests('slow')
-
-        global CRAWLER_QUEUE
-        CRAWLER_QUEUE = CrawlerQueue.object()
 
         return response

@@ -404,8 +404,8 @@ class CrawlerInstance(TimeStamped):
 
 
 class CrawlerQueue(models.Model):
-    max_fast_runtime_crawlers_running = models.PositiveIntegerField(default=3, blank=True)
-    max_medium_runtime_crawlers_running = models.PositiveIntegerField(default=2, blank=True)
+    max_fast_runtime_crawlers_running = models.PositiveIntegerField(default=1, blank=True)
+    max_medium_runtime_crawlers_running = models.PositiveIntegerField(default=1, blank=True)
     max_slow_runtime_crawlers_running = models.PositiveIntegerField(default=1, blank=True)
 
     @classmethod
@@ -466,11 +466,12 @@ class CrawlerQueue(models.Model):
 
         candidates = self.items.filter(queue_type=queue_type, running=False).order_by('position').values()
         limit = max(0, max_crawlers_running - num_crawlers_running)
-        return candidates[:limit]
+        
+        return [(e['id'], e['crawl_request_id']) for e in candidates[:limit]]
 
     def get_next(self, queue_type: str):
         next_crawlers = list()
-        source_queue = queue_type
+        has_items_from_another_queue = False
 
         if queue_type == 'fast':
             next_crawlers = self.__get_next('fast', self.max_fast_runtime_crawlers_running) 
@@ -478,28 +479,31 @@ class CrawlerQueue(models.Model):
         elif queue_type == 'medium':
             next_crawlers = self.__get_next('medium', self.max_medium_runtime_crawlers_running)
             
-            # we run fast crawlers if are not medium runtime crawlers to run
-            if len(next_crawlers) == 0:
-                next_crawlers = self.__get_next('fast', self.max_medium_runtime_crawlers_running, 'medium') 
-                source_queue = 'fast'
+            # We fill the vacant spot in the queue of slow crawlers with the fastest ones
+            if len(next_crawlers) < self.max_medium_runtime_crawlers_running:
+                fast_next_crawlers = self.__get_next('fast', self.max_medium_runtime_crawlers_running - len(next_crawlers), 'medium') 
+                next_crawlers.extend(fast_next_crawlers)
+                has_items_from_another_queue = True
 
         elif queue_type == 'slow':
             next_crawlers = self.__get_next('slow', self.max_slow_runtime_crawlers_running)
 
-            # we run medium runtime crawlers if are not slow crawlers to run
-            if len(next_crawlers) == 0:
-                next_crawlers = self.__get_next('medium', self.max_slow_runtime_crawlers_running, 'slow')
-                source_queue = 'medium'
+            # We fill the vacant spot in the queue of slow crawlers with the fastest ones
+            if len(next_crawlers) < self.max_slow_runtime_crawlers_running:
+                medium_next_crawlers = self.__get_next('medium', self.max_slow_runtime_crawlers_running - len(next_crawlers), 'slow')
+                next_crawlers.extend(medium_next_crawlers)
+                has_items_from_another_queue = True
 
-            # we run fast crawlers if are not medium runtime crawlers to run
-            if len(next_crawlers) == 0:
-                next_crawlers = self.__get_next('fast', self.max_slow_runtime_crawlers_running, 'slow') 
-                source_queue = 'fast'
+            # We fill the vacant spot in the queue of slow crawlers with the fastest ones
+            if len(next_crawlers) < self.max_slow_runtime_crawlers_running:
+                fast_next_crawlers = self.__get_next('fast', self.max_slow_runtime_crawlers_running - len(next_crawlers), 'slow') 
+                next_crawlers.extend(fast_next_crawlers)
+                has_items_from_another_queue = True
 
         else:
             raise ValueError('Queue type must be fast, medium or slow.')
 
-        return source_queue, next_crawlers
+        return has_items_from_another_queue, next_crawlers
 
 
     def save(self, *args, **kwargs):
