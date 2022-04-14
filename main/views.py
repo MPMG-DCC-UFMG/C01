@@ -93,15 +93,16 @@ def add_crawl_request(crawler_id):
     # in the correct queue: fast, normal or slow
 
     position = 1
-    last_queue_item_created = CrawlerQueueItem.objects.filter(queue_type = cr_expec_runtime_cat).last()
+    last_queue_item_created = CrawlerQueueItem.objects.filter(queue_type=cr_expec_runtime_cat).last()
 
     if last_queue_item_created:
         position = last_queue_item_created.position + 1
 
-    queue_item = CrawlerQueueItem(crawl_request_id=crawler_id, 
+    queue_item = CrawlerQueueItem(crawl_request_id=crawler_id,
                                 position=position,
                                 queue_type=cr_expec_runtime_cat)
     queue_item.save()
+
 
 def remove_crawl_request(crawler_id):
     in_queue = CrawlerQueueItem.objects.filter(crawl_request_id=crawler_id).exists()
@@ -110,9 +111,11 @@ def remove_crawl_request(crawler_id):
         queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
         queue_item.delete()
 
+
 def remove_crawl_request_view(request, crawler_id):
     remove_crawl_request(crawler_id)
     return redirect('/detail/' + str(crawler_id))
+
 
 def unqueue_crawl_requests(queue_type: str):
     crawlers_runnings = list()
@@ -129,7 +132,7 @@ def unqueue_crawl_requests(queue_type: str):
         queue_item = CrawlerQueueItem.objects.get(pk=queue_item_id)
         queue_item.running = True
 
-        # the crawlers from the another queue "will be insert in the queue with vacancy" 
+        # the crawlers from the another queue "will be insert in the queue with vacancy"
         if has_items_from_another_queue:
             queue_item.queue_type = queue_type
 
@@ -137,6 +140,7 @@ def unqueue_crawl_requests(queue_type: str):
 
     response = {'crawlers_added_to_run': crawlers_runnings}
     return response
+
 
 def process_stop_crawl(crawler_id):
     instance = CrawlRequest.objects.filter(
@@ -152,8 +156,8 @@ def process_stop_crawl(crawler_id):
 
     instance = None
     instance_info = {}
-    queue_type = None  
-    
+    queue_type = None
+
     with transaction.atomic():
         # Execute DB commands atomically
         instance = CrawlerInstance.objects.get(instance_id=instance_id)
@@ -348,7 +352,7 @@ def detail_crawler(request, id):
     queue_item_id = None
     if crawler.waiting_on_queue:
         queue_item = CrawlerQueueItem.objects.get(crawl_request_id=id)
-        queue_item_id = queue_item.id 
+        queue_item_id = queue_item.id
 
     context = {
         'crawler': crawler,
@@ -375,12 +379,12 @@ def stop_crawl(request, crawler_id):
 
 def run_crawl(request, crawler_id):
     add_crawl_request(crawler_id)
-    
-    crawl_request = CrawlRequest.objects.get(pk = crawler_id)
+
+    crawl_request = CrawlRequest.objects.get(pk=crawler_id)
     queue_type = crawl_request.expected_runtime_category
 
     unqueue_crawl_requests(queue_type)
-    
+
     return redirect(detail_crawler, id=crawler_id)
 
 
@@ -717,16 +721,16 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, pk=None):
         crawler_queue = CrawlerQueue.to_dict()
         return Response(crawler_queue)
-    
+
     @action(detail=True, methods=['get'])
     def switch_position(self, request, pk):
         a = request.GET['a']
         b = request.GET['b']
-        
+
         with transaction.atomic():
             try:
                 queue_item_a = CrawlerQueueItem.objects.get(pk=a)
-            
+
             except ObjectDoesNotExist:
                 return JsonResponse({'message': f'Crawler queue item {a} not found!'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -746,7 +750,7 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
 
             queue_item_a.save()
             queue_item_b.save()
-        
+
         return JsonResponse({'message': 'success'}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['get'])
@@ -756,14 +760,14 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
         with transaction.atomic():
             try:
                 queue_item = CrawlerQueueItem.objects.get(pk=queue_item_id)
-            
+
             except ObjectDoesNotExist:
                 return JsonResponse({'message': f'Crawler queue item {queue_item_id} not found!'}, status=status.HTTP_404_NOT_FOUND)
 
             crawler_id = queue_item.crawl_request.id
-            
+
             instance = process_run_crawl(crawler_id)
-            
+
             queue_item.forced_execution = True
             queue_item.running = True
             queue_item.save()
@@ -782,7 +786,7 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
         try:
             queue_item = CrawlerQueueItem.objects.get(pk=queue_item_id)
             queue_item.delete()
-        
+
         except ObjectDoesNotExist:
             return JsonResponse({'message': f'Crawler queue item {queue_item_id} not found!'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -795,17 +799,17 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
         global CRAWLER_QUEUE
         CRAWLER_QUEUE = CrawlerQueue.object()
 
-        # the size of queue of type fast changed, may is possible run 
+        # the size of queue of type fast changed, may is possible run
         # more crawlers
         if 'max_fast_runtime_crawlers_running' in request.data:
             unqueue_crawl_requests('fast')
 
-        # the size of queue of type normal changed, may is possible run 
+        # the size of queue of type normal changed, may is possible run
         # more crawlers
         if 'max_medium_runtime_crawlers_running' in request.data:
             unqueue_crawl_requests('medium')
 
-        # the size of queue of type slow changed, may is possible run 
+        # the size of queue of type slow changed, may is possible run
         # more crawlers
         if 'max_slow_runtime_crawlers_running' in request.data:
             unqueue_crawl_requests('slow')
