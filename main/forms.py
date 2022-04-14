@@ -1,3 +1,4 @@
+from cv2 import FarnebackOpticalFlow
 from django import forms
 from .models import CrawlRequest, ParameterHandler, ResponseHandler
 from django.core.exceptions import ValidationError
@@ -413,12 +414,13 @@ class RawCrawlRequestForm(CrawlRequestForm):
                                                   widget=forms.RadioSelect)
 
     expected_runtime_category = forms.ChoiceField(choices=(
-        ('fast', 'Rápido (até algumas horas)'),
-        ('medium', 'Médio (até um dia)'),
-        ('slow', 'Lento (mais de um dia)'),
-    ),
+            ('fast', 'Rápido (até algumas horas)'),
+            ('medium', 'Médio (até um dia)'),
+            ('slow', 'Lento (mais de um dia)'),
+        ),
         label='Expectativa de tempo de execução',
         initial='medium',
+        help_text='Escolha subjetiva de quanto tempo o coletor demorará para completar a coleta. Na prática, está se definindo em qual fila de execução o coletor irá aguardar.',
         widget=forms.RadioSelect)
 
 

@@ -575,6 +575,22 @@ function stop_running_crawler(crawler_id) {
     });
 }
 
+function bind_inputs_config_max_crawlers(queue_type) {
+    // The user can choose two different inputs to change parameters of the scheduler, 
+    // this method makes them have the same values
+
+    $(`#in_max_${queue_type}_crawler`).on('input', function () {
+        $(`#in_max_${queue_type}_crawler_number`).val(this.value);
+    });
+
+    $(`#in_max_${queue_type}_crawler_number`).on('input', function () {
+        if (this.value > 1000)
+            this.value = 1000;
+
+        $(`#in_max_${queue_type}_crawler`).val(this.value);
+    });
+}
+
 $(document).ready(function() {
     get_default_active_tab();
 
@@ -582,23 +598,8 @@ $(document).ready(function() {
 
     setInterval(function(){update_ui()},5000);
 
-    $('#in_max_fast_crawler').on('input', function() {
-        $('#in_max_fast_crawler_number').val(this.value);
-    });
-
-    $('#in_max_medium_crawler').on('input', function () {
-        $('#in_max_medium_crawler_number').val(this.value);
-    }); 
-    
-    $('#in_max_slow_crawler').on('input', function () {
-        $('#in_max_slow_crawler_number').val(this.value);
-    });
-
-    $('#in_max_crawler_number').on('input', function () {
-        if (this.value > 1000)
-            this.value = 1000;
-
-        $('#in_max_crawler').val(this.value);
-    });
+    bind_inputs_config_max_crawlers('fast');
+    bind_inputs_config_max_crawlers('medium');
+    bind_inputs_config_max_crawlers('slow');
 
 });
