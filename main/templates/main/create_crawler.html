@@ -202,7 +202,10 @@ New Crawler
                         <div class="row" style="padding: 20px;">
                             <div class="col md-6">
                                 <div id="div_id_import_settings" class="form-group">
-                                    <label for="id_import_settings">Importar arquivo de configuração</label>
+                                    <label for="id_import_settings">
+                                        Importar arquivo de configuração
+                                        <button type="button" class="popover-icon btn btn-link" data-toggle="popover" data-trigger="click" data-content="Carregue um arquivo de configuração externo em formato json e preencher automaticamente os parâmetros de configuração de uma coleta." data-placement="auto left"><i class="fa fa-info-circle" aria-hidden="true"></i></button>
+                                    </label>
                                     <div class="">
                                         <input type="file"
                                                 class="form-control-file"
@@ -230,7 +233,6 @@ New Crawler
                                 {{ form.request_type | as_crispy_field}}
                                 {{ form.obey_robots | as_crispy_field}}
                                 {{ form.data_path | as_crispy_field}}
-                                <p>* Esse caminho deve ser único para cada coletor</p>
                             </div>
                         </div>
                     </div>
@@ -241,15 +243,10 @@ New Crawler
                                 <div id="antiblock-delay-div" class="border-bottom">
                                     <div class="antiblock-wrapper mb-3">
                                         {{ form.antiblock_download_delay | as_crispy_field}}
-                                        <small class="text-muted">Se auto ajuste está desligado, esse parâmetro vai funcionar como o intervalo base
-                                            entre chamadas.
-                                            O intervalo real vai ser um valor entre 0.5*intervalo e 1.5*intervalo.</small>
                                     </div>
                                     
                                     <div class="antiblock-wrapper mb-3">
                                         {{ form.antiblock_autothrottle_enabled | as_crispy_field}}
-                                        <small class="text-muted">Essa opção ajusta automaticamente o intervalo entre as chamadas para se adaptar
-                                            ao tempo de resposta do servidor.</small>
                                     </div>
 
                                     <div id="autothrottle-options-div" hidden=True>
@@ -263,8 +260,7 @@ New Crawler
                             <div class="col md-6">
                                 <div id="antiblock-mask-div">
                                     <div class="antiblock-wrapper mb-3">
-                                        {{ form.antiblock_ip_rotation_enabled | as_crispy_field }}
-                                        <small class="text-muted">Utiliza Tor ou uma lista de proxy para que IPs diferentes sejam utilizados durante a coleta.</small>
+                                        {{ form.antiblock_ip_rotation_enabled | as_crispy_field }}                                        
                                     </div>
 
                                     <div id="ip-rotation-options-div" {% if not form.antiblock_ip_rotation_enabled.value %} hidden {% endif %}>
@@ -287,27 +283,21 @@ New Crawler
                                             </div>
                                             <div class="tab-pane " id="proxies-nav" role="tabpanel" aria-labelledby="proxies">
                                                 {{ form.antiblock_proxy_list | as_crispy_field}}
-
-                                                <small class="text-muted mb-2 d-block">Um proxy da lista será escolhido aleatoriamente em cada requisição feita.</small>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div class="antiblock-wrapper mb-3">
-                                        {{ form.antiblock_user_agent_rotation_enabled | as_crispy_field}}
-                                        <small class="text-muted">Altera o identificador das requisições feitas periodicamente. Útil se o site possui alguma restrição relacionada aos dispositivos/ferramentas que podem acessá-lo.</small>                                    
+                                        {{ form.antiblock_user_agent_rotation_enabled | as_crispy_field}}     
                                     </div>
 
                                     <div id="user-agent-rotation-options-div" class="border-bottom my-3" {% if not form.antiblock_user_agent_rotation_enabled.value %} hidden {% endif %}>
                                         {{ form.antiblock_reqs_per_user_agent | as_crispy_field}}
-                                        <small class="text-muted mt-1 mb-2 d-block">O user-agent será alterado em intervalos aleatórios entre 0.5x e 1.5x o valor deste campo.</small>
                                         {{ form.antiblock_user_agents_list | as_crispy_field}}
                                     </div>
                                     
                                     <div class="antiblock-wrapper mb-3">
                                         {{ form.antiblock_insert_cookies_enabled | as_crispy_field }}
-                                        <small class="text-muted">Útil se o site a ser coletado possui algum tipo de autenticação para acessar determinado conteúdo. 
-                                            Com esta opção, cookies de acesso são enviados em cada requisição contornando tal restrição.</small>
                                     </div>
 
                                     <div id="insert-cookies-options-div" class="border-bottom my-3" {% if not form.antiblock_insert_cookies_enabled.value %} hidden {% endif %}>
@@ -356,7 +346,7 @@ New Crawler
                         <div class="row">
                             <div class="col md-6">
                                 <div class="crawler-type-content-div" id="static_page">
-                                    <div id="explore_links" style="padding: 20px; border-top: 1px solid #DCDCDC;">
+                                    <div id="explore_links">
                                         {{ form.explore_links | as_crispy_field}}
                                         {{ form.link_extractor_max_depth | as_crispy_field}}
                                         {{ form.link_extractor_allow_url | as_crispy_field}}
@@ -496,6 +486,12 @@ New Crawler
         added: () => checkStaticForm(),
         removed: () => checkStaticForm(),
     });
+    $(function () {$('[data-toggle="popover"]').popover({
+        trigger: 'hover',
+        html: true,
+        animation: false,
+        placement: 'right'
+    })});
 </script>
 <script src="{% static 'js/create_crawler.js' %}"></script>
 <script>detailDynamicProcessing();</script>

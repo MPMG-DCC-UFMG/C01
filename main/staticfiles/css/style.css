@@ -2,12 +2,16 @@
     box-sizing: border-box;
 }
 
-.navbar{
-    background-color: #286f99;
-}
-
 body {
     padding-top: 56px;
+}
+
+body > .navbar {
+    background-color: #646464;
+}
+
+body > .navbar a {
+    color: #ffffff;
 }
 
 .selected{
@@ -331,6 +335,20 @@ a.close, a.add_form {
 }
 
 /* End crawler queue styles */
+
+/* Popovers */
+.popover-icon {filter:grayscale(1); padding: 0 0 0 3px;}
+.popover-icon:hover {filter:grayscale(0);}
+.block_tooltip {
+  position: absolute;
+  top: 25px;
+  left: 10px;
+  opacity:.5;
+}
+
+.block_tooltip:hover {opacity: 1;}
+/* End Popovers */
+
 
 /* Making the layout responsive */
 #list_crawlers td:nth-child(3), #stderr_tail, #stdout_tail {word-wrap: anywhere;}
