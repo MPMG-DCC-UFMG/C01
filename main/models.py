@@ -8,6 +8,7 @@ from crawlers.constants import *
 
 CRAWLER_QUEUE_DB_ID = 1
 
+
 class TimeStamped(models.Model):
     creation_date = models.DateTimeField()
     last_modified = models.DateTimeField()
@@ -148,15 +149,16 @@ class CrawlRequest(TimeStamped):
     ]
 
     encoding_detection_method = models.IntegerField(choices=ENCODE_DETECTION_CHOICES, default=HEADER_ENCODE_DETECTION)
-    
-    # CRAWLER QUEUE ============================================================ 
+
+    # CRAWLER QUEUE ============================================================
     EXP_RUNTIME_CAT_CHOICES = [
         ('fast', 'Rápido'),
         ('medium', 'Médio'),
         ('slow', 'Lento'),
     ]
 
-    expected_runtime_category = models.CharField(null=False, max_length=8, default='medium', choices=EXP_RUNTIME_CAT_CHOICES)
+    expected_runtime_category = models.CharField(
+        null=False, max_length=8, default='medium', choices=EXP_RUNTIME_CAT_CHOICES)
 
     @staticmethod
     def process_parameter_data(param_list):
@@ -441,7 +443,7 @@ class CrawlerQueue(models.Model):
             'items': queue_items
         }
 
-        return data 
+        return data
 
     def num_crawlers_running(self, queue_type: str) -> int:
         return self.items.filter(queue_type=queue_type, running=True).count()
@@ -452,21 +454,21 @@ class CrawlerQueue(models.Model):
     def __get_next(self, queue_type: str, max_crawlers_running: int, source_queue: str = None):
         next_crawlers = list()
 
-        # um coletor irá executar na fila que não seria a sua. Como no caso onde 
+        # um coletor irá executar na fila que não seria a sua. Como no caso onde
         # a fila de coletores lentos em execução está vazia e ele pode alocar para executar
         # coletores médios e curtos
         if source_queue:
             num_crawlers_running = self.num_crawlers_running(source_queue)
-        
+
         else:
             num_crawlers_running = self.num_crawlers_running(queue_type)
-        
+
         if num_crawlers_running >= max_crawlers_running:
             return next_crawlers
 
         candidates = self.items.filter(queue_type=queue_type, running=False).order_by('position').values()
         limit = max(0, max_crawlers_running - num_crawlers_running)
-        
+
         return [(e['id'], e['crawl_request_id']) for e in candidates[:limit]]
 
     def get_next(self, queue_type: str):
@@ -474,14 +476,15 @@ class CrawlerQueue(models.Model):
         has_items_from_another_queue = False
 
         if queue_type == 'fast':
-            next_crawlers = self.__get_next('fast', self.max_fast_runtime_crawlers_running) 
+            next_crawlers = self.__get_next('fast', self.max_fast_runtime_crawlers_running)
 
         elif queue_type == 'medium':
             next_crawlers = self.__get_next('medium', self.max_medium_runtime_crawlers_running)
-            
+
             # We fill the vacant spot in the queue of slow crawlers with the fastest ones
             if len(next_crawlers) < self.max_medium_runtime_crawlers_running:
-                fast_next_crawlers = self.__get_next('fast', self.max_medium_runtime_crawlers_running - len(next_crawlers), 'medium') 
+                fast_next_crawlers = self.__get_next(
+                    'fast', self.max_medium_runtime_crawlers_running - len(next_crawlers), 'medium')
                 next_crawlers.extend(fast_next_crawlers)
                 has_items_from_another_queue = True
 
@@ -490,13 +493,15 @@ class CrawlerQueue(models.Model):
 
             # We fill the vacant spot in the queue of slow crawlers with the fastest ones
             if len(next_crawlers) < self.max_slow_runtime_crawlers_running:
-                medium_next_crawlers = self.__get_next('medium', self.max_slow_runtime_crawlers_running - len(next_crawlers), 'slow')
+                medium_next_crawlers = self.__get_next(
+                    'medium', self.max_slow_runtime_crawlers_running - len(next_crawlers), 'slow')
                 next_crawlers.extend(medium_next_crawlers)
                 has_items_from_another_queue = True
 
             # We fill the vacant spot in the queue of slow crawlers with the fastest ones
             if len(next_crawlers) < self.max_slow_runtime_crawlers_running:
-                fast_next_crawlers = self.__get_next('fast', self.max_slow_runtime_crawlers_running - len(next_crawlers), 'slow') 
+                fast_next_crawlers = self.__get_next(
+                    'fast', self.max_slow_runtime_crawlers_running - len(next_crawlers), 'slow')
                 next_crawlers.extend(fast_next_crawlers)
                 has_items_from_another_queue = True
 
@@ -509,6 +514,7 @@ class CrawlerQueue(models.Model):
     def save(self, *args, **kwargs):
         self.pk = self.id = 1
         return super().save(*args, **kwargs)
+
 
 class CrawlerQueueItem(TimeStamped):
     queue = models.ForeignKey(CrawlerQueue, on_delete=models.CASCADE, default=1, related_name='items')

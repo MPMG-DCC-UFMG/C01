@@ -2,6 +2,7 @@ from django import forms
 from .models import CrawlRequest, ParameterHandler, ResponseHandler
 from django.core.exceptions import ValidationError
 
+
 class CrawlRequestForm(forms.ModelForm):
     class Meta:
         model = CrawlRequest
@@ -67,6 +68,7 @@ class CrawlRequestForm(forms.ModelForm):
             'expected_runtime_category'
         ]
 
+
 class RawCrawlRequestForm(CrawlRequestForm):
 
     # BASIC INFO ##############################################################
@@ -81,7 +83,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
             'placeholder': 'www.example.com/data/{}',
             'onchange': 'detailBaseUrl();'
         }),
-        help_text = "A URL pode conter espaços para parâmetros, representados como um conjunto de chaves vazias {}. Os parâmetros são configurados na aba URL Parametrizada."
+        help_text="A URL pode conter espaços para parâmetros, representados como um conjunto de chaves vazias {}. Os parâmetros são configurados na aba URL Parametrizada."
     )
     obey_robots = forms.BooleanField(
         required=False, label="Obedecer robots.txt")
@@ -90,7 +92,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
         required=False, max_length=2000, label="Caminho para salvar arquivos",
         widget=forms.TextInput(
             attrs={'placeholder': '/home/user/Documents/<crawler_name>'}),
-        help_text = "Esse caminho deve ser único para cada coletor. Caso a pasta não esteja criada, o coletor a criará automaticamente.",
+        help_text="Esse caminho deve ser único para cada coletor. Caso a pasta não esteja criada, o coletor a criará automaticamente.",
         validators=[CrawlRequest.pathValid]
     )
 
@@ -102,14 +104,14 @@ class RawCrawlRequestForm(CrawlRequestForm):
             "Intervalo médio em segundos (ou intervalo mínimo se "
             "auto ajuste está ligado)."
         ),
-        help_text = "Se auto ajuste está desligado, esse parâmetro vai funcionar como o intervalo base entre chamadas. O intervalo real vai ser um valor entre 0.5*intervalo e 1.5*intervalo.",
+        help_text="Se auto ajuste está desligado, esse parâmetro vai funcionar como o intervalo base entre chamadas. O intervalo real vai ser um valor entre 0.5*intervalo e 1.5*intervalo.",
         initial=2,
         min_value=0
     )
     antiblock_autothrottle_enabled = forms.BooleanField(
         required=False,
         label="Habilitar auto ajuste de intervalo",
-        help_text = "Essa opção ajusta automaticamente o intervalo entre as chamadas para se adaptar ao tempo de resposta do servidor.",
+        help_text="Essa opção ajusta automaticamente o intervalo entre as chamadas para se adaptar ao tempo de resposta do servidor.",
 
         widget=forms.CheckboxInput(
             attrs={
@@ -151,7 +153,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     antiblock_ip_rotation_enabled = forms.BooleanField(
         required=False,
         label="Rotacionar IPs",
-        help_text = "Utiliza Tor ou uma lista de proxy para que IPs diferentes sejam utilizados durante a coleta.",
+        help_text="Utiliza Tor ou uma lista de proxy para que IPs diferentes sejam utilizados durante a coleta.",
         widget=forms.CheckboxInput(
             attrs={
                 "onclick": "ipRotationEnabled();",
@@ -174,9 +176,9 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
 
     antiblock_proxy_list = forms.CharField(
-        required=False, 
+        required=False,
         label="Insira a lista de proxy",
-        help_text = "Um proxy da lista será escolhido aleatoriamente em cada requisição feita.",
+        help_text="Um proxy da lista será escolhido aleatoriamente em cada requisição feita.",
         widget=forms.Textarea(
             attrs={
                 'placeholder': (
@@ -185,14 +187,14 @@ class RawCrawlRequestForm(CrawlRequestForm):
             }
         )
     )
-    
+
 
     # Options for User Agent rotation
 
     antiblock_user_agent_rotation_enabled = forms.BooleanField(
-        required=False, 
+        required=False,
         label="Rotacionar User-Agents",
-        help_text = "Altera o identificador das requisições feitas periodicamente. Útil se o site possui alguma restrição relacionada aos dispositivos/ferramentas que podem acessá-lo.",
+        help_text="Altera o identificador das requisições feitas periodicamente. Útil se o site possui alguma restrição relacionada aos dispositivos/ferramentas que podem acessá-lo.",
         widget=forms.CheckboxInput(
             attrs={
                 "onclick": "userAgentRotationEnabled();",
@@ -201,15 +203,15 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
 
     antiblock_reqs_per_user_agent = forms.IntegerField(
-        required=False, 
+        required=False,
         label="Requisições por User-Agent",
-        help_text = "O user-agent será alterado em intervalos aleatórios entre 0.5x e 1.5x o valor deste campo",
+        help_text="O user-agent será alterado em intervalos aleatórios entre 0.5x e 1.5x o valor deste campo",
         initial=100,
         min_value=1
     )
 
     antiblock_user_agents_list = forms.CharField(
-        required=False, 
+        required=False,
         label="Lista de User-Agent",
         widget=forms.Textarea(
             attrs={
@@ -226,7 +228,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     antiblock_insert_cookies_enabled = forms.BooleanField(
         required=False,
         label="Inserir cookies",
-        help_text = "Útil se o site a ser coletado possui algum tipo de autenticação para acessar determinado conteúdo. Com esta opção, cookies de acesso são enviados em cada requisição contornando tal restrição.",
+        help_text="Útil se o site a ser coletado possui algum tipo de autenticação para acessar determinado conteúdo. Com esta opção, cookies de acesso são enviados em cada requisição contornando tal restrição.",
         widget=forms.CheckboxInput(
             attrs={
                 "onclick": "insertCookiesEnabled();",
@@ -249,7 +251,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
 
     # antiblock_persist_cookies = forms.BooleanField(
-    #     required=False, 
+    #     required=False,
     #     label="Manter cookies entre requisições")
 
     # CAPTCHA #################################################################
@@ -353,7 +355,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     download_files_allow_extensions = forms.CharField(
         required=False, max_length=2000,
         label="Extensões de arquivo permitidas",
-        help_text= "Separado por vírgula",
+        help_text="Separado por vírgula",
         widget=forms.TextInput(attrs={'placeholder': 'pdf,xml'})
     )
     download_files_allow_domains = forms.CharField(
@@ -405,19 +407,20 @@ class RawCrawlRequestForm(CrawlRequestForm):
     # Crawler Type - Bundle file
 
     # ENCODE DETECTION METHOD
-    encoding_detection_method = forms.ChoiceField(choices=CrawlRequest.ENCODE_DETECTION_CHOICES, 
-                                                    label='Método de detecção de codificação das páginas',
-                                                    initial=CrawlRequest.HEADER_ENCODE_DETECTION,
-                                                    widget=forms.RadioSelect)
+    encoding_detection_method = forms.ChoiceField(choices=CrawlRequest.ENCODE_DETECTION_CHOICES,
+                                                  label='Método de detecção de codificação das páginas',
+                                                  initial=CrawlRequest.HEADER_ENCODE_DETECTION,
+                                                  widget=forms.RadioSelect)
 
-    expected_runtime_category = forms.ChoiceField(choices = (
-                                                        ('fast', 'Rápido (até algumas horas)'),
-                                                        ('medium', 'Médio (até um dia)'),
-                                                        ('slow', 'Lento (mais de um dia)'),
-                                                    ), 
-                                                    label='Expectativa de tempo de execução',
-                                                    initial='medium',
-                                                    widget=forms.RadioSelect)
+    expected_runtime_category = forms.ChoiceField(choices=(
+        ('fast', 'Rápido (até algumas horas)'),
+        ('medium', 'Médio (até um dia)'),
+        ('slow', 'Lento (mais de um dia)'),
+    ),
+        label='Expectativa de tempo de execução',
+        initial='medium',
+        widget=forms.RadioSelect)
+
 
 class ResponseHandlerForm(forms.ModelForm):
     """
