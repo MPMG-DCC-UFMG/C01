@@ -37,7 +37,8 @@ class CrawlerQueueItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = CrawlerQueueItem
         read_only_fields = ["id", "creation_date", "last_modified", "queue", "running"]
-        fields = ["id", "creation_date", "last_modified", "crawler_id", "crawler_name", "queue_type", "position", "forced_execution", "running"]
+        fields = ["id", "creation_date", "last_modified", "crawler_id",
+            "crawler_name", "queue_type", "position", "forced_execution", "running"]
 
 
 class CrawlerQueueSerializer(serializers.ModelSerializer):
