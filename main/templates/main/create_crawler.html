@@ -225,6 +225,7 @@ New Crawler
                                 <p>A URL pode conter espaços para parâmetros, representados como um conjunto de chaves vazias</p>
                                 <hr>
                                 {{ form.expected_runtime_category | as_crispy_field }}
+                                <small class="m-0">Escolha subjetiva de quanto tempo o coletor demorará para completar a coleta. Na prática, está se definindo em qual fila de execução o coletor irá aguardar.</small>
                                 <hr>
                                 {{ form.request_type | as_crispy_field}}
                                 {{ form.obey_robots | as_crispy_field}}

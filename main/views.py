@@ -103,7 +103,6 @@ def add_crawl_request(crawler_id):
                                 queue_type=cr_expec_runtime_cat)
     queue_item.save()
 
-
 def remove_crawl_request(crawler_id):
     in_queue = CrawlerQueueItem.objects.filter(crawl_request_id=crawler_id).exists()
 
@@ -111,24 +110,21 @@ def remove_crawl_request(crawler_id):
         queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
         queue_item.delete()
 
-
 def remove_crawl_request_view(request, crawler_id):
     remove_crawl_request(crawler_id)
     return redirect('/detail/' + str(crawler_id))
-
 
 def unqueue_crawl_requests(queue_type: str):
     crawlers_runnings = list()
     has_items_from_another_queue, queue_items = CRAWLER_QUEUE.get_next(queue_type)
 
-    for queue_item_id, crawl_request_id in queue_items:
+    for queue_item_id, crawler_id in queue_items:
+        instance = process_run_crawl(crawler_id)
 
-        # instance = process_run_crawl(crawler_id)
-
-        # crawlers_runnings.append({
-        #     'crawler_id': crawler_id,
-        #     'instance_id': instance.pk
-        # })
+        crawlers_runnings.append({
+            'crawler_id': crawler_id,
+            'instance_id': instance.pk
+        })
 
         queue_item = CrawlerQueueItem.objects.get(pk=queue_item_id)
         queue_item.running = True
@@ -349,10 +345,16 @@ def detail_crawler(request, id):
     instances = CrawlerInstance.objects.filter(
         crawler_id=id).order_by("-last_modified")
 
+    queue_item_id = None
+    if crawler.waiting_on_queue:
+        queue_item = CrawlerQueueItem.objects.get(crawl_request_id=id)
+        queue_item_id = queue_item.id 
+
     context = {
         'crawler': crawler,
         'instances': instances,
-        'last_instance': instances[0] if len(instances) else None
+        'last_instance': instances[0] if len(instances) else None,
+        'queue_item_id': queue_item_id
     }
 
     return render(request, 'main/detail_crawler.html', context)
@@ -681,12 +683,13 @@ class CrawlerViewSet(viewsets.ModelViewSet):
         instance = None
         try:
             instance = process_stop_crawl(pk)
+
         except Exception as e:
             data = {
                 'status': settings.API_ERROR,
                 'message': str(e)
             }
-            return JsonResponse(data)
+            return JsonResponse(data,)
 
         data = {
             'status': settings.API_SUCCESS,

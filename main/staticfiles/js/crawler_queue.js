@@ -1,11 +1,12 @@
 var SERVER_ADDRESS = window.location.origin;
 
+// the queue always has id = 1 as it is unique and designed that way
+var CRAWLER_QUEUE_API_ADDRESS = SERVER_ADDRESS + '/api/crawler_queue/1/';
+
 // when this variable equals true, it blocks the interface update to prevent 
 // the data being changed from being rewritten by the interface update
 var UPDATING_SCHEDULER_CONFIG = false;
 
-// the queue always has id = 1 as it is unique and designed that way
-var CRAWLER_QUEUE_API_ADDRESS = SERVER_ADDRESS + '/api/crawler_queue/1/';
 
 var MAX_FAST_CRAWLERS;
 var MAX_MEDIUM_CRAWLERS;
@@ -95,7 +96,17 @@ function get_running_li_html(item) {
             </div>
             <small class="" title="Tempo gasto coletando"> <i class="fa fa-clock-o fa-lg" aria-hidden="true"></i> ${countdown(elapsed_time)}</small>
         </div>
-        <small>Coletando desde: ${timestamp_converter(item.last_modified)} </small>
+        <div class="d-flex justify-content-between align-items-center">
+            <small>Coletando desde: ${timestamp_converter(item.last_modified)} </small>
+            <div class="d-flex justify-content-end mt-2" style="flex: auto;">
+                <button
+                    title="Interromper coleta"
+                    onclick="stop_running_crawler('${item.crawler_id}')"
+                    class="border py-0 rounded-circle bg-light crawler-queue-remove-item mr-2">
+                    <i class="fa fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
     </li>`;
 }
 
@@ -544,6 +555,22 @@ function get_default_active_tab() {
         },
         error: function () {
             console.error('Não foi possível obter a fila de coletas!');
+        }
+    });
+}
+
+function stop_running_crawler(crawler_id) {
+    let stop_crawler_address = SERVER_ADDRESS + `/api/crawlers/${crawler_id}/stop`;
+    $.ajax({
+        url: stop_crawler_address,
+        type: 'get',
+        dataType: 'json',
+        async: false,
+        success: function (data) {
+            update_ui();
+        },
+        error: function (data) {
+            console.log('Não foi possível interromper o coletor!');
         }
     });
 }
