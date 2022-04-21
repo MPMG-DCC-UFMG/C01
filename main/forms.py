@@ -40,6 +40,7 @@ class CrawlRequestForm(forms.ModelForm):
             'img_xpath',
             'sound_xpath',
             'dynamic_processing',
+            'skip_iter_errors',
             'explore_links',
 
             'link_extractor_max_depth',
@@ -287,6 +288,9 @@ class RawCrawlRequestForm(CrawlRequestForm):
         widget=forms.CheckboxInput(
             attrs={'onchange': 'detailDynamicProcessing();'}
         )
+    )
+    skip_iter_errors = forms.BooleanField(
+        required=False, label="Pular iterações com erro"
     )
 
     explore_links = forms.BooleanField(required=False, label="Explorar links")

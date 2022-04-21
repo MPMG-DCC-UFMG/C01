@@ -106,6 +106,7 @@ def get_dynamic_processing_settings(config: dict, settings: dict):
         settings["DATA_PATH"] = config["data_path"]
         settings["CRAWLER_ID"] = config["crawler_id"]
         settings["INSTANCE_ID"] = config["instance_id"]
+        settings["SKIP_ITER_ERRORS"] = config["skip_iter_errors"]
 
 
 def get_crawler_base_settings(config: dict):
