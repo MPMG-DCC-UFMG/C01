@@ -2,6 +2,7 @@ import inspect
 import sys
 from pyext import RuntimeModule
 
+
 def generate_protected_iteration(child, module):
     """
     Generates the iteration body for iterations, while encapsulating it in a
@@ -94,6 +95,7 @@ def generate_enquanto(child, module, skip_iter_errors):
         code += generate_body(child, module, skip_iter_errors)
 
     return code
+
 
 def generate_atribuicao(child, module):
     code = ""
