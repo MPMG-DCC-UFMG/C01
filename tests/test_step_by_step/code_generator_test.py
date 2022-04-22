@@ -70,7 +70,7 @@ class TestExtractInfo(unittest.TestCase):
         ff = __import__("step_crawler").functions_file
 
         result = cg.generate_body(
-            recipe_examples['unbreakable_between_breakable']['recipe'], ff,\
+            recipe_examples['unbreakable_between_breakable']['recipe'], ff,
             False)
         expected_result = "    for i in [1, 2, 3]:\n"
         expected_result += "        for j in repete(vezes = 2):\n"
@@ -79,7 +79,7 @@ class TestExtractInfo(unittest.TestCase):
         self.assertEqual(expected_result, result)
 
         result = cg.generate_body(atom.extend(
-            recipe_examples['unbreakable_between_breakable']['recipe'])[0], \
+            recipe_examples['unbreakable_between_breakable']['recipe'])[0],
             ff, False)
         expected_result = "    i = 1\n"
         expected_result += "    for j in repete(vezes = 2):\n"
@@ -113,7 +113,7 @@ class TestExtractInfo(unittest.TestCase):
         result = cg.generate_para_cada(
             recipe_examples['unique_for']['recipe']['children'][0], ff,
             True)
-        expected_result =  "    for i in repete(vezes = 2):\n"
+        expected_result = "    for i in repete(vezes = 2):\n"
         expected_result += "        initial_page_stack_len1 = len(page_stack)\n"
         expected_result += "        try:\n"
         expected_result += "            imprime(texto = \"teste\")\n"
