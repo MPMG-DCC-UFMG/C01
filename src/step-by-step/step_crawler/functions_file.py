@@ -3,6 +3,7 @@ import asyncio
 import datetime
 import time
 import operator
+import playwright
 import uuid
 from cssify import cssify
 from PIL import Image
@@ -202,8 +203,10 @@ async def quebrar_captcha_imagem(pagina, xpath_do_elemento_captcha, xpath_do_cam
                                          before character recognition. Defaults to None.
         :returns text: the string representing the captcha characters
     """
-    # TODO
-    element = (await pagina.xpath(xpath_do_elemento_captcha))[0]
+    el_locator = pagina.locator(f'xpath={xpath_do_elemento_captcha}')
+    await el_locator.wait_for()
+    element = (await el_locator.element_handles())[0]
+
     image_data = await element.screenshot(type='jpeg')
     image = Image.open(io.BytesIO(image_data))
     if funcao_preprocessamento:
@@ -212,6 +215,7 @@ async def quebrar_captcha_imagem(pagina, xpath_do_elemento_captcha, xpath_do_cam
     else:
         solver = ImageSolver()
     text = solver.solve(image=image)
+
     type_function = f"(text) => {{ (document.querySelector('{cssify(xpath_do_campo_a_preencher)}')).value = text; }}"
     await pagina.evaluate(type_function, text)
     return text
@@ -247,21 +251,31 @@ async def comparacao(pagina, arg1, comp, arg2):
     return op_dict[comp](arg1, arg2)
 
 async def open_in_new_tab(pagina, link_xpath):
-    # TODO
-    await pagina.waitForXPath(link_xpath)
-    elements = await pagina.xpath(link_xpath)
+    el_locator = pagina.locator(f'xpath={link_xpath}')
 
-    if len(elements) != 1:
-        raise Exception('XPath points to non existent element, or multiple elements!')
-
-    new_page_promisse = asyncio.get_event_loop().create_future()
-    pagina.browser.once("targetcreated", lambda target: new_page_promisse.set_result(target))
-    await pagina.evaluate('el => { el.setAttribute("target", "_blank"); el.click();}', elements[0])
     try:
-        new_page = await (await asyncio.wait_for(new_page_promisse, 60)).page()
+        await el_locator.wait_for()
+    except playwright._impl._api_types.TimeoutError:
+        raise Exception('No element was found with the supplied XPath!')
+    except playwright._impl._api_types.Error:
+        raise Exception('XPath points to multiple elements!')
+
+    element = await el_locator.first.element_handle()
+
+    try:
+        async with pagina.context.expect_page() as tab:
+            await pagina.evaluate(
+                'el => { el.setAttribute("target", "_blank"); el.click();}',
+                element
+            )
+
+        new_page = await tab.value
         await espere_pagina(new_page)
-        await new_page.bringToFront()
+        await new_page.bring_to_front()
 
         return new_page
-    except asyncio.TimeoutError:
-        raise Exception('Process timed out when trying to open xpath "' + link_xpath +'" in a new page!')
+    except playwright._impl._api_types.TimeoutError:
+        # TODO we will have to change this section to warn the user without
+        # crashing the collector when we merge master with this branch
+        raise Exception('Process timed out when trying to open xpath "'\
+            + link_xpath +'" in a new page!')
