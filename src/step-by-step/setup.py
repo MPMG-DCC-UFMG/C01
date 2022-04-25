@@ -14,6 +14,5 @@ setup(
     author='Tales Panoutsos',
     author_email='TalesPanoutsos@users.noreply.github.com',
     packages=['step_crawler'],
-    install_requires=['selenium', 'asyncio', 'pyppeteer==0.2.6',
-                      'pyext', 'pillow']
+    install_requires=['selenium', 'asyncio', 'playwright', 'pyext', 'pillow']
 )
