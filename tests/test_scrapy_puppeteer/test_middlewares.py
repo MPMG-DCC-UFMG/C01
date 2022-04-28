@@ -123,6 +123,7 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
         middleware.data_path = ""
         middleware.instance_id = 0
         middleware.download_path = ""
+        middleware.skip_iter_errors = True
 
         return middleware
 
