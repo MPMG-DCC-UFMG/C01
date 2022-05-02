@@ -42,6 +42,7 @@ class CrawlRequestForm(forms.ModelForm):
             'img_xpath',
             'sound_xpath',
             'dynamic_processing',
+            'skip_iter_errors',
             'explore_links',
 
             'link_extractor_max_depth',
@@ -292,6 +293,9 @@ class RawCrawlRequestForm(CrawlRequestForm):
             attrs={'onchange': 'detailDynamicProcessing();'}
         )
     )
+    skip_iter_errors = forms.BooleanField(
+        required=False, label="Pular iterações com erro"
+    )
 
     explore_links = forms.BooleanField(required=False, label="Explorar links")
 
@@ -422,7 +426,6 @@ class RawCrawlRequestForm(CrawlRequestForm):
         initial='medium',
         help_text='Escolha subjetiva de quanto tempo o coletor demorará para completar a coleta. Na prática, está se definindo em qual fila de execução o coletor irá aguardar.',
         widget=forms.RadioSelect)
-
 
 class ResponseHandlerForm(forms.ModelForm):
     """

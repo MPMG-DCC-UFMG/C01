@@ -94,6 +94,9 @@ class CrawlRequest(TimeStamped):
 
     # Steps activation
     dynamic_processing = models.BooleanField(blank=True, null=True)
+    # If true, skips failing iterations with a warning, else, stops the crawler
+    # if an iteration fails
+    skip_iter_errors = models.BooleanField(default=False)
 
     # DETAILS #################################################################
     explore_links = models.BooleanField(blank=True, null=True)
