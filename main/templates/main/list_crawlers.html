@@ -48,7 +48,16 @@ Home
                         </div>
                     </td>
                     {% if crawler.waiting_on_queue %}
-                        <td><span class="badge badge-info">Na fila de coletas</span></td>
+                        <td class="d-flex">
+                            <span class="badge badge-info mr-1">Na fila</span>
+                            {% if crawler.expected_runtime_category == 'fast' %}
+                            <span class="badge badge-success">Rápida</span>
+                            {% elif crawler.expected_runtime_category == 'medium' %}
+                            <span class="badge badge-warning">Média</span>
+                            {% else %}
+                            <span class="badge badge-danger">Lenta</span>
+                            {% endif %}
+                        </td>
                     {% else  %}
                         {% if crawler.running == True %}
                             <td><span class="badge badge-success">Rodando</span></td>

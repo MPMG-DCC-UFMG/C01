@@ -19,9 +19,27 @@ Crawler "{{ crawler.source_name }}"
                 <li>ID do coletor: <strong>{{ crawler.id }}</strong></li>
                 <li>URL base: <strong>{{ crawler.base_url }}</strong></li>
                 <li>Data de criação: <strong>{{ crawler.creation_date }}</strong></li>
-                <li id="crawler_ status">Status:
+                <li title="Informa em qual fila o coletor irá aguardar">Fila de coletas: 
+                {% if crawler.expected_runtime_category == 'fast' %} 
+                    <span class="badge badge-success">Rápida</span>
+                {% elif crawler.expected_runtime_category == 'medium' %}
+                    <span class="badge badge-warning">Média</span>
+                {% else %}  
+                    <span class="badge badge-danger">Lenta</span>
+                {% endif %}
+                </li>
+                <li id="crawler_ status">
                 {% if crawler.waiting_on_queue%}
-                    <span class="badge badge-info">Aguardando na fila de coletas</span>
+                    <div class="d-flex">
+                        <span class="badge badge-info mr-1">Aguardando na fila de coletas</span>
+                        {% if crawler.expected_runtime_category == 'fast' %}
+                        <span class="badge badge-success">Rápida</span>
+                        {% elif crawler.expected_runtime_category == 'medium' %}
+                        <span class="badge badge-warning">Média</span>
+                        {% else %}
+                        <span class="badge badge-danger">Lenta</span>
+                        {% endif %}
+                    </div>
                 {% else %}
                     {% if crawler.running == True %}
                     <span class="badge badge-success">Rodando</span>
@@ -102,8 +120,9 @@ Crawler "{{ crawler.source_name }}"
     <div class="row">
         {% if crawler.waiting_on_queue %}
         <div class="col">
-            <a href="/crawler_queue" class="border btn btn-info font-weight-bold"><i class="fa fa-clock-o fa-lg mr-1"></i> Aguardando na fila de coletas</a>
-            <a href="{% url 'remove_crawl_request' crawler.id %}" class="btn border font-weight-bold"> <i class="fa fa-times fa-lg mr-1"></i> Sair da fila</a>
+            <!-- <a href="/crawler_queue" class="border btn btn-info font-weight-bold"><i class="fa fa-clock-o fa-lg mr-1"></i> Aguardando na fila de coletas</a> -->
+            <a class="btn btn-info" href="{% url 'edit_crawler' crawler.id %}" class="btn btn-primary">Editar</a>
+            <button onclick="exit_crawler_queue({{ queue_item_id }})" class="btn border font-weight-bold ml-2"> <i class="fa fa-times fa-lg mr-1"></i> Sair da fila de coletas</button>
         </div>
         {% else %}
 
@@ -238,6 +257,12 @@ Crawler "{{ crawler.source_name }}"
 {% block js %}
 <script>
     var WAITING_ON_QUEUE =  {% if crawler.waiting_on_queue %} true {% else %} false {% endif %};
+
+    var SERVER_ADDRESS = window.location.origin;
+
+    // the queue always has id = 1 as it is unique and designed that way
+    var CRAWLER_QUEUE_API_ADDRESS = SERVER_ADDRESS + '/api/crawler_queue/1/';
+        
 </script>
 <script  type="text/javascript" src="https://cdn.jsdelivr.net/npm/nanogallery2@3/dist/jquery.nanogallery2.min.js"></script>
 

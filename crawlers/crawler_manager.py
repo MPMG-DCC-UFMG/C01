@@ -6,7 +6,6 @@ from scrapy.crawler import CrawlerProcess
 import json
 import os
 import random
-import requests
 import shutil
 import sys
 import time

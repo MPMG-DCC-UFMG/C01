@@ -224,7 +224,11 @@ New Crawler
                         <div class="row" style="padding:20px;">
                             <div class="col md-6">
                                 {{ form.source_name | as_crispy_field}}
-                                {{ form.base_url | as_crispy_field}} 
+                                {{ form.base_url | as_crispy_field}}
+                                <p>A URL pode conter espaços para parâmetros, representados como um conjunto de chaves vazias</p>
+                                <hr>
+                                {{ form.expected_runtime_category | as_crispy_field }}
+                                <hr>
                                 {{ form.request_type | as_crispy_field}}
                                 {{ form.obey_robots | as_crispy_field}}
                                 {{ form.data_path | as_crispy_field}}
@@ -440,6 +444,9 @@ New Crawler
 
 {% block js %}
 <script>
+    // remove duplicate tool tip to the crawler queue
+    $('#div_id_expected_runtime_category > div > button').remove();
+
     // initialize formsets
     $('#templated_url_param').formset({
         prefix: '{{ templated_parameter_formset.prefix }}',

@@ -12,20 +12,71 @@ Fila de coletas
     <div class="d-flex justify-content-between">
         <h1 class="h3">Fila de coletas</h1>
         <div class="d-flex align-items-center">
-            <h2 class="h6 m-0">Máximo de coletores simultâneos: <strong id="max-crawlers-running">0</strong></h2>
-            <button class="btn border ml-3 p-0 px-2 py-1 font-weight-bold" onclick="openEditMaxCrawlersModal()"> <i class="fa fa-pencil" aria-hidden="true"></i> Editar</button>
+            <button class="btn border ml-3 p-0 px-2 py-1 font-weight-bold" onclick="openEditMaxCrawlersModal()"> <i class="fa fa-cog" aria-hidden="true"></i> Configurar escalonador</button>
         </div>
     </div>
 
     <ul class="mt-3" style="padding: 0; list-style: none;">
-        <h3 class="h5" id="running-label">Em execução</h3>
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="h5" id="running-label">Em execução na fila: </h3>
+            <ul class="d-flex" id="running-filter-list" style="list-style: none;">
+                <li>
+                    <button id="btn_running_filter_fast"
+                            onclick="filter_running_crawlers('fast')"
+                            class="rounded border rounded-pill crawler-queue-active-tab-color text-white font-weight-bold px-2 ml-2">
+                        Rápida (<span id="qtd_running_crawler_fast">0</span>)
+                    </button>
+                </li>
+                <li>
+                    <button id="btn_running_filter_medium" 
+                            onclick="filter_running_crawlers('medium')"
+                            class="rounded border rounded-pill text-muted px-2 ml-2">
+                        Média (<span id="qtd_running_crawler_medium">0</span>)
+                    </button>
+                </li>
+                <li>
+                    <button id="btn_running_filter_slow" 
+                            onclick="filter_running_crawlers('slow')"
+                            class="rounded border rounded-pill text-muted px-2 ml-2">
+                        Lenta (<span id="qtd_running_crawler_slow">0</span>)
+                    </button>
+                </li>
+            </ul>
+        </div>  
         <div id="running-list">
 
         </div>
     </ul>
 
     <ul class="mt-3" style="padding: 0; list-style: none;">
-        <h3 class="h5" id="waiting-label">Aguardando execução</h3>
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="h5" id="waiting-label">Aguardando execução na fila: </h3>
+            <ul class="d-flex" id="waiting-filter-list" style="list-style: none;">
+                <li>
+                    <button id="btn_waiting_filter_fast" onclick="filter_waiting_crawlers('fast')"
+                        title="Fila de coletores rápidos"
+                        class="rounded border rounded-pill crawler-queue-active-tab-color text-white font-weight-bold px-2 ml-2">
+                        Rápida (<span id="qtd_waiting_crawler_fast">0</span>)
+                    </button>
+                </li>
+                <li>
+                    <button id="btn_waiting_filter_medium" 
+                        onclick="filter_waiting_crawlers('medium')"
+                        title="Fila de coletores de tempo de execução médio"
+                        class="rounded border rounded-pill text-muted px-2 ml-2">
+                        Média (<span id="qtd_waiting_crawler_medium">0</span>)
+                    </button>
+                </li>
+                <li>
+                    <button id="btn_waiting_filter_slow" 
+                        onclick="filter_waiting_crawlers('slow')"
+                        title="Fila de coletores lentos"
+                        class="rounded border rounded-pill text-muted px-2 ml-2">
+                        Lenta (<span id="qtd_waiting_crawler_slow">0</span>)
+                    </button>
+                </li>
+            </ul>
+        </div>
         <div id="waiting-list">
 
         </div>
@@ -38,16 +89,38 @@ Fila de coletas
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title font-weight-bold" id="editMaxCrawlerLabel">Máximo de coletores em execução simultânea</h5>
+                <h5 class="modal-title font-weight-bold" id="editMaxCrawlerLabel">Editar fila de coletas</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <div class="d-flex justify-content-center mb-3">
-                    <input type="number" min="1" max="1000" id="in_max_crawler_number" value="" class="text-center border-0" style="font-size: 2.2rem; width: 7rem;">
+                <div class="">
+                    <h6>Máximo de coletores rápidos ao mesmo tempo</h6>
+                    <div class="d-flex">
+                        <input class="w-100" type="range" id="in_max_fast_crawler" name="in_max_fast_crawler" min="1" max="1000">
+                        <input type="number" min="1" max="1000" id="in_max_fast_crawler_number" value="" class="text-center border-0" style="font-size: 1.2rem; width: 4.5rem;">
+                    </div>
                 </div>
-                <input class="w-100" type="range" id="in_max_crawler" name="in_max_crawler" min="1" max="1000">
+                <hr>
+                <div class="">
+                    <h6>Máximo de coletores médios ao mesmo tempo</h6>
+                    <div class="d-flex">
+                        <input class="w-100" type="range" id="in_max_medium_crawler" name="in_max_medium_crawler" min="1" max="1000">
+                        <input type="number" min="1" max="1000" id="in_max_medium_crawler_number" value="" class="text-center border-0"
+                            style="font-size: 1.2rem; width: 4.5rem;">
+                    </div>
+                </div>
+                <hr>
+                <div class="">
+                    <h6>Máximo de coletores lentos ao mesmo tempo</h6>
+                    <div class="d-flex">
+                        <input class="w-100" type="range" id="in_max_slow_crawler" name="in_max_slow_crawler" min="1" max="1000">
+                        <input type="number" min="1" max="1000" id="in_max_slow_crawler_number" value="" class="text-center border-0"
+                            style="font-size: 1.2rem; width: 4.5rem;">
+                    </div>
+                </div>
+
             </div>
             <div class="modal-footer d-flex justify-content-end">
                 <div class="">
@@ -59,6 +132,27 @@ Fila de coletas
     </div>
 </div>
 
+<div class="modal fade" id="force-execution-modal" tabindex="-1" aria-labelledby="force-execution-modal-Label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title font-weight-bold" id="force-execution-modal-Label">Forçar execução</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja forçar a execução do coletor?</p>
+            </div>
+            <div class="modal-footer d-flex justify-content-end">
+                <div class="">
+                    <button type="button" class="btn btn-secondary" onclick="closeForceExecutionModal()">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="forceExecution()">Sim, continuar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block js %}

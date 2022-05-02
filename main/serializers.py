@@ -30,13 +30,15 @@ class CrawlerQueueItemSerializer(serializers.ModelSerializer):
     # crawl_request = CrawlRequestSerializer(many=False, read_only=True)
     crawler_id = serializers.ReadOnlyField(source='crawl_request.pk')
     crawler_name = serializers.ReadOnlyField(source='crawl_request.source_name')
+    queue_type = serializers.ReadOnlyField(source='crawl_request.expected_runtime_category')
     creation_date = TimestampField()
     last_modified = TimestampField()
 
     class Meta:
         model = CrawlerQueueItem
         read_only_fields = ["id", "creation_date", "last_modified", "queue", "running"]
-        fields = ["id", "creation_date", "last_modified", "crawler_id", "crawler_name", "running"]
+        fields = ["id", "creation_date", "last_modified", "crawler_id",
+            "crawler_name", "queue_type", "position", "forced_execution", "running"]
 
 
 class CrawlerQueueSerializer(serializers.ModelSerializer):
