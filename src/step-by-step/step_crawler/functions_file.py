@@ -18,11 +18,12 @@ from pyext import RuntimeModule
 """
 
 
-def step(display, executable_contexts=['page', 'tab', 'iframe']):
+def step(display, field_options = {}, executable_contexts=['page', 'tab', 'iframe']):
     def function(f):
         f.is_step = True
         f.display = display
         f.executable_contexts = executable_contexts
+        f.field_options = field_options
         return f
 
     return function
@@ -39,7 +40,8 @@ def repete(vezes):
     return [i for i in range(vezes)]
 
 
-@step("Esperar")
+@step("Esperar", field_options = {
+    'segundos' : {'field_type' : 'number', 'input_placeholder' : 'Espera em segundos'}})
 def espere(segundos):
     time.sleep(segundos)
 
@@ -152,11 +154,12 @@ async def for_clicavel(pagina, xpath):
         return False
 
 
-@step("Localizar elementos")
-async def localiza_elementos(pagina, xpath, numero_xpaths=None, modo='simples'):
+@step("Localizar elementos", field_options = {
+    'modo' : {'field_type' : 'select', 'select_options' : ["'Modo Simples'","'XPath Complexos'"]}})
+async def localiza_elementos(pagina, xpath, numero_xpaths=None, modo='Modo Simples'):
     xpath_list = []
 
-    if modo == 'complexo':
+    if modo == 'XPath Complexos':
         elements = await pagina.xpath(xpath)
         for el in elements:
             text = await pagina.evaluate("""el => { 
@@ -182,7 +185,7 @@ async def localiza_elementos(pagina, xpath, numero_xpaths=None, modo='simples'):
 
             xpath_list.append(text.lower())
         
-    elif modo == 'simples':
+    elif modo == 'Modo Simples':
         base_xpath = xpath.split("[*]")[0]
 
         for i in range(len(await pagina.xpath(base_xpath))):
@@ -270,7 +273,8 @@ async def elemento_existe_na_pagina(pagina, xpath):
     return True
 
 
-@step("Comparação")
+@step("Comparação", field_options = {
+    'comp' : {'field_type' : 'select', 'select_options' : ["'=='","'<='", "'>='", "'<'", "'>'", "'!='"]}})
 async def comparacao(pagina, arg1, comp, arg2):
     """This step returns the result of comp(arg1, arg2)
 

@@ -167,13 +167,48 @@ function init_optional_params_button(step){
     for(child of dropdown_menu.children){
         child.onclick = function(){
             block = find_parent_with_attr_worth(this, "block")
-            block.add_param(this.dataset.param, true)
+            param = this.dataset.param
+            field_options = step.field_options[param]
+            block.add_param(param, field_options, true)
             hide(this)
         }
     }
 
     block.new_parameter_button.dropdown_menu = dropdown_menu
     block.lines[last_line].appendChild(block.new_parameter_button_box)
+}
+
+function generate_input_html(param_name, param_display, field_options){
+    if (field_options == undefined){
+        return `<input type="text" placeholder="${param_display}" class="row form-control" data-param="${param_name}" data-type="text" />`
+    }
+
+    field_type = field_options['field_type']
+    innerHTML = ''
+
+    switch(field_type){
+        case 'text':
+        case 'number':
+            placeholder = field_options['input_placeholder'] == undefined ?  param_display : field_options['input_placeholder']
+            innerHTML = `<input type="${field_type}" placeholder="${placeholder}" class="row form-control" data-param="${param_name}" data-type="text" />`
+            break;
+        case 'checkbox':
+            label = field_options['checkbox_label']
+            innerHTML = `<input type="${field_type}" id="${param_name}" class="form-check-input" data-param="${param_name}" data-type="bool"/>`
+            innerHTML += `<label for="${param_name}" class="form-check-label">${label}</label>`
+            break;
+        case 'select':
+            options = field_options['select_options']
+            innerHTML += `<select class="row form-control" id="${param_name}" data-param="${param_name}" data-type="text">`
+            innerHTML += `<option value="" disabled selected>${param_display}</option>`
+            for(option of options){
+                innerHTML += `<option value="${option}">${option}</option>`
+            }
+            innerHTML += `</select>`
+            break;
+    }
+
+    return innerHTML
 }
 
 /**
@@ -184,7 +219,7 @@ function init_optional_params_button(step){
  * @param {Bool} optional_param A boolean that says whether or
  *               not the parameter is optional
  */
-function add_param(param_name, optional_param = false){
+function add_param(param_name, field_options, optional_param = false){
     block = find_parent_with_attr_worth(this, "block")
     last_line = block.lines.length-1
     if(block.lines[last_line].row.full){
@@ -199,7 +234,8 @@ function add_param(param_name, optional_param = false){
     param_element = document.createElement("DIV")
     param_element.className = "col-sm"
     param_display = param_to_placeholder(param_name)
-    param_element.innerHTML = `<input placeholder="${param_display}" class="row form-control" data-param="${param_name}">`
+
+    param_element.innerHTML = generate_input_html(param_name, param_display, field_options)
 
     if(optional_param){
         remove_button = document.createElement("A")
@@ -311,7 +347,8 @@ function refresh_iterable(){
     block.add_line()
 
     for(param of block.iterable_step.mandatory_params){
-        block.add_param(param)
+        field_options = block.iterable_step.field_options[param]
+        block.add_param(param, field_options)
     }
 
     optional_params = Object.keys(block.iterable_step.optional_params)
@@ -333,7 +370,8 @@ function refresh_iterable(){
     block.add_line()
 
     for(param of block.condition_step.mandatory_params){
-        block.add_param(param)
+        field_options = block.condition_step.field_options[param]
+        block.add_param(param, field_options)
     }
 
     optional_params = Object.keys(block.condition_step.optional_params)
@@ -356,7 +394,8 @@ function refresh_source(){
     block.add_line()
 
     for(param of block.source_step.mandatory_params){
-        block.add_param(param)
+        field_options = block.source_step.field_options[param]
+        block.add_param(param, field_options)
     }
 
     optional_params = Object.keys(block.source_step.optional_params)
@@ -584,7 +623,8 @@ function refresh_step(){
         block.add_line()
         
         for(param of block.step.mandatory_params){
-            block.add_param(param)
+            field_options = block.step.field_options[param]
+            block.add_param(param, field_options)
         }
         
         optional_params = Object.keys(block.step.optional_params)

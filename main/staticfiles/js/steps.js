@@ -236,20 +236,24 @@ function load_steps(json_steps, step_list){
 
 function refill_parameters(args, block){
     for(arg in args){
-        let param_input = $(block).find("input[data-param=" + arg + "]")
+        let param_input = $(block).find("input,select[data-param=" + arg + "]")
 
         if(param_input.length == 0){
             let dropdown_entry = $(block.new_parameter_button.dropdown_menu).find("a[data-param=" + arg + "]")
 
             if(dropdown_entry.length != 0){
                 dropdown_entry.click()
-                param_input = $(block).find("input[data-param=" + arg + "]")
+                param_input = $(block).find("input,select[data-param=" + arg + "]")
             }else{
                 // TODO: warn user, argument not found
                 continue
             }
         }
-        param_input.val(args[arg])
+        if (typeof args[arg] === 'boolean') {
+            param_input.prop('checked', args[arg]);
+        } else {
+            param_input.val(args[arg])
+        }
     }
 }
 
@@ -360,10 +364,15 @@ function get_step_json_format(block){
  * @return {Dict} dict The step object filled with configured parameters.
  */
 function load_param_dict(block){
-    let dict = {}
-    for(let param of block.params){
-        let param_name = param.children[0].dataset.param
-        dict[param_name] = param.children[0].value
+    dict = {}
+    for(param of block.params){
+        param_name = param.children[0].dataset.param
+        field_type = param.children[0].type
+        if (field_type == "checkbox") {
+            dict[param_name] = param.children[0].checked
+        } else {
+            dict[param_name] = param.children[0].value
+        }
     }
     return dict
 }
