@@ -1,3 +1,4 @@
+import datetime
 from django.db import models
 from django.utils import timezone
 from django.core.validators import RegexValidator
@@ -283,6 +284,14 @@ class CrawlRequest(TimeStamped):
         if inst_query.exists():
             return inst_query.get()
         return None
+    
+    @property
+    def last_instance(self):
+        last_instance = self.instances.order_by('-creation_date')[:1]
+        try:
+            return last_instance[0]
+        except:
+            return None
 
     def __str__(self):
         return self.source_name
@@ -406,6 +415,57 @@ class CrawlerInstance(TimeStamped):
                                    related_name='instances')
     instance_id = models.BigIntegerField(primary_key=True)
     running = models.BooleanField()
+    num_data_files = models.IntegerField(default=0)
+    data_size_kbytes = models.BigIntegerField(default=0)
+
+    @property
+    def duration_seconds(self):
+        if self.creation_date == None or self.last_modified ==None:
+            return 0
+
+        start_timestamp = datetime.datetime.timestamp(self.creation_date)
+        end_timestamp = datetime.datetime.timestamp(self.last_modified)
+    
+        return end_timestamp - start_timestamp
+    
+    @property
+    def duration_readable(self):
+        final_str = ''
+        str_duration = str(datetime.timedelta(seconds=self.duration_seconds))
+        if 'day' in str_duration:
+            parts = str_duration.split(',')
+            final_str += parts[0].replace('day', 'dia')
+            parts = parts[1].split(':')
+            hours = int(parts[0])
+            if hours > 0:
+                final_str += ' '+str(hours)+'h'
+        else:
+            parts = str_duration.split(':')
+            hours = int(parts[0])
+            minutes = int(parts[1])
+            seconds = int(float(parts[2]))
+            if hours > 0:
+                final_str += str(hours)+'h'
+                if minutes > 0:
+                    final_str += ' '+str(minutes)+'min'
+            elif minutes > 0:
+                final_str += str(minutes)+'min'
+                if seconds > 0:
+                    final_str += ' '+str(seconds)+'s'
+            else:
+                final_str += str(seconds)+'s'
+        
+        return final_str
+    
+    @property
+    def data_size_readable(self):
+        size = self.data_size_kbytes
+        for unit in ['kb','mb','gb','tb']:
+            if size < 1000.0:
+                break
+            size /= 1000.0
+        return f"{size:.{2}f}{unit}"
+
 
 
 class CrawlerQueue(models.Model):
@@ -521,7 +581,7 @@ class CrawlerQueue(models.Model):
 
 class CrawlerQueueItem(TimeStamped):
     queue = models.ForeignKey(CrawlerQueue, on_delete=models.CASCADE, default=1, related_name='items')
-    queue_type = models.CharField(max_length=8)
+    queue_type = models.CharField(max_length=8, default="medium")
     crawl_request = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE, unique=True)
     forced_execution = models.BooleanField(default=False)
     running = models.BooleanField(default=False, blank=True)

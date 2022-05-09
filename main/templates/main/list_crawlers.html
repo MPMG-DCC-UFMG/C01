@@ -15,7 +15,8 @@ Home
                     <th scope="col">ID do Coletor</th>
                     <th scope="col">URL Base</th>
                     <th scope="col">Criado em</th>
-                <th scope="col">Ações</th>
+                    <th scope="col">Coleta</th>
+                    <th scope="col">Ações</th>
                     <th scope="col">Status</th>
                 </tr>
             </thead>
@@ -26,6 +27,13 @@ Home
                     <td>{{crawler.id}}</td>
                     <td>{{crawler.base_url}}</td>
                     <td>{{crawler.creation_date}}</td>
+                    <td>
+                        <small>
+                        <nobr><i class="fa fa-clock-o" title="Duração da coleta"></i>&nbsp;{{crawler.last_instance.duration_readable}}</nobr><br>
+                        <nobr><i class="fa fa-file-o" title="Número de arquivos coletados"></i>&nbsp;{{crawler.last_instance.num_data_files}}&nbsp;arquivos</nobr><br>
+                        <nobr><i class="fa fa-database" title="Tamanho dos dados coletados"></i>&nbsp;{{crawler.last_instance.data_size_readable}}</nobr>
+                        </small>
+                    </td>
                     <td>
                         <div class="btn-group">
                             <a title="Detalhes" class="btn btn-info" href="{% url 'detail_crawler' crawler.id %}"><i class="fa fa-info-circle" aria-hidden="true"></i>

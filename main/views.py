@@ -154,6 +154,17 @@ def process_stop_crawl(crawler_id):
     instance_id = instance.instance_id
     config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
 
+    # computa o tamanho em kbytes do diretório "data"
+    command_output = subprocess.run(["du "+config['data_path']+"/data -d 0"], shell=True, stdout=subprocess.PIPE)
+    output_line = command_output.stdout.decode('utf-8').strip('\n')
+    parts = output_line.split('\t')
+    data_size_kbytes = int(parts[0])
+    
+    # conta a qtde de arquivos no diretório "data"
+    command_output = subprocess.run(["find "+config['data_path']+"/data -type f | wc -l"], shell=True, stdout=subprocess.PIPE)
+    output_line = command_output.stdout.decode('utf-8').strip('\n')
+    num_data_files = int(output_line)
+
     instance = None
     instance_info = {}
     queue_type = None
@@ -163,6 +174,8 @@ def process_stop_crawl(crawler_id):
         instance = CrawlerInstance.objects.get(instance_id=instance_id)
         instance.running = False
         instance.finished_at = timezone.now()
+        instance.data_size_kbytes = data_size_kbytes
+        instance.num_data_files = num_data_files
         instance.save()
 
         queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
@@ -173,6 +186,8 @@ def process_stop_crawl(crawler_id):
     # we use these fields to define when a collection started and ended
     instance_info["started_at"] = str(instance.creation_date)
     instance_info["finished_at"] = str(instance.last_modified)
+    instance_info["data_size_kbytes"] = data_size_kbytes
+    instance_info["num_data_files"] = num_data_files
 
     crawler_manager.update_instances_info(
         config["data_path"], str(instance_id), instance_info)
@@ -248,7 +263,8 @@ def generate_injector_forms(*args, injection_type, filter_queryset=False,
 
 
 def list_crawlers(request):
-    context = {'allcrawlers': getAllData()}
+    all_crawlers = getAllData()
+    context = {'allcrawlers': all_crawlers}
     return render(request, "main/list_crawlers.html", context)
 
 
