@@ -521,7 +521,7 @@ class CrawlerQueue(models.Model):
 
 class CrawlerQueueItem(TimeStamped):
     queue = models.ForeignKey(CrawlerQueue, on_delete=models.CASCADE, default=1, related_name='items')
-    queue_type = models.CharField(max_length=8)
+    queue_type = models.CharField(max_length=8, default="medium")
     crawl_request = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE, unique=True)
     forced_execution = models.BooleanField(default=False)
     running = models.BooleanField(default=False, blank=True)
