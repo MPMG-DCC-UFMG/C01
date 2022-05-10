@@ -83,12 +83,17 @@ async def fill_iframe_content(page):
 async def clique(pagina, elemento):
     if type(elemento) == str:
         el_locator = pagina.locator(f'xpath={elemento}')
-        await el_locator.wait_for()
-        elements = await el_locator.element_handles()
-        if len(elements) == 1:
-            await pagina.evaluate('element => { element.click(); }', elements[0])
-        else:
-            raise Exception('XPath points to non existent element, or multiple elements!')
+
+        try:
+            await el_locator.wait_for()
+        except playwright._impl._api_types.TimeoutError:
+            raise Exception('No element was found with the supplied XPath!')
+        except playwright._impl._api_types.Error:
+            raise Exception('XPath points to multiple elements!')
+
+        element = await el_locator.first.element_handle()
+
+        await pagina.evaluate('element => { element.click(); }', element)
     else:
         await pagina.evaluate('element => { element.click(); }', elemento)
     await espere_pagina(pagina)
