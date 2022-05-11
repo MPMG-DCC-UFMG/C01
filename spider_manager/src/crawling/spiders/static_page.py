@@ -301,6 +301,29 @@ class StaticPageSpider(BaseSpider):
             request=response.request
         )
 
+    def _get_content_type(self, headers: dict) -> str:
+        '''Usually, in dynamic pages we're receiving headers as bytes (Ex.: {... b'Content-Type': [b'text/html; charset=iso-8859-1'] ...}). 
+        Then, is necessary parse the values to get the content-type as string. 
+        '''
+
+        # we check every key of headers dict because the key `content-type`` can be written in many ways, 
+        # Ex.: b'Content-Type', b'content-type', 'Content-Type'... Then, we normalize the keys.
+        for key, val in headers.items():
+            if type(key) is bytes:
+                key = key.decode()
+
+            if key.lower() == 'content-type':
+                # content-type is always a string. If it is incorrectly a list (as we are receiving), it is expected to be o length 1. 
+                if type(val) is list and len(val) > 0:
+                    val = val[0]
+                
+                if type(val) is bytes:
+                    val = val.decode()
+
+                return val
+
+        return '' 
+
     async def dynamic_processing(self, response):
         """
         Runs the dynamic processing steps
@@ -326,14 +349,13 @@ class StaticPageSpider(BaseSpider):
             steps = code_g.generate_code(steps, functions_file, scrshot_path)
             page_dict = await steps.execute_steps(pagina=page)
 
-        content_type = response.headers['content-type']
-        # _, params = cgi.parse_header(content_type)
+        content_type = self._get_content_type(response.headers)
+        _, params = cgi.parse_header(content_type)
 
         # If encoding info is not avaible in response headers, use default utf-8 to encode content
         encoding = 'utf-8'
-        # if 'charset' in params:
-        #     encoding = params['charset']
-        # TODO uncomment and fix above
+        if 'charset' in params:
+            encoding = params['charset']
 
         content = await page.content()
         # TODO this body goes nowhere, how is it saving the page? What about
