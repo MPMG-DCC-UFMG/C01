@@ -7,7 +7,7 @@ RUN apt-get update && apt-get upgrade -y && \
     apt-get autoclean && \
     apt-get install -f
 
-RUN apt-get update && apt-get install -y default-jre postgresql postgresql-client gcc musl-dev
+RUN apt-get update && apt-get install -y default-jre postgresql-client gcc musl-dev
 
 # Don't create bytecode files
 ENV PYTHONDONTWRITEBYTECODE 1
