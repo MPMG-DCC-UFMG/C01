@@ -16,11 +16,13 @@ class KafkaLogger:
         self.__producer = KafkaProducer(bootstrap_servers=settings.KAFKA_HOSTS,
                                         value_serializer=lambda v: ujson.dumps(v).encode('utf-8'))
 
+        self.closed = False
+
     def write(self, message: str):
         """Write the message passed as a parameter to a kafka topic.
 
         Args:
-            - message: Log message to be sent to the topic 
+            - message: Log message to be sent to the topic
         """
 
         message = message.strip()
@@ -33,8 +35,15 @@ class KafkaLogger:
             'instance_id': self.__instance_id,
             'message': message
         })
+        self.__producer.flush()
 
 
     def flush(self):
         """Force sending messages that are waiting to be sent to Kafka"""
         self.__producer.flush()
+
+    def close(self):
+        """Sets the closed property, just to follow IO stream conventions"""
+        self.__producer.flush()
+        self.__producer.close()
+        self.closed = True

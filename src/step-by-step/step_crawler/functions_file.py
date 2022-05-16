@@ -3,6 +3,7 @@ import asyncio
 import datetime
 import time
 import operator
+import playwright
 import uuid
 from cssify import cssify
 from PIL import Image
@@ -48,15 +49,15 @@ def gera_nome_arquivo():
 
 
 async def espere_pagina(pagina):
-    await pagina.waitForSelector("html")
+    await pagina.wait_for_selector("html")
 
 
 async def fill_iframe_content(page):
     # based on: https://gist.github.com/jgontrum/5a9060e40c7fc04c2c3bae3f1a9b28ad
 
-    iframes = await page.querySelectorAll('iframe')
+    iframes = await page.query_selector_all('iframe')
     for iframe in iframes:
-        frame = await iframe.contentFrame()
+        frame = await iframe.content_frame()
 
         # Checks if the element is really an iframe
         if not frame:
@@ -72,21 +73,27 @@ async def fill_iframe_content(page):
 
         # Inserts iframe content as base page content
         await page.evaluate('''
-            (iframe, content) => {
+            ([iframe, content]) => {
                 iframe.innerHTML = content;
             }
-        ''', iframe, content)
+        ''', [iframe, content])
 
 
 @step("Clicar")
 async def clique(pagina, elemento):
     if type(elemento) == str:
-        await pagina.waitForXPath(elemento)
-        elements = await pagina.xpath(elemento)
-        if len(elements) == 1:
-            await pagina.evaluate('element => { element.click(); }', elements[0])
-        else:
-            raise Exception('XPath points to non existent element, or multiple elements!')
+        el_locator = pagina.locator(f'xpath={elemento}')
+
+        try:
+            await el_locator.wait_for()
+        except playwright._impl._api_types.TimeoutError:
+            raise Exception('No element was found with the supplied XPath!')
+        except playwright._impl._api_types.Error:
+            raise Exception('XPath points to multiple elements!')
+
+        element = await el_locator.first.element_handle()
+
+        await pagina.evaluate('element => { element.click(); }', element)
     else:
         await pagina.evaluate('element => { element.click(); }', elemento)
     await espere_pagina(pagina)
@@ -94,8 +101,9 @@ async def clique(pagina, elemento):
 
 @step("Selecionar")
 async def selecione(pagina, xpath, opcao):
-    await pagina.waitForXPath(xpath)
-    await pagina.type(cssify(xpath), opcao)
+    el_locator = pagina.locator(f'xpath={xpath}')
+    await el_locator.wait_for()
+    await el_locator.type(opcao)
     await espere_pagina(pagina)
 
 
@@ -109,8 +117,9 @@ async def salva_pagina(pagina):
 
 @step("Extrair texto de")
 async def extrai_texto(pagina, xpath):
-    await pagina.waitForXPath(xpath)
-    text = await pagina.Jeval(cssify(xpath), "el => el.textContent")
+    el_locator = pagina.locator(f'xpath={xpath}')
+    await el_locator.wait_for()
+    text = await el_locator.text_content()
     return text
 
 
@@ -119,9 +128,13 @@ async def opcoes(pagina, xpath, exceto=None):
     if exceto is None:
         exceto = []
     options = []
-    await pagina.waitForXPath(xpath)
-    for option in (await pagina.xpath(xpath + "/option")):
-        value = await option.getProperty("text")
+
+
+    el_locator = pagina.locator(f'xpath={xpath}')
+    await el_locator.wait_for()
+
+    for option in (await pagina.locator(f'xpath={xpath + "/option"}').element_handles()):
+        value = await option.get_attribute("text")
         options.append(value.toString().split(":")[-1])
     return [value for value in options if value not in exceto]
 
@@ -140,7 +153,7 @@ async def localiza_elementos(pagina, xpath, numero_xpaths=None):
     base_xpath = xpath.split("[*]")[0]
 
     xpath_list = []
-    for i in range(len(await pagina.xpath(base_xpath))):
+    for i in range(await pagina.locator(f'xpath={base_xpath}').count()):
         candidate_xpath = xpath.replace("*", str(i + 1))
         if await elemento_existe_na_pagina(pagina, candidate_xpath):
             xpath_list.append(candidate_xpath)
@@ -151,13 +164,14 @@ async def localiza_elementos(pagina, xpath, numero_xpaths=None):
 
 @step("Voltar", executable_contexts=['page', 'tab'])
 async def retorna_pagina(pagina):
-    await pagina.goBack()
+    await pagina.go_back()
 
 
 @step("Digitar em")
 async def digite(pagina, xpath, texto):
-    await pagina.querySelectorEval(cssify(xpath), 'el => el.value = ""')
-    await pagina.type(cssify(xpath), texto)
+    el_locator = pagina.locator(f'xpath={xpath}')
+    await el_locator.evaluate('el => el.value = ""')
+    await el_locator.type(texto)
 
 
 @step("Objeto")
@@ -167,14 +181,16 @@ async def objeto(pagina, objeto):
 
 @step("Está escrito")
 async def nesse_elemento_esta_escrito(pagina, xpath, texto):
-    elements = await pagina.xpath(xpath)
-    if len(elements):
-        element = elements[0]
+    el_locator = pagina.locator(f'xpath={xpath}')
+
+    if el_locator.count() > 0:
+        element = el_locator.element_handle()
     else:
         return 0
 
-    element_text_content = await element.getProperty('textContent')
-    element_text = await (element_text_content).jsonValue()
+    # element_text_content = await element.text_content()
+    # element_text = await (element_text_content).jsonValue()
+    element_text = await element.text_content()
     if texto in element_text:
         return True
     else:
@@ -192,8 +208,10 @@ async def quebrar_captcha_imagem(pagina, xpath_do_elemento_captcha, xpath_do_cam
                                          before character recognition. Defaults to None.
         :returns text: the string representing the captcha characters
     """
+    el_locator = pagina.locator(f'xpath={xpath_do_elemento_captcha}')
+    await el_locator.wait_for()
+    element = (await el_locator.element_handles())[0]
 
-    element = (await pagina.xpath(xpath_do_elemento_captcha))[0]
     image_data = await element.screenshot(type='jpeg')
     image = Image.open(io.BytesIO(image_data))
     if funcao_preprocessamento:
@@ -202,6 +220,7 @@ async def quebrar_captcha_imagem(pagina, xpath_do_elemento_captcha, xpath_do_cam
     else:
         solver = ImageSolver()
     text = solver.solve(image=image)
+
     type_function = f"(text) => {{ (document.querySelector('{cssify(xpath_do_campo_a_preencher)}')).value = text; }}"
     await pagina.evaluate(type_function, text)
     return text
@@ -216,7 +235,8 @@ async def elemento_existe_na_pagina(pagina, xpath):
         :returns bool: True or False
     """
     try:
-        await pagina.waitForXPath(xpath, visible=True, timeout=300)
+        el_locator = pagina.locator(f'xpath={xpath}')
+        await el_locator.wait_for('visible', timeout=300)
     except Exception as e:
         return False
     return True
@@ -236,20 +256,31 @@ async def comparacao(pagina, arg1, comp, arg2):
     return op_dict[comp](arg1, arg2)
 
 async def open_in_new_tab(pagina, link_xpath):
-    await pagina.waitForXPath(link_xpath)
-    elements = await pagina.xpath(link_xpath)
+    el_locator = pagina.locator(f'xpath={link_xpath}')
 
-    if len(elements) != 1:
-        raise Exception('XPath points to non existent element, or multiple elements!')
-
-    new_page_promisse = asyncio.get_event_loop().create_future()
-    pagina.browser.once("targetcreated", lambda target: new_page_promisse.set_result(target))
-    await pagina.evaluate('el => { el.setAttribute("target", "_blank"); el.click();}', elements[0])
     try:
-        new_page = await (await asyncio.wait_for(new_page_promisse, 60)).page()
+        await el_locator.wait_for()
+    except playwright._impl._api_types.TimeoutError:
+        raise Exception('No element was found with the supplied XPath!')
+    except playwright._impl._api_types.Error:
+        raise Exception('XPath points to multiple elements!')
+
+    element = await el_locator.first.element_handle()
+
+    try:
+        async with pagina.context.expect_page() as tab:
+            await pagina.evaluate(
+                'el => { el.setAttribute("target", "_blank"); el.click();}',
+                element
+            )
+
+        new_page = await tab.value
         await espere_pagina(new_page)
-        await new_page.bringToFront()
+        await new_page.bring_to_front()
 
         return new_page
-    except asyncio.TimeoutError:
-        raise Exception('Process timed out when trying to open xpath "' + link_xpath +'" in a new page!')
+    except playwright._impl._api_types.TimeoutError:
+        # TODO we will have to change this section to warn the user without
+        # crashing the collector when we merge master with this branch
+        raise Exception('Process timed out when trying to open xpath "'\
+            + link_xpath +'" in a new page!')

@@ -20,7 +20,7 @@ class RedisSpider(Spider):
             self.idleness += 1
             raise DontCloseSpider
 
-    def parse(self, response):
+    async def parse(self, response):
         '''
         Parse a page of html, and yield items into the item pipeline
 

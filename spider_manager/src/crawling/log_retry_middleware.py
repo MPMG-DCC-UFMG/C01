@@ -7,7 +7,11 @@ import time
 import sys
 from scrapy.utils.response import response_status_message
 
-from scrapy.xlib.tx import ResponseFailed
+# TODO had to comment this line since this module was deprecated in Scrapy
+# 1.8.0. ResponseFailed was inside the EXCEPTIONS_TO_RETRY tuple, maybe we
+# should substitute it for a different one? The Scrapy release notes and the
+# respective PR don't mention any alternatives
+# from scrapy.xlib.tx import ResponseFailed
 from twisted.internet import defer
 from twisted.internet.error import TimeoutError, DNSLookupError, \
         ConnectionRefusedError, ConnectionDone, ConnectError, \
@@ -22,7 +26,8 @@ class LogRetryMiddleware(object):
 
     EXCEPTIONS_TO_RETRY = (defer.TimeoutError, TimeoutError, DNSLookupError,
                            ConnectionRefusedError, ConnectionDone, ConnectError,
-                           ConnectionLost, TCPTimedOutError, ResponseFailed,
+                           ConnectionLost, TCPTimedOutError,
+                           # ResponseFailed,
                            IOError)
 
     def __init__(self, settings):
