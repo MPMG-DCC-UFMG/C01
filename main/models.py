@@ -284,7 +284,7 @@ class CrawlRequest(TimeStamped):
         if inst_query.exists():
             return inst_query.get()
         return None
-    
+
     @property
     def last_instance(self):
         last_instance = self.instances.order_by('-creation_date')[:1]
@@ -420,14 +420,14 @@ class CrawlerInstance(TimeStamped):
 
     @property
     def duration_seconds(self):
-        if self.creation_date == None or self.last_modified ==None:
+        if self.creation_date == None or self.last_modified == None:
             return 0
 
         start_timestamp = datetime.datetime.timestamp(self.creation_date)
         end_timestamp = datetime.datetime.timestamp(self.last_modified)
-    
+
         return end_timestamp - start_timestamp
-    
+
     @property
     def duration_readable(self):
         final_str = ''
@@ -438,29 +438,29 @@ class CrawlerInstance(TimeStamped):
             parts = parts[1].split(':')
             hours = int(parts[0])
             if hours > 0:
-                final_str += ' '+str(hours)+'h'
+                final_str += ' ' + str(hours) + 'h'
         else:
             parts = str_duration.split(':')
             hours = int(parts[0])
             minutes = int(parts[1])
             seconds = int(float(parts[2]))
             if hours > 0:
-                final_str += str(hours)+'h'
+                final_str += str(hours) + 'h'
                 if minutes > 0:
-                    final_str += ' '+str(minutes)+'min'
+                    final_str += ' ' + str(minutes) + 'min'
             elif minutes > 0:
-                final_str += str(minutes)+'min'
+                final_str += str(minutes) + 'min'
                 if seconds > 0:
-                    final_str += ' '+str(seconds)+'s'
+                    final_str += ' ' + str(seconds) + 's'
             else:
-                final_str += str(seconds)+'s'
-        
+                final_str += str(seconds) + 's'
+
         return final_str
-    
+
     @property
     def data_size_readable(self):
         size = self.data_size_kbytes
-        for unit in ['kb','mb','gb','tb']:
+        for unit in ['kb', 'mb', 'gb', 'tb']:
             if size < 1000.0:
                 break
             size /= 1000.0
