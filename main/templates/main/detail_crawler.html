@@ -17,7 +17,7 @@ Crawler "{{ crawler.source_name }}"
 
                 <li>Nome do coletor: <strong>{{ crawler.source_name }}</strong></li>
                 <li>ID do coletor: <strong>{{ crawler.id }}</strong></li>
-                <li>URL base: <strong>{{ crawler.base_url }}</strong></li>
+                <li>URL base: <strong><a href="{{ crawler.base_url }}" target="_blank">{{ crawler.base_url }}</a></strong></li>
                 <li>Data de criação: <strong>{{ crawler.creation_date }}</strong></li>
                 <li title="Informa em qual fila o coletor irá aguardar">Fila de coletas: 
                 {% if crawler.expected_runtime_category == 'fast' %} 
@@ -81,6 +81,9 @@ Crawler "{{ crawler.source_name }}"
                         <th scope="col">ID</th>
                         <th scope="col">Iniciado em</th>
                         <th scope="col">Última atualização</th>
+                        <th scope="col">Duração</th>
+                        <th scope="col">Nº de arquivos</th>
+                        <th scope="col">Tamanho</th>
                         {% if crawler.dynamic_processing %}
                         <th scope="col">Screenshots</th>
                         {% endif %}
@@ -92,8 +95,11 @@ Crawler "{{ crawler.source_name }}"
 
                     <tr {% if forloop.counter > 3 %} class="multinstancias hidden" {% endif %}>
                         <td>{{instance.instance_id}}</td>
-                        <td>{{instance.creation_date}}</td>
-                        <td>{{instance.last_modified}}</td>
+                        <td>{{instance.creation_date|date:"d/m/Y à\s H:i"}}</td>
+                        <td>{{instance.last_modified|date:"d/m/Y à\s H:i"}}</td>
+                        <td>{{instance.duration_readable}}</td>
+                        <td>{{instance.num_data_files}} arquivos</td>
+                        <td>{{instance.data_size_readable}}</td>
                         {% if crawler.dynamic_processing %}
                         <td><button type="button" class="btn btn-primary" onclick="displayScreenshotModal({{instance.instance_id}})">Visualizar</button></td>
                         {% endif %}

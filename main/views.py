@@ -156,6 +156,18 @@ def process_stop_crawl(crawler_id):
     instance_id = instance.instance_id
     config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
 
+    # computa o tamanho em kbytes do diretório "data"
+    command_output = subprocess.run(["du " + config['data_path'] + "/data -d 0"], shell=True, stdout=subprocess.PIPE)
+    output_line = command_output.stdout.decode('utf-8').strip('\n')
+    parts = output_line.split('\t')
+    data_size_kbytes = int(parts[0])
+
+    # conta a qtde de arquivos no diretório "data"
+    command_output = subprocess.run(
+        ["find " + config['data_path'] + "/data -type f | wc -l"], shell=True, stdout=subprocess.PIPE)
+    output_line = command_output.stdout.decode('utf-8').strip('\n')
+    num_data_files = int(output_line)
+
     instance = None
     instance_info = {}
     queue_type = None
@@ -165,6 +177,8 @@ def process_stop_crawl(crawler_id):
         instance = CrawlerInstance.objects.get(instance_id=instance_id)
         instance.running = False
         instance.finished_at = timezone.now()
+        instance.data_size_kbytes = data_size_kbytes
+        instance.num_data_files = num_data_files
         instance.save()
 
         queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
@@ -175,6 +189,8 @@ def process_stop_crawl(crawler_id):
     # we use these fields to define when a collection started and ended
     instance_info["started_at"] = str(instance.creation_date)
     instance_info["finished_at"] = str(instance.last_modified)
+    instance_info["data_size_kbytes"] = data_size_kbytes
+    instance_info["num_data_files"] = num_data_files
 
     crawler_manager.update_instances_info(
         config["data_path"], str(instance_id), instance_info)
@@ -202,44 +218,48 @@ def crawler_queue(request):
 def getAllData():
     return CrawlRequest.objects.all().order_by('-last_modified')
 
+
 def getAllDataFiltered(filter_crawler_id, filter_name, filter_base_url, filter_dynamic, filter_start_date, filter_end_date, filter_status):
     filters_url = ''
     all_crawlers = getAllData()
 
     if filter_crawler_id != '':
         all_crawlers = all_crawlers.filter(id=filter_crawler_id)
-        filters_url += '&filter_crawler_id='+filter_crawler_id
+        filters_url += '&filter_crawler_id=' + filter_crawler_id
     if filter_name != '':
         all_crawlers = all_crawlers.filter(source_name__icontains=filter_name)
-        filters_url += '&filter_name='+filter_name
+        filters_url += '&filter_name=' + filter_name
     if filter_base_url != '':
         all_crawlers = all_crawlers.filter(base_url__exact=filter_base_url)
-        filters_url += '&filter_base_url='+filter_base_url
+        filters_url += '&filter_base_url=' + filter_base_url
     if filter_dynamic != '':
         if filter_dynamic == '0':
             all_crawlers = all_crawlers.filter(Q(dynamic_processing=0) | Q(dynamic_processing__isnull=True))
         if filter_dynamic == '1':
             all_crawlers = all_crawlers.filter(dynamic_processing=1)
-        filters_url += '&filter_dynamic='+filter_dynamic
+        filters_url += '&filter_dynamic=' + filter_dynamic
     if filter_start_date != '':
         all_crawlers = all_crawlers.filter(creation_date__gte=filter_start_date)
-        filters_url += '&filter_start_date='+filter_start_date
+        filters_url += '&filter_start_date=' + filter_start_date
     if filter_end_date != '':
         all_crawlers = all_crawlers.filter(creation_date__lte=filter_end_date)
-        filters_url += '&filter_end_date='+filter_end_date
+        filters_url += '&filter_end_date=' + filter_end_date
     if filter_status != '':
         if filter_status == 'running':
             all_crawlers = all_crawlers.filter(instances__running=True).distinct()
         if filter_status == 'stopped':
             all_crawlers = all_crawlers.filter(instances__running=False).distinct()
         if filter_status == 'queue_fast':
-            all_crawlers = all_crawlers.filter(crawlerqueueitem__isnull=False).select_related('crawlerqueueitem').filter(crawlerqueueitem__running=False).filter(crawlerqueueitem__queue_type__exact='fast')
+            all_crawlers = all_crawlers.filter(crawlerqueueitem__isnull=False).select_related('crawlerqueueitem').filter(
+                crawlerqueueitem__running=False).filter(crawlerqueueitem__queue_type__exact='fast')
         if filter_status == 'queue_medium':
-            all_crawlers = all_crawlers.filter(crawlerqueueitem__isnull=False).select_related('crawlerqueueitem').filter(crawlerqueueitem__running=False).filter(crawlerqueueitem__queue_type__exact='medium')
+            all_crawlers = all_crawlers.filter(crawlerqueueitem__isnull=False).select_related('crawlerqueueitem').filter(
+                crawlerqueueitem__running=False).filter(crawlerqueueitem__queue_type__exact='medium')
         if filter_status == 'queue_medium':
-            all_crawlers = all_crawlers.filter(crawlerqueueitem__isnull=False).select_related('crawlerqueueitem').filter(crawlerqueueitem__running=False).filter(crawlerqueueitem__queue_type__exact='slow')
-        filters_url += '&filter_status='+filter_status
-    
+            all_crawlers = all_crawlers.filter(crawlerqueueitem__isnull=False).select_related('crawlerqueueitem').filter(
+                crawlerqueueitem__running=False).filter(crawlerqueueitem__queue_type__exact='slow')
+        filters_url += '&filter_status=' + filter_status
+
     return (all_crawlers, filters_url)
 
 
@@ -299,12 +319,12 @@ def list_crawlers(request):
     filter_end_date = request.GET.get('filter_end_date', '')
     filter_status = request.GET.get('filter_status', '')
 
-    
-    all_crawlers, filters_url = getAllDataFiltered(filter_crawler_id, 
-                                    filter_name, 
-                                    filter_base_url, 
-                                    filter_dynamic, 
-                                    filter_start_date, 
+
+    all_crawlers, filters_url = getAllDataFiltered(filter_crawler_id,
+                                    filter_name,
+                                    filter_base_url,
+                                    filter_dynamic,
+                                    filter_start_date,
                                     filter_end_date, filter_status)
 
 
