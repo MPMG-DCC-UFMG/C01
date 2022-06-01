@@ -42,7 +42,6 @@ SCHEDULER = "crawling.distributed_scheduler.DistributedScheduler"
 ITEM_PIPELINES = {'crawling.pipelines.KafkaPipeline': 100, 'crawling.pipelines.LoggingBeforePipeline': 1}
 SPIDER_MIDDLEWARES = {'scrapy.spidermiddlewares.depth.DepthMiddleware': None,
     'crawling.meta_passthrough_middleware.MetaPassthroughMiddleware': 100, 'crawling.redis_stats_middleware.RedisStatsMiddleware': 101}
-DOWNLOADER_MIDDLEWARES = {'scrapy_puppeteer.PuppeteerMiddleware': 800}
 DOWNLOADER_MIDDLEWARES = {'scrapy.downloadermiddlewares.retry.RetryMiddleware': None, 'crawling.redis_retry_middleware.RedisRetryMiddleware': 510,
     'crawling.log_retry_middleware.LogRetryMiddleware': 520, 'scrapy.downloadermiddlewares.cookies.CookiesMiddleware': None, 'crawling.custom_cookies.CustomCookiesMiddleware': 700}
 LOG_ENABLED = True

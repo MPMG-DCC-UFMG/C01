@@ -1,9 +1,18 @@
+import cgi
 import datetime
+import json
+import magic
+import mimetypes
+import os
+import pathlib
 import re
+import shutil
+import time
+
+from glob import glob
 
 from scrapy.linkextractors import LinkExtractor
 from scrapy.http import Request, HtmlResponse, Response
-from scrapy_puppeteer import PuppeteerRequest
 import cchardet as chardet
 
 # Checks if an url is valid
@@ -15,11 +24,16 @@ from crawling_utils.constants import HEADER_ENCODE_DETECTION, AUTO_ENCODE_DETECT
 from crawling.items import RawResponseItem
 from crawling.spiders.base_spider import BaseSpider
 from crawling_utils import notify_page_crawled_with_error
+from step_crawler import code_generator as code_g
+from step_crawler import functions_file
 
 LARGE_CONTENT_LENGTH = 1e9
 HTTP_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
 
+# System waits for up to DOWNLOAD_START_TIMEOUT seconds for a download to
+# begin. The value below is arbitrary
+DOWNLOAD_START_TIMEOUT = 7
 
 class StaticPageSpider(BaseSpider):
     # nome temporário, que será alterado no __init__
@@ -208,6 +222,74 @@ class StaticPageSpider(BaseSpider):
 
         return item
 
+    def block_until_downloads_complete(self, download_path):
+        """
+        Blocks the flow of execution until all files are downloaded, and then
+        moves files from the temporary folder to the final one.
+        """
+
+        temp_download_path = os.path.join(download_path, 'temp')
+        if not os.path.exists(temp_download_path):
+            os.makedirs(temp_download_path)
+
+        def pending_downloads_exist():
+            # Pending downloads in chrome have the .crdownload extension.
+            # So, if any of these files exist, we know that a download is
+            # running.
+            pending_downloads = glob(f'{temp_download_path}*.crdownload')
+            return len(pending_downloads) > 0
+
+        for _ in range(DOWNLOAD_START_TIMEOUT):
+            time.sleep(1)
+            if pending_downloads_exist():
+                break
+
+        while pending_downloads_exist():
+            time.sleep(1)
+
+        # Copy files to proper location
+        allfiles = os.listdir(temp_download_path)
+        for f in allfiles:
+            os.rename(os.path.join(temp_download_path, f), os.path.join(download_path, f))
+
+        shutil.rmtree(temp_download_path)
+
+    def generate_file_descriptions(self, download_path):
+        """Generates descriptions for downloaded files."""
+
+        # list all files in crawl data folder, except file_description.jsonl
+        files = glob(os.path.join(download_path, '*[!jsonl]'))
+
+        with open(os.path.join(download_path, 'file_description.jsonl'), 'w') as f:
+            for file in files:
+                # Get timestamp from file download
+                fname = pathlib.Path(file)
+                creation_time = datetime.datetime.fromtimestamp(fname.stat().st_ctime)
+
+                mimetype = magic.from_file(file, mime=True)
+                guessed_extension = mimetypes.guess_extension(mimetype)
+
+                ext = '' if guessed_extension is None else guessed_extension
+
+                file_with_extension = file + ext
+                os.rename(file, file_with_extension)
+
+                # A typical file will be: /home/user/folder/filename.ext
+                # So, we get only the filename.ext in the next line
+                file_name = file_with_extension.split('/')[-1]
+
+                description = {
+                    'url': '<triggered by dynamic page click>',
+                    'file_name': file_name,
+                    'crawler_id': crawler_id,
+                    'instance_id': instance_id,
+                    'crawled_at_date': str(creation_time),
+                    'referer': '<from unique dynamic crawl>',
+                    'type': ext.replace('.', '') if ext != '' else '<unknown>',
+                }
+
+                f.write(json.dumps(description) + '\n')
+
     def page_to_response(self, page, response) -> HtmlResponse:
         return HtmlResponse(
             response.url,
@@ -218,7 +300,103 @@ class StaticPageSpider(BaseSpider):
             request=response.request
         )
 
-    def parse(self, response):
+    def _get_content_type(self, headers: dict) -> str:
+        '''Usually, in dynamic pages we're receiving headers as bytes (Ex.: {... b'Content-Type': [b'text/html; charset=iso-8859-1'] ...}). 
+        Then, is necessary parse the values to get the content-type as string. 
+        '''
+
+        # we check every key of headers dict because the key `content-type`` can be written in many ways, 
+        # Ex.: b'Content-Type', b'content-type', 'Content-Type'... Then, we normalize the keys.
+        for key, val in headers.items():
+            if type(key) is bytes:
+                key = key.decode()
+
+            if key.lower() == 'content-type':
+                # content-type is always a string. If it is incorrectly a list (as we are receiving), it is expected to be o length 1. 
+                if type(val) is list and len(val) > 0:
+                    val = val[0]
+                
+                if type(val) is bytes:
+                    val = val.decode()
+
+                return val
+
+        return '' 
+
+    async def dynamic_processing(self, response):
+        """
+        Runs the dynamic processing steps
+
+        :response: The response obtained from Scrapy
+        """
+
+        crawler_id = self.config["crawler_id"]
+        instance_id = self.config["instance_id"]
+
+        data_path = self.config['data_path']
+        output_folder = self.settings['OUTPUT_FOLDER']
+        instance_path = os.path.join(output_folder, data_path, str(instance_id))
+
+        download_path = os.path.join(instance_path, 'data', 'files')
+        scrshot_path = os.path.join(instance_path, "data", "screenshots")
+
+        page = response.meta["playwright_page"]
+        request = response.request
+
+        if request.meta['steps']:
+            steps = request.meta['steps']
+            steps = code_g.generate_code(steps, functions_file, scrshot_path)
+            page_dict = await steps.execute_steps(pagina=page)
+
+        content_type = self._get_content_type(response.headers)
+        _, params = cgi.parse_header(content_type)
+
+        # If encoding info is not avaible in response headers, use default utf-8 to encode content
+        encoding = 'utf-8'
+        if 'charset' in params:
+            encoding = params['charset']
+
+        content = await page.content()
+        # TODO this body goes nowhere, how is it saving the page? What about
+        # the other pages? And how does it know the names?
+        body = str.encode(content, encoding=encoding, errors='ignore')
+
+        # Necessary to bypass the compression middleware (?)
+        response.headers.pop('content-encoding', None)
+        response.headers.pop('Content-Encoding', None)
+
+        results = []
+
+        for entry in list(page_dict.values()):
+            results.append(self.page_to_response(entry, response))
+
+        # Maybe move this to the end of the whole parsing method
+        self.block_until_downloads_complete(download_path)
+        self.generate_file_descriptions(download_path)
+
+        # TODO ideally the page would be closed here or at the end of the parse
+        # method, but then we get the following error:
+        #
+        # playwright._impl._api_types.Error: Target page, context or browser has been closed
+        #
+        # In any case I suppose the browser will be killed at the end of the
+        # spider execution so this shouldn't be a critical issue. Still, we
+        # should investigate in the future.
+
+        # await page.close()
+
+        return results
+
+        """return HtmlResponse(
+            page.url,
+            status=response.status,
+            headers=response.headers,
+            body=body,
+            encoding=encoding,
+            request=request
+        )"""
+
+    async def parse(self, response):
         """
         Parse responses of static pages.
         Will try to follow links if config["explore_links"] is set.
@@ -233,10 +411,8 @@ class StaticPageSpider(BaseSpider):
             cur_depth = response.meta['curdepth']
 
         responses = [response]
-        if type(response.request) is PuppeteerRequest:
-            responses = [self.page_to_response(page, response) 
-                            for page in list(response.request.meta["pages"].values())]
-
+        if "playwright_page" in response.meta:
+            responses = await self.dynamic_processing(response)
 
         files_found = set()
         images_found = set()

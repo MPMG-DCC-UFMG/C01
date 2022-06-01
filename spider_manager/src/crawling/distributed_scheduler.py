@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-from scrapy_puppeteer import PuppeteerRequest
 from crawling_utils import notify_new_page_found, notify_page_duplicated_found
 from crawling.redis_global_page_per_domain_filter import \
     RFGlobalPagePerDomainFilter
@@ -13,7 +12,7 @@ from scutils.log_factory import LogFactory
 from scrapy.utils.reqser import request_from_dict, request_to_dict
 from scrapy.utils.python import to_unicode
 from scrapy.http import Request
-from scrapy.conf import settings
+# from scrapy.conf import settings
 from past.builtins import basestring
 from kazoo.handlers.threading import KazooTimeoutError
 import yaml
@@ -75,7 +74,8 @@ class DistributedScheduler(object):
     def __init__(self, server, persist, update_int, timeout, retries, logger,
                  hits, window, mod, ip_refresh, add_type, add_ip, ip_regex,
                  backlog_blacklist, queue_timeout, global_page_per_domain_limit,
-                 global_page_per_domain_limit_timeout, domain_max_page_timeout):
+                 global_page_per_domain_limit_timeout, domain_max_page_timeout,
+                 public_ip_url):
         '''
         Initialize the scheduler
         '''
@@ -102,18 +102,22 @@ class DistributedScheduler(object):
         # set up tldextract
         self.extract = tldextract.TLDExtract()
 
+        # get public id URL (required after scrapy.conf deprecation, see
+        # https://docs.scrapy.org/en/latest/news.html#id47)
+        self.public_ip_url = public_ip_url
+
         self.update_ipaddress()
 
         # if we need better uuid's mod this line
         self.my_uuid = str(uuid.uuid4()).split('-')[4]
 
     def setup_zookeeper(self):
-        self.assign_path = settings.get('ZOOKEEPER_ASSIGN_PATH', "")
-        self.my_id = settings.get('ZOOKEEPER_ID', 'all')
+        self.assign_path = self.spider.crawler.settings.get('ZOOKEEPER_ASSIGN_PATH', "")
+        self.my_id = self.spider.crawler.settings.get('ZOOKEEPER_ID', 'all')
         self.logger.debug("Trying to establish Zookeeper connection")
         try:
             self.zoo_watcher = ZookeeperWatcher(
-                hosts=settings.get('ZOOKEEPER_HOSTS'),
+                hosts=self.spider.crawler.settings.get('ZOOKEEPER_HOSTS'),
                 filepath=self.assign_path + self.my_id,
                 config_handler=self.change_config,
                 error_handler=self.error_config,
@@ -292,8 +296,7 @@ class DistributedScheduler(object):
         self.old_ip = self.my_ip
         self.my_ip = '127.0.0.1'
         try:
-            obj = urllib.request.urlopen(settings.get('PUBLIC_IP_URL',
-                                  'http://ip.42.pl/raw'))
+            obj = urllib.request.urlopen(self.public_ip_url)
             results = self.ip_regex.findall(obj.read().decode('utf-8'))
             if len(results) > 0:
                 self.my_ip = results[0]
@@ -367,10 +370,15 @@ class DistributedScheduler(object):
         global_page_per_domain_limit_timeout = settings.get('GLOBAL_PAGE_PER_DOMAIN_LIMIT_TIMEOUT', 600)
         domain_max_page_timeout = settings.get('DOMAIN_MAX_PAGE_TIMEOUT', 600)
 
+        # get public id URL (required after scrapy.conf deprecation, see
+        # https://docs.scrapy.org/en/latest/news.html#id47)
+        public_ip_url = settings.get('PUBLIC_IP_URL', 'http://ip.42.pl/raw')
+
         return cls(server, persist, up_int, timeout, retries, logger, hits,
                    window, mod, ip_refresh, add_type, add_ip, ip_regex,
                    backlog_blacklist, queue_timeout, global_page_per_domain_limit,
-                   global_page_per_domain_limit_timeout, domain_max_page_timeout)
+                   global_page_per_domain_limit_timeout, domain_max_page_timeout,
+                   public_ip_url)
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -543,6 +551,7 @@ class DistributedScheduler(object):
             self.report_self()
 
         item = self.find_item()
+
         if item:
             self.logger.info(u"Found url to crawl {url}"
                     .format(url=item['url']))
@@ -567,15 +576,23 @@ class DistributedScheduler(object):
         return None
 
     def request_from_feed(self, item):
-        if settings.get('DYNAMIC_PROCESSING'):
+        if self.spider.crawler.settings.get('DYNAMIC_PROCESSING'):
             attrs = item.get('attrs', dict())
 
             req_body = attrs.get('req_body', '').encode()
             req_method = attrs.get('req_method', 'GET')
 
-            steps = settings.get('DYNAMIC_PROCESSING_STEPS')
-            req = PuppeteerRequest(url=item['url'], body=req_body, method=req_method, steps=steps)
-
+            steps = self.spider.crawler.settings.get('DYNAMIC_PROCESSING_STEPS')
+            req = Request(url=item['url'],
+                body=req_body,
+                method=req_method,
+                dont_filter=True,
+                meta={
+                    "playwright": True,
+                    "playwright_include_page": True,
+                    "steps": steps
+                }
+            )
         else:
             try:
                 req = Request(item['url'])
