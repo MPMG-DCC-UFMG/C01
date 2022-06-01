@@ -483,7 +483,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     # ENCODE DETECTION METHOD
     encoding_detection_method = forms.ChoiceField(choices=CrawlRequest.ENCODE_DETECTION_CHOICES,
                                                   label='Método de detecção de codificação das páginas',
-                                                  initial=CrawlRequest.HEADER_ENCODE_DETECTION,
+                                                  initial=HEADER_ENCODE_DETECTION,
                                                   widget=forms.RadioSelect)
 
     expected_runtime_category = forms.ChoiceField(choices=(
