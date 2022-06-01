@@ -2,12 +2,16 @@
     box-sizing: border-box;
 }
 
-.navbar{
-    background-color: #286f99;
-}
-
 body {
     padding-top: 56px;
+}
+
+body > .navbar {
+    background-color: #646464;
+}
+
+body > .navbar a {
+    color: #ffffff;
 }
 
 .selected{
@@ -172,7 +176,7 @@ table.dataTable thead .sorting_desc_disabled:before {
     background-color: #E8F6EF;
 }
 
-#dynamic-processing-item-wrap.disabled {
+#dynamic-processing-item-wrap.disabled, #dynamic-processing-skip-errors.disabled {
     opacity: .5;
     pointer-events: none;
 }
@@ -299,6 +303,52 @@ a.close, a.add_form {
     margin-left: 0.25em;
 }
 /* End screenshot pagination styles */
+
+/* Crawler queue page */
+
+.crawler-queue-active-tab-color {
+    background-color: #646464;
+}
+
+.crawler-queue-switch-position {
+    color: #6c757d;
+}
+
+.crawler-queue-switch-position:hover {
+    color: #343a40;
+}
+
+.crawler-queue-remove-item {
+    color: #6c757d;
+}
+
+.crawler-queue-remove-item:hover {
+    color: #dc3545;
+}
+
+.crawler-queue-force-execution {
+    color: #6c757d;
+}
+
+.crawler-queue-force-execution:hover {
+    color: #28a745;
+}
+
+/* End crawler queue styles */
+
+/* Popovers */
+.popover-icon {filter:grayscale(1); padding: 0 0 0 3px;}
+.popover-icon:hover {filter:grayscale(0);}
+.block_tooltip {
+  position: absolute;
+  top: 25px;
+  left: 10px;
+  opacity:.5;
+}
+
+.block_tooltip:hover {opacity: 1;}
+/* End Popovers */
+
 
 /* Making the layout responsive */
 #list_crawlers td:nth-child(3), #stderr_tail, #stdout_tail {word-wrap: anywhere;}

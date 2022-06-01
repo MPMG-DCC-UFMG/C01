@@ -25,21 +25,20 @@
 
 <body>
     <!-- Bootstrap NavBar -->
-    <nav class="navbar navbar-expand-md navbar-dark fixed-top">
-        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse"
-            data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false"
-            aria-label="Toggle navigation">
+    <nav class="navbar navbar-expand-md fixed-top">
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <a class="navbar-brand" href="#"><img src="{% static 'img/logo.png' %}" width="80" height="30"
                 class="d-inline-block align-top" alt=""></a>
         <div class="collapse navbar-collapse" id="navbarNavDropdown">
-            <ul class="navbar-nav">
+            <ul class="navbar-nav mr-auto">
                 <!-- <li class="nav-item"><a class="nav-link" href="#">Monitor <span class="sr-only">(current)</span></a></li> -->
                 <li class="nav-item"><a class="nav-link" href="/crawlers">Coletores</a></li>
                 <li class="nav-item"><a class="nav-link" href="/new">Novo coletor</a></li>
                 <li class="nav-item"><a class="nav-link" href="/crawler_queue">Fila de coletas</a></li>
             </ul>
+            <span class="navbar-text"><a href="https://github.com/MPMG-DCC-UFMG/C01/wiki" target="_blank"><i class="fa fa-info-circle" aria-hidden="true"></i> Wiki</a></span>
         </div>
     </nav>
     <!-- NavBar END -->

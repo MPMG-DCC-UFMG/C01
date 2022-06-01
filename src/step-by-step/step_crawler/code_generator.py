@@ -3,7 +3,33 @@ import sys
 from pyext import RuntimeModule
 
 
-def generate_para_cada(child, module):
+def generate_protected_iteration(child, module):
+    """
+    Generates the iteration body for iterations, while encapsulating it in a
+    try/except pair
+    """
+
+    # Save the page stack length before continuing, to be able to clean up
+    # later if needed
+    code = ((child['depth'] + 1) * '    ') + \
+        f'initial_page_stack_len{child["depth"]} = len(page_stack)\n'
+    code += ((child['depth'] + 1) * '    ') + 'try:\n'
+
+    # Indent iteration body
+    for line in generate_body(child, module, True).splitlines():
+        code += '    ' + line + '\n'
+
+    code += ((child['depth'] + 1) * '    ') + 'except Exception as e:\n'
+    code += ((child['depth'] + 2) * '    ') + 'print("Erro em iteração: " + str(e))\n'
+    code += ((child['depth'] + 2) * '    ') + 'print("Continuando para a próxima iteração.")\n'
+    # Close tabs open in this iteration and clean the stack as needed
+    code += ((child['depth'] + 2) * '    ') + f'while len(page_stack) > initial_page_stack_len{child["depth"]}:\n'
+    code += generate_fechar_aba({'depth': child['depth'] + 3}, module)
+
+    return code
+
+
+def generate_para_cada(child, module, skip_iter_errors):
     code = ""
     if 'call' in child['iterable']:
         function_info = child['iterable']['call']
@@ -19,11 +45,16 @@ def generate_para_cada(child, module):
 
     code += child['depth'] * '    ' + 'for ' + child['iterator']
     code += ' in ' + iterable_statement + ':' + '\n'
-    code += generate_body(child, module)
+
+    if skip_iter_errors:
+        code += generate_protected_iteration(child, module)
+    else:
+        code += generate_body(child, module, skip_iter_errors)
+
     return code
 
 
-def generate_se(child, module):
+def generate_se(child, module, skip_iter_errors):
     code = ''
     code += child['depth'] * '    ' + 'if '
 
@@ -38,12 +69,12 @@ def generate_se(child, module):
     else:
         raise TypeError('This condition is in the wrong format')
 
-    code += generate_body(child, module)
+    code += generate_body(child, module, skip_iter_errors)
 
     return code
 
 
-def generate_enquanto(child, module):
+def generate_enquanto(child, module, skip_iter_errors):
     code = ''
     code += child['depth'] * '    ' + 'while '
 
@@ -58,8 +89,13 @@ def generate_enquanto(child, module):
     else:
         raise TypeError('This condition is in the wrong format')
 
-    code += generate_body(child, module)
+    if skip_iter_errors:
+        code += generate_protected_iteration(child, module)
+    else:
+        code += generate_body(child, module, skip_iter_errors)
+
     return code
+
 
 def generate_atribuicao(child, module):
     code = ""
@@ -190,7 +226,7 @@ def generate_head(module, scrshot_path):
     return code
 
 
-def generate_body(recipe, module):
+def generate_body(recipe, module, skip_iter_errors):
     """
     Generates the second part of the code, that is,
     the body of the function, the steps.
@@ -199,19 +235,26 @@ def generate_body(recipe, module):
     code = ""
     for child in recipe['children']:
         if hasattr(thismodule, "generate_" + child["step"]):
-            code += getattr(thismodule, "generate_" + child["step"])(child, module)
+            args = [child, module]
+
+            # Iterative steps and steps which can call generate_body should be
+            # sent the skip_iter_errors parameter
+            if child["step"] in ["para_cada", "enquanto", "se"]:
+                args.append(skip_iter_errors)
+
+            code += getattr(thismodule, "generate_" + child["step"])(*args)
         else:
             code += generate_call_step(child, module)
 
     return code
 
 
-def generate_code(recipe, module, scrshot_path):
+def generate_code(recipe, module, scrshot_path, skip_iter_errors):
     """
     Generates the entire code.
     """
     code = generate_head(module, scrshot_path)
-    code += generate_body(recipe, module)
+    code += generate_body(recipe, module, skip_iter_errors)
     code += "    return pages"
     print(code)
     print('--------------------------------------------------------------------------')

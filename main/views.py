@@ -4,16 +4,20 @@ from django.db import transaction
 from django.db.models import Q
 
 from django.http import HttpResponseRedirect, JsonResponse, \
-    FileResponse, HttpResponseNotFound
+    FileResponse, HttpResponseNotFound, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.paginator import Paginator
+from django.db.models import Q
 
 from rest_framework import viewsets
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm,\
     ResponseHandlerFormSet, ParameterHandlerFormSet
-from .models import CrawlRequest, CrawlerInstance, CrawlerQueue, CrawlerQueueItem, Log
+from .models import CrawlRequest, CrawlerInstance, CrawlerQueue, CrawlerQueueItem, CRAWLER_QUEUE_DB_ID
 
 from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer, CrawlerQueueSerializer
 
@@ -27,7 +31,7 @@ import json
 import logging
 import time
 import os
-
+import multiprocessing as mp
 from datetime import datetime
 
 import crawler_manager.crawler_manager as crawler_manager
@@ -45,6 +49,7 @@ logger = logging.getLogger('file')
 
 # Helper methods
 
+
 try:
     CRAWLER_QUEUE = CrawlerQueue.object()
 
@@ -53,6 +58,7 @@ try:
 
 except:
     pass
+
 
 def process_run_crawl(crawler_id):
     instance = None
@@ -88,7 +94,21 @@ def add_crawl_request(crawler_id):
     if already_in_queue:
         return
 
-    queue_item = CrawlerQueueItem(crawl_request_id=crawler_id)
+    crawl_request = CrawlRequest.objects.get(pk=crawler_id)
+    cr_expec_runtime_cat = crawl_request.expected_runtime_category
+
+    # The new element of the crawler queue must be in the correct position (after the last added) and
+    # in the correct queue: fast, normal or slow
+
+    position = 1
+    last_queue_item_created = CrawlerQueueItem.objects.filter(queue_type=cr_expec_runtime_cat).last()
+
+    if last_queue_item_created:
+        position = last_queue_item_created.position + 1
+
+    queue_item = CrawlerQueueItem(crawl_request_id=crawler_id,
+                                position=position,
+                                queue_type=cr_expec_runtime_cat)
     queue_item.save()
 
 
@@ -99,18 +119,17 @@ def remove_crawl_request(crawler_id):
         queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
         queue_item.delete()
 
+
 def remove_crawl_request_view(request, crawler_id):
     remove_crawl_request(crawler_id)
     return redirect('/detail/' + str(crawler_id))
 
 
-def unqueue_crawl_requests():
+def unqueue_crawl_requests(queue_type: str):
     crawlers_runnings = list()
+    has_items_from_another_queue, queue_items = CRAWLER_QUEUE.get_next(queue_type)
 
-    for queue_item in CRAWLER_QUEUE.get_next():
-        queue_item_id = queue_item['id']
-        crawler_id = queue_item['crawl_request_id']
-
+    for queue_item_id, crawler_id in queue_items:
         instance = process_run_crawl(crawler_id)
 
         crawlers_runnings.append({
@@ -120,16 +139,15 @@ def unqueue_crawl_requests():
 
         queue_item = CrawlerQueueItem.objects.get(pk=queue_item_id)
         queue_item.running = True
+
+        # the crawlers from the another queue "will be insert in the queue with vacancy"
+        if has_items_from_another_queue:
+            queue_item.queue_type = queue_type
+
         queue_item.save()
 
     response = {'crawlers_added_to_run': crawlers_runnings}
     return response
-
-
-def run_next_crawl_requests_view(request):
-    response = unqueue_crawl_requests()
-    return JsonResponse(response, status=status.HTTP_200_OK)
-
 
 def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
     instance = CrawlRequest.objects.filter(
@@ -149,29 +167,56 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
     instance_id = instance.instance_id
     config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
 
+    # computa o tamanho em kbytes do diretório "data"
+    command_output = subprocess.run(["du " + config['data_path'] + "/data -d 0"], shell=True, stdout=subprocess.PIPE)
+    output_line = command_output.stdout.decode('utf-8').strip('\n')
+    parts = output_line.split('\t')
+    data_size_kbytes = int(parts[0])
+
+    # conta a qtde de arquivos no diretório "data"
+    command_output = subprocess.run(
+        ["find " + config['data_path'] + "/data -type f | wc -l"], shell=True, stdout=subprocess.PIPE)
+    output_line = command_output.stdout.decode('utf-8').strip('\n')
+    num_data_files = int(output_line)
+
     instance = None
     instance_info = {}
+    queue_type = None
+
     with transaction.atomic():
         # Execute DB commands atomically
         instance = CrawlerInstance.objects.get(instance_id=instance_id)
         instance.running = False
         instance.finished_at = timezone.now()
+        instance.data_size_kbytes = data_size_kbytes
+        instance.num_data_files = num_data_files
         instance.save()
 
         queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
+        queue_type = queue_item.queue_type
         queue_item.delete()
 
     # As soon as the instance is created, it starts to collect and is only modified when it stops,
     # we use these fields to define when a collection started and ended
     instance_info["started_at"] = str(instance.creation_date)
     instance_info["finished_at"] = str(instance.last_modified)
+    instance_info["data_size_kbytes"] = data_size_kbytes
+    instance_info["num_data_files"] = num_data_files
 
     crawler_manager.update_instances_info(
         config["data_path"], str(instance_id), instance_info)
     
     crawler_manager.stop_crawler(crawler_id)
 
-    unqueue_crawl_requests()
+    unqueue_crawl_requests(queue_type)
+
+
+def list_process(request):
+    text = ''
+    for p in mp.active_children():
+        text += f"child {p.name} is PID {p.pid}<br>"
+
+    return HttpResponse(text)
 
 def crawler_queue(request):
     return render(request, 'main/crawler_queue.html')
@@ -179,6 +224,50 @@ def crawler_queue(request):
 
 def getAllData():
     return CrawlRequest.objects.all().order_by('-last_modified')
+
+
+def getAllDataFiltered(filter_crawler_id, filter_name, filter_base_url, filter_dynamic, filter_start_date, filter_end_date, filter_status):
+    filters_url = ''
+    all_crawlers = getAllData()
+
+    if filter_crawler_id != '':
+        all_crawlers = all_crawlers.filter(id=filter_crawler_id)
+        filters_url += '&filter_crawler_id=' + filter_crawler_id
+    if filter_name != '':
+        all_crawlers = all_crawlers.filter(source_name__icontains=filter_name)
+        filters_url += '&filter_name=' + filter_name
+    if filter_base_url != '':
+        all_crawlers = all_crawlers.filter(base_url__exact=filter_base_url)
+        filters_url += '&filter_base_url=' + filter_base_url
+    if filter_dynamic != '':
+        if filter_dynamic == '0':
+            all_crawlers = all_crawlers.filter(Q(dynamic_processing=0) | Q(dynamic_processing__isnull=True))
+        if filter_dynamic == '1':
+            all_crawlers = all_crawlers.filter(dynamic_processing=1)
+        filters_url += '&filter_dynamic=' + filter_dynamic
+    if filter_start_date != '':
+        all_crawlers = all_crawlers.filter(creation_date__gte=filter_start_date)
+        filters_url += '&filter_start_date=' + filter_start_date
+    if filter_end_date != '':
+        all_crawlers = all_crawlers.filter(creation_date__lte=filter_end_date)
+        filters_url += '&filter_end_date=' + filter_end_date
+    if filter_status != '':
+        if filter_status == 'running':
+            all_crawlers = all_crawlers.filter(instances__running=True).distinct()
+        if filter_status == 'stopped':
+            all_crawlers = all_crawlers.filter(instances__running=False).distinct()
+        if filter_status == 'queue_fast':
+            all_crawlers = all_crawlers.filter(crawlerqueueitem__isnull=False).select_related('crawlerqueueitem').filter(
+                crawlerqueueitem__running=False).filter(crawlerqueueitem__queue_type__exact='fast')
+        if filter_status == 'queue_medium':
+            all_crawlers = all_crawlers.filter(crawlerqueueitem__isnull=False).select_related('crawlerqueueitem').filter(
+                crawlerqueueitem__running=False).filter(crawlerqueueitem__queue_type__exact='medium')
+        if filter_status == 'queue_medium':
+            all_crawlers = all_crawlers.filter(crawlerqueueitem__isnull=False).select_related('crawlerqueueitem').filter(
+                crawlerqueueitem__running=False).filter(crawlerqueueitem__queue_type__exact='slow')
+        filters_url += '&filter_status=' + filter_status
+
+    return (all_crawlers, filters_url)
 
 
 def create_instance(crawler_id, instance_id):
@@ -228,7 +317,38 @@ def generate_injector_forms(*args, injection_type, filter_queryset=False,
 
 
 def list_crawlers(request):
-    context = {'allcrawlers': getAllData()}
+    page_number = request.GET.get('page', 1)
+    filter_crawler_id = request.GET.get('filter_crawler_id', '')
+    filter_name = request.GET.get('filter_name', '')
+    filter_base_url = request.GET.get('filter_base_url', '')
+    filter_dynamic = request.GET.get('filter_dynamic', '')
+    filter_start_date = request.GET.get('filter_start_date', '')
+    filter_end_date = request.GET.get('filter_end_date', '')
+    filter_status = request.GET.get('filter_status', '')
+
+
+    all_crawlers, filters_url = getAllDataFiltered(filter_crawler_id,
+                                    filter_name,
+                                    filter_base_url,
+                                    filter_dynamic,
+                                    filter_start_date,
+                                    filter_end_date, filter_status)
+
+
+    crawlers_paginator = Paginator(all_crawlers, 20)
+    crawlers_page = crawlers_paginator.get_page(page_number)
+
+    context = {
+        'crawlers_page': crawlers_page,
+        'filter_crawler_id': filter_crawler_id,
+        'filter_name': filter_name,
+        'filter_base_url': filter_base_url,
+        'filter_dynamic': filter_dynamic,
+        'filter_start_date': filter_start_date,
+        'filter_end_date': filter_end_date,
+        'filter_status': filter_status,
+        'filters_url': filters_url,
+    }
     return render(request, "main/list_crawlers.html", context)
 
 
@@ -329,10 +449,16 @@ def detail_crawler(request, crawler_id):
     # order_by("-atribute") orders descending
     instances = crawler.instances.order_by("-last_modified")
 
+    queue_item_id = None
+    if crawler.waiting_on_queue:
+        queue_item = CrawlerQueueItem.objects.get(crawl_request_id=id)
+        queue_item_id = queue_item.id
+
     context = {
         'crawler': crawler,
         'instances': instances,
-        'last_instance': instances[0] if len(instances) else None
+        'last_instance': instances[0] if len(instances) else None,
+        'queue_item_id': queue_item_id
     }
 
     return render(request, 'main/detail_crawler.html', context)
@@ -353,8 +479,13 @@ def stop_crawl(request, crawler_id):
 
 def run_crawl(request, crawler_id):
     add_crawl_request(crawler_id)
-    unqueue_crawl_requests()
-    return redirect(detail_crawler, crawler_id=crawler_id)
+
+    crawl_request = CrawlRequest.objects.get(pk=crawler_id)
+    queue_type = crawl_request.expected_runtime_category
+
+    unqueue_crawl_requests(queue_type)
+
+    return redirect(detail_crawler, id=crawler_id)
 
 def tail_log_file(request, instance_id):
     instance = CrawlerInstance.objects.get(instance_id=instance_id)
@@ -781,12 +912,13 @@ class CrawlerViewSet(viewsets.ModelViewSet):
         instance = None
         try:
             instance = process_stop_crawl(pk)
+
         except Exception as e:
             data = {
                 'status': settings.API_ERROR,
                 'message': str(e)
             }
-            return JsonResponse(data)
+            return JsonResponse(data,)
 
         data = {
             'status': settings.API_SUCCESS,
@@ -808,12 +940,103 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
     serializer_class = CrawlerQueueSerializer
     http_method_names = ['get', 'put']
 
-    def update(self, request, pk=None):
-        response = super().update(request, pk=pk)
+    def list(self, request):
+        return self.retrieve(request)
 
+    def retrieve(self, request, pk=None):
+        crawler_queue = CrawlerQueue.to_dict()
+        return Response(crawler_queue)
+
+    @action(detail=True, methods=['get'])
+    def switch_position(self, request, pk):
+        a = request.GET['a']
+        b = request.GET['b']
+
+        with transaction.atomic():
+            try:
+                queue_item_a = CrawlerQueueItem.objects.get(pk=a)
+
+            except ObjectDoesNotExist:
+                return JsonResponse({'message': f'Crawler queue item {a} not found!'}, status=status.HTTP_404_NOT_FOUND)
+
+            try:
+                queue_item_b = CrawlerQueueItem.objects.get(pk=b)
+
+            except ObjectDoesNotExist:
+                return JsonResponse({'message': f'Crawler queue item {b} not found!'}, status=status.HTTP_404_NOT_FOUND)
+
+            if queue_item_a.queue_type != queue_item_b.queue_type:
+                return JsonResponse({'message': 'Crawler queue items must be in same queue!'}, status=status.HTTP_400_BAD_REQUEST)
+
+            position_aux = queue_item_a.position
+
+            queue_item_a.position = queue_item_b.position
+            queue_item_b.position = position_aux
+
+            queue_item_a.save()
+            queue_item_b.save()
+
+        return JsonResponse({'message': 'success'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'])
+    def force_execution(self, request, pk):
+        queue_item_id = request.GET['queue_item_id']
+
+        with transaction.atomic():
+            try:
+                queue_item = CrawlerQueueItem.objects.get(pk=queue_item_id)
+
+            except ObjectDoesNotExist:
+                return JsonResponse({'message': f'Crawler queue item {queue_item_id} not found!'}, status=status.HTTP_404_NOT_FOUND)
+
+            crawler_id = queue_item.crawl_request.id
+
+            instance = process_run_crawl(crawler_id)
+
+            queue_item.forced_execution = True
+            queue_item.running = True
+            queue_item.save()
+
+            data = {
+                'crawler_id': crawler_id,
+                'instance_id': instance.pk
+            }
+
+        return JsonResponse(data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'])
+    def remove_item(self, request, pk):
+        queue_item_id = request.GET['queue_item_id']
+
+        try:
+            queue_item = CrawlerQueueItem.objects.get(pk=queue_item_id)
+            queue_item.delete()
+
+        except ObjectDoesNotExist:
+            return JsonResponse({'message': f'Crawler queue item {queue_item_id} not found!'}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def update(self, request, pk=None):
+        response = super().update(request, pk=CRAWLER_QUEUE_DB_ID)
+
+        # updade crawler queue instance with new configs
         global CRAWLER_QUEUE
         CRAWLER_QUEUE = CrawlerQueue.object()
 
-        unqueue_crawl_requests()
+        # the size of queue of type fast changed, may is possible run
+        # more crawlers
+        if 'max_fast_runtime_crawlers_running' in request.data:
+            unqueue_crawl_requests('fast')
+
+        # the size of queue of type normal changed, may is possible run
+        # more crawlers
+        if 'max_medium_runtime_crawlers_running' in request.data:
+            unqueue_crawl_requests('medium')
+
+        # the size of queue of type slow changed, may is possible run
+        # more crawlers
+        if 'max_slow_runtime_crawlers_running' in request.data:
+            unqueue_crawl_requests('slow')
 
         return response

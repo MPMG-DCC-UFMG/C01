@@ -1,7 +1,6 @@
 from django.urls import include, path
 from django.conf.urls import url
 from rest_framework import routers
-
 from . import views
 
 # Router for API endpoints
@@ -38,9 +37,10 @@ urlpatterns = [
 
     path("iframe/load", views.load_iframe, name="load_iframe"),
 
+    path('list_process', views.list_process, name="list_process"),
+
     path("crawler_queue/", views.crawler_queue, name="crawler_queue"),
     path("crawler_queue/remove/<int:crawler_id>", views.remove_crawl_request_view, name="remove_crawl_request"),
-    path("crawler_queue/run_next", views.run_next_crawl_requests_view, name="run_next_crawl_request"),
 
     # Includes the API endpoints in the URLs
     url(r'^api/', include(api_router.urls)),

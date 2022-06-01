@@ -20,10 +20,10 @@ jobs:
       - name: Test with pytest
         run: |
           coverage run -m pytest
-          coverage report -i
+          coverage xml
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
           fail_ci_if_error: true
           verbose: true
-          files: ./.coverage
+          files: ./coverage.xml

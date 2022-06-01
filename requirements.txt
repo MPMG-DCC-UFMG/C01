@@ -21,6 +21,7 @@ Deprecated==1.2.13
 Django==3.2.12
 django-crispy-forms==1.14.0
 django-environ==0.8.1
+django-mathfilters==1.0.0
 djangorestframework==3.13.1
 filelock==3.6.0
 fonttools==4.31.2

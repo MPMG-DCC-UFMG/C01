@@ -297,6 +297,10 @@ class ScrapyPuppeteerTestCase(unittest.TestCase):
             self.assertIsInstance(result, scrapy_puppeteer.PuppeteerMiddleware)
             # The download path should be set properly
             self.assertEqual(result.download_path, '/data/test/1/data/files')
+            # launch should be called once
+            mockLaunch.assert_called_once()
+            # browser.newPage should be called once
+            self.mockBrowser.newPage.assert_called_once()
             # crawler.signals.connect should be called once with the expected
             # arguments
             self.mockSpider.signals.connect.assert_called_once_with(

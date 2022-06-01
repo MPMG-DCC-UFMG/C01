@@ -1,7 +1,6 @@
 """This module contains the ``PuppeteerMiddleware`` scrapy middleware"""
 import asyncio
 import json
-import signal
 
 from twisted.internet import asyncioreactor
 
@@ -66,13 +65,13 @@ class PuppeteerMiddleware:
         """
 
         middleware = cls()
-        # middleware.browser = await launch({
-        #     'executablePath': chromium_executable(),
-        #     'headless': True,
-        #     'args': ['--no-sandbox'], # '--single-process', '--no-zygote', 
-        #     'dumpio': True,
-        #     'logLevel': crawler.settings.get('LOG_LEVEL')
-        # })
+        middleware.browser = await launch({
+            'executablePath': chromium_executable(),
+            'headless': True,
+            'args': ['--no-sandbox'],
+            'dumpio': True,
+            'logLevel': crawler.settings.get('LOG_LEVEL')
+        })
 
         middleware.crawler_id = crawler.settings.get('CRAWLER_ID')
         middleware.instance_id = crawler.settings.get('INSTANCE_ID')
@@ -84,11 +83,11 @@ class PuppeteerMiddleware:
         middleware.download_path = os.path.join(instance_path, 'data', 'files')
         middleware.scrshot_path = os.path.join(instance_path, "data", "screenshots")
 
-        # page = await middleware.browser.newPage()
+        page = await middleware.browser.newPage()
 
         # Changes the default file save location.
-        # cdp = await page._target.createCDPSession()
-        # await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allowAndName', 'downloadPath': middleware.download_path})
+        cdp = await page._target.createCDPSession()
+        await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allowAndName', 'downloadPath': middleware.download_path})
 
         crawler.signals.connect(middleware.spider_closed, signals.spider_closed)
 
@@ -124,20 +123,20 @@ class PuppeteerMiddleware:
         try:
             page = await self.browser.newPage()
 
-        except Exception as e:
+        except:
             self.browser = await launch({
                                         'executablePath': chromium_executable(),
                                         'headless': True,
-                                        'args': ['--no-sandbox'], #'--single-process', '--no-zygote', 
+                                        'args': ['--no-sandbox'],
                                         'dumpio': True
                                         })
             await self.browser.newPage()
             page = await self.browser.newPage()
-
+            
             # Changes the default file save location.
             cdp = await page._target.createCDPSession()
             await cdp.send('Browser.setDownloadBehavior', {'behavior': 'allowAndName', 'downloadPath': self.download_path})
-
+            
         # Cookies
         if isinstance(request.cookies, dict):
             await page.setCookie(*[
@@ -288,9 +287,9 @@ class PuppeteerMiddleware:
         """Generates descriptions for downloaded files."""
 
         # list all files in crawl data folder, except file_description.jsonl
-        files = glob(f'{self.download_path}*[!jsonl]')
+        files = glob(os.path.join(self.download_path, '*[!jsonl]'))
 
-        with open(f'{self.download_path}file_description.jsonl', 'w') as f:
+        with open(os.path.join(self.download_path, 'file_description.jsonl'), 'w') as f:
             for file in files:
                 # Get timestamp from file download
                 fname = pathlib.Path(file)

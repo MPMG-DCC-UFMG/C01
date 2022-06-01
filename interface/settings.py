@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'main.apps.MainConfig',
     'crispy_forms',
     'rest_framework',
+    'mathfilters',
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
