@@ -216,6 +216,8 @@ function generate_input_html(param_name, param_display, field_options){
  * an input element to obtain the value to be setted
  * for this parameter. This function is a method of block.
  * @param {String} param_name The name of the param to be added.
+ * @param {Dict} field_options A dictionary containing options 
+ * regarding the field which will be created for the parameter
  * @param {Bool} optional_param A boolean that says whether or
  *               not the parameter is optional
  */
