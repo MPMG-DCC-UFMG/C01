@@ -134,7 +134,7 @@ def generate_templated_urls(base_url, crawler_id, instance_id,
                 # Check if once again we hit a valid page
                 if static_form_probe.check_entry(url_entries=templated_param_combination, req_entries=req_entries):
                     # Insert parameters into URL and request body
-                    curr_url = base_url.format(*templated_param_combination)
+                    curr_url = base_url.format(**templated_param_combination)
                     method = form_req_type
                     if not use_static_forms:
                         # If no form data is injected, use the regular
