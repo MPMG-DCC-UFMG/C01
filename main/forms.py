@@ -16,7 +16,7 @@ class CrawlRequestForm(forms.ModelForm):
         fields = [
             'source_name',
             'base_url',
-            'request_type',
+            # 'request_type',
             'form_request_type',
             'obey_robots',
             'captcha',
