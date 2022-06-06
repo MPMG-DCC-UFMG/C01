@@ -167,17 +167,19 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
     instance_id = instance.instance_id
     config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
 
+    # FIXME: Colocar esse trecho de código no módulo writer
     # computa o tamanho em kbytes do diretório "data"
-    command_output = subprocess.run(["du " + config['data_path'] + "/data -d 0"], shell=True, stdout=subprocess.PIPE)
-    output_line = command_output.stdout.decode('utf-8').strip('\n')
-    parts = output_line.split('\t')
-    data_size_kbytes = int(parts[0])
+    # command_output = subprocess.run(["du " + config['data_path'] + "/data -d 0"], shell=True, stdout=subprocess.PIPE)
+    # output_line = command_output.stdout.decode('utf-8').strip('\n')
+    # parts = output_line.split('\t')
+    data_size_kbytes = 0#int(parts[0])
 
+    # FIXME: Colocar esse trecho de código no módulo writer
     # conta a qtde de arquivos no diretório "data"
-    command_output = subprocess.run(
-        ["find " + config['data_path'] + "/data -type f | wc -l"], shell=True, stdout=subprocess.PIPE)
-    output_line = command_output.stdout.decode('utf-8').strip('\n')
-    num_data_files = int(output_line)
+    # command_output = subprocess.run(
+    #     ["find " + config['data_path'] + "/data -type f | wc -l"], shell=True, stdout=subprocess.PIPE)
+    # output_line = command_output.stdout.decode('utf-8').strip('\n')
+    num_data_files = 0#int(output_line)
 
     instance = None
     instance_info = {}
