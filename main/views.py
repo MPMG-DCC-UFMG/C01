@@ -487,7 +487,7 @@ def run_crawl(request, crawler_id):
 
     unqueue_crawl_requests(queue_type)
 
-    return redirect(detail_crawler, id=int(crawler_id))
+    return redirect(detail_crawler, crawler_id=crawler_id)
 
 def tail_log_file(request, instance_id):
     instance = CrawlerInstance.objects.get(instance_id=instance_id)
