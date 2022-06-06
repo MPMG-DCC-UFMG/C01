@@ -480,6 +480,10 @@ def stop_crawl(request, crawler_id):
     return redirect(detail_crawler, crawler_id=crawler_id)
 
 def run_crawl(request, crawler_id):
+    print('*' * 15)
+    print(crawler_id)
+    print('*' * 15)
+
     add_crawl_request(crawler_id)
 
     crawl_request = CrawlRequest.objects.get(pk=crawler_id)
