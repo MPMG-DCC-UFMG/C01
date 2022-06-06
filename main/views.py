@@ -17,7 +17,7 @@ from rest_framework.response import Response
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm,\
     ResponseHandlerFormSet, ParameterHandlerFormSet
-from .models import CrawlRequest, CrawlerInstance, CrawlerQueue, CrawlerQueueItem, CRAWLER_QUEUE_DB_ID
+from .models import CrawlRequest, CrawlerInstance, CrawlerQueue, CrawlerQueueItem, Log, CRAWLER_QUEUE_DB_ID
 
 from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer, CrawlerQueueSerializer
 
