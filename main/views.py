@@ -385,7 +385,7 @@ def create_crawler(request):
             static_response_formset.instance = instance
             static_response_formset.save()
 
-            return redirect("detail_crawler", crawler_id=instance.id)
+            return redirect(detail_crawler, crawler_id=instance.id)
 
     context['form'] = my_form
     context['templated_response_formset'] = templated_response_formset
@@ -419,7 +419,7 @@ def edit_crawler(request, crawler_id):
         templated_response_formset.save()
         static_parameter_formset.save()
         static_response_formset.save()
-        return redirect("detail_crawler", crawler_id=crawler_id)
+        return redirect(detail_crawler, crawler_id=crawler_id)
 
     else:
         return render(request, 'main/create_crawler.html', {
@@ -477,7 +477,7 @@ def create_steps(request):
 def stop_crawl(request, crawler_id):
     from_sm_listener = request.GET.get('from', '') == 'sm_listener'
     process_stop_crawl(crawler_id, from_sm_listener)
-    return redirect("detail_crawler", crawler_id=crawler_id)
+    return redirect(detail_crawler, crawler_id=crawler_id)
 
 def run_crawl(request, crawler_id):
     add_crawl_request(crawler_id)
@@ -487,7 +487,7 @@ def run_crawl(request, crawler_id):
 
     unqueue_crawl_requests(queue_type)
 
-    return redirect("detail_crawler", id=crawler_id)
+    return redirect(detail_crawler, id=int(crawler_id))
 
 def tail_log_file(request, instance_id):
     instance = CrawlerInstance.objects.get(instance_id=instance_id)
