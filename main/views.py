@@ -453,7 +453,7 @@ def detail_crawler(request, crawler_id):
 
     queue_item_id = None
     if crawler.waiting_on_queue:
-        queue_item = CrawlerQueueItem.objects.get(crawl_request_id=id)
+        queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
         queue_item_id = queue_item.id
 
     context = {
