@@ -281,8 +281,8 @@ class StaticPageSpider(BaseSpider):
                 description = {
                     'url': '<triggered by dynamic page click>',
                     'file_name': file_name,
-                    'crawler_id': crawler_id,
-                    'instance_id': instance_id,
+                    'crawler_id': self.config['crawler_id'],
+                    'instance_id': self.config['instance_id'],
                     'crawled_at_date': str(creation_time),
                     'referer': '<from unique dynamic crawl>',
                     'type': ext.replace('.', '') if ext != '' else '<unknown>',
@@ -330,10 +330,12 @@ class StaticPageSpider(BaseSpider):
         :response: The response obtained from Scrapy
         """
 
-        crawler_id = self.config["crawler_id"]
-        instance_id = self.config["instance_id"]
+        crawler_id = self.config['crawler_id']
+        instance_id = self.config['instance_id']
 
         data_path = self.config['data_path']
+        skip_iter_errors = self.config['skip_iter_errors']
+
         output_folder = self.settings['OUTPUT_FOLDER']
         instance_path = os.path.join(output_folder, data_path, str(instance_id))
 
@@ -345,21 +347,8 @@ class StaticPageSpider(BaseSpider):
 
         if request.meta['steps']:
             steps = request.meta['steps']
-            steps = code_g.generate_code(steps, functions_file, scrshot_path)
+            steps = code_g.generate_code(steps, functions_file, scrshot_path, skip_iter_errors)
             page_dict = await steps.execute_steps(pagina=page)
-
-        content_type = self._get_content_type(response.headers)
-        _, params = cgi.parse_header(content_type)
-
-        # If encoding info is not avaible in response headers, use default utf-8 to encode content
-        encoding = 'utf-8'
-        if 'charset' in params:
-            encoding = params['charset']
-
-        content = await page.content()
-        # TODO this body goes nowhere, how is it saving the page? What about
-        # the other pages? And how does it know the names?
-        body = str.encode(content, encoding=encoding, errors='ignore')
 
         # Necessary to bypass the compression middleware (?)
         response.headers.pop('content-encoding', None)
@@ -386,15 +375,6 @@ class StaticPageSpider(BaseSpider):
         # await page.close()
 
         return results
-
-        """return HtmlResponse(
-            page.url,
-            status=response.status,
-            headers=response.headers,
-            body=body,
-            encoding=encoding,
-            request=request
-        )"""
 
     async def parse(self, response):
         """
