@@ -121,12 +121,6 @@ def generate_templated_urls(base_url, crawler_id, instance_id,
     parameter_keys = list(map(lambda x: x['parameter_key'], static_form_parameter_handlers))
 
     for templated_param_combination in templated_url_generator:
-        print('*' * 15)
-        print('*' * 15)
-        print(base_url, templated_param_combination)
-        print('*' * 15)
-        print('*' * 15)
-
         if templated_url_probe.check_entry(url_entries=templated_param_combination):
             # Copy the generator (we'd need to "rewind" if we used the
             # original)

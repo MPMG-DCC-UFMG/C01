@@ -28,7 +28,7 @@
     "SC_LOG_BACKUPS": 5,
     "SC_LOG_STDOUT": true,
     "SC_LOG_JSON": false,
-    "SC_LOG_LEVEL": "INFO",
+    "SC_LOG_LEVEL": "DEBUG",
     "STATS_STATUS_CODES": true,
     "STATS_RESPONSE_CODES": [
         200,
@@ -68,7 +68,7 @@
         "crawling.custom_cookies.CustomCookiesMiddleware": 700
     },
     "LOG_ENABLED": true,
-    "LOG_LEVEL": "INFO",
+    "LOG_LEVEL": "DEBUG",
     "HTTPERROR_ALLOW_ALL": true,
     "RETRY_TIMES": 3,
     "DOWNLOAD_TIMEOUT": 30,
