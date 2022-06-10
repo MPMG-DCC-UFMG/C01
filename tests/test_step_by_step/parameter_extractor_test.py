@@ -18,7 +18,8 @@ class TestExtractInfo(unittest.TestCase):
             "optional_params": {
                 "to": 1,
                 "test": None
-            }
+            },
+            'field_options': {}
         },
         {
             "name": "only_mandatory_params",
@@ -30,7 +31,8 @@ class TestExtractInfo(unittest.TestCase):
                 "to",
                 "test"
             ],
-            "optional_params": {}
+            "optional_params": {},
+            'field_options': {}
         },
         {
             "name": "only_optional_params",
@@ -42,14 +44,26 @@ class TestExtractInfo(unittest.TestCase):
                 "parameters": "parameters",
                 "to": "to",
                 "test": "test"
-            }
+            },
+            'field_options': {}
         },
         {
             "name": "no_params",
             "executable_contexts": ["page", "tab", "iframe"],
             "name_display": "No params",
             "mandatory_params": [],
-            "optional_params": {}
+            "optional_params": {},
+            'field_options': {}
+        },
+        {
+            "name": "with_params_and_field_options",
+            "executable_contexts": ["page", "tab", "iframe"],
+            "name_display": "With params and field_options",
+            "mandatory_params": [
+                "test"
+            ],
+            "optional_params": {},
+            "field_options": {"test" : {"field_type" : "number", "input_placeholder" : "test"}}
         }
     ]
 
@@ -71,7 +85,7 @@ class TestExtractInfo(unittest.TestCase):
 
         # Because they may be out of order, and contains unhashable items
         self.assertEqual(
-            [i in result for i in self.expected_results], [1, 1, 1, 1])
+            [i in result for i in self.expected_results], [1, 1, 1, 1, 1])
 
 
 if __name__ == '__main__':

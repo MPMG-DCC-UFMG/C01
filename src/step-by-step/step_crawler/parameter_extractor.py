@@ -22,6 +22,7 @@ def extract_info(func, ignore_params=None):
 
     optional_params = dict()
     mandatory_params = list()
+    field_options = func.field_options
     signature = inspect.signature(func)
     for k, v in signature.parameters.items():
         if v.default is not inspect.Parameter.empty:
@@ -30,12 +31,14 @@ def extract_info(func, ignore_params=None):
             if k not in ignore_params:
                 mandatory_params.append(k)
 
+
     func_info = {
         'name': name,
         'name_display': name_display,
         'executable_contexts': executable_contexts,
         'mandatory_params': mandatory_params,
         'optional_params': optional_params,
+        'field_options': field_options,
     }
     return func_info
 
