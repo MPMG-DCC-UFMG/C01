@@ -281,8 +281,8 @@ class StaticPageSpider(BaseSpider):
                 description = {
                     'url': '<triggered by dynamic page click>',
                     'file_name': file_name,
-                    'crawler_id': crawler_id,
-                    'instance_id': instance_id,
+                    'crawler_id': self.config['crawler_id'],
+                    'instance_id': self.config['instance_id'],
                     'crawled_at_date': str(creation_time),
                     'referer': '<from unique dynamic crawl>',
                     'type': ext.replace('.', '') if ext != '' else '<unknown>',
@@ -307,10 +307,12 @@ class StaticPageSpider(BaseSpider):
         :response: The response obtained from Scrapy
         """
 
-        crawler_id = self.config["crawler_id"]
-        instance_id = self.config["instance_id"]
+        crawler_id = self.config['crawler_id']
+        instance_id = self.config['instance_id']
 
         data_path = self.config['data_path']
+        skip_iter_errors = self.config['skip_iter_errors']
+
         output_folder = self.settings['OUTPUT_FOLDER']
         instance_path = os.path.join(output_folder, data_path, str(instance_id))
 
@@ -322,7 +324,7 @@ class StaticPageSpider(BaseSpider):
 
         if request.meta['steps']:
             steps = request.meta['steps']
-            steps = code_g.generate_code(steps, functions_file, scrshot_path)
+            steps = code_g.generate_code(steps, functions_file, scrshot_path, skip_iter_errors)
             page_dict = await steps.execute_steps(pagina=page)
 
         # Necessary to bypass the compression middleware (?)

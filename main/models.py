@@ -1,9 +1,15 @@
+import datetime
 from django.db import models
 from django.utils import timezone
 from django.core.validators import MinValueValidator, RegexValidator
+from django.core.validators import RegexValidator
+from django.db.models.base import ModelBase
 
 from crawler_manager.constants import *
 from crawling_utils.constants import HEADER_ENCODE_DETECTION, AUTO_ENCODE_DETECTION
+
+CRAWLER_QUEUE_DB_ID = 1
+
 
 class TimeStamped(models.Model):
     creation_date = models.DateTimeField()
@@ -147,6 +153,9 @@ class CrawlRequest(TimeStamped):
 
     # Steps activation
     dynamic_processing = models.BooleanField(blank=True, null=True)
+    # If true, skips failing iterations with a warning, else, stops the crawler
+    # if an iteration fails
+    skip_iter_errors = models.BooleanField(default=False)
 
     # DETAILS #################################################################
     explore_links = models.BooleanField(blank=True, null=True)
@@ -198,6 +207,16 @@ class CrawlRequest(TimeStamped):
     ]
 
     encoding_detection_method = models.IntegerField(choices=ENCODE_DETECTION_CHOICES, default=HEADER_ENCODE_DETECTION)
+
+    # CRAWLER QUEUE ============================================================
+    EXP_RUNTIME_CAT_CHOICES = [
+        ('fast', 'Rápido'),
+        ('medium', 'Médio'),
+        ('slow', 'Lento'),
+    ]
+
+    expected_runtime_category = models.CharField(
+        null=False, max_length=8, default='medium', choices=EXP_RUNTIME_CAT_CHOICES)
 
     @staticmethod
     def process_parameter_data(param_list):
@@ -302,11 +321,26 @@ class CrawlRequest(TimeStamped):
         return self.instances.filter(running=True).exists()
 
     @property
+    def waiting_on_queue(self):
+        on_queue = CrawlerQueueItem.objects.filter(crawl_request_id=self.pk).exists()
+        if on_queue:
+            return not CrawlerQueueItem.objects.get(crawl_request_id=self.pk).running
+        return False
+
+    @property
     def running_instance(self):
         inst_query = self.instances.filter(running=True)
         if inst_query.exists():
             return inst_query.get()
         return None
+
+    @property
+    def last_instance(self):
+        last_instance = self.instances.order_by('-creation_date')[:1]
+        try:
+            return last_instance[0]
+        except:
+            return None
 
     def __str__(self):
         return self.source_name
@@ -393,7 +427,7 @@ class ParameterHandler(models.Model):
                                  default='D')
 
     value_const_param = models.CharField(max_length=5000, blank=True)
-    value_list_param = models.CharField(max_length=5000, blank=True)
+    value_list_param = models.CharField(max_length=50000, blank=True)
 
 
 class ResponseHandler(models.Model):
@@ -442,6 +476,57 @@ class CrawlerInstance(TimeStamped):
     page_crawling_finished = models.BooleanField(default=False, null=True, blank=True)
 
     running = models.BooleanField()
+    num_data_files = models.IntegerField(default=0)
+    data_size_kbytes = models.BigIntegerField(default=0)
+
+    @property
+    def duration_seconds(self):
+        if self.creation_date == None or self.last_modified == None:
+            return 0
+
+        start_timestamp = datetime.datetime.timestamp(self.creation_date)
+        end_timestamp = datetime.datetime.timestamp(self.last_modified)
+
+        return end_timestamp - start_timestamp
+
+    @property
+    def duration_readable(self):
+        final_str = ''
+        str_duration = str(datetime.timedelta(seconds=self.duration_seconds))
+        if 'day' in str_duration:
+            parts = str_duration.split(',')
+            final_str += parts[0].replace('day', 'dia')
+            parts = parts[1].split(':')
+            hours = int(parts[0])
+            if hours > 0:
+                final_str += ' ' + str(hours) + 'h'
+        else:
+            parts = str_duration.split(':')
+            hours = int(parts[0])
+            minutes = int(parts[1])
+            seconds = int(float(parts[2]))
+            if hours > 0:
+                final_str += str(hours) + 'h'
+                if minutes > 0:
+                    final_str += ' ' + str(minutes) + 'min'
+            elif minutes > 0:
+                final_str += str(minutes) + 'min'
+                if seconds > 0:
+                    final_str += ' ' + str(seconds) + 's'
+            else:
+                final_str += str(seconds) + 's'
+
+        return final_str
+
+    @property
+    def data_size_readable(self):
+        size = self.data_size_kbytes
+        for unit in ['kb', 'mb', 'gb', 'tb']:
+            if size < 1000.0:
+                break
+            size /= 1000.0
+        return f"{size:.{2}f}{unit}"
+
 
     def download_files_finished(self):
         return self.number_files_success_download + self.number_files_error_download == self.number_files_found
@@ -454,3 +539,122 @@ class Log(TimeStamped):
     logger_name = models.CharField(max_length=50, blank=True, null=True)
     log_level = models.CharField(max_length=10, blank=True, null=True)
     raw_log = models.TextField(blank=True, null=True)
+
+class CrawlerQueue(models.Model):
+    max_fast_runtime_crawlers_running = models.PositiveIntegerField(default=1, blank=True)
+    max_medium_runtime_crawlers_running = models.PositiveIntegerField(default=1, blank=True)
+    max_slow_runtime_crawlers_running = models.PositiveIntegerField(default=1, blank=True)
+
+    @classmethod
+    def object(cls: ModelBase):
+        if cls._default_manager.all().count() == 0:
+            crawler_queue = CrawlerQueue.objects.create(id=CRAWLER_QUEUE_DB_ID)
+            crawler_queue.save()
+
+        return CrawlerQueue.objects.get(id=CRAWLER_QUEUE_DB_ID)
+
+    @classmethod
+    def to_dict(cls: ModelBase) -> dict:
+        crawler_queue = CrawlerQueue.object()
+
+        queue_items = list()
+        for queue_item in crawler_queue.items.all():
+            queue_items.append({
+                'id': queue_item.id,
+                'creation_date': round(queue_item.creation_date.timestamp() * 1000),
+                'last_modified': round(queue_item.last_modified.timestamp() * 1000),
+                'crawler_id': queue_item.crawl_request.id,
+                'crawler_name': queue_item.crawl_request.source_name,
+                'queue_type': queue_item.queue_type,
+                'position': queue_item.position,
+                'forced_execution': queue_item.forced_execution,
+                'running': queue_item.running
+            })
+
+        data = {
+            'max_fast_runtime_crawlers_running': crawler_queue.max_fast_runtime_crawlers_running,
+            'max_medium_runtime_crawlers_running': crawler_queue.max_medium_runtime_crawlers_running,
+            'max_slow_runtime_crawlers_running': crawler_queue.max_slow_runtime_crawlers_running,
+            'items': queue_items
+        }
+
+        return data
+
+    def num_crawlers_running(self, queue_type: str) -> int:
+        return self.items.filter(queue_type=queue_type, running=True).count()
+
+    def num_crawlers(self) -> int:
+        return self.items.all().count()
+
+    def __get_next(self, queue_type: str, max_crawlers_running: int, source_queue: str = None):
+        next_crawlers = list()
+
+        # um coletor irá executar na fila que não seria a sua. Como no caso onde
+        # a fila de coletores lentos em execução está vazia e ele pode alocar para executar
+        # coletores médios e curtos
+        if source_queue:
+            num_crawlers_running = self.num_crawlers_running(source_queue)
+
+        else:
+            num_crawlers_running = self.num_crawlers_running(queue_type)
+
+        if num_crawlers_running >= max_crawlers_running:
+            return next_crawlers
+
+        candidates = self.items.filter(queue_type=queue_type, running=False).order_by('position').values()
+        limit = max(0, max_crawlers_running - num_crawlers_running)
+
+        return [(e['id'], e['crawl_request_id']) for e in candidates[:limit]]
+
+    def get_next(self, queue_type: str):
+        next_crawlers = list()
+        has_items_from_another_queue = False
+
+        if queue_type == 'fast':
+            next_crawlers = self.__get_next('fast', self.max_fast_runtime_crawlers_running)
+
+        elif queue_type == 'medium':
+            next_crawlers = self.__get_next('medium', self.max_medium_runtime_crawlers_running)
+
+            # We fill the vacant spot in the queue of slow crawlers with the fastest ones
+            if len(next_crawlers) < self.max_medium_runtime_crawlers_running:
+                fast_next_crawlers = self.__get_next(
+                    'fast', self.max_medium_runtime_crawlers_running - len(next_crawlers), 'medium')
+                next_crawlers.extend(fast_next_crawlers)
+                has_items_from_another_queue = True
+
+        elif queue_type == 'slow':
+            next_crawlers = self.__get_next('slow', self.max_slow_runtime_crawlers_running)
+
+            # We fill the vacant spot in the queue of slow crawlers with the fastest ones
+            if len(next_crawlers) < self.max_slow_runtime_crawlers_running:
+                medium_next_crawlers = self.__get_next(
+                    'medium', self.max_slow_runtime_crawlers_running - len(next_crawlers), 'slow')
+                next_crawlers.extend(medium_next_crawlers)
+                has_items_from_another_queue = True
+
+            # We fill the vacant spot in the queue of slow crawlers with the fastest ones
+            if len(next_crawlers) < self.max_slow_runtime_crawlers_running:
+                fast_next_crawlers = self.__get_next(
+                    'fast', self.max_slow_runtime_crawlers_running - len(next_crawlers), 'slow')
+                next_crawlers.extend(fast_next_crawlers)
+                has_items_from_another_queue = True
+
+        else:
+            raise ValueError('Queue type must be fast, medium or slow.')
+
+        return has_items_from_another_queue, next_crawlers
+
+
+    def save(self, *args, **kwargs):
+        self.pk = self.id = 1
+        return super().save(*args, **kwargs)
+
+
+class CrawlerQueueItem(TimeStamped):
+    queue = models.ForeignKey(CrawlerQueue, on_delete=models.CASCADE, default=1, related_name='items')
+    queue_type = models.CharField(max_length=8, default="medium")
+    crawl_request = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE, unique=True)
+    forced_execution = models.BooleanField(default=False)
+    running = models.BooleanField(default=False, blank=True)
+    position = models.PositiveIntegerField(null=False, default=1)

@@ -6,12 +6,14 @@ document.addEventListener('DOMContentLoaded',
 
         if(instance_id != "None"){
             tail_logs(instance_id);
-            status_instance(instance_id);
+            if (!WAITING_ON_QUEUE)
+                status_instance(instance_id);
         }
 
         if(last_as_running){
             tail_f_logs(instance_id);
-            status_f_instance(instance_id);
+            if (!WAITING_ON_QUEUE)
+                status_f_instance(instance_id);
         }
     },
     false
@@ -147,4 +149,20 @@ function status_f_instance(instance_id){
     );
 }
 
+function exit_crawler_queue(queue_item_id) {
+    let remove_queue_item_address = CRAWLER_QUEUE_API_ADDRESS + `remove_item?queue_item_id=${queue_item_id}`;
+    UPDATING_SCHEDULER_CONFIG = true;
 
+    $.ajax({
+        url: remove_queue_item_address,
+        type: 'get',
+        dataType: 'json',
+        async: false,
+        success: function (data) {
+            location.reload();
+        },
+        error: function (data) {
+            alert('Houve um erro ao remover o item da fila!');
+        }
+    });
+}

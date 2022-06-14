@@ -62,6 +62,8 @@ function init_block(step_list, depth){
     block.turn_to_attribution_step = turn_to_attribution_step
     block.turn_to_new_tab_step = turn_to_new_tab_step
     block.turn_to_close_tab_step = turn_to_close_tab_step
+    block.turn_to_if_step = turn_to_if_step
+
 
     //Setting the border functions
     block.onmouseout = function(){
@@ -84,9 +86,11 @@ function init_block(step_list, depth){
 
     //setting new parameter button
     block.init_optional_params_button = init_optional_params_button
-    block.add_param = add_param
+    block.add_param = add_param    
 
     //--
+
+    block.add_block_tooltip = add_block_tooltip
 
     block.select.onchange = refresh_step
     block.select.onchange()
@@ -302,7 +306,7 @@ function refresh_iterable(){
     block = find_parent_with_attr_worth(this, "block")
     block.iterable_step = get_step_info(this.value)
     block.params = []
-
+    
     block.delete_lines(1, block.lines.length)
     block.add_line()
 
@@ -562,6 +566,8 @@ function refresh_step(){
         block.turn_to_for_step()
     }else if(this.value=="Enquanto"){
         block.turn_to_while_step()
+    }else if(this.value=="Se"){
+        block.turn_to_if_step()
     }else if(this.value=="Atribuição"){
         block.turn_to_attribution_step()
     }else if(this.value=="Abrir em nova aba"){
@@ -597,12 +603,15 @@ function refresh_step(){
             execution_context_changed = true;
         }
     }
+
+    //add block tooltip depending on type selection
+    block.add_block_tooltip();
     
     if (execution_context_changed) {
         let index = get_index_in_parent(block)
         refresh_steps_option_below_index(index)
     }
-
+    
     colorize_contexts()
 }
 
@@ -658,6 +667,31 @@ function turn_to_for_step(){
  * This function is a method of the block.
  */
  function turn_to_while_step(){
+    block = find_parent_with_attr_worth(this, "block")
+    block.delete_lines(block.lines.length)
+    block.add_line()
+
+    // defines condition step
+    condition_select_box = document.createElement("DIV")
+    condition_select_box.className = "step-config-select"
+    condition_select = document.createElement("select")
+    condition_select.className = "form-control select-step"
+    condition_select.innerHTML = get_this_texts_inside_each_tag(Object.keys(get_step_names(block.step_list)), "<option>")
+    condition_select_box.appendChild(condition_select)
+    block.condition_select = condition_select
+
+    block.lines[0].row.appendChild(condition_select_box)
+    block.lines[0].row.full = true
+
+    condition_select.onchange = refresh_condition
+    condition_select.onchange()
+}
+
+/**
+ * Sets the block to the if each step.
+ * This function is a method of the block.
+ */
+ function turn_to_if_step(){
     block = find_parent_with_attr_worth(this, "block")
     block.delete_lines(block.lines.length)
     block.add_line()
@@ -1003,4 +1037,110 @@ function init_block_element(step_list){
     new_block.className = "conteiner card step-block"
 
     return new_block
+}
+
+/**
+ * Adds block tooltip depending on type selection
+ * This function is called on the function refresh_step.
+ */
+function add_block_tooltip() {
+    block = find_parent_with_attr_worth(this, "block")
+    
+    switch(block.step.name){
+        case "clique":
+            tooltip = "Recebe um XPath, entre aspas, ou uma váriavel (por exemplo, dentro de um Para cada) para identificar o elemento correspondente na página e clicar sobre ele."
+            break;
+        case "comparacao":
+            tooltip = ""
+            break;
+        case "digite":
+            tooltip = "Permite que o usuário preencha as entradas HTML do tipo input para entradas textuais."
+            break;
+        case "elemento_existe_na_pagina":
+            tooltip = ""
+            break;
+        case "espere":
+            tooltip = "Congela a execução durante o tempo informado em segundos"
+            break;
+        case "extrai_propriedade":
+            tooltip = ""
+            break;
+        case "extrai_texto":
+            tooltip = "Extrai e retorna o texto do elemento apontado pelo xpath fornecido. Pode ser mais útil se utilizado com o passo de Atribuição. Nota: é necessário converter esse valor para um valor inteiro, utilizando a int([variável_atribuida]) para que ele possa ser utilizado no Para Cada."
+            break;
+        case "for_clicavel":
+            tooltip = ""
+            break;
+        case "imprime":
+            tooltip = "Essa ação se assemelha ao 'print' do Python, e permite imprimir nos logs dos coletores qualquer valor desejado, por exemplo, XPath armazenado em uma variável."
+            break;
+        case "localiza_elementos":
+            tooltip = "Utilizado junto com o Para Cada recebe um XPath genérico (que apresenta um, e apenas um, asterisco) e retorna uma lista com todos os elementos na página que casam com esse elemento genérico"
+            break;
+        case "nesse_elemento_esta_escrito":
+            tooltip = ""
+            break;
+        case "objeto":
+            tooltip = "Utilizado em conjunto com outro passo para retornar um objeto estático. Exemplo: pode ser utilizado na função de Para Cada para retornar uma lista de valores pré-definidos."
+            break;
+        case "opcoes":
+            tooltip = "Utilizado junto com o Para Cada recebe um XPath de um select e retorna uma lista com todas as suas opções. Com isso, podemos iterar nessas opções e possivelmente, selecionar cada uma delas, usando o 'Selecione'"
+            break;
+        case "quebrar_captcha_imagem":
+            tooltip = ""
+            break;
+        case "repete":
+            tooltip = "Utilizado junto com o Para Cada recebe um valor inteiro N e é responsável por retornar a lista de valores partindo de 0 até N-1"
+            break;
+        case "retorna_pagina":
+            tooltip = "Simula a opção de voltar dos navegadores."
+            break;
+        case "salva_pagina":
+            tooltip = "O conteúdo será armazenado em memória e ao final da execução de ações, tais páginas serão armazenadas em disco. Além disso, essas páginas podem ser exploradas com as outras ferramentas presentes na plataforma, por exemplo, a exploração de links. A partir desse ponto, novas requisições serão executadas fora de um webdriver, portanto, podem não carregar mais o conteúdo JavaScript da página."
+            break;
+        case "selecione":
+            tooltip = "Essa ação recebe como entrada o XPath do select e o texto da opção a ser selecionada."
+            break;
+        case "para_cada":
+            tooltip = "Define um conjunto de ações que será repetido. O primeiro input será a variável criada para uso no conjunto de ações, que corresponde ao valor da vez no loop. Essa ação deve ser combinada com outra que retorne uma lista."
+            break;
+        case "atribuicao":
+            tooltip = "Atribui o valor de retorno de um dos passos ao nome fornecido."
+            break;
+        case "abrir_em_nova_aba":
+            tooltip = "Funciona de forma parecida a função de clique, com a diferença de que aqui, caso o link apontado pelo xpath fornecido leva a uma página de destino, ela é aberta em uma nova aba, e o contexto de navegação é alterado para esta nova aba."
+            break;
+        case "fechar_aba":
+            tooltip = "Deve ser usada em conjunto com a função Abrir em Nova Aba. Este passo fecha a última aba aberta pelo passo anterior, e retorna o contexto para a página que a abriu."
+            break;
+        case "executar_em_iframe":
+            tooltip = ""
+            break;
+        case "sair_de_iframe":
+            tooltip = ""
+            break;
+        case "screenshot":
+            tooltip = ""
+            break;
+        case "enquanto":
+            tooltip = ""
+            break;
+        default:
+            tooltip = ""
+            break;
+    }
+
+    old_tooltip = this.querySelector('.block_tooltip');
+    if (old_tooltip) {
+        $(old_tooltip).remove();
+    }
+
+    if (tooltip != "") {
+        tooltip_element = document.createElement("DIV")
+        tooltip_element.className = "block_tooltip"
+        tooltip_element.innerHTML = '<button type="button" class="popover-icon btn btn-link start_tooltip" data-toggle="popover" data-trigger="hover" data-content="'+tooltip+'"><i class="fa fa-info-circle" aria-hidden="true"></i></button>';
+        block.firstChild.childNodes[1].appendChild(tooltip_element);
+        setTimeout(() => {$('.start_tooltip').popover();$('.start_tooltip').removeClass('start_tooltip');}, 800);
+        
+    } 
 }

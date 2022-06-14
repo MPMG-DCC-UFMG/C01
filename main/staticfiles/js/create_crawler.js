@@ -622,12 +622,15 @@ function detailWebdriverType() {
 function detailDynamicProcessing() {
     dynamic_processing_check = document.getElementById("dynamic-processing-valid-icon")
     dynamic_processing_block = document.getElementById("dynamic-processing-item-wrap")
+    dynamic_processing_skip_errors = document.getElementById("dynamic-processing-skip-errors")
     if(getCheckboxState("id_dynamic_processing")){
         dynamic_processing_check.classList.remove("disabled")
         dynamic_processing_block.classList.remove("disabled")
+        dynamic_processing_skip_errors.classList.remove("disabled")
     }else{
         dynamic_processing_check.classList.add("disabled")
         dynamic_processing_block.classList.add("disabled")
+        dynamic_processing_skip_errors.classList.add("disabled")
     }
 }
 
