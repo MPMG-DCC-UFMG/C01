@@ -236,7 +236,7 @@ async def elemento_existe_na_pagina(pagina, xpath):
     """
     try:
         el_locator = pagina.locator(f'xpath={xpath}')
-        await el_locator.wait_for('visible', timeout=300)
+        await el_locator.wait_for(state='visible', timeout=300)
     except Exception as e:
         return False
     return True
