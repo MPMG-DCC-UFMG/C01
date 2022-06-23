@@ -1,0 +1,185 @@
+{% extends 'main/base.html' %}
+{% load mathfilters %}
+{% load static %}
+
+{% block title %}
+Home
+{% endblock %}
+
+{% block style %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/crawler_list_grouped.css' %}" />
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <fieldset class="form-group border p-3 mt-md-3 mb-md-4 bg-light">
+            <legend class="w-auto px-2"><small>Filtrar Coletores</small></legend>
+            <form id="filterForm" method="get">
+                <div class="row">
+                    <div class="col-2">
+                        <div class="form-group">
+                            <label for="filterCrawlerId">ID do Coletor:</label>
+                            <input type="text" id="filterCrawlerId" name="filter_crawler_id" class="form-control" value="{{ filter_crawler_id }}" autocomplete="off" />
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <div class="form-group">
+                            <label for="filterName">Nome:</label>
+                            <input type="text" id="filterName" name="filter_name" class="form-control" value="{{ filter_name }}" autocomplete="off" />
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <div class="form-group">
+                            <label for="filterBaseURL">URL Base:</label>
+                            <input type="text" id="filterBaseURL" name="filter_base_url" class="form-control" value="{{ filter_base_url }}" autocomplete="off" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-3">
+                        <div class="form-group">
+                            <label for="filterDynamic">Tipo de Coleta:</label>
+                            <select id="filterDynamic" name="filter_dynamic" class="form-control">
+                                <option value=""></option>
+                                <option value="0" {% if '0' == filter_dynamic %}selected="selected"{% endif %}>Coleta Estática</option>
+                                <option value="1" {% if '1' == filter_dynamic %}selected="selected"{% endif %}>Coleta Dinâmica</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <div class="row"><div class="col"><label for="filterStartDate">Período:</label></div></div>
+                            <div class="form-row">
+                                <div class="col">
+                                    <input type="date" class="form-control datepicker" id="filterStartDate" name="filter_start_date" placeholder="Data Inicial" value="{{filter_start_date}}" autocomplete="off">
+                                </div>
+                                <div class="col">
+                                    <input type="date" class="form-control datepicker" id="filterEndDate" name="filter_end_date" placeholder="Data Final" value="{{filter_end_date}}" autocomplete="off">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="form-group">
+                            <label for="filterStatus">Status:</label>
+                            <select id="filterStatus" name="filter_status" class="form-control">
+                                <option value=""></option>
+                                <option value="running" {% if "running" == filter_status %}selected="selected"{% endif %}>Executando</option>
+                                <option value="stopped" {% if "stopped" == filter_status %}selected="selected"{% endif %}>Parado</option>
+                                <option value="queue_fast" {% if "queue_fast" == filter_status %}selected="selected"{% endif %}>Fila Rápida</option>
+                                <option value="queue_medium" {% if "queue_medium" == filter_status %}selected="selected"{% endif %}>Fila Média</option>
+                                <option value="queue_slow" {% if "queue_slow" == filter_status %}selected="selected"{% endif %}>Fila Lenta</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col d-flex justify-content-end">
+                        <button class="btn btn-secondary clear-form mr-md-2" type="button">Limpar</button>
+                        <button class="btn btn-primary" type="submit">Filtrar</button>
+                    </div>
+                </div>
+            </form>
+        </fieldset>
+        
+        <small>Listando {{ grouped_crawlers_page.paginator.count }} grupos de coletores</small>
+
+        <div id="accordion-header">
+            <div class="col-10">Nome do Grupo</div>
+            <div class="col-1">Total</div>
+            <div class="col-1">Ações</div>
+        </div>
+        
+        <div id="group-content-template" class="d-none">
+            <table class="table table-striped table-bordered searchable sortable" cellspacing="0" width="100%">
+                <thead class="">
+                    <tr>
+                        <th scope="col">Nome</th>
+                        <th scope="col">ID</th>
+                        <th scope="col">URL</th>
+                        <th scope="col">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="crawlers-grouped-accordion">
+            {% for crawler in grouped_crawlers_page %}
+                <div class="card">
+                    <div class="card-header" id="grupo-{{ forloop.counter0 }}" data-toggle="collapse" data-target="#conteudo-{{ forloop.counter0 }}" aria-expanded="false" aria-controls="conteudo-{{ forloop.counter0 }}">
+                        <div class="row">
+                            <div class="col-10">{{crawler.source_name}}</div>
+                            <div class="col-1">{{crawler.total}}</div>
+                            <div class="col-1">
+                                <div class="btn-group">                                
+                                    <a title="Editar Grupo" class="btn btn-primary" href="{% url 'edit_grouped_crawlers' crawler.id %}"><i class="fa fa-pencil" aria-hidden="true"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="conteudo-{{ forloop.counter0 }}" class="collapse" aria-labelledby="grupo-{{ forloop.counter0 }}" data-parent="#crawlers-grouped-accordion" data-crawler-id="{{crawler.id}}">
+                    <div class="card-body p-0">
+                        <div class="loading">Carregando...</div>
+                        <div class="group-content d-none"></div>
+                    </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <br><br>
+
+        {% if grouped_crawlers_page.paginator.num_pages > 1%}
+        <nav class="d-flex justify-content-center" aria-label="Paginação dos coletores">
+            <ul class="pagination">
+                {% if grouped_crawlers_page.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page=1{{ filters_url}}">&laquo;</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ grouped_crawlers_page.previous_page_number }}{{ filters_url}}">&#8678;</a></li>
+                {% endif %}
+
+                {% if grouped_crawlers_page.number|sub:3 > 0 %}
+                    <li class="page-item"><a class="page-link" href="?page=1{{ filters_url}}">1</a></li>
+                {% endif %}
+
+                {% if grouped_crawlers_page.number|sub:4 > 0 %}
+                    <li class="page-item"><span class="page-link">...</span></li>
+                {% endif %}
+        
+                {% if grouped_crawlers_page.number|sub:2 > 0 %}
+                    <li class="page-item"><a class="page-link" href="?page={{ grouped_crawlers_page.number|sub:2 }}{{ filters_url}}">{{ grouped_crawlers_page.number|sub:2 }}</a></li>
+                {% endif %}
+                {% if grouped_crawlers_page.number|sub:1 > 0 %}
+                    <li class="page-item"><a class="page-link" href="?page={{ grouped_crawlers_page.number|sub:1 }}{{ filters_url}}">{{ grouped_crawlers_page.number|sub:1 }}</a></li>
+                {% endif %}
+
+                    <li class="page-item active"><span class="page-link">{{ grouped_crawlers_page.number }}</span></li>
+                
+                {% if grouped_crawlers_page.number|add:1 <= grouped_crawlers_page.paginator.num_pages %}
+                    <li class="page-item"><a class="page-link" href="?page={{ grouped_crawlers_page.number|add:1 }}{{ filters_url}}">{{ grouped_crawlers_page.number|add:1 }}</a></li>
+                {% endif %}
+                {% if grouped_crawlers_page.number|add:2 <= grouped_crawlers_page.paginator.num_pages %}
+                    <li class="page-item"><a class="page-link" href="?page={{ grouped_crawlers_page.number|add:2 }}{{ filters_url}}">{{ grouped_crawlers_page.number|add:2 }}</a></li>
+                {% endif %}
+
+                {% if grouped_crawlers_page.number|add:3 < grouped_crawlers_page.paginator.num_pages %}
+                    <li class="page-item"><span class="page-link">...</span></li>
+                {% endif %}
+                {% if grouped_crawlers_page.number|add:3 <= grouped_crawlers_page.paginator.num_pages %}
+                    <li class="page-item"><a class="page-link" href="?page={{ grouped_crawlers_page.paginator.num_pages }}{{ filters_url}}">{{ grouped_crawlers_page.paginator.num_pages }}</a></li>
+                {% endif %}
+        
+                {% if grouped_crawlers_page.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ grouped_crawlers_page.next_page_number }}{{ filters_url}}">&#8680;</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ grouped_crawlers_page.paginator.num_pages }}{{ filters_url}}">&raquo;</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+{% endblock %}
+{% block js %}
+    <script src="{% static 'js/crawler_list_grouped.js' %}"></script>
+{% endblock %}

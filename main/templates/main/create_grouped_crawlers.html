@@ -1,0 +1,357 @@
+{% extends 'main/base.html' %}
+
+{% load static %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}
+New Crawler
+{% endblock %}
+
+{% block style %}
+<style>
+    .grouped_crawlers_container{
+        height: 400px;
+        overflow-y: scroll;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<form id="myForm" method="POST" action="" class="form-group">{% csrf_token %}
+    <!-- esse token é para segurança em forms do tipo POST -->
+    <!-- Bootstrap row -->
+    <div class="row" id="body-row">
+        <!-- Sidebar -->
+        <div id="sidebar-container" class="sidebar-expanded d-none d-md-block col-2">
+            <!-- d-* hiddens the Sidebar in smaller devices. Its itens can be kept on the Navbar 'Menu' -->
+            <!-- Bootstrap List Group -->
+            <ul class="list-group list-group-mine sticky-top sticky-offset">
+                {% if not form.instance.pk %}
+                <!-- import settings -->
+                <a onClick="showBlock(this.id);" href="#" class="button-block bg-dark list-group-item list-group-item-action"
+                    id="import-settings-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-download fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Importar configuração</span>
+                        </div>
+                    </div>
+                </a>
+                <!-- End of import settings -->
+                {% endif %}
+
+                <!-- Separator with title -->
+                <li
+                    class="sidebar list-group-item sidebar-separator-title text-muted d-flex align-items-center menu-collapsed">
+                    <small>CONFIGURAÇÕES DA REQUISIÇÃO</small>
+                </li>
+                <!-- /END Separator -->
+                <a title="Infos básicas" onClick="showBlock(this.id);" href="#"
+                    class="active button-block bg-dark list-group-item list-group-item-action" id="basic-info-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-id-card-o fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Infos básicas</span>
+                        </div>
+                        <div class="col-md-2">
+                            {% if crawler %}
+                            <span id="basic-info-valid-icon"
+                                class="fa fa-check fa-fw mr-3 basic-info-valid-icon valid-icon"></span>
+                            {% else %}
+                            <span id="basic-info-valid-icon"
+                                class="fa fa-warning fa-fw mr-3 basic-info-valid-icon valid-icon"></span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+                <a title="Antibloqueio" onClick="showBlock(this.id);" href="#"
+                    class="button-block bg-dark list-group-item list-group-item-action" id="antiblock-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-user-secret fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Antibloqueio</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span id="antiblock-valid-icon"
+                                class="fa fa-check fa-fw mr-3 antiblock-valid-icon valid-icon"></span>
+                        </div>
+                    </div>
+                </a>
+                <a title="Captcha" onClick="showBlock(this.id);" href="#"
+                    class="disabled button-block bg-dark list-group-item list-group-item-action" id="captcha-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-unlock fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Captcha</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span id="captcha-valid-icon"
+                                class="fa fa-check fa-fw mr-3 captcha-valid-icon valid-icon"></span>
+                        </div>
+                    </div>
+                </a>
+                <a title="URL Parametrizada" onClick="showBlock(this.id)" href="#"
+                    class="disabled button-block bg-dark list-group-item list-group-item-action"
+                    id="templated_url-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-sliders fa-fw mr-3"></span>
+                            <span class="menu-collapsed">URL Parametrizada</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span id="templated_url-valid-icon"
+                                class="fa fa-check fa-fw mr-3 templated_url-valid-icon valid-icon"></span>
+                        </div>
+                    </div>
+                </a>
+                <a title="Formulários" onClick="showBlock(this.id)" href="#"
+                    class="button-block bg-dark list-group-item list-group-item-action"
+                    id="static_form-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-wpforms fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Formulários</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span id="static_form-valid-icon"
+                                class="fa fa-check fa-fw mr-3 static_form-valid-icon valid-icon"></span>
+                        </div>
+                    </div>
+                </a>
+                <!-- Separator with title -->
+                <li class="list-group-item sidebar-separator-title text-muted d-flex align-items-center menu-collapsed">
+                    <small>CONFIGURAÇÕES DA RESPOSTA</small>
+                </li>
+
+                <!-- /END Separator -->
+
+                <!-- implementation local begin -->
+                <a title="Processamento dinâmico" onClick="showBlock(this.id); load_steps_interface(this.id + '-wrap', 'id_steps');" href="#"
+                    class="button-block bg-dark list-group-item list-group-item-action" id="dynamic-processing-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-code fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Processamento dinâmico</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span id="dynamic-processing-valid-icon"
+                                class="fa fa-check fa-fw mr-3 crawler-details-valid-icon valid-icon disabled"></span>
+                        </div>
+                    </div>
+                </a>
+                <!-- implementation local end -->
+
+                <a title="Detalhes do coletor" onClick="showBlock(this.id)" href="#"
+                    class="button-block bg-dark list-group-item list-group-item-action" id="crawler-details-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-gear fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Detalhes do coletor</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span id="crawler-details-valid-icon"
+                                class="fa fa-check fa-fw mr-3 crawler-details-valid-icon valid-icon"></span>
+                        </div>
+                    </div>
+                </a>
+
+                <a title="Configuração..." href="#" class="disabled bg-dark list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <span class="fa fa-shield fa-fw mr-3"></span>
+                        <span class="menu-collapsed">Configuração...</span>
+                    </div>
+                </a>
+                <!--
+                <a onClick="showBlock(this.id);" href="#"
+                    class="disabled button-block bg-dark list-group-item list-group-item-action" id="probing-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-id-card-o fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Sondagem</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span id="probing-valid-icon"
+                                class="fa fa-check fa-fw mr-3 probing-valid-icon valid-icon"></span>
+                        </div>
+                    </div>
+                </a>
+                -->
+                <a title="Configuração..." href="#" class="disabled bg-dark list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <span class="fa fa-image fa-fw mr-3"></span>
+                        <span class="menu-collapsed">Configuração...</span>
+                    </div>
+                </a>
+                {% if crawler %}
+                <button id="createButton" type="submit"
+                    class="bg-dark list-group-item list-group-item-valid list-group-item-action"
+                    style="text-align: center; position: fixed; bottom: 0px; width: 16.725%;">
+                    Update
+                </button>
+                {% else %}
+                <button id="createButton" type="submit"
+                    class="bg-dark list-group-item list-group-item-invalid list-group-item-action"
+                    style="text-align: center; position: fixed; bottom: 0px; width: 16.725%;">
+                    Create
+                </button>
+                {% endif %}
+            </ul>
+            <!-- List Group END-->
+        </div>
+        <!-- sidebar-container END -->
+        <div class="col py-3">
+            <div class="row justify-content-center">
+                <div class="col-8">
+                    <hr class="mt-0 mb-4">
+
+                    <div id="import-settings-item-block" class="block" hidden>
+                        <div class="row" style="padding: 20px;">
+                            <div class="col md-6">
+                                <div id="div_id_import_settings" class="form-group">
+                                    <label for="id_import_settings">
+                                        Importar arquivo de configuração
+                                        <button type="button" class="popover-icon btn btn-link" data-toggle="popover" data-trigger="click" data-content="Carregue um arquivo de configuração externo em formato json e preencher automaticamente os parâmetros de configuração de uma coleta." data-placement="auto left"><i class="fa fa-info-circle" aria-hidden="true"></i></button>
+                                    </label>
+                                    <div class="">
+                                        <input type="file"
+                                                class="form-control-file"
+                                                accept="application/JSON"
+                                                id="id_import_settings"
+                                                name="import_settings"
+                                                onchange="parseSettings(this)"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="basic-info-item-block" class="block">
+                        <div class="row" style="padding:20px;">
+                            <div class="col md-10">
+                                <div class="row">
+                                    <div class="col-1">ID</div>
+                                    <div class="col-3">Nome do Coletor</div>
+                                    <div class="col-4">URL Base</div>
+                                    <div class="col-4">Caminho para salvar arquivos</div>
+                                </div>
+                                <div class="grouped_crawlers_container">
+                                    {% for crawler in crawlers %}
+                                    <div class="row">
+                                        <div class="col-1">{{ crawler.id }}</div>
+                                        <div class="col-3">
+                                            <input type="text" name="source_name" value="{{ crawler.source_name }}" class="textinput textInput form-control">
+                                        </div>
+                                        <div class="col-4">
+                                            <input type="text" name="base_url" value="{{ crawler.base_url }}" class="textinput textInput form-control">
+                                        </div>
+                                        <div class="col-4">
+                                            <input type="text" name="data_path" value="{{ crawler.data_path }}" class="textinput textInput form-control">
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="antiblock-item-block" class="block" hidden>
+                        
+                    </div>
+
+                    <div id="captcha-item-block" class="block" hidden>
+                        
+                    </div>
+
+
+                    <div id="dynamic-processing-item-block" class="block" hidden>
+                        
+                    </div>
+
+                    <div id="crawler-details-item-block" class="block" hidden>
+                        
+                    </div>
+                </div>
+
+                <div id="templated_url-item-block" class="block" hidden>
+                    <div class="row">
+                        <div class="col md-6" id="templated_url-config">
+                            
+                        </div>
+                    </div>
+                </div>
+
+                <div id="static_form-item-block" class="block" hidden>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% endblock %}
+
+{% block js %}
+<script>
+    // remove duplicate tool tip to the crawler queue
+    $('#div_id_expected_runtime_category > div > button').remove();
+
+    // initialize formsets
+    $('#templated_url_param').formset({
+        prefix: '{{ templated_parameter_formset.prefix }}',
+        templateId: 'base_templated_url_param_template',
+        subformSelector: '.param-step',
+        displayControls: false,
+    });
+    $('#templated_url_response').formset({
+        prefix: '{{ templated_response_formset.prefix }}',
+        templateId: 'base_templated_url_response_template',
+        subformSelector: '.resp-step',
+        addBtnContent: $('<a><span class="fa fa-plus"></span> ' +
+                         'Adicionar validação</a>'),
+        addBtnClass: 'add_form',
+        rmBtnClass: 'close',
+        added: () => checkTemplatedURL(),
+        removed: () => checkTemplatedURL(),
+    });
+
+    $('#static_form_param').formset({
+        prefix: '{{ static_parameter_formset.prefix }}',
+        templateId: 'base_static_form_param_template',
+        subformSelector: '.param-step',
+        addBtnContent: $('<a><span class="fa fa-plus"></span> ' +
+                         'Adicionar campo</a>'),
+        addBtnClass: 'add_form',
+        rmBtnClass: 'close',
+        added: () => {
+            updateInjectionFields('static_form');
+            checkStaticForm();
+        },
+        removed: () => checkStaticForm(),
+    });
+    $('#static_form_response').formset({
+        prefix: '{{ static_response_formset.prefix }}',
+        templateId: 'base_static_form_response_template',
+        subformSelector: '.resp-step',
+        addBtnContent: $('<a><span class="fa fa-plus"></span> ' +
+                         'Adicionar validação</a>'),
+        addBtnClass: 'add_form',
+        rmBtnClass: 'close',
+        added: () => checkStaticForm(),
+        removed: () => checkStaticForm(),
+    });
+    $(function () {$('[data-toggle="popover"]').popover({
+        trigger: 'hover',
+        html: true,
+        animation: false,
+        placement: 'right'
+    })});
+</script>
+<script src="{% static 'js/create_crawler.js' %}"></script>
+<script>detailDynamicProcessing();</script>
+<script src="{% static 'js/steps.js' %}"></script>
+<script src="{% static 'js/step_block.js' %}"></script>
+{% endblock %}
