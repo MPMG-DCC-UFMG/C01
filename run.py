@@ -42,6 +42,16 @@ def run_django():
     signal.signal(signal.SIGCHLD, lambda _, __: os.wait())
     wait_for_port(9092)
 
+    # gets port from CLI parameter and sets module to be used on spider_closed()
+    if (len(sys.argv[1:]) == 0):
+        cli_port = 8000
+    else:
+        cli_port = str(sys.argv[1]).split(":",1)[1]
+    
+    f = open("./crawlers/port.py", "w") 
+    f.write("PORT="+str(cli_port)) 
+    f.close()
+
     # Runs django repassing cli parameters
     # --no-reload Avoid calling MainConfig twice, not creating more processes than necessary
     subprocess.run(["python", "manage.py", "runserver", "--noreload"] + sys.argv[1:])

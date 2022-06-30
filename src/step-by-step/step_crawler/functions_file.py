@@ -18,11 +18,12 @@ from pyext import RuntimeModule
 """
 
 
-def step(display, executable_contexts=['page', 'tab', 'iframe']):
+def step(display, field_options = {}, executable_contexts=['page', 'tab', 'iframe']):
     def function(f):
         f.is_step = True
         f.display = display
         f.executable_contexts = executable_contexts
+        f.field_options = field_options
         return f
 
     return function
@@ -39,7 +40,8 @@ def repete(vezes):
     return [i for i in range(vezes)]
 
 
-@step("Esperar")
+@step("Esperar", field_options = {
+    'segundos' : {'field_type' : 'number', 'input_placeholder' : 'Espera em segundos'}})
 def espere(segundos):
     time.sleep(segundos)
 
@@ -148,15 +150,44 @@ async def for_clicavel(pagina, xpath):
         return False
 
 
-@step("Localizar elementos")
-async def localiza_elementos(pagina, xpath, numero_xpaths=None):
-    base_xpath = xpath.split("[*]")[0]
-
+@step("Localizar elementos", field_options = {
+    'modo' : {'field_type' : 'select', 'select_options' : ["'Modo Simples'","'XPath Complexos'"]}})
+async def localiza_elementos(pagina, xpath, numero_xpaths=None, modo='Modo Simples'):
     xpath_list = []
-    for i in range(await pagina.locator(f'xpath={base_xpath}').count()):
-        candidate_xpath = xpath.replace("*", str(i + 1))
-        if await elemento_existe_na_pagina(pagina, candidate_xpath):
-            xpath_list.append(candidate_xpath)
+
+    if modo == 'XPath Complexos':
+        elements = await pagina.xpath(xpath)
+        for el in elements:
+            text = await pagina.evaluate("""el => { 
+                var getXpathOfNode = (domNode, bits) => {
+                    bits = bits ? bits : [];
+                    var c = 0;
+                    var b = domNode.nodeName;
+                    var p = domNode.parentNode;
+
+                    if (p) {
+                        var els = p.getElementsByTagName(b);
+                        if (els.length >  1) {
+                        while (els[c] !== domNode) c++;
+                        b += "[" + (c+1) + "]";
+                        }
+                        bits.push(b);
+                        return getXpathOfNode(p, bits);
+                    }
+                    return bits.reverse().join("/");
+                }; 
+                return getXpathOfNode(el);
+            }""", el)
+
+            xpath_list.append(text.lower())
+        
+    elif modo == 'Modo Simples':
+        base_xpath = xpath.split("[*]")[0]
+
+        for i in range(await pagina.locator(f'xpath={base_xpath}').count()):
+            candidate_xpath = xpath.replace("*", str(i + 1))
+            if await elemento_existe_na_pagina(pagina, candidate_xpath):
+                xpath_list.append(candidate_xpath)
 
     numero_xpaths = len(xpath_list) if not numero_xpaths else numero_xpaths
     return xpath_list[:numero_xpaths]
@@ -241,7 +272,9 @@ async def elemento_existe_na_pagina(pagina, xpath):
         return False
     return True
 
-@step("Comparação")
+
+@step("Comparação", field_options = {
+    'comp' : {'field_type' : 'select', 'select_options' : ["'=='","'<='", "'>='", "'<'", "'>'", "'!='"]}})
 async def comparacao(pagina, arg1, comp, arg2):
     """This step returns the result of comp(arg1, arg2)
 

@@ -22,3 +22,9 @@ def only_optional_params(some="some", parameters="parameters", to="to",
 @step("No params")
 def no_params():
     return [1, 2]
+
+
+@step("With params and field_options", field_options = {
+    'test' : {'field_type' : 'number', 'input_placeholder' : 'test'}})
+def with_params_and_field_options(test):
+    return test
