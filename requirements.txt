@@ -102,7 +102,7 @@ trio-websocket==0.9.2
 Twisted==22.2.0
 typing==3.7.4.3
 typing_extensions==4.1.1
-ujson==5.1.0
+ujson==5.4.0
 urllib3==1.26.9
 validators==0.18.2
 w3lib==1.22.0
