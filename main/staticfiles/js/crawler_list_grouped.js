@@ -24,7 +24,7 @@ $(function(){
             $group_content.html(table);
             for (let i = 0; i < json_response.length; i++) {
                 const item = json_response[i];
-                table.append("<tr><td>"+item.source_name+"</td><td>"+item.id+"</td><td>"+item.base_url+"</td><td></td></tr>");
+                table.append("<tr><td>"+item.source_name+"</td><td>"+item.id+"</td><td>"+item.base_url+"</td></tr>");
             }
             $group_content.removeClass("d-none");
             $loading.addClass("d-none");

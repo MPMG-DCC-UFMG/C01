@@ -467,22 +467,57 @@ def edit_crawler(request, id):
 
 
 def edit_grouped_crawlers(request, id):
+    # busca pelo crawler que representa o grupo (pra ajudar a preencher o form)
+    crawler = get_object_or_404(CrawlRequest, pk=id)
+    
+    # e busca por todos os crawlers do grupo
     crawlers = CrawlRequest.objects.raw(
         "select id, source_name \
         from main_crawlrequest \
         where steps=( \
            select steps from main_crawlrequest where id = "+str(id)+") order by id desc")
+
     
+    form = RawCrawlRequestForm(request.POST or None, instance=crawler)
+    templated_parameter_formset, templated_response_formset = \
+        generate_injector_forms(request.POST or None,
+            injection_type='templated_url', filter_queryset=True,
+            instance=crawler)
+
+    static_parameter_formset, static_response_formset = \
+        generate_injector_forms(request.POST or None,
+            injection_type='static_form', filter_queryset=True,
+            instance=crawler)
+    
+    if request.method == 'POST':
+        crawler_ids = request.POST.getlist('crawler_id')
+        source_names = request.POST.getlist('source_name')
+        base_urls = request.POST.getlist('base_url')
+        data_paths = request.POST.getlist('data_path')
+
+        post_crawler = form.save(commit=False)
+
+        for i, _id in enumerate(crawler_ids):
+            post_crawler.id = None if _id == '' else _id
+            post_crawler.source_name = source_names[i]
+            post_crawler.base_url = base_urls[i]
+            post_crawler.data_path = data_paths[i]
+            post_crawler.save()
     
     
     context = {
+        'crawler': crawler,
         'crawlers': crawlers,
+        'form': form,
+        'templated_response_formset': templated_response_formset,
+        'templated_parameter_formset': templated_parameter_formset,
+        'static_parameter_formset': static_parameter_formset,
+        'static_response_formset': static_response_formset,
     }
 
     return render(request, 'main/create_grouped_crawlers.html', context)
     
     
-    crawler = get_object_or_404(CrawlRequest, pk=id)
 
     form = RawCrawlRequestForm(request.POST or None, instance=crawler)
     templated_parameter_formset, templated_response_formset = \

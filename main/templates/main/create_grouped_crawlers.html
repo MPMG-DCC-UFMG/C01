@@ -13,6 +13,11 @@ New Crawler
     .grouped_crawlers_container{
         height: 400px;
         overflow-y: scroll;
+        margin-right: -15px;
+        margin-left: -15px;
+        padding-right: 15px;
+        padding-left: 15px;
+        border: 1px solid #ddd;
     }
 </style>
 {% endblock %}
@@ -203,7 +208,7 @@ New Crawler
         <!-- sidebar-container END -->
         <div class="col py-3">
             <div class="row justify-content-center">
-                <div class="col-8">
+                <div class="col-12">
                     <hr class="mt-0 mb-4">
 
                     <div id="import-settings-item-block" class="block" hidden>
@@ -230,17 +235,42 @@ New Crawler
 
                     <div id="basic-info-item-block" class="block">
                         <div class="row" style="padding:20px;">
-                            <div class="col md-10">
-                                <div class="row">
-                                    <div class="col-1">ID</div>
+                            <div class="col-12">
+                                <div class="row bg-secondary text-light">
+                                    <div class="col-1"><input type="checkbox" name="check_all_crawlers" id="check_all_crawlers" checked /> ID</div>
                                     <div class="col-3">Nome do Coletor</div>
                                     <div class="col-4">URL Base</div>
                                     <div class="col-4">Caminho para salvar arquivos</div>
                                 </div>
+                                <div id="crawler-line-template" class="d-none">
+                                    <div class="row mb-1">
+                                        <div class="col-1">
+                                            <input type="checkbox" name="template-crawler_id" value="" checked />
+                                            Novo
+                                        </div>
+                                        <div class="col-3">
+                                            <input type="text" name="template-source_name" value="" class="textinput textInput form-control">
+                                        </div>
+                                        <div class="col-4">
+                                            <input type="text" name="template-base_url" value="" class="textinput textInput form-control">
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="input-group">
+                                                <input type="text" name="template-data_path" value="" class="textinput textInput form-control">
+                                                <div class="input-group-append">
+                                                    <button type="button" class="btn btn-danger ml-2 btn-remove-crawler"><i class="fa fa-minus"></i></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="grouped_crawlers_container">
                                     {% for crawler in crawlers %}
-                                    <div class="row">
-                                        <div class="col-1">{{ crawler.id }}</div>
+                                    <div class="row mb-1">
+                                        <div class="col-1">
+                                            <input type="checkbox" name="crawler_id" value="{{ crawler.id }}" checked />
+                                            {{ crawler.id }}
+                                        </div>
                                         <div class="col-3">
                                             <input type="text" name="source_name" value="{{ crawler.source_name }}" class="textinput textInput form-control">
                                         </div>
@@ -253,39 +283,218 @@ New Crawler
                                     </div>
                                     {% endfor %}
                                 </div>
+
+                                <div class="row justify-content-end mt-2">
+                                    <button id="btn-add-crawler" type="button" class="btn btn-primary"><i class="fa fa-plus"></i></button>
+                                </div>
                                 
+                                <hr>
+                                {{ form.expected_runtime_category | as_crispy_field }}
+                                <hr>
+                                {{ form.request_type | as_crispy_field}}
+                                {{ form.obey_robots | as_crispy_field}}
                             </div>
                         </div>
                     </div>
 
                     <div id="antiblock-item-block" class="block" hidden>
-                        
+                        <div class="row" style="padding:20px;">
+                            <div class="col md-6">
+                                <div id="antiblock-delay-div" class="border-bottom">
+                                    <div class="antiblock-wrapper mb-3">
+                                        {{ form.antiblock_download_delay | as_crispy_field}}
+                                    </div>
+                                    
+                                    <div class="antiblock-wrapper mb-3">
+                                        {{ form.antiblock_autothrottle_enabled | as_crispy_field}}
+                                    </div>
+
+                                    <div id="autothrottle-options-div" hidden=True>
+                                        <div>{{form.antiblock_autothrottle_start_delay | as_crispy_field}}</div>
+                                        <div>{{form.antiblock_autothrottle_max_delay | as_crispy_field}}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row pt-0" style="padding:20px;">
+                            <div class="col md-6">
+                                <div id="antiblock-mask-div">
+                                    <div class="antiblock-wrapper mb-3">
+                                        {{ form.antiblock_ip_rotation_enabled | as_crispy_field }}                                        
+                                    </div>
+
+                                    <div id="ip-rotation-options-div" {% if not form.antiblock_ip_rotation_enabled.value %} hidden {% endif %}>
+                                        {{ form.antiblock_ip_rotation_type | as_crispy_field }}
+                                        
+                                        <ul class="nav nav-tabs" id="ip-rotation-tabs" role="tablist">
+                                            <li class="nav-item">
+                                                <a class="nav-link active" id="tor" data-toggle="tab" href="#ip-nav" role="tab">Tor</a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" id="proxies" data-toggle="tab" href="#proxies-nav" role="tab">Proxies</a>
+                                            </li>
+                                        </ul>
+                                        <div class="tab-content border-bottom my-3">
+                                            <div class="tab-pane show active" id="ip-nav" role="tabpanel" aria-labelledby="tor">
+                                                {{ form.antiblock_max_reqs_per_ip | as_crispy_field}}
+                                                {{ form.antiblock_max_reuse_rounds | as_crispy_field}}
+                                                
+                                                <small class="text-muted mb-2 d-block">Certifique que o Tor esteja devidamente configurado.</small>
+                                            </div>
+                                            <div class="tab-pane " id="proxies-nav" role="tabpanel" aria-labelledby="proxies">
+                                                {{ form.antiblock_proxy_list | as_crispy_field}}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="antiblock-wrapper mb-3">
+                                        {{ form.antiblock_user_agent_rotation_enabled | as_crispy_field}}     
+                                    </div>
+
+                                    <div id="user-agent-rotation-options-div" class="border-bottom my-3" {% if not form.antiblock_user_agent_rotation_enabled.value %} hidden {% endif %}>
+                                        {{ form.antiblock_reqs_per_user_agent | as_crispy_field}}
+                                        {{ form.antiblock_user_agents_list | as_crispy_field}}
+                                    </div>
+                                    
+                                    <div class="antiblock-wrapper mb-3">
+                                        {{ form.antiblock_insert_cookies_enabled | as_crispy_field }}
+                                    </div>
+
+                                    <div id="insert-cookies-options-div" class="border-bottom my-3" {% if not form.antiblock_insert_cookies_enabled.value %} hidden {% endif %}>
+                                        {{ form.antiblock_cookies_list | as_crispy_field}}
+                                    </div>
+
+                                </div>
+                                <p class="text-info font-style-bold">* Apenas funcional para coletores estáticos.</p>
+                            </div>
+                        </div>
                     </div>
 
                     <div id="captcha-item-block" class="block" hidden>
-                        
+                        <div class="row" style="padding:20px;">
+                            <div class="col md-6">
+                                {{ form.captcha | as_crispy_field}}
+                                <div id="captchaDiv">
+                                    <div class="captcha-content-div" id="image" hidden>
+                                        {{ form.img_xpath | as_crispy_field}}
+                                    </div>
+                                    <div class="captcha-content-div" id="sound" hidden>
+                                        {{ form.sound_xpath | as_crispy_field}}
+                                    </div>
+                                    <div class="webdriver-div" id="webdriver" hidden>
+                                        {{ form.has_webdriver | as_crispy_field}}
+                                        <div id="webdriver_path_div" hidden>
+                                            {{ form.webdriver_path | as_crispy_field}}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
 
                     <div id="dynamic-processing-item-block" class="block" hidden>
-                        
+                        <div id="dynamic_processing" class="">
+                            {{ form.dynamic_processing | as_crispy_field}}
+                        </div>
+                        <div id="dynamic-processing-skip-errors" class="hidden">
+                            {{ form.skip_iter_errors | as_crispy_field}}
+                        </div>
+                        <div id="dynamic-processing-item-wrap" style="padding:20px;" class="hidden">
+                            {{ form.steps | as_crispy_field }}
+                        </div>
                     </div>
 
                     <div id="crawler-details-item-block" class="block" hidden>
-                        
+                        <div class="row">
+                            <div class="col md-6">
+                                <div class="crawler-type-content-div" id="static_page">
+                                    <div id="explore_links">
+                                        {{ form.explore_links | as_crispy_field}}
+                                        {{ form.link_extractor_max_depth | as_crispy_field}}
+                                        {{ form.link_extractor_allow_url | as_crispy_field}}
+
+                                        <div class="btn btn-primary" id="collapse-adv-links">
+                                            Opções Avançadas
+                                        </div>
+                                        <div class="mycollapse" id="adv-links">
+                                            <div class="mycollapse-block  p-4 pb-0 rounded mt-3">
+                                                {{ form.encoding_detection_method | as_crispy_field }}
+                                                <p class="small">Essa configuração permite escolher como será obtida a codificação para salvamento das páginas salvas. 
+                                                    O padrão é via cabeçalho das respostas do servidor, que devem funcionar para a maiorias dos casos e é mais rápido. 
+                                                    O método automático tentará detectar a codificação automaticamente, o que é mais lento mas pode resolver caso de 
+                                                    respostas incorretas do servidor. A detecção de codificação não é perfeita, portanto, o nível de confiança de <strong>80%</strong> é adotado.
+                                                    <br>
+                                                    <br>
+                                                    <strong>Obs.:</strong>A detecção automática de codificação não é atualmente suportada em páginas dinâmicas.
+                                                </p>
+
+                                                {{ form.link_extractor_allow_domains | as_crispy_field }}
+                                                {{ form.link_extractor_tags | as_crispy_field }}
+                                                {{ form.link_extractor_attrs | as_crispy_field }}
+                                                {{ form.link_extractor_check_type | as_crispy_field }}
+                                                <p class="small">Se existirem urls que apontam para arquivos mas não <strong>terminam</strong>
+                                                    em uma extensão de arquivo, o coletor pode conferir o tipo da página pra qual a url aponta.
+                                                    Nesse caso, ele irá requisitar os <i>headers</i> da url. Se o tipo for <i>'text/html'</i>,
+                                                    a página será tratada com um html; caso contrário, como um arquivo. Habilitar essa opção
+                                                    pode deixar a coleta mais lenta, então priorize filtrar urls com regex.
+                                                </p>
+                                                {{ form.link_extractor_process_value | as_crispy_field }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="download_files" style="padding: 20px; border-top: 1px solid #DCDCDC;">
+                                        {{ form.download_files | as_crispy_field}}
+                                        {{ form.download_files_allow_url | as_crispy_field}}
+                                        {{ form.download_files_allow_extensions | as_crispy_field}}
+
+                                        <div class="btn btn-primary" id="collapse-adv-download">
+                                            Opções Avançadas
+                                        </div>
+                                        <div class="mycollapse" id="adv-download">
+                                            <div class="mycollapse-block p-4 pb-0 rounded mt-3">
+                                                {{ form.download_files_allow_domains | as_crispy_field }}
+                                                {{ form.download_files_tags | as_crispy_field }}
+                                                {{ form.download_files_attrs | as_crispy_field }}
+                                                {{ form.download_files_process_value | as_crispy_field }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="download_img" class="" style="padding: 20px 20px 0 20px; border-top: 1px solid #DCDCDC;">
+                                        {{ form.download_imgs | as_crispy_field}}
+                                    </div>
+                                    <div class="download_check_large_files" style="padding: 0 20px 0 20px;">
+                                        {{ form.download_files_check_large_content | as_crispy_field}}
+                                        <p class="small">Caso não haja arquivos grandes (>1GB) a serem coletados, desabilite a opção acima para ganhar desempenho. </p>                     
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div id="templated_url-item-block" class="block" hidden>
                     <div class="row">
                         <div class="col md-6" id="templated_url-config">
-                            
+                            {% include "main/injection_config.html" with parameter_formset=templated_parameter_formset response_formset=templated_response_formset injection_type='templated_url' %}
                         </div>
                     </div>
                 </div>
 
                 <div id="static_form-item-block" class="block" hidden>
-                    
+                    <div class="row">
+                        <div class="col md-6" id="static_form-config">
+                            <input name="loadfields"
+                                type="button" onclick="loadStaticForm()"
+                                value="Carregar campos de formulário">
+                            </input>
+                            <br><br>
+                            {{ form.form_request_type | as_crispy_field}}
+                            <div class="bordered-bottom-option"></div>
+                            {% include "main/injection_config.html" with parameter_formset=static_parameter_formset response_formset=static_response_formset injection_type='static_form' %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -354,4 +563,5 @@ New Crawler
 <script>detailDynamicProcessing();</script>
 <script src="{% static 'js/steps.js' %}"></script>
 <script src="{% static 'js/step_block.js' %}"></script>
+<script src="{% static 'js/create_crawler_grouped.js' %}"></script>
 {% endblock %}
