@@ -591,7 +591,7 @@ class DistributedScheduler(object):
                     "playwright": True,
                     "playwright_include_page": True,
                     "steps": steps
-                }
+            }
             )
         else:
             try:
