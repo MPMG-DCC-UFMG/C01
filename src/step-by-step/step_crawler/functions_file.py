@@ -317,3 +317,7 @@ async def open_in_new_tab(pagina, link_xpath):
         # crashing the collector when we merge master with this branch
         raise Exception('Process timed out when trying to open xpath "'\
             + link_xpath +'" in a new page!')
+
+@step("Executar código Javascript")
+async def run_javascript(pagina, codigo_javascript):
+    return await pagina.evaluate(codigo_javascript)

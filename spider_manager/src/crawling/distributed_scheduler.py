@@ -372,7 +372,7 @@ class DistributedScheduler(object):
 
         # get public id URL (required after scrapy.conf deprecation, see
         # https://docs.scrapy.org/en/latest/news.html#id47)
-        public_ip_url = settings.get('PUBLIC_IP_URL', 'http://ip.42.pl/raw')
+        public_ip_url = settings.get('PUBLIC_IP_URL', 'https://ip.42.pl/raw')
 
         return cls(server, persist, up_int, timeout, retries, logger, hits,
                    window, mod, ip_refresh, add_type, add_ip, ip_regex,
