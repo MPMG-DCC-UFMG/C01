@@ -18,7 +18,7 @@ from pyext import RuntimeModule
 """
 
 
-def step(display, field_options = {}, executable_contexts=['page', 'tab', 'iframe']):
+def step(display, field_options={}, executable_contexts=['page', 'tab', 'iframe']):
     def function(f):
         f.is_step = True
         f.display = display
@@ -40,8 +40,8 @@ def repete(vezes):
     return [i for i in range(vezes)]
 
 
-@step("Esperar", field_options = {
-    'segundos' : {'field_type' : 'number', 'input_placeholder' : 'Espera em segundos'}})
+@step("Esperar", field_options={
+    'segundos': {'field_type': 'number', 'input_placeholder': 'Espera em segundos'}})
 def espere(segundos):
     time.sleep(segundos)
 
@@ -150,8 +150,8 @@ async def for_clicavel(pagina, xpath):
         return False
 
 
-@step("Localizar elementos", field_options = {
-    'modo' : {'field_type' : 'select', 'select_options' : ["'Modo Simples'","'XPath Complexos'"]}})
+@step("Localizar elementos", field_options={
+    'modo': {'field_type': 'select', 'select_options': ["'Modo Simples'", "'XPath Complexos'"]}})
 async def localiza_elementos(pagina, xpath, numero_xpaths=None, modo='Modo Simples'):
     xpath_list = []
 
@@ -180,7 +180,7 @@ async def localiza_elementos(pagina, xpath, numero_xpaths=None, modo='Modo Simpl
             }""", el)
 
             xpath_list.append(text.lower())
-        
+
     elif modo == 'Modo Simples':
         base_xpath = xpath.split("[*]")[0]
 
@@ -273,8 +273,8 @@ async def elemento_existe_na_pagina(pagina, xpath):
     return True
 
 
-@step("Comparação", field_options = {
-    'comp' : {'field_type' : 'select', 'select_options' : ["'=='","'<='", "'>='", "'<'", "'>'", "'!='"]}})
+@step("Comparação", field_options={
+    'comp': {'field_type': 'select', 'select_options': ["'=='", "'<='", "'>='", "'<'", "'>'", "'!='"]}})
 async def comparacao(pagina, arg1, comp, arg2):
     """This step returns the result of comp(arg1, arg2)
 
@@ -283,10 +283,11 @@ async def comparacao(pagina, arg1, comp, arg2):
         :param arg1 : a python object
         :returns bool: True or False
     """
-    op_dict = {"==" : operator.eq, "<=" : operator.le, ">=" : operator.ge,
-               "<" : operator.lt, ">" : operator.gt, "!=" : operator.ne,}
+    op_dict = {"==": operator.eq, "<=": operator.le, ">=": operator.ge,
+               "<": operator.lt, ">": operator.gt, "!=": operator.ne, }
 
     return op_dict[comp](arg1, arg2)
+
 
 async def open_in_new_tab(pagina, link_xpath):
     el_locator = pagina.locator(f'xpath={link_xpath}')
@@ -315,8 +316,9 @@ async def open_in_new_tab(pagina, link_xpath):
     except playwright._impl._api_types.TimeoutError:
         # TODO we will have to change this section to warn the user without
         # crashing the collector when we merge master with this branch
-        raise Exception('Process timed out when trying to open xpath "'\
-            + link_xpath +'" in a new page!')
+        raise Exception('Process timed out when trying to open xpath "' +
+            link_xpath + '" in a new page!')
+
 
 @step("Executar código Javascript")
 async def run_javascript(pagina, codigo_javascript):
