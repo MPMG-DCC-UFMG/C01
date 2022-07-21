@@ -163,7 +163,7 @@ function init_optional_params_button(step){
             text = param_to_placeholder(param)
             return `<a class="dropdown-item" style="cursor:pointer" data-param="${param}">${text}<\a>`
         }
-    )
+    ).join('\n')
     for(child of dropdown_menu.children){
         child.onclick = function(){
             block = find_parent_with_attr_worth(this, "block")
