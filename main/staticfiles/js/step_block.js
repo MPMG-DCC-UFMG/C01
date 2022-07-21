@@ -705,13 +705,24 @@ function turn_to_for_step(){
 }
 
 /**
- * Sets the block to the while each step.
+ * Sets the block to the while step.
  * This function is a method of the block.
  */
  function turn_to_while_step(){
     block = find_parent_with_attr_worth(this, "block")
     block.delete_lines(block.lines.length)
     block.add_line()
+
+    // defines "invert" checkbox
+    invert_input_box = document.createElement("DIV")
+    invert_input = document.createElement("input")
+    invert_input.setAttribute("type", "checkbox");
+    invert_input_box.appendChild(invert_input)
+    invert_input_label = document.createElement("label")
+    invert_input_label.innerHTML = "Inverter"
+    invert_input_label.style.paddingLeft = "0.5em"
+    invert_input_box.appendChild(invert_input_label)
+    block.invert_input = invert_input
 
     // defines condition step
     condition_select_box = document.createElement("DIV")
@@ -722,6 +733,7 @@ function turn_to_for_step(){
     condition_select_box.appendChild(condition_select)
     block.condition_select = condition_select
 
+    block.lines[0].row.appendChild(invert_input_box)
     block.lines[0].row.appendChild(condition_select_box)
     block.lines[0].row.full = true
 
@@ -730,13 +742,24 @@ function turn_to_for_step(){
 }
 
 /**
- * Sets the block to the if each step.
+ * Sets the block to the if step.
  * This function is a method of the block.
  */
  function turn_to_if_step(){
     block = find_parent_with_attr_worth(this, "block")
     block.delete_lines(block.lines.length)
     block.add_line()
+
+    // defines "invert" checkbox
+    invert_input_box = document.createElement("DIV")
+    invert_input = document.createElement("input")
+    invert_input.setAttribute("type", "checkbox");
+    invert_input_box.appendChild(invert_input)
+    invert_input_label = document.createElement("label")
+    invert_input_label.innerHTML = "Inverter"
+    invert_input_label.style.paddingLeft = "0.5em"
+    invert_input_box.appendChild(invert_input_label)
+    block.invert_input = invert_input
 
     // defines condition step
     condition_select_box = document.createElement("DIV")
@@ -747,6 +770,7 @@ function turn_to_for_step(){
     condition_select_box.appendChild(condition_select)
     block.condition_select = condition_select
 
+    block.lines[0].row.appendChild(invert_input_box)
     block.lines[0].row.appendChild(condition_select_box)
     block.lines[0].row.full = true
 
