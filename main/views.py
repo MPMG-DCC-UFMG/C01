@@ -143,6 +143,7 @@ def unqueue_crawl_requests(queue_type: str):
     response = {'crawlers_added_to_run': crawlers_runnings}
     return response
 
+
 def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
     instance = CrawlRequest.objects.filter(
         id=crawler_id).get().running_instance
@@ -166,14 +167,14 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
     # command_output = subprocess.run(["du " + config['data_path'] + "/data -d 0"], shell=True, stdout=subprocess.PIPE)
     # output_line = command_output.stdout.decode('utf-8').strip('\n')
     # parts = output_line.split('\t')
-    data_size_kbytes = 0#int(parts[0])
+    data_size_kbytes = 0  # int(parts[0])
 
     # FIXME: Colocar esse trecho de código no módulo writer
     # conta a qtde de arquivos no diretório "data"
     # command_output = subprocess.run(
     #     ["find " + config['data_path'] + "/data -type f | wc -l"], shell=True, stdout=subprocess.PIPE)
     # output_line = command_output.stdout.decode('utf-8').strip('\n')
-    num_data_files = 0#int(output_line)
+    num_data_files = 0  # int(output_line)
 
     instance = None
     instance_info = {}
@@ -201,7 +202,7 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
 
     crawler_manager.update_instances_info(
         config["data_path"], str(instance_id), instance_info)
-    
+
     crawler_manager.stop_crawler(crawler_id)
 
     unqueue_crawl_requests(queue_type)
@@ -213,6 +214,7 @@ def list_process(request):
         text += f"child {p.name} is PID {p.pid}<br>"
 
     return HttpResponse(text)
+
 
 def crawler_queue(request):
     return render(request, 'main/crawler_queue.html')
@@ -435,6 +437,7 @@ def stop_crawl(request, crawler_id):
     process_stop_crawl(crawler_id, from_sm_listener)
     return redirect(detail_crawler, crawler_id=crawler_id)
 
+
 def run_crawl(request, crawler_id):
     add_crawl_request(crawler_id)
 
@@ -444,6 +447,7 @@ def run_crawl(request, crawler_id):
     unqueue_crawl_requests(queue_type)
 
     return redirect(detail_crawler, crawler_id=crawler_id)
+
 
 def tail_log_file(request, instance_id):
     instance = CrawlerInstance.objects.get(instance_id=instance_id)
@@ -595,6 +599,7 @@ def duplicated_download_page(request, instance_id):
 
 def downloads(request):
     return render(request, "main/downloads.html")
+
 
 def export_config(request, instance_id):
     instance = get_object_or_404(CrawlerInstance, pk=instance_id)

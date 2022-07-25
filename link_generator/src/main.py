@@ -5,6 +5,7 @@ from kafka import KafkaConsumer
 from generator import generate_requests
 import settings
 
+
 def run() -> None:
     consumer = KafkaConsumer(settings.LINK_GENERATOR_TOPIC,
                             bootstrap_servers=settings.KAFKA_HOSTS,
@@ -47,6 +48,7 @@ def run() -> None:
 
         except Exception as e:
             print(f'Error processing message: {e}')
+
 
 if __name__ == '__main__':
     run()
