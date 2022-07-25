@@ -73,7 +73,7 @@ def get_redis_queue_key(base_url: str, crawler_id: str) -> str:
 
 def push_crawl_request_to_redis(redis_queue_key: str, url: str,
                                 crawler_id: str, instance_id: str,
-                                templated_param_combination:list):
+                                templated_param_combination: list):
     req = format_request(url, crawler_id, instance_id,
         templated_param_combination)
     val = json.dumps(req)
