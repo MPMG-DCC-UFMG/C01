@@ -491,6 +491,7 @@ class Log(TimeStamped):
     log_level = models.CharField(max_length=10, blank=True, null=True)
     raw_log = models.TextField(blank=True, null=True)
 
+
 class CrawlerQueue(models.Model):
     max_fast_runtime_crawlers_running = models.PositiveIntegerField(default=1, blank=True)
     max_medium_runtime_crawlers_running = models.PositiveIntegerField(default=1, blank=True)
