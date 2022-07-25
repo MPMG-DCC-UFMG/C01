@@ -8,16 +8,9 @@ class CrawlRequestForm(forms.ModelForm):
     class Meta:
         model = CrawlRequest
 
-        labels = {
-            # 'request_type': 'Método da requisição',
-            'form_request_type': 'Método da requisição ao injetar em formulários',
-        }
-
         fields = [
             'source_name',
             'base_url',
-            # 'request_type',
-            'form_request_type',
             'obey_robots',
             'captcha',
 
@@ -515,8 +508,7 @@ class ResponseHandlerForm(forms.ModelForm):
         widgets = {
             'handler_type': forms.Select(attrs={
                 'onchange': 'detailResponseType(event);'
-            }),
-            'injection_type': forms.HiddenInput(),
+            })
         }
 
 
@@ -525,29 +517,6 @@ class ParameterHandlerForm(forms.ModelForm):
     Contains the fields related to the configuration of the request parameters
     to be injected
     """
-
-    def __init__(self, *args, **kwargs):
-        super(ParameterHandlerForm, self).__init__(*args, **kwargs)
-
-        injection_type = ""
-        if self.initial:
-            injection_type = self.initial['injection_type']
-
-        def filter_option(opt):
-            if injection_type == "templated_url" and opt[0] == "const_value":
-                return False
-            return True
-
-        # Templated URL forms shouldn't have a constant injector option
-        choices = list(filter(filter_option, ParameterHandler.PARAM_TYPES))
-
-        self.fields['parameter_type'] = forms.ChoiceField(
-            choices=choices,
-            label='Tipo de parâmetro',
-            widget=forms.Select(attrs={
-                'onchange': 'detailParamType(event);'
-            })
-        )
 
     def clean(self):
         """
@@ -630,10 +599,8 @@ class ParameterHandlerForm(forms.ModelForm):
             'origin_ids_proc_param': ('Identificadores de origens a buscar, '
                                       'separados por vírgula'),
             'value_list_param': 'Lista de valores a gerar (separados por vírgula)',
-            'value_const_param': 'Valor a gerar',
             'filter_range': 'Filtrar limites',
-            'parameter_label': 'Descrição do campo',
-            'parameter_key': 'Nome do campo',
+            'parameter_type': 'Tipo de parâmetro'
         }
 
         widgets = {
@@ -660,7 +627,9 @@ class ParameterHandlerForm(forms.ModelForm):
                 'pattern': ParameterHandler.LIST_REGEX,
                 'title': 'Insira uma lista de números separados por vírgula.',
             }),
-            'injection_type': forms.HiddenInput(),
+            'parameter_type': forms.Select(attrs={
+                'onchange': 'detailParamType(event);'
+            }),
         }
 
     step_num_param = forms.IntegerField(initial=1, required=False,
