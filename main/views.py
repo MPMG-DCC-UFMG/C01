@@ -851,6 +851,9 @@ def load_iframe(request):
         }
         return render(request, 'main/error_iframe_loader.html', ctx)
 
+def scheduler(request):
+    context = {}
+    return render(request, 'main/scheduler.html', context)
 
 # API
 ########
