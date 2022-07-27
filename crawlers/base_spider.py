@@ -29,6 +29,8 @@ from crawlers.injector_tools import create_probing_object,\
 from main.models import CrawlRequest
 from crawlers.constants import AUTO_ENCODE_DETECTION_CONFIDENCE_THRESHOLD
 
+from crawlers.port import *
+
 PUNCTUATIONS = "[{}]".format(string.punctuation)
 
 
@@ -465,7 +467,6 @@ class BaseSpider(scrapy.Spider):
     def spider_closed(self, spider):
         crawler_id = spider.crawler.settings.get('CRAWLER_ID')
 
-        # TODO: get port as variable
-        port = 8000
+        # PORT comes from the port module and is set on run.py directly from CLI input
         requests.get(
-            f'http://localhost:{port}/detail/stop_crawl/{crawler_id}')
+            f'http://localhost:{PORT}/detail/stop_crawl/{crawler_id}')
