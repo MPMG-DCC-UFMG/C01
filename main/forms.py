@@ -42,6 +42,7 @@ class CrawlRequestForm(forms.ModelForm):
             'img_xpath',
             'sound_xpath',
             'dynamic_processing',
+            'browser_type',
             'skip_iter_errors',
             'explore_links',
 
@@ -293,6 +294,18 @@ class RawCrawlRequestForm(CrawlRequestForm):
             attrs={'onchange': 'detailDynamicProcessing();'}
         )
     )
+
+    browser_type = forms.ChoiceField(
+        choices=(
+            ('chromium', 'Chromium'),
+            ('firefox', 'Mozilla Firefox'),
+            ('webkit', 'WebKit'),
+        ),
+        label='Navegador Web',
+        initial='chromium',
+        widget=forms.RadioSelect
+    )
+
     skip_iter_errors = forms.BooleanField(
         required=False, label="Pular iterações com erro"
     )
