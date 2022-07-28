@@ -5,25 +5,48 @@ var el_montly_repeat_option = $('#monthly-repeat-wrapper');
 var repeat_option_selected = null;
 
 var days_selected_to_repeat = {
-    '0': false,
-    '1': false,
-    '2': false,
-    '3': false,
-    '4': false,
-    '5': false,
-    '6': false
+    0: false,
+    1: false,
+    2: false,
+    3: false,
+    4: false,
+    5: false,
+    6: false
 };
+
+var day_number_to_weekday = {
+    0: 'domingo',
+    1: 'segunda-feira',
+    2: 'terça-feira',
+    3: 'quarta-feira',
+    4: 'quinta-feira',
+    5: 'sexta-feira',
+    6: 'sábado'   
+}
+
+var repetion = {
+    type: 'daily',
+    interval: 1,
+    additional_data: null,
+    finish: {
+        type: 'never',
+        additional_data: null
+    }
+};
+
+var date = new Date();
+
+var repeat_finish_occurrences = 1;
+var montly_repeat_value = date.getDate();
+var montly_repeat_type = 'day-x';
+var repeat_finish_date; 
 
 function new_scheduling_modal() {    
 }
 
 function open_personalized_crawler_repetition() {
-    console.log('ok, npe')
-
     $('#newScheduling').modal('hide');
-
     $('#personalizedCrawlerRepetion').modal('show');
-
 }
 
 function show_days_of_week_repeat_options() {
@@ -47,7 +70,7 @@ function hide_monthly_repeat_options() {
 }
 
 function toggle_weekday_select(el) {
-    let weekday = el.getAttribute('weekday');
+    let weekday = parseInt(el.getAttribute('weekday'));
 
     days_selected_to_repeat[weekday] = !days_selected_to_repeat[weekday];
 
@@ -58,11 +81,16 @@ function toggle_weekday_select(el) {
         el.classList.remove('text-white', 'bg-primary');
         el.classList.add('text-muted', 'bg-white');
     }
+
+    repetion.additional_data = [];
+    for (let i in days_selected_to_repeat)
+        if (days_selected_to_repeat[i])
+            repetion.additional_data.push(i)
+    
+    update_repetition_info();
 }
 
 function init_default_options() {
-    let date = new Date();
-
     let curr_day = date.getDate();
     let weekday = date.getDay();
     
@@ -71,19 +99,116 @@ function init_default_options() {
     $(`#mlws-${weekday}`).attr('selected', 'selected');
     $(`#dwr-${weekday}`).click();
 
-    date.setFullYear(date.getFullYear() + 1);
+    let future_date = new Date()
+    future_date.setFullYear(date.getFullYear() + 1);
 
-    let day = date.getDate() < 10 ? `0${date.getDate()}` : date.getDate();
-    let month = date.getMonth() < 10 ? `0${date.getMonth()}` : date.getMonth();
+    let day = date.getDate() < 10 ? `0${future_date.getDate()}` : future_date.getDate();
+    let month = date.getMonth() < 10 ? `0${future_date.getMonth()}` : future_date.getMonth();
 
-    let parsed_date = `${date.getFullYear()}-${month}-${day}`;
+    let parsed_date = `${day}/${month}/${future_date.getFullYear()}`;
+    
+    repeat_finish_date = parsed_date;
+    montly_repeat_value = curr_day;
+
     $('#finish-date-in').val(parsed_date);
-    
-    console.log(parsed_date);
+}
 
-    // console.log($('#finish-date-in').val(), parsed_date)
+function update_repetition_info() {
+    let s = '';
     
-    // .val(parsed_date);
+    switch (repetion.type) {
+        case 'daily':
+            if (repetion.interval == 1)
+                s = 'Repete diariamente.'
+            
+            else
+                s = `Repete a cada ${repetion.interval} dias.`
+
+            break;
+        
+        case 'weekly':
+            
+            if (repetion.additional_data.length > 0) {
+                if (repetion.interval == 1)
+                    s = 'Repete semanalmente aos/às ';
+    
+                else 
+                    s = `Repete a cada ${repetion.interval} semanas aos/às `
+
+                    let days = [];
+                let day_number;
+                
+                for (let i = 0;i < repetion.additional_data.length;i++) {
+                    day_number = repetion.additional_data[i];
+                    days.push(day_number_to_weekday[day_number]);
+                }
+                
+                if (days.length == 1)
+                    s += days[0] + '.';
+
+                else {
+                    for (let i=0;i<days.length-1;i++)
+                        s += days[i] + ', '
+                    s = s.substring(0, s.length - 2) + ` e ${days[days.length - 1]}.`;
+
+                }
+
+            } else 
+                s = 'Repete semanalmente.'
+
+            break
+        
+        case 'monthly':
+            if (repetion.interval == 1)
+                s = 'Repete mensalmente ';
+            
+            else 
+                s = `Repete a cada ${repetion.interval} meses `
+
+            switch (repetion.additional_data.type) {
+                case 'day-x':
+                    s += `no dia ${repetion.additional_data.value}.`;
+                    break;
+                
+                case 'first-weekday':
+
+                    s += `no/na primeiro(a) ${day_number_to_weekday[repetion.additional_data.value]}.`
+                    break
+
+                case 'last-weekday':
+                    s += `no/na último(a) ${day_number_to_weekday[repetion.additional_data.value]}.`
+                    break;
+
+                default:
+                    break;
+            }
+
+            break
+
+        case 'yearly':
+            if (repetion.interval == 1)
+                s = 'Repete anualmente.'
+
+            else
+                s = `Repete a cada ${repetion.interval} anos.`
+
+            break 
+    }
+
+    switch (repetion.finish.type) {
+        case 'occurrence':
+            s += ` Ocorre ${repetion.finish.additional_data} vezes.`
+            break;
+        
+        case 'date':
+            s += ` Ocorre até ${repetion.finish.additional_data}.`
+            break;
+
+        default:
+            break;
+    }
+
+    $('#repetition-info').text(s);
 }
 
 $(document).ready(function () {
@@ -129,19 +254,128 @@ $(document).ready(function () {
                 hide_monthly_repeat_options();
                 break;
         }
-
-
+        
         switch (repeat_mode) {
             case 'weekly':
+                repetion.additional_data = [];
+                for (let i in days_selected_to_repeat)
+                    if (days_selected_to_repeat[i])
+                        repetion.additional_data.push(i)                    
+
+                if (repetion.additional_data.length == 0)
+                    $(`#dwr-${date.getDay()}`).click();
+
                 show_days_of_week_repeat_options();
                 break;
         
             case 'monthly':
                 show_monthly_repeat_options();
+                repetion.additional_data = { type: montly_repeat_type, value: montly_repeat_value};
+                break;
+                
+            default:
+                repetion.additional_data = null;
                 break;
         }
 
         repeat_option_selected = repeat_mode;
+        repetion.type = repeat_mode;
+
+        update_repetition_info();
+    });
+
+    $('#interval-in').change(function () {
+        repetion.interval = parseInt($(this).val());
+        update_repetition_info();
+    });
+
+    $("input[name=finish-type]").change(function() {
+        let input = $(this);
+
+        let finish_type = input.attr('finish_type');
+        
+        repetion.finish.type = finish_type;
+        switch (finish_type) {
+            case 'never':
+                repetion.finish.additional_data = null;
+                break;
+        
+            case 'occurrence':
+                repetion.finish.additional_data = repeat_finish_occurrences;                
+                break;
+
+            case 'date':
+                repetion.finish.additional_data = repeat_finish_date;
+                break;
+
+            default:
+                break;
+        }
+
+        update_repetition_info();
+    });
+
+    $('#finish-occurrence-in').on('click', function(){
+        repeat_finish_occurrences = parseInt($(this).val());
+        $('#finish-ocurrence').click();
+        repetion.finish.additional_data = repeat_finish_occurrences;   
+        update_repetition_info();             
+    });
+
+    $('#finish-date-in').change(function () {
+        repeat_finish_date = $(this).val(); 
+        $('#finish-date').click();
+        repetion.finish.additional_data = repeat_finish_date;
+        update_repetition_info();
+    });
+
+    $('input[name=montly-repeat]').change(function() {
+        let input = $(this);
+
+        montly_repeat_type = input.attr('montly_repeat');
+        montly_repeat_value = parseInt($(`#montly-${montly_repeat_type}-sel`).find(":selected").val());
+
+        repetion.additional_data.type = montly_repeat_type;
+        repetion.additional_data.value = montly_repeat_value;
+        update_repetition_info();
+    });
+
+    $('#montly-day-x-sel').on('change',function() {
+        montly_repeat_value = parseInt($(this).find(":selected").val());
+        montly_repeat_type = 'day-x';
+
+        $('#montly-every-day-x').click();
+        
+        repetion.additional_data.type = montly_repeat_type;
+        repetion.additional_data.value = montly_repeat_value;
+        update_repetition_info();
+    });
+
+    $('#montly-first-weekday-sel').on('change', function () {
+        montly_repeat_value = parseInt($(this).find(":selected").val());
+        montly_repeat_type = 'first-weekday';
+
+        $('#montly-first-weekday').click();
+
+        repetion.additional_data.type = montly_repeat_type;
+        repetion.additional_data.value = montly_repeat_value;
+        update_repetition_info();
+    });
+
+    $('#montly-last-weekday-sel').on('change', function () {
+        montly_repeat_value = parseInt($(this).find(":selected").val());
+        montly_repeat_type = 'last-weekday';
+
+        $('#montly-last-weekday').click();
+
+        repetion.additional_data.type = montly_repeat_type;
+        repetion.additional_data.value = montly_repeat_value;
+        update_repetition_info();
+    });
+
+    $('#finish-date-in').datepicker({
+        format: 'dd/mm/yyyy',
+        language: 'pt-BR'
     });
 
     init_default_options();

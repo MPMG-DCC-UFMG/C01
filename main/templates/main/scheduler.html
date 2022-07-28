@@ -1949,6 +1949,8 @@ Agendamento de coletas
                     <div class="d-flex justify-content-between ml-auto">
                         <input 
                             type="number" 
+                            id="interval-in"
+                            min="1"
                             value="1" class="text-center border-left-0 border-right-0 border-top-0 border-bottom mr-3" 
                             style="max-width: 3rem;">
                         <select 
@@ -1988,10 +1990,10 @@ Agendamento de coletas
                 </div>
 
                 <div id="monthly-repeat-wrapper" class="d-none mt-3">
-                    <input type="radio" name="montly-repeat" id="montly-every-day-x">
+                    <input type="radio" name="montly-repeat" montly_repeat="day-x" id="montly-every-day-x" checked>
                     <label for="montly-every-day-x">
                         Todo dia 
-                            <select name="" id="montly-every-day-x" class="border-left-0 border-right-0 border-top-0 border-bottom bg-white pb-1" style="min-width: 3rem;">
+                            <select name="" id="montly-day-x-sel" class="border-left-0 border-right-0 border-top-0 border-bottom bg-white pb-1" style="min-width: 3rem;">
                                 <option id="medx-1" value="1">1</option>
                                 <option id="medx-2" value="2">2</option>
                                 <option id="medx-3" value="3">3</option>
@@ -2024,14 +2026,14 @@ Agendamento de coletas
                                 <option id="medx-30" value="30">30</option>
                                 <option id="medx-31" value="31">31</option>
                             </select>
-                             de todo mês
+                             do mês
                     </label>
 
                     <br>
 
-                    <input class="mt-1" type="radio" name="montly-repeat" id="montly-first-weekday">
+                    <input class="mt-1" type="radio" name="montly-repeat" montly_repeat="first-weekday" id="montly-first-weekday">
                     <label for="montly-first-weekday">No(a) primeiro(a)
-                        <select name="" id="montly-first-weekday-select" 
+                        <select name="" id="montly-first-weekday-sel" 
                             class="border-left-0 border-right-0 border-top-0 border-bottom bg-white pb-1">
                             <option id="mfws-0" value="0">domingo</option>
                             <option id="mfws-1" value="1">segunda-feira</option>
@@ -2041,15 +2043,14 @@ Agendamento de coletas
                             <option id="mfws-5" value="5">sexta-feira</option>
                             <option id="mfws-6" value="6">sábado</option>
                         </select>    
-                        
-                    de todo mês
+                        do mês
                     </label>
 
                     <br>
-                    <input class="mt-1" type="radio" name="montly-repeat" id="montly-last-weekday">
+                    <input class="mt-1" type="radio" name="montly-repeat" montly_repeat="last-weekday" id="montly-last-weekday">
                     <label for="montly-last-weekday">
                         No(a) último(a) 
-                        <select name="" id="montly-last-weekday-selector" 
+                        <select name="" id="montly-last-weekday-sel" 
                             class="border-left-0 border-right-0 border-top-0 border-bottom bg-white pb-1">
                             <option id="mlws-0" value="0">domingo</option>
                             <option id="mlws-1" value="1">segunda-feira</option>
@@ -2059,7 +2060,7 @@ Agendamento de coletas
                             <option id="mlws-5" value="5">sexta-feira</option>
                             <option id="mlws-6" value="6">sábado</option>
                         </select>
-                        de todo mês
+                        do mês
                     </label>
                 </div>
                 <hr>
@@ -2068,34 +2069,44 @@ Agendamento de coletas
                     <label for="" class="font-weight-bold">Término</label>
                     
                     <div class="pr-3">
-                        <input type="radio" name="finish-type" id="finish-never" checked>
+                        <input type="radio" name="finish-type"  finish_type="never" id="finish-never" checked>
                         <label for="finish-never">Nunca</label>
                         
                         <br>
                         
-                        <input type="radio" name="finish-type" id="finish-ocurrence">
+                        <input type="radio" name="finish-type" finish_type="occurrence" id="finish-ocurrence">
                         <label for="finish-ocurrence">
                             Após 
                             <input type="number" 
                                 class="border-left-0 border-right-0 border-top-0 border-bottom text-center"
                                 value="1" 
+                                min="1"
+                                id="finish-occurrence-in"
                                 style="width: 3rem;"> 
                             ocorrências    
                         </label>
                         
                         <br>
     
-                        <input type="radio" name="finish-type" id="finish-date">
+                        <input type="radio" name="finish-type" finish_type="date" id="finish-date">
                         <label for="finish-date">
-                            Em <input type="date" name="" id="finish-date-in" class="border-left-0 border-right-0 border-top-0 border-bottom">
+                            <div class="d-flex" >
+                                    Em 
+                                    <input type="text" 
+                                    name="" 
+                                    id="finish-date-in" 
+                                    class="border-left-0 border-right-0 border-top-0 border-bottom text-center"
+                                    style="max-width: 9rem;"
+                                    >
+                                    <i class="far fa-calendar fa-lg ml-3"></i>
+                                </div>
                         </label>
                     </div>
                 </div>
             </div>
 
             <div class="modal-footer d-flex justify-content-end">
-                <span class="w-100 font-weight-bold small">
-                    Repete a cada 2 dias, 5 vezes.
+                <span class="w-100 font-weight-bold small" id="repetition-info">
                 </span>
                 <br>
                 <div class="">
@@ -2111,4 +2122,10 @@ Agendamento de coletas
 
 {% block js %}
 <script src="{% static 'js/scheduler.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.css"
+    rel="stylesheet" />
+<script
+    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.pt-BR.min.js"></script>
+
 {% endblock %}
