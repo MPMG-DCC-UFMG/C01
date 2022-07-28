@@ -1,0 +1,174 @@
+<!-- d-* hiddens the Sidebar in smaller devices. Its itens can be kept on the Navbar 'Menu' -->
+<!-- Bootstrap List Group -->
+<ul class="list-group list-group-mine sticky-top sticky-offset">
+    {% if not form.instance.pk %}
+    <!-- import settings -->
+    <a onClick="showBlock(this.id);" href="#" class="button-block bg-dark list-group-item list-group-item-action"
+        id="import-settings-item">
+        <div class="d-flex w-100 justify-content-start align-items-center">
+            <div class="col-md-10 sidemenu-items">
+                <span class="fa fa-download fa-fw mr-3"></span>
+                <span class="menu-collapsed">Importar configuração</span>
+            </div>
+        </div>
+    </a>
+    <!-- End of import settings -->
+    {% endif %}
+
+    <!-- Separator with title -->
+    <li
+        class="sidebar list-group-item sidebar-separator-title text-muted d-flex align-items-center menu-collapsed">
+        <small>CONFIGURAÇÕES DA REQUISIÇÃO</small>
+    </li>
+    <!-- /END Separator -->
+    <a title="Infos básicas" onClick="showBlock(this.id);" href="#"
+        class="active button-block bg-dark list-group-item list-group-item-action" id="basic-info-item">
+        <div class="d-flex w-100 justify-content-start align-items-center">
+            <div class="col-md-10 sidemenu-items">
+                <span class="fa fa-id-card-o fa-fw mr-3"></span>
+                <span class="menu-collapsed">Infos básicas</span>
+            </div>
+            <div class="col-md-2">
+                {% if crawler %}
+                <span id="basic-info-valid-icon"
+                    class="fa fa-check fa-fw mr-3 basic-info-valid-icon valid-icon"></span>
+                {% else %}
+                <span id="basic-info-valid-icon"
+                    class="fa fa-warning fa-fw mr-3 basic-info-valid-icon valid-icon"></span>
+                {% endif %}
+            </div>
+        </div>
+    </a>
+    <a title="Antibloqueio" onClick="showBlock(this.id);" href="#"
+        class="button-block bg-dark list-group-item list-group-item-action" id="antiblock-item">
+        <div class="d-flex w-100 justify-content-start align-items-center">
+            <div class="col-md-10 sidemenu-items">
+                <span class="fa fa-user-secret fa-fw mr-3"></span>
+                <span class="menu-collapsed">Antibloqueio</span>
+            </div>
+            <div class="col-md-2">
+                <span id="antiblock-valid-icon"
+                    class="fa fa-check fa-fw mr-3 antiblock-valid-icon valid-icon"></span>
+            </div>
+        </div>
+    </a>
+    <a title="Captcha" onClick="showBlock(this.id);" href="#"
+        class="disabled button-block bg-dark list-group-item list-group-item-action" id="captcha-item">
+        <div class="d-flex w-100 justify-content-start align-items-center">
+            <div class="col-md-10 sidemenu-items">
+                <span class="fa fa-unlock fa-fw mr-3"></span>
+                <span class="menu-collapsed">Captcha</span>
+            </div>
+            <div class="col-md-2">
+                <span id="captcha-valid-icon"
+                    class="fa fa-check fa-fw mr-3 captcha-valid-icon valid-icon"></span>
+            </div>
+        </div>
+    </a>
+    <a title="URL Parametrizada" onClick="showBlock(this.id)" href="#"
+        class="disabled button-block bg-dark list-group-item list-group-item-action"
+        id="templated_url-item">
+        <div class="d-flex w-100 justify-content-start align-items-center">
+            <div class="col-md-10 sidemenu-items">
+                <span class="fa fa-sliders fa-fw mr-3"></span>
+                <span class="menu-collapsed">URL Parametrizada</span>
+            </div>
+            <div class="col-md-2">
+                <span id="templated_url-valid-icon"
+                    class="fa fa-check fa-fw mr-3 templated_url-valid-icon valid-icon"></span>
+            </div>
+        </div>
+    </a>
+    <a title="Formulários" onClick="showBlock(this.id)" href="#"
+        class="button-block bg-dark list-group-item list-group-item-action"
+        id="static_form-item">
+        <div class="d-flex w-100 justify-content-start align-items-center">
+            <div class="col-md-10 sidemenu-items">
+                <span class="fa fa-wpforms fa-fw mr-3"></span>
+                <span class="menu-collapsed">Formulários</span>
+            </div>
+            <div class="col-md-2">
+                <span id="static_form-valid-icon"
+                    class="fa fa-check fa-fw mr-3 static_form-valid-icon valid-icon"></span>
+            </div>
+        </div>
+    </a>
+    <!-- Separator with title -->
+    <li class="list-group-item sidebar-separator-title text-muted d-flex align-items-center menu-collapsed">
+        <small>CONFIGURAÇÕES DA RESPOSTA</small>
+    </li>
+
+    <!-- /END Separator -->
+
+    <!-- implementation local begin -->
+    <a title="Processamento dinâmico" onClick="showBlock(this.id); load_steps_interface(this.id + '-wrap', 'id_steps');" href="#"
+        class="button-block bg-dark list-group-item list-group-item-action" id="dynamic-processing-item">
+        <div class="d-flex w-100 justify-content-start align-items-center">
+            <div class="col-md-10 sidemenu-items">
+                <span class="fa fa-code fa-fw mr-3"></span>
+                <span class="menu-collapsed">Processamento dinâmico</span>
+            </div>
+            <div class="col-md-2">
+                <span id="dynamic-processing-valid-icon"
+                    class="fa fa-check fa-fw mr-3 crawler-details-valid-icon valid-icon disabled"></span>
+            </div>
+        </div>
+    </a>
+    <!-- implementation local end -->
+
+    <a title="Detalhes do coletor" onClick="showBlock(this.id)" href="#"
+        class="button-block bg-dark list-group-item list-group-item-action" id="crawler-details-item">
+        <div class="d-flex w-100 justify-content-start align-items-center">
+            <div class="col-md-10 sidemenu-items">
+                <span class="fa fa-gear fa-fw mr-3"></span>
+                <span class="menu-collapsed">Detalhes do coletor</span>
+            </div>
+            <div class="col-md-2">
+                <span id="crawler-details-valid-icon"
+                    class="fa fa-check fa-fw mr-3 crawler-details-valid-icon valid-icon"></span>
+            </div>
+        </div>
+    </a>
+
+    <a title="Configuração..." href="#" class="disabled bg-dark list-group-item list-group-item-action">
+        <div class="d-flex w-100 justify-content-start align-items-center">
+            <span class="fa fa-shield fa-fw mr-3"></span>
+            <span class="menu-collapsed">Configuração...</span>
+        </div>
+    </a>
+    <!--
+    <a onClick="showBlock(this.id);" href="#"
+        class="disabled button-block bg-dark list-group-item list-group-item-action" id="probing-item">
+        <div class="d-flex w-100 justify-content-start align-items-center">
+            <div class="col-md-10 sidemenu-items">
+                <span class="fa fa-id-card-o fa-fw mr-3"></span>
+                <span class="menu-collapsed">Sondagem</span>
+            </div>
+            <div class="col-md-2">
+                <span id="probing-valid-icon"
+                    class="fa fa-check fa-fw mr-3 probing-valid-icon valid-icon"></span>
+            </div>
+        </div>
+    </a>
+    -->
+    <a title="Configuração..." href="#" class="disabled bg-dark list-group-item list-group-item-action">
+        <div class="d-flex w-100 justify-content-start align-items-center">
+            <span class="fa fa-image fa-fw mr-3"></span>
+            <span class="menu-collapsed">Configuração...</span>
+        </div>
+    </a>
+    {% if crawler %}
+    <button id="createButton" type="submit"
+        class="bg-dark list-group-item list-group-item-valid list-group-item-action"
+        style="text-align: center; position: fixed; bottom: 0px; width: 16.725%;">
+        Update
+    </button>
+    {% else %}
+    <button id="createButton" type="submit"
+        class="bg-dark list-group-item list-group-item-invalid list-group-item-action"
+        style="text-align: center; position: fixed; bottom: 0px; width: 16.725%;">
+        Create
+    </button>
+    {% endif %}
+</ul>
+<!-- List Group END-->

@@ -430,6 +430,60 @@ def create_crawler(request):
     return render(request, "main/create_crawler.html", context)
 
 
+def create_grouped_crawlers(request):
+    context = {}
+
+    my_form = RawCrawlRequestForm(request.POST or None)
+    templated_parameter_formset, templated_response_formset = \
+        generate_injector_forms(request.POST or None,
+            injection_type='templated_url')
+
+    static_parameter_formset, static_response_formset = \
+        generate_injector_forms(request.POST or None,
+            injection_type='static_form')
+
+    if request.method == "POST":
+        source_names = request.POST.getlist('source_name')
+        base_urls = request.POST.getlist('base_url')
+        data_paths = request.POST.getlist('data_path')
+
+        if my_form.is_valid() and templated_parameter_formset.is_valid() and \
+           templated_response_formset.is_valid() and \
+           static_parameter_formset.is_valid() and \
+           static_response_formset.is_valid():
+
+            # new_crawl = my_form.save(commit=False)
+            form_new_crawl = CrawlRequestForm(my_form.cleaned_data)
+            new_crawl = form_new_crawl.save(commit=False)
+
+            for i in range(len(source_names)):
+                new_crawl.id = None
+                new_crawl.source_name = source_names[i]
+                new_crawl.base_url = base_urls[i]
+                new_crawl.data_path = data_paths[i]
+                new_crawl.save()
+
+                # save sub-forms and attribute to this crawler instance
+                templated_parameter_formset.instance = new_crawl
+                templated_parameter_formset.save()
+                templated_response_formset.instance = new_crawl
+                templated_response_formset.save()
+                static_parameter_formset.instance = new_crawl
+                static_parameter_formset.save()
+                static_response_formset.instance = new_crawl
+                static_response_formset.save()
+
+            return redirect('/edit_group/' + str(new_crawl.id))
+
+    context['form'] = my_form
+    context['templated_response_formset'] = templated_response_formset
+    context['templated_parameter_formset'] = templated_parameter_formset
+    context['static_response_formset'] = static_response_formset
+    context['static_parameter_formset'] = static_parameter_formset
+    context['page_context'] = 'new'
+    return render(request, "main/create_grouped_crawlers.html", context)
+
+
 def edit_crawler(request, id):
     crawler = get_object_or_404(CrawlRequest, pk=id)
 
@@ -495,14 +549,26 @@ def edit_grouped_crawlers(request, id):
         base_urls = request.POST.getlist('base_url')
         data_paths = request.POST.getlist('data_path')
 
+        # cria a instância do crawler com os dados do formulário, mas não salva no banco
         post_crawler = form.save(commit=False)
 
+        # essa mesma instância será modificada com os dados de cada crawler e aí sim será
+        # salva no banco
         for i, _id in enumerate(crawler_ids):
             post_crawler.id = None if _id == '' else _id
             post_crawler.source_name = source_names[i]
             post_crawler.base_url = base_urls[i]
             post_crawler.data_path = data_paths[i]
             post_crawler.save()
+
+            templated_parameter_formset.instance = post_crawler
+            templated_parameter_formset.save()
+            templated_response_formset.instance = post_crawler
+            templated_response_formset.save()
+            static_parameter_formset.instance = post_crawler
+            static_parameter_formset.save()
+            static_response_formset.instance = post_crawler
+            static_response_formset.save()
     
     
     context = {
@@ -513,6 +579,7 @@ def edit_grouped_crawlers(request, id):
         'templated_parameter_formset': templated_parameter_formset,
         'static_parameter_formset': static_parameter_formset,
         'static_response_formset': static_response_formset,
+        'page_context': 'edit',
     }
 
     return render(request, 'main/create_grouped_crawlers.html', context)

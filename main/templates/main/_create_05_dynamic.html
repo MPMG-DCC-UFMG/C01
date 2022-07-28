@@ -1,0 +1,13 @@
+{% load crispy_forms_tags %}
+
+<div id="dynamic-processing-item-block" class="block" hidden>
+    <div id="dynamic_processing" class="">
+        {{ form.dynamic_processing | as_crispy_field}}
+    </div>
+    <div id="dynamic-processing-skip-errors" class="hidden">
+        {{ form.skip_iter_errors | as_crispy_field}}
+    </div>
+    <div id="dynamic-processing-item-wrap" style="padding:20px;" class="hidden">
+        {{ form.steps | as_crispy_field }}
+    </div>
+</div>

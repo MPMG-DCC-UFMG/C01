@@ -68,6 +68,18 @@ function validateTextInput(input_id) {
     return document.getElementById(input_id).value.length > 0;
 }
 
+function validateTextInputsByName(input_name) {
+    let elements = document.getElementsByName(input_name);
+    let valid = true;
+    for(let i=0; i<elements.length; i++) {
+        if(elements[i].value.length == 0) {
+            valid = false;
+            break
+        }
+    }
+    return valid
+}
+
 function getCheckboxState(checkbox_id) {
     return document.getElementById(checkbox_id).checked;
 }
@@ -88,9 +100,9 @@ function setHiddenState(element_id, hidden) {
 
 function checkBasicInfo() {
     var valid =
-      validateTextInput("id_source_name") &&
-      validateTextInput("id_base_url") &&
-      validateTextInput("id_data_path");
+      validateTextInputsByName("source_name") &&
+      validateTextInputsByName("base_url") &&
+      validateTextInputsByName("data_path");
     defineIcon("basic-info", valid);
 }
 
@@ -265,6 +277,7 @@ function updateInjectionFields(prefix) {
 
 function checkRelatedFields() {
     var input_name = $(this).attr('name');
+    console.log(input_name)
 
     if (input_name == "import_settings")
         return;
@@ -330,7 +343,8 @@ $(document).ready(function () {
         checkAntiblock();
     });
 
-    $('input, textarea').on('blur keyup change', checkRelatedFields);
+    // $('input, textarea').on('blur keyup change', checkRelatedFields);
+    $(document.body).on('blur keyup change', 'input, textarea', checkRelatedFields);
     $('#collapse-adv-links').on("click", function () { mycollapse("#adv-links");})
     $('#collapse-adv-download').on("click", function () { mycollapse("#adv-download"); })
     updateInjectionFields('static_form');
@@ -363,7 +377,7 @@ function showBlock(clicked_id) {
 }
 
 function detailBaseUrl() {
-    const base_url = $("#id_base_url").val();
+    const base_url = $("[name=base_url]").val();
 
     // Check if a Templated URL is being used (if there is at least one
     // occurrence of the substring "{}")
@@ -386,7 +400,7 @@ function detailBaseUrl() {
 }
 
 function loadStaticForm() {
-    const base_url = $("#id_base_url").val();
+    const base_url = $("[name=base_url]").val();
     const req_type = $("#id_request_type").val();
 
     // Clear form before updating

@@ -14,6 +14,7 @@ urlpatterns = [
     path("crawlers/", views.list_crawlers, name="list_crawlers"),
     path('grouped_crawlers', views.list_grouped_crawlers, name="list_grouped_crawlers"),
     path("new/", views.create_crawler, name="create_crawler"),
+    path("new_group/", views.create_grouped_crawlers, name="create_grouped_crawlers"),
     path("edit/<int:id>/", views.edit_crawler, name="edit_crawler"),
     path("edit_group/<int:id>/", views.edit_grouped_crawlers, name="edit_grouped_crawlers"),
     path("delete/<int:id>/", views.delete_crawler, name="delete_crawler"),

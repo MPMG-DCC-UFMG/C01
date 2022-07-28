@@ -1,0 +1,16 @@
+{% load crispy_forms_tags %}
+
+<div id="static_form-item-block" class="block" hidden>
+    <div class="row">
+        <div class="col md-6" id="static_form-config">
+            <input name="loadfields"
+                type="button" onclick="loadStaticForm()"
+                value="Carregar campos de formulário">
+            </input>
+            <br><br>
+            {{ form.form_request_type | as_crispy_field}}
+            <div class="bordered-bottom-option"></div>
+            {% include "main/injection_config.html" with parameter_formset=static_parameter_formset response_formset=static_response_formset injection_type='static_form' %}
+        </div>
+    </div>
+</div>

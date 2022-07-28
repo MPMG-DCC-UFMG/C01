@@ -39,13 +39,15 @@ $(function(){
             $(this).attr("name", $(this).attr("name").replace("template-", ""));
         });
         let $container = $(".grouped_crawlers_container");
-        $container.append($template.clone());
+        $container.append($template);
         $container.animate({ scrollTop: $container.prop("scrollHeight")}, 1000);
+        checkBasicInfo();
     });
 
     // remove uma linha com novo crawler
     $(".grouped_crawlers_container").on("click", ".btn-remove-crawler", function(){
-        $(this).parents(".row:eq(0)").remove()
+        $(this).parents(".row:eq(0)").remove();
+        checkBasicInfo();
     });
 });
 
