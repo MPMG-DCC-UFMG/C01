@@ -14,8 +14,3 @@ for folder in os.listdir(f"{src_folder}"):
         print(f"Installing {folder}...")
         subprocess.run(["pip", "install", f"{src_folder}/{folder}"])
         print()
-
-print(f"Creating database...")
-subprocess.run(["python", "manage.py", "makemigrations"])
-subprocess.run(["python", "manage.py", "migrate"])
-print()
