@@ -1,11 +1,12 @@
 import datetime
 from django.db import models
 from django.utils import timezone
+from django.core.validators import MinValueValidator, RegexValidator
 from django.core.validators import RegexValidator
-from django.db import transaction
 from django.db.models.base import ModelBase
 
-from crawlers.constants import *
+from crawler_manager.constants import *
+from crawling_utils.constants import HEADER_ENCODE_DETECTION, AUTO_ENCODE_DETECTION
 
 CRAWLER_QUEUE_DB_ID = 1
 
@@ -31,11 +32,14 @@ class CrawlRequest(TimeStamped):
     source_name = models.CharField(max_length=200)
     base_url = models.TextField()
     obey_robots = models.BooleanField(blank=True, null=True)
-    pathValid = RegexValidator(r'^[0-9a-zA-Z\/\\-_]*$',
-                               'This is not a valid path.')
-    data_path = models.CharField(max_length=2000,
-                                 blank=True, null=True,
-                                 validators=[pathValid])
+
+    # This regex is a bit convolute, but in summary: it allows numbers,
+    # letters, dashes and underlines. It allows forward and backward slashes
+    # unless it occurs in the first character (since we don't allow absolute
+    # paths).
+    pathValid = RegexValidator(r'^[0-9a-zA-Z\-_][0-9a-zA-Z\/\\\-_]*$',
+                               'Esse não é um caminho relativo válido.')
+    data_path = models.CharField(max_length=2000, validators=[pathValid])
 
     REQUEST_TYPES = [
         ('GET', 'GET'),
@@ -44,6 +48,60 @@ class CrawlRequest(TimeStamped):
     request_type = models.CharField(max_length=15,
                                     choices=REQUEST_TYPES,
                                     default='GET')
+
+    # SCRAPY CLUSTER ##########################################################
+
+    # Don't cleanup redis queues, allows to pause/resume crawls.
+    sc_scheduler_persist = models.BooleanField(default=True)
+
+    # seconds to wait between seeing new queues, cannot be faster than spider_idle time of 5
+    sc_scheduler_queue_refresh = models.PositiveIntegerField(default=10,
+        validators=[MinValueValidator(5)])
+
+    # throttled queue defaults per domain, x hits in a y second window
+    sc_queue_hits = models.PositiveIntegerField(default=10)
+    sc_queue_window = models.PositiveIntegerField(default=60)
+
+    # we want the queue to produce a consistent pop flow
+    sc_queue_moderated = models.BooleanField(default=True)
+
+    # how long we want the duplicate timeout queues to stick around in seconds
+    sc_dupefilter_timeout = models.PositiveIntegerField(default=600)
+
+    # how many pages to crawl for an individual domain. Cluster wide hard limit.
+    sc_global_page_per_domain_limit = models.PositiveIntegerField(null=True, blank=True)
+
+    # how long should the global page limit per domain stick around in seconds
+    sc_global_page_per_domain_limit_timeout = models.PositiveIntegerField(default=600)
+
+    # how long should the individual domain's max page limit stick around in seconds
+    sc_domain_max_page_timeout = models.PositiveIntegerField(default=600)
+
+    # how often to refresh the ip address of the scheduler
+    sc_scheduler_ip_refresh = models.PositiveIntegerField(default=60)
+
+    # whether to add depth >= 1 blacklisted domain requests back to the queue
+    sc_scheduler_backlog_blacklist = models.BooleanField(default=True)
+
+    # add Spider type to throttle mechanism
+    sc_scheduler_type_enabled = models.BooleanField(default=True)
+
+    # add ip address to throttle mechanism
+    sc_scheduler_ip_enabled = models.BooleanField(default=True)
+
+    # how many times to retry getting an item from the queue before the spider is considered idle
+    sc_scheduler_item_retries = models.PositiveIntegerField(default=3)
+
+    # how long to keep around stagnant domain queues
+    sc_scheduler_queue_timeout = models.PositiveIntegerField(default=3600)
+
+    # Allow all return codes
+    sc_httperror_allow_all = models.BooleanField(default=True)
+
+    sc_retry_times = models.PositiveIntegerField(default=3)
+
+    sc_download_timeout = models.PositiveIntegerField(default=10)
+
     form_request_type = models.CharField(max_length=15,
                                     choices=REQUEST_TYPES,
                                     default='POST')
@@ -153,10 +211,6 @@ class CrawlRequest(TimeStamped):
     steps = models.CharField(
         blank=True, null=True, max_length=9999999, default='{}')
 
-    # ENCODING DETECTION =======================================================
-    HEADER_ENCODE_DETECTION = 1
-    AUTO_ENCODE_DETECTION = 2
-
     ENCODE_DETECTION_CHOICES = [
         (HEADER_ENCODE_DETECTION, 'Via cabeçalho da resposta'),
         (AUTO_ENCODE_DETECTION, 'Automático'),
@@ -255,13 +309,8 @@ class CrawlRequest(TimeStamped):
         del config['creation_date']
         del config['last_modified']
 
-        if config["data_path"] is None:
-            config["data_path"] = CURR_FOLDER_FROM_ROOT
-        else:
-            if config["data_path"][-1] == "/":
-                config["data_path"] = config["data_path"][:-1]
-            else:
-                config["data_path"] = config["data_path"]
+        if config["data_path"][-1] == "/":
+            config["data_path"] = config["data_path"][:-1]
 
         # Include information on parameter handling
         param_list = crawler.parameter_handlers.values()
@@ -421,9 +470,21 @@ class ResponseHandler(models.Model):
 
 
 class CrawlerInstance(TimeStamped):
-    crawler_id = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE,
-                                   related_name='instances')
+    crawler = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE,
+                                related_name='instances')
     instance_id = models.BigIntegerField(primary_key=True)
+
+    number_files_found = models.PositiveIntegerField(default=0, null=True, blank=True)
+    number_files_success_download = models.PositiveIntegerField(default=0, null=True, blank=True)
+    number_files_error_download = models.PositiveIntegerField(default=0, null=True, blank=True)
+
+    number_pages_found = models.PositiveIntegerField(default=0, null=True, blank=True)
+    number_pages_success_download = models.PositiveIntegerField(default=0, null=True, blank=True)
+    number_pages_error_download = models.PositiveIntegerField(default=0, null=True, blank=True)
+    number_pages_duplicated_download = models.PositiveIntegerField(default=0, null=True, blank=True)
+
+    page_crawling_finished = models.BooleanField(default=False, null=True, blank=True)
+
     running = models.BooleanField()
     num_data_files = models.IntegerField(default=0)
     data_size_kbytes = models.BigIntegerField(default=0)
@@ -477,6 +538,17 @@ class CrawlerInstance(TimeStamped):
         return f"{size:.{2}f}{unit}"
 
 
+    def download_files_finished(self):
+        return self.number_files_success_download + self.number_files_error_download == self.number_files_found
+
+
+class Log(TimeStamped):
+    instance = models.ForeignKey(CrawlerInstance, on_delete=models.CASCADE,
+                                 related_name="log")
+    log_message = models.TextField(blank=True, null=True)
+    logger_name = models.CharField(max_length=50, blank=True, null=True)
+    log_level = models.CharField(max_length=10, blank=True, null=True)
+    raw_log = models.TextField(blank=True, null=True)
 
 class CrawlerQueue(models.Model):
     max_fast_runtime_crawlers_running = models.PositiveIntegerField(default=1, blank=True)

@@ -60,7 +60,7 @@ class TestExtractInfo(unittest.TestCase):
         expected_result += "    pages = {}\n"
         expected_result += "    page = missing_arguments['pagina']\n"
         expected_result += "    page_stack = []\n"
-        expected_result += "    iframe = None\n"
+        expected_result += "    iframe_stack = []\n"
         expected_result += "    scrshot_path = \"test_path\"\n"
         self.assertEqual(expected_result, result)
 
