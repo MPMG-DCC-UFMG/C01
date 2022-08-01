@@ -107,6 +107,14 @@ class Executor:
                 # instances to fail
                 # 'args': ['--no-sandbox']
             }
+            base_config["PLAYWRIGHT_CONTEXTS"] = {
+                'default': {
+                    'viewport': {
+                        'width': config["browser_resolution_width"],
+                        'height': config["browser_resolution_height"]
+                    }
+                }
+            }
 
         # Antiblock middlewares
         if config.get("antiblock_ip_rotation_type", "") == "tor":

@@ -376,6 +376,28 @@ New Crawler
                         <div id="dynamic_processing" class="">
                             {{ form.dynamic_processing | as_crispy_field}}
                         </div>
+                        <div id="dynamic-processing-resolution" class="hidden">
+                            <label for="resolution-select">
+                                Resolução do navegador
+                            </label>
+                            <select id="resolution-select"
+                                class="form-control"
+                                onchange="detailResolution()">
+                                <option value="640x480">640 x 480 (VGA)</option>
+                                <option value="1280x720">1280 x 720 (SD)</option>
+                                <option value="1366x768">1366 x 768 (HD)</option>
+                                <option value="1920x1080">1920 x 1080 (Full HD)</option>
+                                <option value="2560x1440">2560 x 1440 (QHD)</option>
+                                <option value="custom">Personalizado</option>
+                            </select>
+                            <div id="resolution_inputs" style="display:none">
+                                <br>
+                                {{ form.browser_resolution_width }}
+                                x
+                                {{ form.browser_resolution_height }}
+                            </div>
+                        </div>
+                        <br>
                         <div id="dynamic-processing-skip-errors" class="hidden">
                             {{ form.skip_iter_errors | as_crispy_field}}
                         </div>

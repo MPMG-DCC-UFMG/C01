@@ -62,6 +62,8 @@ class CrawlRequestForm(forms.ModelForm):
             'sound_xpath',
             'dynamic_processing',
             'skip_iter_errors',
+            'browser_resolution_width',
+            'browser_resolution_height',
             'explore_links',
 
             'link_extractor_max_depth',
@@ -360,6 +362,30 @@ class RawCrawlRequestForm(CrawlRequestForm):
         required=False, label="Processamento dinâmico",
         widget=forms.CheckboxInput(
             attrs={'onchange': 'detailDynamicProcessing();'}
+        )
+    )
+    browser_resolution_width = forms.IntegerField(
+        required=False,
+        label="Largura da janela do navegador (em pixels)",
+        initial=1280,
+        min_value=640,
+        widget=forms.NumberInput(
+            attrs={
+                'style': 'display:inline',
+                'class': 'form-control col-5'
+            }
+        )
+    )
+    browser_resolution_height = forms.IntegerField(
+        required=False,
+        label="Altura da janela do navegador (em pixels)",
+        initial=720,
+        min_value=360,
+        widget=forms.NumberInput(
+            attrs={
+                'style': 'display:inline',
+                'class': 'form-control col-5'
+            }
         )
     )
     skip_iter_errors = forms.BooleanField(

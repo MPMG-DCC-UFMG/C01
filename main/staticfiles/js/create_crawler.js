@@ -263,6 +263,24 @@ function updateInjectionFields(prefix) {
     );
 }
 
+function updateResolutionField() {
+    var resSelect = document.getElementById("resolution-select");
+    const x = document.getElementById("id_browser_resolution_width").value;
+    const y = document.getElementById("id_browser_resolution_height").value;
+
+    const optionText = x + "x" + y
+
+    if ($("#resolution-select option[value='" + optionText + "']").length > 0) {
+        // Select option in resolution checkbox
+        resSelect.value = optionText;
+        document.getElementById("resolution_inputs").style.display = 'none';
+    } else {
+        // Customized resolution
+        resSelect.value = 'custom';
+        document.getElementById("resolution_inputs").style.display = 'block';
+    }
+}
+
 function checkRelatedFields() {
     var input_name = $(this).attr('name');
 
@@ -334,6 +352,7 @@ $(document).ready(function () {
     $('#collapse-adv-links').on("click", function () { mycollapse("#adv-links");})
     $('#collapse-adv-download').on("click", function () { mycollapse("#adv-download"); })
     updateInjectionFields('static_form');
+    updateResolutionField();
 
 });
 
@@ -623,14 +642,17 @@ function detailDynamicProcessing() {
     dynamic_processing_check = document.getElementById("dynamic-processing-valid-icon")
     dynamic_processing_block = document.getElementById("dynamic-processing-item-wrap")
     dynamic_processing_skip_errors = document.getElementById("dynamic-processing-skip-errors")
+    dynamic_processing_resolution = document.getElementById("dynamic-processing-resolution")
     if(getCheckboxState("id_dynamic_processing")){
         dynamic_processing_check.classList.remove("disabled")
         dynamic_processing_block.classList.remove("disabled")
         dynamic_processing_skip_errors.classList.remove("disabled")
+        dynamic_processing_resolution.classList.remove("disabled")
     }else{
         dynamic_processing_check.classList.add("disabled")
         dynamic_processing_block.classList.add("disabled")
         dynamic_processing_skip_errors.classList.add("disabled")
+        dynamic_processing_resolution.classList.add("disabled")
     }
 }
 
@@ -817,6 +839,23 @@ function processParameterizedURL(data) {
     // Re-updates the parameterized URL section (used to refresh sub-options
     // based on select values and remove/add the "required" attribute)
     detailBaseUrl();
+}
+
+function detailResolution() {
+    var resSelect = document.getElementById("resolution-select");
+    const option = resSelect.options[resSelect.selectedIndex].value;
+
+    if (option === "custom") {
+        document.getElementById("resolution_inputs").style.display = 'block';
+    } else {
+        document.getElementById("resolution_inputs").style.display = 'none';
+
+        const res = option.split('x');
+
+        document.getElementById("id_browser_resolution_width").value = res[0];
+        document.getElementById("id_browser_resolution_height").value = res[1];
+    }
+
 }
 
 function ipRotationEnabled() {
