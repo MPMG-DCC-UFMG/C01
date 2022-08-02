@@ -211,6 +211,10 @@ function update_repetition_info() {
     $('#repetition-info').text(s);
 }
 
+function close_personalized_repetition_modal() {
+    $('#personalizedCrawlerRepetion').modal('hide');
+}
+
 $(document).ready(function () {
     $('#crawl-selector').multiselect({
         includeSelectAllOption: true,
@@ -226,7 +230,7 @@ $(document).ready(function () {
         
     });
 
-    $('#personalizedCrawlerRepetion').modal('show');
+    // $('#personalizedCrawlerRepetion').modal('show');
 
     // $('#newScheduling').modal('show');
 
@@ -379,4 +383,16 @@ $(document).ready(function () {
     });
 
     init_default_options();
+
+    $('#previous').on('click', function () {
+        calendar.previous_month();
+    });
+
+    $('#next').on('click', function () {
+        calendar.next_month();
+    });
+
+    $('#today').on('click', function () {
+        calendar.today();
+    });
 });

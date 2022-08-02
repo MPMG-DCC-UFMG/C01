@@ -8,9 +8,525 @@ Agendamento de coletas
 
 {% block content %}
 
-<div class="d-flex justify-content-center">
+
+<header class="container-fluid mt-3 pb-3 border-bottom">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <div class="mx-3">
+                <button class="btn" id="previous"><i class="fas fa-chevron-left"></i></button>
+                <button class="btn border rounded px-2 font-weight-bold" id="today">Hoje</button>
+                <button class="btn" id="next"><i class="fas fa-chevron-right"></i></button>
+            </div>
+            <h2 class="h4 m-0" id="curr-date">1 de agosto de 2022</h2>
+        </div>
+    
+        <select name="" id="" class="form-control font-weight-bold" style="width: auto;">
+            <option value="">Dia</option>
+            <option value="">Semana</option>
+            <option value="">Mês</option>
+            <option value="">Ano</option>
+        </select>
+    </div>
+</header>
+
+<main class="mt-3 container-fluid">
+    <style>
+        .calendar {
+            display: grid;
+            column-gap: 15px;
+            row-gap: 15px;
+            height: calc(100vh - 148px);
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+            grid-template-rows: 0fr 1fr 1fr 1fr 1fr 1fr 1fr;
+        }
+        .calendar-cell {
+            display: inline-grid;
+        }
+        .no-current-month {
+            color:lightgray;
+        }
+    </style>
+
+    <div class="calendar text-center font-weight-bold" id="schedule-calendar">
+        <!-- <div class="calendar-cell d-flex justify-content-center " style="flex-direction: column;">
+            1
+            <div class="d-flex justify-content-center align-items-center h-100" style="flex-direction: column;">
+                <button class="btn rounded-pill border px-3 py-1">
+                    <i class="far fa-calendar" style="display: inline-block;"></i> 
+                    <p class="font-weight-bold m-0 p-0" style="display: inline-block;">23</p>
+                </button>
+                <button class="btn rounded-pill border px-3 py-1 bg-primary text-white mt-3">
+                    <i class="far fa-calendar-plus"></i> 
+                    <small class="font-weight-bold">Novo</small>
+                </button>
+            </div>
+        </div> -->
+    </div>
+
+    <table class="table table-bordered text-center d-none" style="table-layout: fixed;">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Dom.</th>
+                <th>Seg.</th>
+                <th>Ter.</th>
+                <th>Qua.</th>
+                <th>Qui.</th>
+                <th>Sex.</th>
+                <th>Sáb.</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>0 AM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1 AM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>2 AM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>3 AM</td>
+                <td>
+                    <div class="rounded border px-3 py-1 bg-info text-white">Coleta de São Geraldo da Piedade + 3</div>
+                </td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>4 AM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>5 AM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>6 AM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>7 AM</td>
+                <td></td>
+                <td></td>
+                <td>
+                    <div class="rounded border px-3 py-1 bg-info text-white">Coleta de São Sebastião + 7</div>
+                </td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>8 AM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>9 AM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>10 AM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>11 AM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>12 pM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>13 PM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>14 PM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>
+            <div >
+                <div class="rounded border px-3 py-1 bg-info text-white">Coleta de Pref. Gov. Valadares + 1</div>
+            </div>
+
+                </td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>15 PM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>16 PM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>
+                    <div class="rounded border px-3 py-1 bg-info text-white m-0">Coleta de São Geraldo da Piedade + 3 outros</div>
+                </td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>17 PM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>18 PM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>19 PM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>20 PM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>21 PM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>22 PM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>23 PM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <ul class="text-muted d-none" style="list-style: none;">
+        <li class="d-flex align-items-center">
+            
+            <span class="mr-3">
+                0 AM 
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+
+
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                1 AM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                2 AM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="mt-5">
+            <div class="d-flex align-items-center">
+                <span class="mr-3">
+                    3 AM
+                </span>
+                <div class="border-bottom" style="display: inline-block;flex: auto;">
+                </div>
+            </div>
+            <div class="d-flex justify-content-start" style="padding-left: 3.3rem; flex-wrap: wrap;">
+                <div class="mt-3 rounded-pill border px-3 py-1 bg-success text-white">3h25: Coleta de São Geraldo da Piedade</div>
+                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
+                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
+                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
+                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
+                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
+                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
+                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
+                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
+                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
+                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
+                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
+                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                4 AM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                5 AM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                6 AM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                7 AM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                8 AM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                9 AM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                10 AM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                11 AM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                12 PM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                13 PM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                14 PM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                15 PM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                16 PM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                17 PM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                18 PM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                19 PM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                20 PM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                21 PM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                22 PM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+        <li class="d-flex align-items-center mt-5">
+            <span class="mr-3">
+                23 PM
+            </span>
+            <div class="border-bottom" style="display: inline-block;flex: auto;">
+            </div>
+        </li>
+    </ul>
+</main>
+
+<!-- <div class="d-flex justify-content-center">
     <button class="btn btn-success mt-auto" onclick="new_scheduling_modal()">Novo</button>
-</div>
+</div> -->
+
 
 
 <div class="modal fade" id="newScheduling" tabindex="-1" aria-labelledby="newSchedulingLabel"
@@ -23,7 +539,7 @@ Agendamento de coletas
             <div class="modal-body">
                 <div id="crawler-selector-wrapper" class="border rounded p-3 bg-light">
                     <label for="crawl-selector" class="font-weight-bold">Coletores: </label>
-                    <select class="form-select bg-white" id="crawl-selector" multiple>
+                    <select class="form-select bg-white" id="crawl-selector" >
                         <option value="0">[Realização-F01] Coleta de Despesas - empenhos_anulados de Patis</option>
                         <option value="1">[Realização-F01] Coleta de Despesas - empenhos_emitidos de Jenipapo de Minas</option>
                         <option value="2">[Realização-F01] Coleta de Despesas - relatorio_gestao_fiscal de Turmalina</option>
@@ -1895,8 +2411,9 @@ Agendamento de coletas
                     <div id="datetime-picker-wrapper">
                         <label for="" class="font-weight-bold">Horário</label>
                         <div class="d-flex justify-content-between">
-                            <input type="time" name="" id="" class="border rounded px-2 py-1 mr-2" style="flex: 1;">
-                            <input type="date" name="" id="" class="border rounded px-2 py-1 ml-2" style="flex: 1;">
+                            <input type="time" name="" id="scheduling-time" class="border rounded px-2 py-1 mr-2" style="flex: 1;">
+                            <input type="date" name="" id="scheduling-date" class="border rounded px-2 py-1 ml-2" style="flex: 1;">
+
                         </div>
                     </div>
                     <div id="repeat-crawler-wrapper">
@@ -2110,7 +2627,7 @@ Agendamento de coletas
                 </span>
                 <br>
                 <div class="">
-                    <button type="button" class="btn">Cancelar</button>
+                    <button type="button" class="btn" onclick="close_personalized_repetition_modal()">Cancelar</button>
                     <button type="button" class="btn btn-success">Concluído</button>
                 </div>
             </div>
@@ -2122,6 +2639,7 @@ Agendamento de coletas
 
 {% block js %}
 <script src="{% static 'js/scheduler.js' %}"></script>
+<script src="{% static 'js/calendar.js' %}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.css"
     rel="stylesheet" />
