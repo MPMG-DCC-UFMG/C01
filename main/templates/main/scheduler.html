@@ -9,10 +9,10 @@ Agendamento de coletas
 {% block content %}
 
 
-<header class="container-fluid mt-3 pb-3 border-bottom">
+<header class="container-fluid pb-3 border-bottom fixed-top bg-white" style="margin-top: 56px; padding-top: 16px;">
     <div class="d-flex justify-content-between align-items-center">
-        <div class="d-flex align-items-center">
-            <div class="mx-3">
+        <div class="d-flex align-items-center justify-content-start">
+            <div class="mr-3">
                 <button class="btn" id="previous"><i class="fas fa-chevron-left"></i></button>
                 <button class="btn border rounded px-2 font-weight-bold" id="today">Hoje</button>
                 <button class="btn" id="next"><i class="fas fa-chevron-right"></i></button>
@@ -31,496 +31,173 @@ Agendamento de coletas
 
 <main class="mt-3 container-fluid">
     <style>
-        .calendar {
-            display: grid;
+        .calendar-monthly {
+            display: none;
             column-gap: 15px;
             row-gap: 15px;
             height: calc(100vh - 148px);
             grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
             grid-template-rows: 0fr 1fr 1fr 1fr 1fr 1fr 1fr;
         }
+
         .calendar-cell {
             display: inline-grid;
+
         }
         .no-current-month {
             color:lightgray;
         }
+        
+        .calendar-cell-content {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            height: 100%;
+            flex-direction: column;
+        }
+
+        .calendar-yearly {
+            display: none;
+            column-gap: 25px;
+            row-gap: 25px;
+            height: calc(100vh - 148px);
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+        }
+
+        .calendar-yearly-month {
+            display: none;
+            column-gap: 5px;
+            row-gap: 5px;
+            height: 100%;
+            grid-template-columns: repeat(7, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            margin-top: 15px;
+        }
+
+        .calendar-weekly {
+            display: none;
+            column-gap: 5px;
+            row-gap: 5px;
+            height: 100%;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(25, 1fr);
+            margin-top: 82px;
+        }
+
+        .calendar {
+            margin-top: 82px;
+            display: none;
+        }
     </style>
 
-    <div class="calendar text-center font-weight-bold" id="schedule-calendar">
-        <!-- <div class="calendar-cell d-flex justify-content-center " style="flex-direction: column;">
-            1
-            <div class="d-flex justify-content-center align-items-center h-100" style="flex-direction: column;">
-                <button class="btn rounded-pill border px-3 py-1">
-                    <i class="far fa-calendar" style="display: inline-block;"></i> 
-                    <p class="font-weight-bold m-0 p-0" style="display: inline-block;">23</p>
-                </button>
-                <button class="btn rounded-pill border px-3 py-1 bg-primary text-white mt-3">
-                    <i class="far fa-calendar-plus"></i> 
-                    <small class="font-weight-bold">Novo</small>
-                </button>
+    <div class="calendar calendar-yearly" id="calendar-yearly">
+        <div class="">
+            <h3 class="h5 m-0 font-weight-bold text-center">Janeiro</h3>
+
+            <div month="0" class="calendar-yearly-month">
+                
             </div>
-        </div> -->
+        </div>
+        <div class="">
+            <h3 class="h5 m-0 font-weight-bold text-center">Fevereiro</h3>
+            <div month="1" class="calendar-yearly-month">
+            
+            </div>
+        </div>
+        <div class="">
+            <h3 class="h5 m-0 font-weight-bold text-center">Março</h3>
+            <div month="2" class="calendar-yearly-month">
+            
+            </div>
+        </div>
+        <div class="">
+            <h3 class="h5 m-0 font-weight-bold text-center">Abril</h3>
+            <div month="3" class="calendar-yearly-month">
+            
+            </div>
+        </div>
+        <div class="mt-3">
+            <h3 class="h5 m-0 font-weight-bold text-center">Maio</h3>
+            <div month="4" class="calendar-yearly-month">
+            
+            </div>
+        </div>
+        <div class="mt-3">
+            <h3 class="h5 m-0 font-weight-bold text-center">Junho</h3>
+            <div month="5" class="calendar-yearly-month">
+            
+            </div>
+        </div>
+        <div class="mt-3">
+            <h3 class="h5 m-0 font-weight-bold text-center">Julho</h3>
+            <div month="6" class="calendar-yearly-month">
+            
+            </div>
+        </div>
+        <div class="mt-3">
+            <h3 class="h5 m-0 font-weight-bold text-center">Agosto</h3>
+            <div month="7" class="calendar-yearly-month">
+            
+            </div>
+        </div>
+        <div class="mt-3">
+            <h3 class="h5 m-0 font-weight-bold text-center">Setembro</h3>
+            <div month="8" class="calendar-yearly-month">
+            
+            </div>
+        </div>
+        <div class="mt-3">
+            <h3 class="h5 m-0 font-weight-bold text-center">Outubro</h3>
+            <div month="9" class="calendar-yearly-month">
+            
+            </div>
+        </div>
+        <div class="mt-3">
+            <h3 class="h5 m-0 font-weight-bold text-center">Novembro</h3>
+            <div month="10" class="calendar-yearly-month">
+            
+            </div>
+        </div>
+        <div class="mt-3">
+            <h3 class="h5 m-0 font-weight-bold text-center">Dezembro</h3>
+            <div month="11" class="calendar-yearly-month">
+            
+            </div>
+        </div>
     </div>
 
-    <table class="table table-bordered text-center d-none" style="table-layout: fixed;">
-        <thead>
-            <tr>
-                <th></th>
-                <th>Dom.</th>
-                <th>Seg.</th>
-                <th>Ter.</th>
-                <th>Qua.</th>
-                <th>Qui.</th>
-                <th>Sex.</th>
-                <th>Sáb.</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>0 AM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>1 AM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>2 AM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>3 AM</td>
-                <td>
-                    <div class="rounded border px-3 py-1 bg-info text-white">Coleta de São Geraldo da Piedade + 3</div>
-                </td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>4 AM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>5 AM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>6 AM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>7 AM</td>
-                <td></td>
-                <td></td>
-                <td>
-                    <div class="rounded border px-3 py-1 bg-info text-white">Coleta de São Sebastião + 7</div>
-                </td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>8 AM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>9 AM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>10 AM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>11 AM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>12 pM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>13 PM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>14 PM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td>
-            <div >
-                <div class="rounded border px-3 py-1 bg-info text-white">Coleta de Pref. Gov. Valadares + 1</div>
-            </div>
+    <div class="calendar calendar-monthly" id="calendar-monthly">
+    </div>
 
-                </td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>15 PM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>16 PM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td>
-                    <div class="rounded border px-3 py-1 bg-info text-white m-0">Coleta de São Geraldo da Piedade + 3 outros</div>
-                </td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>17 PM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>18 PM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>19 PM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>20 PM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>21 PM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>22 PM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>23 PM</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="calendar calendar-weekly" id="calendar-weekly">
+    </div>
 
-    <ul class="text-muted d-none" style="list-style: none;">
-        <li class="d-flex align-items-center">
-            
-            <span class="mr-3">
-                0 AM 
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-
-
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                1 AM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                2 AM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="mt-5">
-            <div class="d-flex align-items-center">
-                <span class="mr-3">
-                    3 AM
-                </span>
-                <div class="border-bottom" style="display: inline-block;flex: auto;">
+    <div class="calendar calendar-daily" id="calendar-daily">
+        <h2 class="h4 d-flex mb-3">
+            <div class="d-flex align-items-center" style="flex-direction: column;">
+                <div class="h6 text-muted">
+                    Qua.
+                </div>
+                <div class="d-flex rounded-circle border align-items-center justify-content-center bg-primary text-white" style="width: 1.9em;height: 1.9em;">
+                    3
                 </div>
             </div>
-            <div class="d-flex justify-content-start" style="padding-left: 3.3rem; flex-wrap: wrap;">
-                <div class="mt-3 rounded-pill border px-3 py-1 bg-success text-white">3h25: Coleta de São Geraldo da Piedade</div>
-                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
-                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
-                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
-                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
-                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
-                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
-                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
-                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
-                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
-                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
-                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
-                <div class="mt-3 rounded-pill border px-3 py-1 bg-info text-white ml-3">3h30: Coleta de Araguari</div>
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                4 AM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                5 AM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                6 AM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                7 AM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                8 AM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                9 AM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                10 AM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                11 AM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                12 PM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                13 PM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                14 PM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                15 PM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                16 PM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                17 PM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                18 PM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                19 PM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                20 PM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                21 PM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                22 PM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-        <li class="d-flex align-items-center mt-5">
-            <span class="mr-3">
-                23 PM
-            </span>
-            <div class="border-bottom" style="display: inline-block;flex: auto;">
-            </div>
-        </li>
-    </ul>
+        </h2>
+        <ul class="text-muted p-0" style="list-style: none;">
+            <li class="mt-5">
+                <div class="d-flex align-items-center">
+                    <span class="mr-3">
+                        3 AM
+                    </span>
+                    <div class="border-bottom" style="display: inline-block;flex: auto;">
+                    </div>
+                </div>
+                <div class="d-flex justify-content-start" style="padding-left: 3.3em; flex-wrap: wrap;">
+                </div>
+            </li>
+        </ul>
+    </div>
 </main>
 
 <!-- <div class="d-flex justify-content-center">
