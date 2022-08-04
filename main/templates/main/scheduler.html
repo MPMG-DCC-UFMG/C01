@@ -89,6 +89,12 @@ Agendamento de coletas
             margin-top: 82px;
             display: none;
         }
+
+        .float-btn {
+            position: fixed;
+            bottom:40px;
+        	right:40px;
+        }
     </style>
 
     <div class="calendar calendar-yearly" id="calendar-yearly">
@@ -198,6 +204,11 @@ Agendamento de coletas
             </li>
         </ul>
     </div>
+
+    <button class="btn border rounded-pill float-btn bg-primary text-white shadow-sm" onclick="open_new_scheduling()">
+        <i class="fa fa-plus mr-2 shadow-sm"></i>
+        <strong class="font-weight-bold h5">Criar</strong>
+    </button>
 </main>
 
 <!-- <div class="d-flex justify-content-center">

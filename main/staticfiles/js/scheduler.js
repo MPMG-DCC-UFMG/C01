@@ -44,7 +44,8 @@ var repeat_finish_date;
 // calendar
 var calendar_mode = null; //daily, weekly, monthly or yearly
 
-function new_scheduling_modal() {    
+function open_new_scheduling() {    
+    $('#newScheduling').modal('show');
 }
 
 function open_personalized_crawler_repetition() {
@@ -106,7 +107,7 @@ function init_default_options() {
     future_date.setFullYear(date.getFullYear() + 1);
 
     let day = date.getDate() < 10 ? `0${future_date.getDate()}` : future_date.getDate();
-    let month = date.getMonth() < 10 ? `0${future_date.getMonth()}` : future_date.getMonth();
+    let month = (date.getMonth() + 1) < 10 ? `0${future_date.getMonth() + 1}` : future_date.getMonth() + 1;
 
     let parsed_date = `${day}/${month}/${future_date.getFullYear()}`;
     

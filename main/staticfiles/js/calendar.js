@@ -102,10 +102,8 @@ calendar.fill_month = function (container, year, month) {
 
     let is_curr_day_css = '';
     for (i = 1; i <= last_day.getDate(); i++) {
-        if (this.curr_date.getFullYear() == year && this.curr_date.getMonth() == month && this.curr_date.getDate() == i) {
-            is_curr_day_css = `class="bg-primary rounded-circle text-white text-center border font-weight-bold" style="width: 1.8em; height: 2.3em; padding-top: 2px;"`
-            console.log('O loco meu');
-        }
+        if (this.curr_date.getFullYear() == year && this.curr_date.getMonth() == month && this.curr_date.getDate() == i) 
+            is_curr_day_css = `class="bg-primary rounded-circle text-white text-center border font-weight-bold" style="width: 1.8em; height: 2.3em; padding-top: 2px;"`;
 
         calendar_cells.push(`<div class="${FLEX_CENTER} calendar-cell" style="flex-direction: column;">
                                 <div ${is_curr_day_css}>
