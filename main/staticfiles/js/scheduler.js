@@ -41,6 +41,9 @@ var montly_repeat_value = date.getDate();
 var montly_repeat_type = 'day-x';
 var repeat_finish_date; 
 
+// calendar
+var calendar_mode = null; //daily, weekly, monthly or yearly
+
 function new_scheduling_modal() {    
 }
 
@@ -215,6 +218,55 @@ function close_personalized_repetition_modal() {
     $('#personalizedCrawlerRepetion').modal('hide');
 }
 
+function update_calendar_mode(mode) {
+    if (mode == calendar_mode)
+        return;
+
+    switch (calendar_mode) {
+        case 'daily':
+            calendar.daily.hide();
+            break;
+
+        case 'weekly':
+            calendar.weekly.hide();
+            break;
+
+        case 'monthly':
+            calendar.monthly.hide();
+            break;
+
+        case 'yearly':
+            calendar.yearly.hide();
+            break;
+
+        default:
+            break;
+    }
+
+    switch (mode) {
+        case 'daily':
+            calendar.daily.show();
+            break;
+
+        case 'weekly':
+            calendar.weekly.show();
+            break;
+
+        case 'monthly':
+            calendar.monthly.show();
+            break;
+
+        case 'yearly':
+            calendar.yearly.show();
+            break;
+
+        default:
+            break;
+    }
+
+    calendar_mode = mode;
+}
+
 $(document).ready(function () {
     $('#crawl-selector').multiselect({
         includeSelectAllOption: true,
@@ -385,14 +437,78 @@ $(document).ready(function () {
     init_default_options();
 
     $('#previous').on('click', function () {
-        calendar.previous_month();
+        switch (calendar_mode) {
+            case 'daily':
+                calendar.daily.previous();
+                break;
+
+            case 'weekly':
+                calendar.weekly.previous();
+                break;
+
+            case 'monthly':
+                calendar.monthly.previous();
+                break;
+
+            case 'yearly':
+                calendar.yearly.previous();
+                break;
+
+            default:
+                break;
+        }
     });
 
     $('#next').on('click', function () {
-        calendar.next_month();
+        switch (calendar_mode) {
+            case 'daily':
+                calendar.daily.next();
+                break;
+
+            case 'weekly':
+                calendar.weekly.next();
+                break;
+
+            case 'monthly':
+                calendar.monthly.next();
+                break;
+
+            case 'yearly':
+                calendar.yearly.next();
+                break;
+
+            default:
+                break;
+        }
     });
 
     $('#today').on('click', function () {
-        calendar.today();
+
+        switch (calendar_mode) {
+            case 'daily':
+                calendar.daily.today();
+                break;
+
+            case 'weekly':
+                calendar.weekly.today();
+                break;
+
+            case 'monthly':
+                calendar.monthly.today();
+                break;
+
+            case 'yearly':
+                calendar.yearly.today();
+                break;
+
+            default:
+                break;
+        }
     });
+
+    $('#calendar-mode').on('change', function () {
+        update_calendar_mode($(this).val());
+    });
+
+    update_calendar_mode('daily');
 });

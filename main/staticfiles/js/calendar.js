@@ -340,7 +340,3 @@ calendar.daily.today = function () {
     this.active_day = this.curr_day;
     this.show();
 }
-
-$(document).ready(function () {
-    // calendar.show();
-});
