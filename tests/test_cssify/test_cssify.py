@@ -6,8 +6,8 @@ import sys
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, parentdir)
 import cssify
+from cssify.cssify import XpathException
 import unittest
-
 
 class CssifyTest(unittest.TestCase):
     def test_supported(self):
@@ -16,4 +16,4 @@ class CssifyTest(unittest.TestCase):
 
     def test_unsupported(self):
         for path in UNSUPPORTED:
-            self.assertRaises(cssify.XpathException, cssify.cssify, (path))
+            self.assertRaises(XpathException, cssify.cssify, (path))
