@@ -7,7 +7,8 @@ import subprocess
 import sys
 import time
 
-from crawlers.crawler_manager import file_descriptor_process
+import crawling_utils.crawling_utils as crawling_utils
+from broker_interface.start_descriptor import start_consumer_process
 
 import crawling_utils.crawling_utils as crawling_utils
 
@@ -22,7 +23,7 @@ global_lock = multiprocessing.Lock()
 
 # FUNCTIONS THAT SHOULD BE EXECUTED BY PROCESSES
 
-N_FUNCTIONS = 5
+N_FUNCTIONS = 1
 
 
 def wait_for_port(port):
@@ -52,22 +53,23 @@ def run_django():
     f.close()
 
     # Runs django repassing cli parameters
-    subprocess.run(["python", "manage.py", "runserver"] + sys.argv[1:])
+    # --no-reload Avoid calling MainConfig twice, not creating more processes than necessary
+    subprocess.run(["python", "manage.py", "runserver", "--noreload"] + sys.argv[1:])
+
 
 def run_zookeeper():
-    crawling_utils.check_file_path("crawlers/log/")
+    crawling_utils.check_file_path("crawler_manager/log/")
     os.chdir('kafka_2.13-2.4.0')
 
     # Starts zookeeper server with overriten properties
     subprocess.run(['bin/zookeeper-server-start.sh',
                     'config/zoo.properties'],
-                   stdout=open(f"../crawlers/log/zookeeper.out", "a", buffering=1),
-                   stderr=open(f"../crawlers/log/zookeeper.err", "a", buffering=1))
-
+                   stdout=open(f"../crawler_manager/log/zookeeper.out", "a", buffering=1),
+                   stderr=open(f"../crawler_manager/log/zookeeper.err", "a", buffering=1))
 
 def run_kafka():
     wait_for_port(2181)
-    crawling_utils.check_file_path("crawlers/log/")
+    crawling_utils.check_file_path("crawler_manager/log/")
     os.chdir('kafka_2.13-2.4.0')
 
     # Starts kafka server
@@ -75,12 +77,12 @@ def run_kafka():
                     'config/server.properties',
                     '--override',
                     'log.dirs=kafka-logs'],
-                   stdout=open(f"../crawlers/log/kafka.out", "a", buffering=1),
-                   stderr=open(f"../crawlers/log/kafka.err", "a", buffering=1))
+                   stdout=open(f"../crawler_manager/log/kafka.out", "a", buffering=1),
+                   stderr=open(f"../crawler_manager/log/kafka.err", "a", buffering=1))
 
-def runn_file_descriptor():
-    file_descriptor_process()
-
+def run_file_descriptor():
+    wait_for_port(9092)
+    start_consumer_process()
 
 # END FUNCTIONS THAT SHOULD BE EXECUTED BY PROCESSES
 
@@ -103,22 +105,25 @@ def signal_stop(e):
 def run():
     global stop_processes, process_exception, n_processes_running, global_lock
 
+    # List functions that will be executed by processes
+    functions = [
+        # [run_zookeeper, []],
+        # [run_kafka, []],
+        [run_django, []],
+        [run_file_descriptor, []],
+        # [run_file_downloader, []],
+    ]
+
+    # N_FUNCTIONS must be equal to len(functions)
+    N_FUNCTIONS = len(functions)
+
     print("Initializing processes")
     pool = multiprocessing.Pool(
         processes=N_FUNCTIONS,
         initializer=init_process,
     )
 
-    # List functions that will be executed by processes
-    functions = [
-        [run_zookeeper, []],
-        [run_kafka, []],
-        [run_django, []],
-        [runn_file_descriptor, []],
-        # [run_file_downloader, []],
-    ]
 
-    # N_FUNCTIONS must be equal to len(functions)
     with global_lock:
         n_processes_running = N_FUNCTIONS
 
@@ -133,6 +138,7 @@ def run():
     # end list function
     try:
         while True:
+            print('Loop', n_processes_running)
             with global_lock:
                 # stop processes if any of them stopped running
                 if n_processes_running != N_FUNCTIONS:
@@ -155,11 +161,11 @@ def run():
 
     finally:
         # stop kafka and zookeeper:
-        os.chdir('kafka_2.13-2.4.0')
-        subprocess.run(['bin/kafka-server-stop.sh'])
-        subprocess.run(['bin/zookeeper-server-stop.sh'])
-        shutil.rmtree('zookeeper')
-        shutil.rmtree('kafka-logs')
+        # os.chdir('kafka_2.13-2.4.0')
+        # subprocess.run(['bin/kafka-server-stop.sh'])
+        # subprocess.run(['bin/zookeeper-server-stop.sh'])
+        # shutil.rmtree('zookeeper')
+        # shutil.rmtree('kafka-logs')
 
         # stop processes
         pool.terminate()

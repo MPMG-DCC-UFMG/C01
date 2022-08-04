@@ -17,7 +17,196 @@ New Crawler
     <div class="row" id="body-row">
         <!-- Sidebar -->
         <div id="sidebar-container" class="sidebar-expanded d-none d-md-block col-2">
-            {% include "main/_create_00_sidebar.html" %}
+            <!-- d-* hiddens the Sidebar in smaller devices. Its itens can be kept on the Navbar 'Menu' -->
+            <!-- Bootstrap List Group -->
+            <ul class="list-group list-group-mine sticky-top sticky-offset">
+                {% if not form.instance.pk %}
+                <!-- import settings -->
+                <a onClick="showBlock(this.id);" href="#" class="button-block bg-dark list-group-item list-group-item-action"
+                    id="import-settings-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-download fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Importar configuração</span>
+                        </div>
+                    </div>
+                </a>
+                <!-- End of import settings -->
+                {% endif %}
+                <li class="sidebar list-group-item sidebar-separator-title text-muted d-flex align-items-center menu-collapsed">
+                    <small>CONFIGURAÇÕES DE SISTEMA</small>
+                </li>
+                <a onClick="showBlock(this.id);" href="#" class="active button-block bg-dark list-group-item list-group-item-action"
+                    id="spiders-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fas fa-spider fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Spiders</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span id="spiders-valid-icon" class="fa fa-check fa-fw mr-3 captcha-valid-icon valid-icon"></span>
+                        </div>
+                    </div>
+                </a>
+                <!-- Separator with title -->
+                <li
+                    class="sidebar list-group-item sidebar-separator-title text-muted d-flex align-items-center menu-collapsed">
+                    <small>CONFIGURAÇÕES DA REQUISIÇÃO</small>
+                </li>
+                <!-- /END Separator -->
+                <a title="Infos básicas" onClick="showBlock(this.id);" href="#"
+                    class="active button-block bg-dark list-group-item list-group-item-action" id="basic-info-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-id-card fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Infos básicas</span>
+                        </div>
+                        <div class="col-md-2">
+                            {% if crawler %}
+                            <span id="basic-info-valid-icon"
+                                class="fa fa-check fa-fw mr-3 basic-info-valid-icon valid-icon"></span>
+                            {% else %}
+                            <span id="basic-info-valid-icon"
+                                class="fas fa-exclamation-triangle fa-fw mr-3 basic-info-valid-icon valid-icon"></span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+                <a title="Antibloqueio" onClick="showBlock(this.id);" href="#"
+                    class="button-block bg-dark list-group-item list-group-item-action" id="antiblock-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-user-secret fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Antibloqueio</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span id="antiblock-valid-icon"
+                                class="fa fa-check fa-fw mr-3 antiblock-valid-icon valid-icon"></span>
+                        </div>
+                    </div>
+                </a>
+                <a title="Captcha" onClick="showBlock(this.id);" href="#"
+                    class="disabled button-block bg-dark list-group-item list-group-item-action" id="captcha-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-unlock fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Captcha</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span id="captcha-valid-icon"
+                                class="fa fa-check fa-fw mr-3 captcha-valid-icon valid-icon"></span>
+                        </div>
+                    </div>
+                </a>
+                <a title="URL Parametrizada" onClick="showBlock(this.id)" href="#"
+                    class="disabled button-block bg-dark list-group-item list-group-item-action"
+                    id="templated_url-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fas fa-sliders-h fa-fw mr-3"></span>
+                            <span class="menu-collapsed">URL Parametrizada</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span id="templated_url-valid-icon"
+                                class="fa fa-check fa-fw mr-3 templated_url-valid-icon valid-icon"></span>
+                        </div>
+                    </div>
+                </a>
+                <!--
+                <a title="Formulários" onClick="showBlock(this.id)" href="#"
+                    class="button-block bg-dark list-group-item list-group-item-action"
+                    id="static_form-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-wpforms fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Formulários</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span id="static_form-valid-icon"
+                                class="fa fa-check fa-fw mr-3 static_form-valid-icon valid-icon"></span>
+                        </div>
+                    </div>
+                </a>
+                -->
+                <!-- Separator with title -->
+                <li class="list-group-item sidebar-separator-title text-muted d-flex align-items-center menu-collapsed">
+                    <small>CONFIGURAÇÕES DA RESPOSTA</small>
+                </li>
+
+                <!-- /END Separator -->
+
+                <!-- implementation local begin -->
+                <a title="Processamento dinâmico" onClick="showBlock(this.id); load_steps_interface(this.id + '-wrap', 'id_steps');" href="#"
+                    class="button-block bg-dark list-group-item list-group-item-action" id="dynamic-processing-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-code fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Processamento dinâmico</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span id="dynamic-processing-valid-icon"
+                                class="fa fa-check fa-fw mr-3 crawler-details-valid-icon valid-icon disabled"></span>
+                        </div>
+                    </div>
+                </a>
+                <!-- implementation local end -->
+
+                <a title="Detalhes do coletor" onClick="showBlock(this.id)" href="#"
+                    class="button-block bg-dark list-group-item list-group-item-action" id="crawler-details-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-gear fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Detalhes do coletor</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span id="crawler-details-valid-icon"
+                                class="fa fa-check fa-fw mr-3 crawler-details-valid-icon valid-icon"></span>
+                        </div>
+                    </div>
+                </a>
+
+                <a title="Configuração..." href="#" class="disabled bg-dark list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <span class="fas fa-shield-alt fa-fw mr-3"></span>
+                        <span class="menu-collapsed">Configuração...</span>
+                    </div>
+                </a>
+                <!--
+                <a onClick="showBlock(this.id);" href="#"
+                    class="disabled button-block bg-dark list-group-item list-group-item-action" id="probing-item">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <div class="col-md-10 sidemenu-items">
+                            <span class="fa fa-id-card-o fa-fw mr-3"></span>
+                            <span class="menu-collapsed">Sondagem</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span id="probing-valid-icon"
+                                class="fa fa-check fa-fw mr-3 probing-valid-icon valid-icon"></span>
+                        </div>
+                    </div>
+                </a>
+                -->
+                <a title="Configuração..." href="#" class="disabled bg-dark list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-start align-items-center">
+                        <span class="fa fa-image fa-fw mr-3"></span>
+                        <span class="menu-collapsed">Configuração...</span>
+                    </div>
+                </a>
+                {% if crawler %}
+                <button id="createButton" type="submit"
+                    class="bg-dark list-group-item list-group-item-valid list-group-item-action"
+                    style="text-align: center; position: fixed; bottom: 0px; width: 16.725%;">
+                    Update
+                </button>
+                {% else %}
+                <button id="createButton" type="submit"
+                    class="bg-dark list-group-item list-group-item-invalid list-group-item-action"
+                    style="text-align: center; position: fixed; bottom: 0px; width: 16.725%;">
+                    Create
+                </button>
+                {% endif %}
+            </ul>
+            <!-- List Group END-->
         </div>
         <!-- sidebar-container END -->
         <div class="col py-3">
@@ -25,23 +214,267 @@ New Crawler
                 <div class="col-8">
                     <hr class="mt-0 mb-4">
 
-                    {% include "main/_create_01_import.html" %}
+                    <div id="import-settings-item-block" class="block" hidden>
+                        <div class="row" style="padding: 20px;">
+                            <div class="col md-6">
+                                <div id="div_id_import_settings" class="form-group">
+                                    <label for="id_import_settings">
+                                        Importar arquivo de configuração
+                                        <button type="button" class="popover-icon btn btn-link" data-toggle="popover" data-trigger="click" data-content="Carregue um arquivo de configuração externo em formato json e preencher automaticamente os parâmetros de configuração de uma coleta." data-placement="auto left"><i class="fa fa-info-circle" aria-hidden="true"></i></button>
+                                    </label>
+                                    <div class="">
+                                        <input type="file"
+                                                class="form-control-file"
+                                                accept="application/JSON"
+                                                id="id_import_settings"
+                                                name="import_settings"
+                                                onchange="parseSettings(this)"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                    {% include "main/_create_02_basic.html" %}
+                    <div id="spiders-item-block" class="block" hidden>
+                        <div class="row" style="padding: 20px;">
+                            <div class="col md-6">
+                                {{ form.sc_scheduler_persist | as_crispy_field }}
+                                {{ form.sc_scheduler_queue_refresh | as_crispy_field }}
+                                {{ form.sc_queue_moderated | as_crispy_field }}
+                                {{ form.sc_dupefilter_timeout | as_crispy_field }}
+                                {{ form.sc_httperror_allow_all | as_crispy_field }}
+                                {{ form.sc_retry_times | as_crispy_field }}
+                                {{ form.sc_download_timeout | as_crispy_field }}
+                                {{ form.sc_queue_hits | as_crispy_field }}
+                                {{ form.sc_queue_window | as_crispy_field }}
+                                {{ form.sc_scheduler_type_enabled | as_crispy_field }}
+                                {{ form.sc_scheduler_ip_enabled | as_crispy_field }}
+                                {{ form.sc_global_page_per_domain_limit | as_crispy_field }}
+                                {{ form.sc_global_page_per_domain_limit_timeout | as_crispy_field }}
+                                {{ form.sc_domain_max_page_timeout | as_crispy_field }}
+                                {{ form.sc_scheduler_ip_refresh | as_crispy_field }}
+                                {{ form.sc_scheduler_backlog_blacklist | as_crispy_field }}
+                                {{ form.sc_scheduler_item_retries | as_crispy_field }}
+                                {{ form.sc_scheduler_queue_timeout | as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
 
-                    {% include "main/_create_03_antiblock.html" %}
+                    <div id="basic-info-item-block" class="block">
+                        <div class="row" style="padding:20px;">
+                            <div class="col md-6">
+                                {{ form.source_name | as_crispy_field}}
+                                {{ form.base_url | as_crispy_field}}
+                                <p>A URL pode conter espaços para parâmetros, representados como um conjunto de chaves vazias</p>
+                                <hr>
+                                {{ form.expected_runtime_category | as_crispy_field }}
+                                <hr>
+                                {{ form.obey_robots | as_crispy_field}}
+                                {{ form.data_path | as_crispy_field}}
+                            </div>
+                        </div>
+                    </div>
 
-                    {% include "main/_create_04_captcha.html" %}
+                    <div id="antiblock-item-block" class="block" hidden>
+                        <div class="row" style="padding:20px;">
+                            <div class="col md-6">
+                                <div id="antiblock-delay-div" class="border-bottom">
+                                    <div class="antiblock-wrapper mb-3">
+                                        {{ form.antiblock_download_delay | as_crispy_field}}
+                                    </div>
+                                    
+                                    <div class="antiblock-wrapper mb-3">
+                                        {{ form.antiblock_autothrottle_enabled | as_crispy_field}}
+                                    </div>
 
-                    {% include "main/_create_05_dynamic.html" %}
-                    
-                    {% include "main/_create_06_details.html" %}
+                                    <div id="autothrottle-options-div" hidden=True>
+                                        <div>{{form.antiblock_autothrottle_start_delay | as_crispy_field}}</div>
+                                        <div>{{form.antiblock_autothrottle_max_delay | as_crispy_field}}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row pt-0" style="padding:20px;">
+                            <div class="col md-6">
+                                <div id="antiblock-mask-div">
+                                    <div class="antiblock-wrapper mb-3">
+                                        {{ form.antiblock_ip_rotation_enabled | as_crispy_field }}                                        
+                                    </div>
 
+                                    <div id="ip-rotation-options-div" {% if not form.antiblock_ip_rotation_enabled.value %} hidden {% endif %}>
+                                        {{ form.antiblock_ip_rotation_type | as_crispy_field }}
+                                        
+                                        <ul class="nav nav-tabs" id="ip-rotation-tabs" role="tablist">
+                                            <li class="nav-item">
+                                                <a class="nav-link active" id="tor" data-toggle="tab" href="#ip-nav" role="tab">Tor</a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" id="proxies" data-toggle="tab" href="#proxies-nav" role="tab">Proxies</a>
+                                            </li>
+                                        </ul>
+                                        <div class="tab-content border-bottom my-3">
+                                            <div class="tab-pane show active" id="ip-nav" role="tabpanel" aria-labelledby="tor">
+                                                {{ form.antiblock_max_reqs_per_ip | as_crispy_field}}
+                                                {{ form.antiblock_max_reuse_rounds | as_crispy_field}}
+                                                
+                                                <small class="text-muted mb-2 d-block">Certifique que o Tor esteja devidamente configurado.</small>
+                                            </div>
+                                            <div class="tab-pane " id="proxies-nav" role="tabpanel" aria-labelledby="proxies">
+                                                {{ form.antiblock_proxy_list | as_crispy_field}}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="antiblock-wrapper mb-3">
+                                        {{ form.antiblock_user_agent_rotation_enabled | as_crispy_field}}     
+                                    </div>
+
+                                    <div id="user-agent-rotation-options-div" class="border-bottom my-3" {% if not form.antiblock_user_agent_rotation_enabled.value %} hidden {% endif %}>
+                                        {{ form.antiblock_reqs_per_user_agent | as_crispy_field}}
+                                        {{ form.antiblock_user_agents_list | as_crispy_field}}
+                                    </div>
+                                    
+                                    <div class="antiblock-wrapper mb-3">
+                                        {{ form.antiblock_insert_cookies_enabled | as_crispy_field }}
+                                    </div>
+
+                                    <div id="insert-cookies-options-div" class="border-bottom my-3" {% if not form.antiblock_insert_cookies_enabled.value %} hidden {% endif %}>
+                                        {{ form.antiblock_cookies_list | as_crispy_field}}
+                                    </div>
+
+                                </div>
+                                <p class="text-info font-style-bold">* Apenas funcional para coletores estáticos.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="captcha-item-block" class="block" hidden>
+                        <div class="row" style="padding:20px;">
+                            <div class="col md-6">
+                                {{ form.captcha | as_crispy_field}}
+                                <div id="captchaDiv">
+                                    <div class="captcha-content-div" id="image" hidden>
+                                        {{ form.img_xpath | as_crispy_field}}
+                                    </div>
+                                    <div class="captcha-content-div" id="sound" hidden>
+                                        {{ form.sound_xpath | as_crispy_field}}
+                                    </div>
+                                    <div class="webdriver-div" id="webdriver" hidden>
+                                        {{ form.has_webdriver | as_crispy_field}}
+                                        <div id="webdriver_path_div" hidden>
+                                            {{ form.webdriver_path | as_crispy_field}}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div id="dynamic-processing-item-block" class="block" hidden>
+                        <div id="dynamic_processing" class="">
+                            {{ form.dynamic_processing | as_crispy_field}}
+                        </div>
+                        <div id="dynamic-processing-skip-errors" class="hidden">
+                            {{ form.skip_iter_errors | as_crispy_field}}
+                        </div>
+                        <div id="dynamic-processing-item-wrap" style="padding:20px;" class="hidden">
+                            {{ form.steps | as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <div id="crawler-details-item-block" class="block" hidden>
+                        <div class="row">
+                            <div class="col md-6">
+                                <div class="crawler-type-content-div" id="static_page">
+                                    <div id="explore_links">
+                                        {{ form.explore_links | as_crispy_field}}
+                                        {{ form.link_extractor_max_depth | as_crispy_field}}
+                                        {{ form.link_extractor_allow_url | as_crispy_field}}
+
+                                        <div class="btn btn-primary" id="collapse-adv-links">
+                                            Opções Avançadas
+                                        </div>
+                                        <div class="mycollapse" id="adv-links">
+                                            <div class="mycollapse-block  p-4 pb-0 rounded mt-3">
+                                                {{ form.encoding_detection_method | as_crispy_field }}
+                                                <p class="small">Essa configuração permite escolher como será obtida a codificação para salvamento das páginas salvas. 
+                                                    O padrão é via cabeçalho das respostas do servidor, que devem funcionar para a maiorias dos casos e é mais rápido. 
+                                                    O método automático tentará detectar a codificação automaticamente, o que é mais lento mas pode resolver caso de 
+                                                    respostas incorretas do servidor. A detecção de codificação não é perfeita, portanto, o nível de confiança de <strong>80%</strong> é adotado.
+                                                    <br>
+                                                    <br>
+                                                    <strong>Obs.:</strong>A detecção automática de codificação não é atualmente suportada em páginas dinâmicas.
+                                                </p>
+
+                                                {{ form.link_extractor_allow_domains | as_crispy_field }}
+                                                {{ form.link_extractor_tags | as_crispy_field }}
+                                                {{ form.link_extractor_attrs | as_crispy_field }}
+                                                {{ form.link_extractor_check_type | as_crispy_field }}
+                                                <p class="small">Se existirem urls que apontam para arquivos mas não <strong>terminam</strong>
+                                                    em uma extensão de arquivo, o coletor pode conferir o tipo da página pra qual a url aponta.
+                                                    Nesse caso, ele irá requisitar os <i>headers</i> da url. Se o tipo for <i>'text/html'</i>,
+                                                    a página será tratada com um html; caso contrário, como um arquivo. Habilitar essa opção
+                                                    pode deixar a coleta mais lenta, então priorize filtrar urls com regex.
+                                                </p>
+                                                {{ form.link_extractor_process_value | as_crispy_field }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="download_files" style="padding: 20px; border-top: 1px solid #DCDCDC;">
+                                        {{ form.download_files | as_crispy_field}}
+                                        {{ form.download_files_allow_url | as_crispy_field}}
+                                        {{ form.download_files_allow_extensions | as_crispy_field}}
+
+                                        <div class="btn btn-primary" id="collapse-adv-download">
+                                            Opções Avançadas
+                                        </div>
+                                        <div class="mycollapse" id="adv-download">
+                                            <div class="mycollapse-block p-4 pb-0 rounded mt-3">
+                                                {{ form.download_files_allow_domains | as_crispy_field }}
+                                                {{ form.download_files_tags | as_crispy_field }}
+                                                {{ form.download_files_attrs | as_crispy_field }}
+                                                {{ form.download_files_process_value | as_crispy_field }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="download_img" class="" style="padding: 20px 20px 0 20px; border-top: 1px solid #DCDCDC;">
+                                        {{ form.download_imgs | as_crispy_field}}
+                                    </div>
+                                    <div class="download_check_large_files" style="padding: 0 20px 0 20px;">
+                                        {{ form.download_files_check_large_content | as_crispy_field}}
+                                        <p class="small">Caso não haja arquivos grandes (>1GB) a serem coletados, desabilite a opção acima para ganhar desempenho. </p>                     
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                    
-                {% include "main/_create_07_url.html" %}
-                
-                {% include "main/_create_08_static.html" %}
+
+                <div id="templated_url-item-block" class="block" hidden>
+                    <div class="row">
+                        <div class="col md-6" id="templated_url-config">
+                            {% include "main/injection_config.html" with parameter_formset=templated_parameter_formset response_formset=templated_response_formset injection_type='templated_url' %}
+                        </div>
+                    </div>
+                </div>
+
+                <div id="static_form-item-block" class="block" hidden>
+                    <div class="row">
+                        <div class="col md-6" id="static_form-config">
+                            <input name="loadfields"
+                                type="button" onclick="loadStaticForm()"
+                                value="Carregar campos de formulário">
+                            </input>
+                            <br><br>
+                            {{ form.form_request_type | as_crispy_field}}
+                            <div class="bordered-bottom-option"></div>
+                            {% include "main/injection_config.html" with parameter_formset=static_parameter_formset response_formset=static_response_formset injection_type='static_form' %}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

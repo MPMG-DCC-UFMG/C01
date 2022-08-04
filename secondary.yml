@@ -1,0 +1,40 @@
+version: '3.7'
+
+services:
+    spider_manager:
+        build:
+            context: .
+            dockerfile: ./docker/spider_manager/Dockerfile
+        network_mode: "host"
+        volumes:
+            - /datalake/ufmg/webcrawlerc01/distributed_system_test/data:/data
+        env_file:
+            - ./docker/config/secondary.env
+        restart: on-failure
+    link_generator:
+        build:
+            context: .
+            dockerfile: ./docker/link_generator/Dockerfile
+        network_mode: "host"
+        env_file:
+            - ./docker/config/secondary.env
+        restart: on-failure
+    writer:
+        build:
+            context: .
+            dockerfile: ./docker/writer/Dockerfile
+        network_mode: "host"
+        volumes:
+            - /datalake/ufmg/webcrawlerc01/distributed_system_test/data:/data
+        env_file:
+            - ./docker/config/secondary.env
+        restart: on-failure
+volumes:
+    static_volume:
+    data:
+        driver: local
+        driver_opts:
+            type: 'none'
+            o: 'bind'
+            device: './data'
+    postgres_data:

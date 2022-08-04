@@ -1,0 +1,136 @@
+version: '3.7'
+
+services:
+    redis:
+        image: redis
+        ports:
+            - "6379:6379"
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 1s
+            timeout: 3s
+            retries: 30
+        restart: always
+    zookeeper:
+        image: wurstmeister/zookeeper
+        ports:
+            - "2181:2181"
+        env_file:
+            - ./docker/config/.env
+        healthcheck:
+            test: ["CMD", "nc", "-vz", "zookeeper", "2181"]
+            interval: 1s
+            timeout: 3s
+            retries: 30
+        restart: always
+    kafka:
+        image: wurstmeister/kafka:2.12-2.5.0
+        ports:
+            - "9092:9092"
+        env_file:
+            - ./docker/config/.env
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+        depends_on:
+            zookeeper:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD", "nc", "-vz", "kafka", "9092"]
+            interval: 1s
+            timeout: 3s
+            retries: 30
+        restart: always
+    web:
+        build:
+            context: .
+            dockerfile: ./docker/django-gunicorn/Dockerfile
+            args:
+                EXECUTION_TYPE: distributed
+                INSTALL_REDIS: "False"
+                INSTALL_KAFKA: "False"
+        command: ./django_run.sh
+        volumes:
+            - static_volume:/home/django/C01/staticfiles
+            - data:/data
+        expose:
+            - 8000
+        env_file:
+            - ./docker/config/.env
+        depends_on:
+            kafka:
+                condition: service_healthy
+            db:
+                condition: service_healthy
+        restart: on-failure
+    nginx:
+        build:
+            context: .
+            dockerfile: ./docker/nginx/Dockerfile
+        volumes:
+            - static_volume:/home/nginx/staticfiles
+        ports:
+            - 8000:80
+        depends_on:
+            - web
+    db:
+        image: postgres:12.0-alpine
+        hostname: localhost
+        volumes:
+          - postgres_data:/var/lib/postgresql/data/
+        env_file:
+          - ./docker/config/.env
+        ports:
+          - "5432:5432"
+        healthcheck:
+          test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+          interval: 10s
+          timeout: 5s
+          retries: 5
+    link_generator:
+        build:
+            context: .
+            dockerfile: ./docker/link_generator/Dockerfile
+        env_file:
+            - ./docker/config/.env
+        depends_on:
+            redis:
+                condition: service_healthy
+            kafka:
+                condition: service_healthy
+        restart: on-failure
+    spider_manager:
+        build:
+            context: .
+            dockerfile: ./docker/spider_manager/Dockerfile
+        env_file:
+            - ./docker/config/.env
+        volumes:
+            - data:/data
+        depends_on:
+            redis:
+                condition: service_healthy
+            kafka:
+                condition: service_healthy
+        restart: on-failure
+    writer:
+        build:
+            context: .
+            dockerfile: ./docker/writer/Dockerfile
+        volumes:
+            - data:/data
+        env_file:
+            - ./docker/config/.env
+        depends_on:
+            kafka:
+                condition: service_healthy
+        restart: on-failure
+
+volumes:
+    static_volume:
+    data:
+        driver: local
+        driver_opts:
+            type: 'none'
+            o: 'bind'
+            device: './data'
+    postgres_data:
