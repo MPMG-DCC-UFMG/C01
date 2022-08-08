@@ -95,7 +95,23 @@ Agendamento de coletas
             bottom:40px;
         	right:40px;
         }
+
+        .toast {
+            position: fixed;
+            top: 164px;
+            right: 15px;
+        }
     </style>
+
+    <div class="toast" data-delay="3000">
+        <div class="toast-header bg-success">
+            <strong class="mr-auto text-white">Notificação</strong>
+            <button type="button" class="ml-2 mb-1 close" data-dismiss="toast">&times;</button>
+        </div>
+        <div class="toast-body font-weight-bold">
+            Agendamento realizado com sucesso!
+        </div>
+    </div>
 
     <div class="calendar calendar-yearly" id="calendar-yearly">
         <div class="">
@@ -228,7 +244,8 @@ Agendamento de coletas
                 <div id="crawler-selector-wrapper" class="border rounded p-3 bg-light">
                     <label for="crawl-selector" class="font-weight-bold">Coletores: </label>
                     <select class="form-select bg-white" id="crawl-selector" >
-                        <option value="0">[Realização-F01] Coleta de Despesas - empenhos_anulados de Patis</option>
+                        <option value="" disabled selected>Selecionar coletor...</option>
+                        <option value="0">[Realização-F01] Coleta deDespesas - empenhos_anulados de Patis</option>
                         <option value="1">[Realização-F01] Coleta de Despesas - empenhos_emitidos de Jenipapo de Minas</option>
                         <option value="2">[Realização-F01] Coleta de Despesas - relatorio_gestao_fiscal de Turmalina</option>
                         <option value="3">[Realização-F01] Coleta de Acesso à Informação - Requisitos Exigidos de Senador Firmino</option>
@@ -2096,36 +2113,37 @@ Agendamento de coletas
                 </div>
 
                 <div class="border rounded p-3 mt-3 bg-light">
-                    <div id="datetime-picker-wrapper">
-                        <label for="" class="font-weight-bold">Horário</label>
-                        <div class="d-flex justify-content-between">
-                            <input type="time" name="" id="scheduling-time" class="border rounded px-2 py-1 mr-2" style="flex: 1;">
-                            <input type="date" name="" id="scheduling-date" class="border rounded px-2 py-1 ml-2" style="flex: 1;">
-
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="mr-2" style="flex: 1;">
+                            <label for="" class="font-weight-bold">Horário</label>
+                            <input type="datetime-local" name="" id="scheduling-time" class="border rounded px-2 py-1">
                         </div>
-                    </div>
-                    <div id="repeat-crawler-wrapper">
-                        <label for="" class="font-weight-bold mt-3">Repetir</label>
-                        <br>
-                        <div class="pr-2" style="width: 50%;">
-                            <select name="" id="repeat-crawling-select" class="border rounded p-2 bg-white pr-2 w-100">
-                                <option value="no-repeat">Não se repete</option>
-                                <option value="daily-repeat">Diariamente</option>
-                                <option value="semanal-repeat">Semanalmente</option>
-                                <option value="montly-repeat">Mensalmente</option>
-                                <option value="yearly-repeat">Anualmente</option>
-                                <option value="custom-repeat" onclick="open_personalized_crawler_repetition()">Personalizado</option>
+                        <div class="ml-1" style="flex: 1;">
+                            <label for="repeat-crawling-select" class="font-weight-bold">Repetir</label>
+                            <select name="" id="repeat-crawling-select" 
+                                class="border rounded px-2 bg-white w-100"
+                                style="padding-top: 7px; padding-bottom: 7px;"
+                                >
+                                <option value="no_repeat">Não se repete</option>
+                                <option value="daily">Diariamente</option>
+                                <option value="weekly">Semanalmente</option>
+                                <option value="monthly">Mensalmente</option>
+                                <option value="yearly">Anualmente</option>
+                                <option value="personalized" onclick="open_personalized_crawler_repetition()">Personalizado</option>
                             </select>
                         </div>
                     </div>
+                    <span id="scheduling-personalized-repetition-info" 
+                        style="display: none;"
+                        class="mt-2 small"></span>
                 </div>
                 
                 <div id="crawler-queue-wrapper" class="mt-3 rounded border bg-light p-3">
                     <label for="" class="font-weight-bold">Fila de coletas</label>
-                    <select name="" id="" class="form-control">
-                        <option value="">Aguardar na última posição da fila</option>
-                        <option value="">Aguardar na primeira posição da fila</option>
-                        <option value="">Executar imediatamente</option>
+                    <select name="" id="crawler_queue_behavior" class="form-control">
+                        <option value="wait_on_last_queue_position">Aguardar na última posição da fila</option>
+                        <option value="wait_on_first_queue_position">Aguardar na primeira posição da fila</option>
+                        <option value="run_immediately">Executar imediatamente</option>
                     </select>
                 </div>
             </div>
@@ -2133,7 +2151,7 @@ Agendamento de coletas
             <div class="modal-footer d-flex justify-content-end">
                 <div class="">
                     <button type="button" class="btn">Cancelar</button>
-                    <button type="button" class="btn btn-success">Salvar</button>
+                    <button type="button" onclick="valid_new_scheduling()" class="btn btn-success">Salvar</button>
                 </div>
             </div>
         </div>
@@ -2315,8 +2333,7 @@ Agendamento de coletas
                 </span>
                 <br>
                 <div class="">
-                    <button type="button" class="btn" onclick="close_personalized_repetition_modal()">Cancelar</button>
-                    <button type="button" class="btn btn-success">Concluído</button>
+                    <button type="button" onclick="close_personalized_repetition_modal()" class="btn btn-success">Concluído</button>
                 </div>
             </div>
         </div>
@@ -2326,8 +2343,9 @@ Agendamento de coletas
 {% endblock %}
 
 {% block js %}
-<script src="{% static 'js/scheduler.js' %}"></script>
-<script src="{% static 'js/calendar.js' %}"></script>
+<script src="{% static 'js/scheduler/scheduler.js' %}"></script>
+<script src="{% static 'js/scheduler/calendar.js' %}"></script>
+<script src="{% static 'js/scheduler/services.js' %}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.css"
     rel="stylesheet" />

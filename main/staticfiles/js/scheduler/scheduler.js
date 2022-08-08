@@ -24,15 +24,15 @@ var day_number_to_weekday = {
     6: 'sábado'   
 }
 
-var repetion = {
-    type: 'daily',
-    interval: 1,
-    additional_data: null,
-    finish: {
-        type: 'never',
-        additional_data: null
-    }
-};
+var new_scheduling_config = {
+    crawl_request: null,
+    runtime: null,
+    crawler_queue_behavior: 'wait_on_last_queue_position',
+    repetion_mode: 'no_repeat',
+    personalized_repetition_mode: {}
+}
+
+var repetion = {};
 
 var date = new Date();
 
@@ -89,7 +89,7 @@ function toggle_weekday_select(el) {
     repetion.additional_data = [];
     for (let i in days_selected_to_repeat)
         if (days_selected_to_repeat[i])
-            repetion.additional_data.push(i)
+            repetion.additional_data.push(parseInt(i));
     
     update_repetition_info();
 }
@@ -115,9 +115,23 @@ function init_default_options() {
     montly_repeat_value = curr_day;
 
     $('#finish-date-in').val(parsed_date);
+
+    repetion = {
+        type: 'daily',
+        interval: 1,
+        additional_data: null,
+        finish: {
+            type: 'never',
+            additional_data: null
+        }
+    };
 }
 
 function update_repetition_info() {
+    
+    if (new_scheduling_config.repetion_mode != 'personalized') 
+        return;
+
     let s = '';
     
     switch (repetion.type) {
@@ -213,10 +227,17 @@ function update_repetition_info() {
     }
 
     $('#repetition-info').text(s);
+
+    let personalized_repetition_info = $('#scheduling-personalized-repetition-info');
+    personalized_repetition_info.css('display', 'inline-block');
+    personalized_repetition_info.text(s);
+
+    new_scheduling_config.personalized_repetition_mode = repetion;
 }
 
 function close_personalized_repetition_modal() {
     $('#personalizedCrawlerRepetion').modal('hide');
+    $('#newScheduling').modal('show');
 }
 
 function update_calendar_mode(mode) {
@@ -268,6 +289,27 @@ function update_calendar_mode(mode) {
     calendar_mode = mode;
 }
 
+function valid_new_scheduling() {
+
+    if (new_scheduling_config.crawl_request == null) {
+        alert('Escolha um coletor válido!');
+        return;
+    }
+
+    if (new_scheduling_config.runtime == null) {
+        alert('Escolha um horário válido!');
+        return;
+    }
+
+    if (new_scheduling_config.repetion_mode == 'personalized' 
+        && new_scheduling_config.personalized_repetition_mode.additional_data.length == 0) {
+        alert('Você configurou uma coleta personalizada semanal, porém não escolheu o(s) dia(s) que ela deve ocorrer!');
+        return;
+    }
+
+    services.save_new_scheduling(new_scheduling_config);
+}
+
 $(document).ready(function () {
     $('#crawl-selector').multiselect({
         includeSelectAllOption: true,
@@ -287,13 +329,21 @@ $(document).ready(function () {
 
     // $('#newScheduling').modal('show');
 
-    $('#repeat-crawling-select').change(function () {
+    $('#repeat-crawling-select').on('click', function () {
         let repeat_mode = $(this).val();
 
-        if (repeat_mode == 'custom-repeat') {
-            open_personalized_crawler_repetition()
+        new_scheduling_config.repetion_mode = repeat_mode;
+
+        if (repeat_mode == 'personalized') {
+            console.warn(repetion);
+
+            update_repetition_info();
+            open_personalized_crawler_repetition();
+        } else {
+            new_scheduling_config.personalized_repetition_mode = {};
+            $('#scheduling-personalized-repetition-info').css('display', 'none');
         }
-        // console.log($(this).val());
+        
     });
 
     $('#repeat-mode-selector').change(function () {
@@ -317,7 +367,7 @@ $(document).ready(function () {
                 repetion.additional_data = [];
                 for (let i in days_selected_to_repeat)
                     if (days_selected_to_repeat[i])
-                        repetion.additional_data.push(i)                    
+                        repetion.additional_data.push(parseInt(i));                    
 
                 if (repetion.additional_data.length == 0)
                     $(`#dwr-${date.getDay()}`).click();
@@ -509,6 +559,18 @@ $(document).ready(function () {
 
     $('#calendar-mode').on('change', function () {
         update_calendar_mode($(this).val());
+    });
+    
+    $('#crawler_queue_behavior').on('change', function () {
+        new_scheduling_config.crawler_queue_behavior = $(this).val();    
+    });
+
+    $('#scheduling-time').on('change', function () {
+       new_scheduling_config.runtime = $(this).val(); 
+    });
+
+    $('#crawl-selector').on('change', function() {
+        new_scheduling_config.crawl_request = parseInt($(this).val());
     });
 
     update_calendar_mode('daily');
