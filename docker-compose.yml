@@ -52,6 +52,7 @@ services:
         volumes:
             - static_volume:/home/django/C01/staticfiles
             - data:/data
+            - migrations:/home/django/C01/main/migrations
         expose:
             - 8000
         env_file:
@@ -133,4 +134,10 @@ volumes:
             type: 'none'
             o: 'bind'
             device: './data'
+    migrations:
+        driver: local
+        driver_opts:
+            type: 'none'
+            o: 'bind'
+            device: './main/migrations'
     postgres_data:

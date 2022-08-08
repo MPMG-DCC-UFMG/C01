@@ -39,7 +39,7 @@ ENV EXECUTION_TYPE=$EXECUTION_TYPE
 ENV INSTALL_REDIS=$INSTALL_REDIS
 ENV INSTALL_KAFKA=$INSTALL_KAFKA
 
-RUN python3 install.py
+RUN python3 web_install.py
 
 RUN mkdir /data
 RUN chown django:django /data
