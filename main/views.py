@@ -358,15 +358,16 @@ def list_grouped_crawlers(request):
     page_number = request.GET.get('page', 1)
 
     grouped_crawlers = CrawlRequest.objects.raw(
-        "select A.id, source_name, B.total \
-        from main_crawlrequest as A inner join \
+        "select X.id, X.source_name, Y.total \
+        from main_crawlrequest as X inner join \
         ( \
-            select ROWID as id,steps, count(1) as total \
-            from main_crawlrequest \
-            where steps is not null and steps <> '' and steps <> '{}' \
-            group by steps \
-        ) as B on A.id = B.id \
-        order by total desc")
+            select B.id, A.steps, count(1) as total \
+            from main_crawlrequest as A inner join \
+            (select max(id) as id, steps from main_crawlrequest group by steps) as B on A.steps=B.steps \
+            where A.steps is not null and A.steps <> '' and A.steps <> '{}' \
+            group by B.id, A.steps \
+        ) as Y on X.id = Y.id \
+        order by Y.total desc")
     
     crawlers_paginator = Paginator(grouped_crawlers, 20)
     grouped_crawlers_page = crawlers_paginator.get_page(page_number)
