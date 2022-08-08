@@ -270,6 +270,9 @@ New Crawler
                                 <hr>
                                 {{ form.expected_runtime_category | as_crispy_field }}
                                 <hr>
+                                {{ form.crawler_type_desc | as_crispy_field}}
+                                {{ form.crawler_description | as_crispy_field}}
+                                {{ form.crawler_issue | as_crispy_field}}
                                 {{ form.obey_robots | as_crispy_field}}
                                 {{ form.data_path | as_crispy_field}}
                             </div>

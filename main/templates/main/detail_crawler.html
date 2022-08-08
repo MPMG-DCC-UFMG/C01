@@ -19,6 +19,9 @@ Crawler "{{ crawler.source_name }}"
                 <li>ID do coletor: <strong>{{ crawler.id }}</strong></li>
                 <li>URL base: <strong><a href="{{ crawler.base_url }}" target="_blank">{{ crawler.base_url }}</a></strong></li>
                 <li>Data de criação: <strong>{{ crawler.creation_date }}</strong></li>
+                <li>Tipo de coleta: <strong>{{crawler.crawler_type_desc}}</strong></li>
+                <li>Descrição: <strong>{{crawler.crawler_description}}</strong></li>
+                <li>Issue: <a href="https://github.com/MPMG-DCC-UFMG/C01/issues/{{crawler.crawler_issue}}" target="_blank"><strong>{{crawler.crawler_issue}}</strong></a></li>
                 <li title="Informa em qual fila o coletor irá aguardar">Fila de coletas: 
                 {% if crawler.expected_runtime_category == 'fast' %} 
                     <span class="badge badge-success">Rápida</span>

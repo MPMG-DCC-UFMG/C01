@@ -20,6 +20,9 @@ class CrawlRequestForm(forms.ModelForm):
             'form_request_type',
             'obey_robots',
             'captcha',
+            'crawler_description',
+            'crawler_type_desc',
+            'crawler_issue',
 
             'sc_scheduler_persist',
             'sc_scheduler_queue_refresh',
@@ -117,6 +120,27 @@ class RawCrawlRequestForm(CrawlRequestForm):
         help_text="Esse caminho deve ser único para cada coletor. Caso a pasta não esteja criada, o coletor a criará automaticamente.",
         validators=[CrawlRequest.pathValid]
     )
+
+    crawler_description = forms.CharField(
+        label="Descrição do coletor",
+        widget=forms.TextInput(
+            attrs={'placeholder': 'Descrição geral do coletor, por exemplo, município e ano alvo de coleta.'})
+    )
+
+    crawler_type_desc = forms.ChoiceField(
+        choices=(
+            ('Contratos', 'Contratos'),
+            ('Despesas', 'Despesas'),
+            ('Diários', 'Diários'),
+            ('Licitação', 'Licitação'),
+            ('Processos', 'Processos'),
+            ('Servidores', 'Servidores'),
+            ('Transparência', 'Transparência'),
+            ('Outro', 'Outro'),
+        )
+    )
+
+    crawler_issue = forms.IntegerField(required=False, initial=0, label='Issue')
 
     # SCRAPY CLUSTER ##########################################################
 

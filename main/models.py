@@ -32,7 +32,22 @@ class CrawlRequest(TimeStamped):
     source_name = models.CharField(max_length=200)
     base_url = models.TextField()
     obey_robots = models.BooleanField(blank=True, null=True)
+    crawler_description = models.TextField( default='')
+    CRAWLERS_TYPES = [
+        ('Contratos', 'Contratos'),
+        ('Despesas', 'Despesas'),
+        ('Diários', 'Diários'),
+        ('Licitação', 'Licitação'),
+        ('Processos', 'Processos'),
+        ('Servidores', 'Servidores'),
+        ('Transparência', 'Transparência'),
+        ('Outro', 'Outro'),
+    ]
+    crawler_type_desc = models.CharField(max_length=15,
+                                    choices=CRAWLERS_TYPES,
+                                    default='Licitação')
 
+    crawler_issue = models.PositiveIntegerField(default=0)
     # This regex is a bit convolute, but in summary: it allows numbers,
     # letters, dashes and underlines. It allows forward and backward slashes
     # unless it occurs in the first character (since we don't allow absolute
