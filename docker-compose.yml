@@ -125,6 +125,20 @@ services:
             kafka:
                 condition: service_healthy
         restart: on-failure
+    scheduler:
+        build:
+            context: .
+            dockerfile: ./docker/scheduler/Dockerfile
+        volumes:
+            - data:/data
+        env_file:
+            - ./docker/config/.env
+        depends_on:
+            kafka:
+                condition: service_healthy
+            db:
+                condition: service_healthy
+        restart: on-failure
 
 volumes:
     static_volume:
