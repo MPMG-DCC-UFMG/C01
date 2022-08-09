@@ -48,6 +48,7 @@ services:
         volumes:
             - static_volume:/home/django/C01/staticfiles
             - data:/data
+            - migrations:/home/django/C01/main/migrations
         expose:
             - 8000
         env_file:
@@ -120,6 +121,20 @@ services:
             kafka:
                 condition: service_healthy
         restart: on-failure
+    scheduler:
+        build:
+            context: .
+            dockerfile: ./docker/scheduler/Dockerfile
+        volumes:
+            - data:/data
+        env_file:
+            - ./docker/config/.env
+        depends_on:
+            kafka:
+                condition: service_healthy
+            db:
+                condition: service_healthy
+        restart: on-failure
 
 volumes:
     static_volume:
@@ -129,4 +144,10 @@ volumes:
             type: 'none'
             o: 'bind'
             device: './data'
+    migrations:
+        driver: local
+        driver_opts:
+            type: 'none'
+            o: 'bind'
+            device: './main/migrations'
     postgres_data:

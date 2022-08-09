@@ -34,7 +34,7 @@ COPY crawler_manager crawler_manager
 
 RUN mkdir logs
 
-RUN python3 install.py
+RUN python3 web_install.py
 
 RUN mkdir /data
 RUN chown django:django /data
