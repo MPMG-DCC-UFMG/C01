@@ -32,7 +32,7 @@ class CrawlRequest(TimeStamped):
     source_name = models.CharField(max_length=200)
     base_url = models.TextField()
     obey_robots = models.BooleanField(blank=True, null=True)
-    crawler_description = models.TextField( default='')
+    crawler_description = models.TextField(default='')
     CRAWLERS_TYPES = [
         ('Contratos', 'Contratos'),
         ('Despesas', 'Despesas'),
@@ -555,6 +555,7 @@ class Log(TimeStamped):
     logger_name = models.CharField(max_length=50, blank=True, null=True)
     log_level = models.CharField(max_length=10, blank=True, null=True)
     raw_log = models.TextField(blank=True, null=True)
+
 
 class CrawlerQueue(models.Model):
     max_fast_runtime_crawlers_running = models.PositiveIntegerField(default=1, blank=True)
