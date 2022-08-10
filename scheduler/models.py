@@ -1,4 +1,5 @@
 from typing import List, Union
+
 from django.db import models
 from main.models import CrawlRequest, TimeStamped
 
@@ -44,7 +45,15 @@ class PersonalizedRepetionMode(TypedDict):
     # Define até quando o coletor deve ser reagendado. Ver classe Finish.
     finish: Finish 
 
-class SchedulerJob(TimeStamped):
+class TaskType(TypedDict):
+    id: int
+    crawl_request: int 
+    runtime: str 
+    crawler_queue_behavior: Literal['wait_on_last_queue_position', 'wait_on_first_queue_position', 'run_immediately'] 
+    repeat_mode: Literal['no_repeat', 'daily', 'weekly', 'monthly', 'yearly', 'personalized']
+    personalized_repetition_mode: Union[None, PersonalizedRepetionMode]
+
+class Task(TimeStamped):
     crawl_request = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE, related_name='scheduler_jobs')
 
     # data e horário base para começar o agendamento de coletas
@@ -70,7 +79,7 @@ class SchedulerJob(TimeStamped):
     ]
 
     # modo de repetição da coleta agendada.
-    repetion_mode = models.CharField(max_length=32, choices=REPETITION_MODE_CHOICES, default='no_repeat')
+    repeat_mode = models.CharField(max_length=32, choices=REPETITION_MODE_CHOICES, default='no_repeat')
 
     # json com a configuração personalizada de reexecução do coletor
     personalized_repetition_mode: PersonalizedRepetionMode = models.JSONField(null=True, blank=True)

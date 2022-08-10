@@ -1,10 +1,10 @@
 from rest_framework import serializers
 
-from .models import SchedulerJob
+from .models import Task
 
-class SchedulerJobSerializer(serializers.ModelSerializer):
+class TaskSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SchedulerJob
+        model = Task
         read_only_fields = ['id', 'creation_date', 'last_modified']
 
         fields = ['id', 'creation_date', 'last_modified', 'crawl_request', 'runtime', 

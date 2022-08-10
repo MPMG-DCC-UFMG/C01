@@ -3,11 +3,11 @@ from django.urls import path
 
 from django.conf.urls import url
 from rest_framework import routers
-from scheduler.views import SchedulerJobViewSet
+from scheduler.views import TaskViewSet
 
 api_router = routers.DefaultRouter()
-api_router.register(r'', SchedulerJobViewSet)
+api_router.register(r'', TaskViewSet)
 
 urlpatterns = [    
-    url(r'^jobs/', include(api_router.urls)),
+    url(r'^tasks/', include(api_router.urls)),
 ]
