@@ -9,6 +9,8 @@ from rest_framework.response import Response
 from scheduler.models import Task
 from scheduler.serializer import TaskSerializer
 
+from scheduler.task_filter import task_filter_by_date_interval
+
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
@@ -47,8 +49,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         
         # serializer.data is ordered_dict
-        data = json.loads(json.dumps(serializer.data))
-
-        print(serializer.data[0]['personalized_repetition_mode'])
+        tasks = json.loads(json.dumps(serializer.data))
+        data = task_filter_by_date_interval(tasks, start_date, end_date)
 
         return Response(data, status=status.HTTP_200_OK)  

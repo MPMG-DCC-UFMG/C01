@@ -2,9 +2,10 @@ import calendar
 import math
 from datetime import MAXYEAR, datetime, timedelta
 from typing import Dict, List, Union
-from scheduler.models import TaskType
+
 from typing_extensions import Literal
 
+from scheduler.models import TaskType
 
 # adapta a saída dos dias da semana da biblioteca para que os dias da semana comecem
 # domingo (dia 0)
@@ -35,7 +36,7 @@ MONTHLY_LAST_WEEKDAY_OCCURRENCE_TYPE = 'last-weekday'
 
 NO_REPEAT_MODE = 'no_repeat'
 DAILY_REPEAT_MODE = 'daily'
-WEEKLY_REPEAT_MODE = 'weeky'
+WEEKLY_REPEAT_MODE = 'weekly'
 MONTHLY_REPEAT_MODE = 'monthly'
 YEARLY_REPEAT_MODE = 'yearly'
 PERSONALIZED_REPEAT_MODE = 'personalized'
@@ -115,7 +116,7 @@ def process_weekly_repeat_mode(filtered_tasks_ids: Dict[str, int],
                             max_date: datetime = MAX_DATE,
                             interval: int = 1) -> Dict[str, int]:
 
-    delta_week_in_days = timedelta(days = NUM_DAYS_IN_WEEK * interval)
+    delta_weeks = timedelta(weeks=interval)
     num_occorrences = 0
 
     weekday_task_start = WEEKDAY[base_date.weekday()]
@@ -129,7 +130,7 @@ def process_weekly_repeat_mode(filtered_tasks_ids: Dict[str, int],
         insert_task_id(filtered_tasks_ids, task_id, base_date, start_date)
         num_occorrences += 1     
 
-    date_week_start += delta_week_in_days
+    date_week_start += delta_weeks
     
     while True:
         for weekday in weekdays_to_run:
@@ -138,7 +139,7 @@ def process_weekly_repeat_mode(filtered_tasks_ids: Dict[str, int],
                 return 
             insert_task_id(filtered_tasks_ids, task_id, base_date, start_date)
             num_occorrences += 1 
-        date_week_start += delta_week_in_days
+        date_week_start += delta_weeks
 
 def process_monthly_repeat_mode(filtered_tasks_ids: Dict[str, int],
                             task_id: int, 
@@ -151,23 +152,26 @@ def process_monthly_repeat_mode(filtered_tasks_ids: Dict[str, int],
                             max_date: datetime = MAX_DATE,
                             interval: int = 1) -> Dict[str, int]:
 
+    num_occorrences = 0
+
     if occurrence_type == MONTHLY_DAY_X_OCCURRENCE_TYPE:
         day = occurrence_value
 
         # a data para o 1o. agendado é ainda nesse mês ou no próximo?
         month = base_date.month if day >= base_date.day else base_date.month + 1 
+        year = base_date.year
 
-        year = base_date.year if month <= NUM_MONTHS_IN_YEAR else base_date.year + 1
-        month %= NUM_MONTHS_IN_YEAR + 1
+        if month > NUM_MONTHS_IN_YEAR:
+            year += month // NUM_MONTHS_IN_YEAR
+            month = 1
 
         base_date = get_date(day, month, year)
 
         while base_date <= end_date and num_occorrences < max_occurrences and base_date <= max_date:
             insert_task_id(filtered_tasks_ids, task_id, base_date, start_date)
 
-            month += interval
-            year = year if month <= NUM_MONTHS_IN_YEAR else year + 1
-            month %= NUM_MONTHS_IN_YEAR + 1
+            year = year + (month + interval - 1) // NUM_MONTHS_IN_YEAR
+            month = (month + interval - 1) % NUM_MONTHS_IN_YEAR + 1
 
             base_date = get_date(day, month, year)
             num_occorrences += 1
@@ -182,18 +186,18 @@ def process_monthly_repeat_mode(filtered_tasks_ids: Dict[str, int],
         # a primeira execução deverá ser no próximo mês, pois o dia da semana escolhido já passou
         if get_first_weekday_date_of_month(weekday_to_run, year, month) < base_date:
             month += 1
-            year = year if month <= NUM_MONTHS_IN_YEAR else year + 1
-            month %= NUM_MONTHS_IN_YEAR + 1
-
+            if month > NUM_MONTHS_IN_YEAR:
+                year += 1
+                month = 1
+    
         base_date = get_first_weekday_date_of_month(weekday_to_run, year, month)
 
         while base_date <= end_date and num_occorrences < max_occurrences and base_date <= max_date:
             insert_task_id(filtered_tasks_ids, task_id, base_date, start_date)
             
-            month += 1
-            year = year if month <= NUM_MONTHS_IN_YEAR else year + 1
-            month %= NUM_MONTHS_IN_YEAR + 1
-
+            year = year + (month + interval - 1) // NUM_MONTHS_IN_YEAR
+            month = (month + interval - 1) % NUM_MONTHS_IN_YEAR + 1
+    
             base_date = get_first_weekday_date_of_month(weekday_to_run, year, month)
             num_occorrences += 1
 
@@ -207,18 +211,18 @@ def process_monthly_repeat_mode(filtered_tasks_ids: Dict[str, int],
         # a primeira execução deverá ser no próximo mês, pois o dia da semana escolhido já passou
         if get_last_weekday_date_of_month(weekday_to_run, year, month) > base_date:
             month += 1
-            year = year if month <= NUM_MONTHS_IN_YEAR else year + 1
-            month %= NUM_MONTHS_IN_YEAR + 1
-
+            if month > NUM_MONTHS_IN_YEAR:
+                year += 1
+                month = 1
+    
         base_date = get_last_weekday_date_of_month(weekday_to_run, year, month)
 
         while base_date <= end_date and num_occorrences < max_occurrences and base_date <= max_date:
             insert_task_id(filtered_tasks_ids, task_id, base_date, start_date)
             
-            month += 1
-            year = year if month <= NUM_MONTHS_IN_YEAR else year + 1
-            month %= NUM_MONTHS_IN_YEAR + 1
-
+            year = year + (month + interval - 1) // NUM_MONTHS_IN_YEAR
+            month = (month + interval - 1) % NUM_MONTHS_IN_YEAR + 1
+    
             base_date = get_last_weekday_date_of_month(weekday_to_run, year, month)
             num_occorrences += 1
 
@@ -238,6 +242,7 @@ def process_yearly_repeat_mode( filtered_tasks_ids: Dict[str, int],
     year = base_date.year
 
     base_date = get_date(day, month, year)
+    num_occorrences = 0
 
     while base_date <= end_date and num_occorrences < max_occurrences and base_date <= max_date:
         insert_task_id(filtered_tasks_ids, task_id, base_date, start_date)
@@ -246,17 +251,19 @@ def process_yearly_repeat_mode( filtered_tasks_ids: Dict[str, int],
         base_date = get_date(day, month, year)
         num_occorrences += 1
 
-def task_date_filter(tasks: List[TaskType], start_date: datetime, end_date: datetime) -> Dict[str, int]:
+def task_filter_by_date_interval(tasks: List[TaskType], start_date: datetime, end_date: datetime) -> Dict[str, int]:
     filtered_tasks_ids: Dict[str, int] = dict()
 
     for task in tasks:
-        repeat_mode = task['repeat_mode']
         runtime = task['runtime']
-
         # runtime is like: 2022-08-06T23:29:00Z
         year, month, day = runtime.split('T')[0].split('-')
         base_date = get_date(day, month, year)
 
+        if base_date > end_date:
+            continue
+
+        repeat_mode = task['repeat_mode']
         task_id = task['id']
 
         if repeat_mode == NO_REPEAT_MODE:
@@ -269,6 +276,9 @@ def task_date_filter(tasks: List[TaskType], start_date: datetime, end_date: date
         monthly_occurrence_type = 'day-x'
         monthly_occurrence_val = base_date.day 
 
+        max_occurrences = math.inf 
+        max_date = MAX_DATE 
+        
         if repeat_mode == PERSONALIZED_REPEAT_MODE:
             personalized_task = task['personalized_repetition_mode']
             interval = personalized_task['interval']
@@ -279,24 +289,27 @@ def task_date_filter(tasks: List[TaskType], start_date: datetime, end_date: date
                 max_date = MAX_DATE
             
             elif finish_type == REPEAT_FINISH_BY_DATE:
-                max_date = get_date(personalized_task['finish']['additional_data'])
+                str_date = personalized_task['finish']['additional_data']
+
+                year, month, day = str_date.split('-')
+                
+                max_date = get_date(day, month, year)
                 max_occurrences = math.inf
 
             else:
-                max_occurrences = math.inf 
-                max_date = MAX_DATE 
+                pass 
 
-            personalized_task_type = personalized_task['type']
-            if personalized_task_type == WEEKLY_REPEAT_MODE:
+            repeat_mode = personalized_task['type']
+            if repeat_mode == WEEKLY_REPEAT_MODE:
                 weekdays_to_run = personalized_task['additional_data']
             
-            elif personalized_task_type == MONTHLY_REPEAT_MODE:
+            elif repeat_mode == MONTHLY_REPEAT_MODE:
                 monthly_occurrence_type = personalized_task['additional_data']['type']
                 monthly_occurrence_val = personalized_task['additional_data']['value'] 
 
             else:
                 pass 
-
+            
         if repeat_mode == DAILY_REPEAT_MODE:
             process_daily_repeat_mode(filtered_tasks_ids,
                                     task_id,

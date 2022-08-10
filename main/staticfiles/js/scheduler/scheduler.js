@@ -28,8 +28,8 @@ var new_scheduling_config = {
     crawl_request: null,
     runtime: null,
     crawler_queue_behavior: 'wait_on_last_queue_position',
-    repetion_mode: 'no_repeat',
-    personalized_repetition_mode: {}
+    repeat_mode: 'no_repeat',
+    personalized_repetition_mode: null
 }
 
 var repetion = {};
@@ -128,7 +128,7 @@ function init_default_options() {
 
 function update_repetition_info() {
     
-    if (new_scheduling_config.repetion_mode != 'personalized') 
+    if (new_scheduling_config.repeat_mode != 'personalized') 
         return;
 
     let s = '';
@@ -300,7 +300,8 @@ function valid_new_scheduling() {
         return;
     }
 
-    if (new_scheduling_config.repetion_mode == 'personalized' 
+    if (new_scheduling_config.repeat_mode == 'personalized' 
+        && new_scheduling_config.personalized_repetition_mode.type == 'weekly'
         && new_scheduling_config.personalized_repetition_mode.additional_data.length == 0) {
         alert('Você configurou uma coleta personalizada semanal, porém não escolheu o(s) dia(s) que ela deve ocorrer!');
         return;
@@ -335,15 +336,13 @@ $(document).ready(function () {
     $('#repeat-crawling-select').on('click', function () {
         let repeat_mode = $(this).val();
 
-        new_scheduling_config.repetion_mode = repeat_mode;
+        new_scheduling_config.repeat_mode = repeat_mode;
 
         if (repeat_mode == 'personalized') {
-            console.warn(repetion);
-
             update_repetition_info();
             open_personalized_crawler_repetition();
         } else {
-            new_scheduling_config.personalized_repetition_mode = {};
+            new_scheduling_config.personalized_repetition_mode = null;
             $('#scheduling-personalized-repetition-info').css('display', 'none');
         }
         
@@ -481,11 +480,6 @@ $(document).ready(function () {
         repetion.additional_data.type = montly_repeat_type;
         repetion.additional_data.value = montly_repeat_value;
         update_repetition_info();
-    });
-
-    $('#finish-date-in').datepicker({
-        format: 'dd/mm/yyyy',
-        language: 'pt-BR'
     });
 
     init_default_options();

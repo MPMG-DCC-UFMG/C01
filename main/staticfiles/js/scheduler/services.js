@@ -6,7 +6,7 @@ services.save_new_scheduling = function (new_scheduling_config) {
     let parsed_data = JSON.stringify(new_scheduling_config);
 
     $.ajax({
-        url: '/scheduler/jobs/',
+        url: '/scheduler/tasks/',
         type: 'post',
         contentType: "application/json; charset=utf-8",
         dataType: "json",
