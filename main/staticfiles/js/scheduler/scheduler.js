@@ -58,7 +58,6 @@ function show_days_of_week_repeat_options() {
     el_days_of_week_repeat_option.addClass('d-flex');
 }
 
-
 function hide_days_of_week_repeat_options() {
     el_days_of_week_repeat_option.removeClass('d-flex');
     el_days_of_week_repeat_option.addClass('d-none');
@@ -308,6 +307,10 @@ function valid_new_scheduling() {
     }
 
     services.save_new_scheduling(new_scheduling_config);
+}
+
+function fill_calendar(start_date, end_date) {
+
 }
 
 $(document).ready(function () {
