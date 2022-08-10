@@ -38,6 +38,7 @@ class CrawlRequest(TimeStamped):
         ('Despesas', 'Despesas'),
         ('Diários', 'Diários'),
         ('Licitação', 'Licitação'),
+        ('Não Informado', 'Não Informado'),
         ('Processos', 'Processos'),
         ('Servidores', 'Servidores'),
         ('Transparência', 'Transparência'),
@@ -45,7 +46,7 @@ class CrawlRequest(TimeStamped):
     ]
     crawler_type_desc = models.CharField(max_length=15,
                                     choices=CRAWLERS_TYPES,
-                                    default='Licitação')
+                                    default='Não Informado')
 
     crawler_issue = models.PositiveIntegerField(default=0)
     # This regex is a bit convolute, but in summary: it allows numbers,

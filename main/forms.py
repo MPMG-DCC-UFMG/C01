@@ -133,6 +133,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
             ('Despesas', 'Despesas'),
             ('Diários', 'Diários'),
             ('Licitação', 'Licitação'),
+            ('Não Informado', 'Não Informado'),
             ('Processos', 'Processos'),
             ('Servidores', 'Servidores'),
             ('Transparência', 'Transparência'),
