@@ -44,6 +44,8 @@ var repeat_finish_date;
 // calendar
 var calendar_mode = null; //daily, weekly, monthly or yearly
 
+var tasks;
+
 function open_new_scheduling() {    
     $('#newScheduling').modal('show');
 }

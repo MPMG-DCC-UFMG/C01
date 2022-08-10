@@ -1,4 +1,4 @@
-var weekdays = [
+var WEEKDAYS = [
     'Dom.',
     'Seg.',
     'Ter.',
@@ -8,7 +8,7 @@ var weekdays = [
     'Sáb.'
 ];
 
-var hours = [
+var HOURS = [
     '0 AM',
     '1 AM',
     '2 AM',
@@ -35,7 +35,7 @@ var hours = [
     '23 PM',
 ];
 
-var months = [
+var MONTHS = [
     'Janeiro',
     'Fevereiro',
     'Março',
@@ -90,8 +90,8 @@ calendar.fill_month = function (container, year, month) {
     let calendar_cells = [];
     let i;
 
-    for (i = 0; i < weekdays.length; i++)
-        calendar_cells.push(`<div class="calendar-cell h6 text-center text-muted">${weekdays[i]}</div>`);
+    for (i = 0; i < WEEKDAYS.length; i++)
+        calendar_cells.push(`<div class="calendar-cell h6 text-center text-muted">${WEEKDAYS[i]}</div>`);
 
     i = num_days_previous_month - weekday_month_start + 1;
     for (i; i <= num_days_previous_month; i++) {
@@ -130,7 +130,7 @@ calendar.fill_month = function (container, year, month) {
 calendar.monthly.show = function () {
     calendar.fill_month(this.container, this.active_month.getFullYear(), this.active_month.getMonth());
     this.container.css('display', 'grid');
-    calendar.date_info.text(`${months[this.active_month.getMonth()]} de ${this.active_month.getFullYear()}`);
+    calendar.date_info.text(`${MONTHS[this.active_month.getMonth()]} de ${this.active_month.getFullYear()}`);
 }
 
 calendar.monthly.previous = function () {
@@ -217,7 +217,7 @@ calendar.weekly.show = function () {
                     <h2 class="${FLEX_CENTER} mb-3">
                         <div class="d-flex align-items-center" style="flex-direction: column;">
                             <div class="h6 text-muted">
-                                ${weekdays[i]}
+                                ${WEEKDAYS[i]}
                             </div>
                             ${day_repr}
                         </div>
@@ -230,10 +230,10 @@ calendar.weekly.show = function () {
     let hour_idx = 0;
     for (i=0;i<8 * 24;i++) {
         if (i % 8 == 0) 
-            calendar_cells.push(`<div id="calendar-weekly-hour-${hours[hour_idx]}" class="${FLEX_CENTER} text-muted small">${hours[hour_idx++]}</div>`)
+            calendar_cells.push(`<div id="calendar-weekly-hour-${hour_idx}" class="${FLEX_CENTER} text-muted small">${HOURS[hour_idx++]}</div>`)
         
         else 
-            calendar_cells.push(`<div id="calendar-weekly-cell-${hour_idx}-${i % 8 + 1}"></div>`);
+            calendar_cells.push(`<div id="calendar-weekly-cell-${hour_idx}-${i % 8 - 1}" class="">3</div>`);
     }
 
     this.container.empty();
@@ -246,11 +246,11 @@ calendar.weekly.show = function () {
     let first_day_month = '';
     let first_day_year = '';
     
-    let last_day_month = ` de ${months[last_day_of_week.getMonth()]}`;
+    let last_day_month = ` de ${MONTHS[last_day_of_week.getMonth()]}`;
     let last_day_year = ` de ${last_day_of_week.getFullYear()}`;
 
     if (first_day_of_week.getMonth() != last_day_of_week.getMonth()) 
-        first_day_month = ` de ${months[first_day_of_week.getMonth()]}`;
+        first_day_month = ` de ${MONTHS[first_day_of_week.getMonth()]}`;
 
     if (first_day_of_week.getFullYear() != last_day_of_week.getFullYear())
         first_day_year = ` de ${first_day_of_week.getFullYear()}`;
@@ -277,13 +277,48 @@ calendar.weekly.hide = function () {
     this.container.css('display', 'none');
 }
 
+calendar.get_formated_date = function (day, month, year) {
+    return `${String(day).padStart(2, '0')}-${String(month).padStart(2, '0') }-${year}`;
+}
+
+calendar.get_hour_from_str_datetime = function (str_datetime) {
+    // expected format of str_datetime is like 2022-08-10T14:47:00Z
+    return str_datetime.split('T')[1].split(':')[0];
+}
+
+calendar.daily.tasks = {};
+calendar.daily.get_daily_tasks = function () {
+    let day = this.active_day;
+    let key = start_date = end_date = calendar.get_formated_date(day.getDate(), day.getMonth() + 1, day.getFullYear());
+
+    let tasks_of_day = services.get_tasks_in_interval(start_date, end_date);
+
+    services.update_tasks(tasks_of_day[key]);
+    
+    this.tasks = {};
+    for (let hour = 0;hour<24;hour++)
+        this.tasks[String(hour).padStart(2, '0')] = [];
+    
+    let task_runtime;
+    for (let task_id in tasks) {
+        task_runtime = tasks[task_id].runtime;
+        key = calendar.get_hour_from_str_datetime(task_runtime);
+        this.tasks[key].push(tasks[task_id]);
+    }
+    
+    console.log(this.tasks);
+
+}
+
 calendar.daily.show = function () {
+    this.get_daily_tasks();
+
     let active_day_classes = this.curr_day.toDateString() == this.active_day.toDateString() ? 'bg-primary text-white' : ''; 
 
     let header = `<h2 class="h4 d-flex mb-3">
                         <div class="d-flex align-items-center" style="flex-direction: column;">
                             <div class="h6 text-muted">
-                                ${weekdays[this.active_day.getDay()]}
+                                ${WEEKDAYS[this.active_day.getDay()]}
                             </div>
                             <div class="${FLEX_CENTER} rounded-circle border ${active_day_classes}" style="width: 1.9em;height: 1.9em;">
                                 ${this.active_day.getDate()}
@@ -293,17 +328,51 @@ calendar.daily.show = function () {
 
     let calendar_cells = [header, '<ul class="text-muted p-0" style="list-style: none;">'];
 
-    for (let i=0;i<24;i++){
+    let tasks_in_hour, task, key, bg_color, mb_size, i;
+    for (let hour=0;hour<24;hour++){
+        tasks_in_hour = [];
+
+        key = String(hour).padStart(2, '0');
+
+        for (i=0;i<this.tasks[key].length;i++) {
+            task = this.tasks[key][i];
+            
+            switch (task.crawler_queue_behavior) {
+                case 'wait_on_fist_queue_position':
+                    bg_color = 'bg-warning';
+                    break;
+            
+                case 'run_immediately':
+                    bg_color = 'bg-danger';
+                    break;
+
+                default:
+                    bg_color = 'bg-primary';
+                    break;
+            }
+
+            tasks_in_hour.push(`
+                <div class="${bg_color} text-white rounded-pill px-2 ml-2 mt-2">
+                    ${task.crawler_name}
+                </div>
+            `);
+
+            console.log(key, task)
+        }
+
+        mb_size = tasks_in_hour.length? 'mb-2' : 'mb-4';
+
         calendar_cells.push(`
-            <li class="mb-5">
+            <li class="${mb_size}">
                 <div class="d-flex align-items-center">
                     <span class="mr-3">
-                        ${hours[i]}
+                        ${HOURS[hour]}
                     </span>
                     <div class="border-bottom" style="display: inline-block;flex: auto;">
                     </div>
                 </div>
-                <div class="${FLEX_CENTER}" style="padding-left: 3.3em; flex-wrap: wrap;">
+                <div class="d-flex justify-content-start align-items-center" style="padding-left: 3.3em; flex-wrap: wrap;">
+                    ${tasks_in_hour.join('\n')}
                 </div>
             </li>
         `);
@@ -316,7 +385,7 @@ calendar.daily.show = function () {
 
     this.container.css('display', 'block');
 
-    calendar.date_info.text(`${weekdays[this.active_day.getDay()]}, ${this.active_day.getDate()} de ${months[this.active_day.getMonth()]} de ${this.active_day.getFullYear()}`);
+    calendar.date_info.text(`${WEEKDAYS[this.active_day.getDay()]}, ${this.active_day.getDate()} de ${MONTHS[this.active_day.getMonth()]} de ${this.active_day.getFullYear()}`);
 
 }
 

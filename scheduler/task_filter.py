@@ -20,7 +20,7 @@ WEEKDAY = {
 }
 
 
-DATE_FORMAT = '{day}-{month}-{year}'
+DATE_FORMAT = '{day:02d}-{month:02}-{year}'
 STRPTIME_FORMAT = '%d-%m-%Y'
 
 MAX_DATE = datetime.strptime(f'31-12-{MAXYEAR}', STRPTIME_FORMAT)
@@ -49,6 +49,12 @@ def get_last_day_of_month(month: int, year: int) -> int:
     return calendar.monthrange(year, month)[1]
 
 def get_date(day: Union[str, int], month: Union[str, int], year: Union[str, int]) -> datetime:
+    if type(day) is str:
+        day = int(day)
+
+    if type(month) is str:
+        month = int(month)
+
     str_date = DATE_FORMAT.format(day=day, month=month, year=year)
 
     try:
