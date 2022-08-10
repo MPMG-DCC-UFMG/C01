@@ -22,20 +22,6 @@ Home
                             <input type="text" id="filterCrawlerId" name="filter_crawler_id" class="form-control" value="{{ filter_crawler_id }}" autocomplete="off" />
                         </div>
                     </div>
-                    <div class="col-5">
-                        <div class="form-group">
-                            <label for="filterName">Nome:</label>
-                            <input type="text" id="filterName" name="filter_name" class="form-control" value="{{ filter_name }}" autocomplete="off" />
-                        </div>
-                    </div>
-                    <div class="col-5">
-                        <div class="form-group">
-                            <label for="filterBaseURL">URL Base:</label>
-                            <input type="text" id="filterBaseURL" name="filter_base_url" class="form-control" value="{{ filter_base_url }}" autocomplete="off" />
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
                     <div class="col-3">
                         <div class="form-group">
                             <label for="filterDynamic">Tipo de Coleta:</label>
@@ -57,19 +43,6 @@ Home
                                     <input type="date" class="form-control datepicker" id="filterEndDate" name="filter_end_date" placeholder="Data Final" value="{{filter_end_date}}" autocomplete="off">
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-3">
-                        <div class="form-group">
-                            <label for="filterStatus">Status:</label>
-                            <select id="filterStatus" name="filter_status" class="form-control">
-                                <option value=""></option>
-                                <option value="running" {% if "running" == filter_status %}selected="selected"{% endif %}>Executando</option>
-                                <option value="stopped" {% if "stopped" == filter_status %}selected="selected"{% endif %}>Parado</option>
-                                <option value="queue_fast" {% if "queue_fast" == filter_status %}selected="selected"{% endif %}>Fila Rápida</option>
-                                <option value="queue_medium" {% if "queue_medium" == filter_status %}selected="selected"{% endif %}>Fila Média</option>
-                                <option value="queue_slow" {% if "queue_slow" == filter_status %}selected="selected"{% endif %}>Fila Lenta</option>
-                            </select>
                         </div>
                     </div>
                 </div>

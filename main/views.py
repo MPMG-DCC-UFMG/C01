@@ -354,11 +354,28 @@ def list_crawlers(request):
     return render(request, "main/list_crawlers.html", context)
 
 
-def list_grouped_crawlers(request):
-    page_number = request.GET.get('page', 1)
+def get_grouped_crawlers_filtered(filter_crawler_id, filter_dynamic, filter_start_date, filter_end_date):
+    filters_url = ''
+
+    filter_string = ''
+    if filter_crawler_id != '':
+        filters_url += '&filter_crawler_id=' + filter_crawler_id
+        filter_string += f" and X.id = {filter_crawler_id}"
+    if filter_dynamic != '':
+        filters_url += '&filter_dynamic=' + filter_dynamic
+        if int(filter_dynamic) == 1:
+            filter_string += " and dynamic_processing = TRUE"
+        else:
+            filter_string += " and (dynamic_processing = FALSE or dynamic_processing IS NULL)"
+    if filter_start_date != '':
+        filters_url += '&filter_start_date=' + filter_start_date
+        filter_string += f" and creation_date >= '{filter_start_date}'"
+    if filter_end_date != '':
+        filters_url += '&filter_end_date=' + filter_end_date
+        filter_string += f" and creation_date <= '{filter_end_date}'"
 
     grouped_crawlers = CrawlRequest.objects.raw(
-        "select X.id, X.source_name, Y.total \
+        "select X.id, X.source_name, Y.total, X.last_modified \
         from main_crawlrequest as X inner join \
         ( \
             select B.id, A.steps, count(1) as total \
@@ -367,13 +384,30 @@ def list_grouped_crawlers(request):
             where A.steps is not null and A.steps <> '' and A.steps <> '{}' \
             group by B.id, A.steps \
         ) as Y on X.id = Y.id \
-        order by Y.total desc")
+        where 1=1 "+filter_string+" order by X.last_modified desc"
+    )
     
+    return grouped_crawlers, filters_url
+
+def list_grouped_crawlers(request):
+    page_number = request.GET.get('page', 1)
+    filter_crawler_id = request.GET.get('filter_crawler_id', '')
+    filter_dynamic = request.GET.get('filter_dynamic', '')
+    filter_start_date = request.GET.get('filter_start_date', '')
+    filter_end_date = request.GET.get('filter_end_date', '')
+    
+    grouped_crawlers, filters_url = get_grouped_crawlers_filtered(filter_crawler_id, filter_dynamic, filter_start_date, filter_end_date)
     crawlers_paginator = Paginator(grouped_crawlers, 20)
+    
     grouped_crawlers_page = crawlers_paginator.get_page(page_number)
     
     context = {
-        'grouped_crawlers_page': grouped_crawlers_page
+        'grouped_crawlers_page': grouped_crawlers_page,
+        'filter_crawler_id': filter_crawler_id,
+        'filter_dynamic': filter_dynamic,
+        'filter_start_date': filter_start_date,
+        'filter_end_date': filter_end_date,
+        'filters_url': filters_url,
     }
 
     return render(request, "main/list_grouped_crawlers.html", context)
