@@ -289,13 +289,107 @@
         }
     },
     "simple_while": {
-        "description": "A simple while",
+        "description": "A simple while loop",
         "recipe": {
             "step": "root",
             "depth": 0,
             "children": [
                 {
                     "step": "enquanto",
+                    "invert": false,
+                    "condition": {
+                        "call": {
+                            "step":"objeto",
+                            "arguments": {
+                                "objeto":"True == 1"
+                                }
+                            }
+                    },
+                    "depth": 1,
+                    "children": [
+                        {
+                            "step": "imprime",
+                            "arguments": {
+                                "texto": "\"teste\""
+                            },
+                            "depth": 2
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "inverted_while": {
+        "description": "A while loop with an inverted condition",
+        "recipe": {
+            "step": "root",
+            "depth": 0,
+            "children": [
+                {
+                    "step": "enquanto",
+                    "invert": true,
+                    "condition": {
+                        "call": {
+                            "step":"objeto",
+                            "arguments": {
+                                "objeto":"True == 1"
+                                }
+                            }
+                    },
+                    "depth": 1,
+                    "children": [
+                        {
+                            "step": "imprime",
+                            "arguments": {
+                                "texto": "\"teste\""
+                            },
+                            "depth": 2
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "simple_if": {
+        "description": "A simple if statement",
+        "recipe": {
+            "step": "root",
+            "depth": 0,
+            "children": [
+                {
+                    "step": "se",
+                    "invert": false,
+                    "condition": {
+                        "call": {
+                            "step":"objeto",
+                            "arguments": {
+                                "objeto":"True == 1"
+                                }
+                            }
+                    },
+                    "depth": 1,
+                    "children": [
+                        {
+                            "step": "imprime",
+                            "arguments": {
+                                "texto": "\"teste\""
+                            },
+                            "depth": 2
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "inverted_if": {
+        "description": "An if statement with an inverted condition",
+        "recipe": {
+            "step": "root",
+            "depth": 0,
+            "children": [
+                {
+                    "step": "se",
+                    "invert": true,
                     "condition": {
                         "call": {
                             "step":"objeto",
