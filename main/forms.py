@@ -129,6 +129,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
 
     crawler_type_desc = forms.ChoiceField(
+        label="Tipo do coletor",
         choices=(
             ('Contratos', 'Contratos'),
             ('Despesas', 'Despesas'),
