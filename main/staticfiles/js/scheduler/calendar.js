@@ -338,7 +338,7 @@ calendar.daily.show = function () {
             task = this.tasks[key][i];
             
             switch (task.crawler_queue_behavior) {
-                case 'wait_on_fist_queue_position':
+                case 'wait_on_first_queue_position':
                     bg_color = 'bg-warning';
                     break;
             
