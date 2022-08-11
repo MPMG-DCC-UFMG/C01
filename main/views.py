@@ -8,6 +8,7 @@ from datetime import datetime
 from typing_extensions import Literal
 
 import crawler_manager.crawler_manager as crawler_manager
+from crawler_manager.settings import TASK_TOPIC
 from crawler_manager.constants import *
 
 from django.conf import settings
@@ -899,6 +900,48 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
+
+    def create(self, request):
+        response = super().create(request)
+        if response.status_code == status.HTTP_201_CREATED:
+            message = {
+                'action': 'create',
+                'data': response.data
+            } 
+            crawler_manager.message_sender.send(TASK_TOPIC, message)
+        return response
+
+    def update(self, request, pk=None):
+        response = super().update(request, pk=pk)
+        if response.status_code == status.HTTP_200_OK:
+            message = {
+                'action': 'update',
+                'data': response.data
+            } 
+            crawler_manager.message_sender.send(TASK_TOPIC, message)
+        return response
+
+    def partial_update(self, request, pk=None):
+        response = super().partial_update(request, pk=pk)
+        if response.status_code == status.HTTP_200_OK:
+            message = {
+                'action': 'update',
+                'data': response.data
+            } 
+            crawler_manager.message_sender.send(TASK_TOPIC, message)
+        return response
+
+    def destroy(self, request, pk=None):
+        response = super().destroy(request, pk=pk)
+        if response.status_code == status.HTTP_204_NO_CONTENT:
+            message = {
+                'action': 'cancel',
+                'data': {
+                    'id': pk
+                }
+            }
+        crawler_manager.message_sender.send(TASK_TOPIC, message)
+        return response
 
     def __str2date(self, s: str) -> datetime:
         date = None 
