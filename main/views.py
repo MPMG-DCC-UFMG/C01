@@ -36,12 +36,6 @@ from datetime import datetime
 
 import crawler_manager.crawler_manager as crawler_manager
 
-from crawler_manager.injector_tools import create_probing_object,\
-    create_parameter_generators
-
-from requests.exceptions import MissingSchema
-
-from formparser.html import HTMLExtractor, HTMLParser
 from scrapy_puppeteer import iframe_loader
 
 # Log the information to the file logger
@@ -149,6 +143,7 @@ def unqueue_crawl_requests(queue_type: str):
     response = {'crawlers_added_to_run': crawlers_runnings}
     return response
 
+
 def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
     instance = CrawlRequest.objects.filter(
         id=crawler_id).get().running_instance
@@ -172,14 +167,14 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
     # command_output = subprocess.run(["du " + config['data_path'] + "/data -d 0"], shell=True, stdout=subprocess.PIPE)
     # output_line = command_output.stdout.decode('utf-8').strip('\n')
     # parts = output_line.split('\t')
-    data_size_kbytes = 0#int(parts[0])
+    data_size_kbytes = 0  # int(parts[0])
 
     # FIXME: Colocar esse trecho de código no módulo writer
     # conta a qtde de arquivos no diretório "data"
     # command_output = subprocess.run(
     #     ["find " + config['data_path'] + "/data -type f | wc -l"], shell=True, stdout=subprocess.PIPE)
     # output_line = command_output.stdout.decode('utf-8').strip('\n')
-    num_data_files = 0#int(output_line)
+    num_data_files = 0  # int(output_line)
 
     instance = None
     instance_info = {}
@@ -207,7 +202,7 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
 
     crawler_manager.update_instances_info(
         config["data_path"], str(instance_id), instance_info)
-    
+
     crawler_manager.stop_crawler(crawler_id)
 
     unqueue_crawl_requests(queue_type)
@@ -219,6 +214,7 @@ def list_process(request):
         text += f"child {p.name} is PID {p.pid}<br>"
 
     return HttpResponse(text)
+
 
 def crawler_queue(request):
     return render(request, 'main/crawler_queue.html')
@@ -279,14 +275,7 @@ def create_instance(crawler_id, instance_id):
     return obj
 
 
-def generate_injector_forms(*args, injection_type, filter_queryset=False,
-                            crawler=None, **kwargs):
-    form_kwargs = {
-        'initial': {
-            'injection_type': f'{injection_type}'
-        },
-    }
-
+def generate_injector_forms(*args, filter_queryset=False, **kwargs):
     queryset = None
     crawler = None
     if filter_queryset:
@@ -296,21 +285,15 @@ def generate_injector_forms(*args, injection_type, filter_queryset=False,
             raise ValueError("If the filter_queryset option is True, the " +
                 "instance property must be set.")
 
-        queryset = crawler.parameter_handlers.filter(
-            injection_type__exact=injection_type
-        )
+        queryset = crawler.parameter_handlers
 
     parameter_formset = ParameterHandlerFormSet(*args,
-        prefix=f'{injection_type}-params',
-        form_kwargs=form_kwargs, queryset=queryset, **kwargs)
+        prefix='templated_url-params', queryset=queryset, **kwargs)
 
     if filter_queryset:
-        queryset = crawler.response_handlers.filter(
-            injection_type__exact=injection_type
-        )
+        queryset = crawler.response_handlers
     response_formset = ResponseHandlerFormSet(*args,
-        prefix=f'{injection_type}-responses',
-        form_kwargs=form_kwargs, queryset=queryset, **kwargs)
+        prefix='templated_url-responses', queryset=queryset, **kwargs)
 
     return parameter_formset, response_formset
 
@@ -359,18 +342,11 @@ def create_crawler(request):
 
     my_form = RawCrawlRequestForm(request.POST or None)
     templated_parameter_formset, templated_response_formset = \
-        generate_injector_forms(request.POST or None,
-            injection_type='templated_url')
-
-    static_parameter_formset, static_response_formset = \
-        generate_injector_forms(request.POST or None,
-            injection_type='static_form')
+        generate_injector_forms(request.POST or None)
 
     if request.method == "POST":
         if my_form.is_valid() and templated_parameter_formset.is_valid() and \
-           templated_response_formset.is_valid() and \
-           static_parameter_formset.is_valid() and \
-           static_response_formset.is_valid():
+           templated_response_formset.is_valid():
 
             new_crawl = CrawlRequestForm(my_form.cleaned_data)
             instance = new_crawl.save()
@@ -380,18 +356,12 @@ def create_crawler(request):
             templated_parameter_formset.save()
             templated_response_formset.instance = instance
             templated_response_formset.save()
-            static_parameter_formset.instance = instance
-            static_parameter_formset.save()
-            static_response_formset.instance = instance
-            static_response_formset.save()
 
             return redirect(detail_crawler, crawler_id=instance.id)
 
     context['form'] = my_form
     context['templated_response_formset'] = templated_response_formset
     context['templated_parameter_formset'] = templated_parameter_formset
-    context['static_response_formset'] = static_response_formset
-    context['static_parameter_formset'] = static_parameter_formset
     return render(request, "main/create_crawler.html", context)
 
 
@@ -400,25 +370,15 @@ def edit_crawler(request, crawler_id):
 
     form = RawCrawlRequestForm(request.POST or None, instance=crawler)
     templated_parameter_formset, templated_response_formset = \
-        generate_injector_forms(request.POST or None,
-            injection_type='templated_url', filter_queryset=True,
-            instance=crawler)
-
-    static_parameter_formset, static_response_formset = \
-        generate_injector_forms(request.POST or None,
-            injection_type='static_form', filter_queryset=True,
+        generate_injector_forms(request.POST or None, filter_queryset=True,
             instance=crawler)
 
     if request.method == 'POST' and form.is_valid() and \
        templated_parameter_formset.is_valid() and \
-       templated_response_formset.is_valid() and \
-       static_parameter_formset.is_valid() and \
-       static_response_formset.is_valid():
+       templated_response_formset.is_valid():
         form.save()
         templated_parameter_formset.save()
         templated_response_formset.save()
-        static_parameter_formset.save()
-        static_response_formset.save()
         return redirect(detail_crawler, crawler_id=crawler_id)
 
     else:
@@ -426,8 +386,6 @@ def edit_crawler(request, crawler_id):
             'form': form,
             'templated_response_formset': templated_response_formset,
             'templated_parameter_formset': templated_parameter_formset,
-            'static_parameter_formset': static_parameter_formset,
-            'static_response_formset': static_response_formset,
             'crawler': crawler
         })
 
@@ -479,6 +437,7 @@ def stop_crawl(request, crawler_id):
     process_stop_crawl(crawler_id, from_sm_listener)
     return redirect(detail_crawler, crawler_id=crawler_id)
 
+
 def run_crawl(request, crawler_id):
     add_crawl_request(crawler_id)
 
@@ -488,6 +447,7 @@ def run_crawl(request, crawler_id):
     unqueue_crawl_requests(queue_type)
 
     return redirect(detail_crawler, crawler_id=crawler_id)
+
 
 def tail_log_file(request, instance_id):
     instance = CrawlerInstance.objects.get(instance_id=instance_id)
@@ -639,134 +599,6 @@ def duplicated_download_page(request, instance_id):
 
 def downloads(request):
     return render(request, "main/downloads.html")
-
-
-def load_form_fields(request):
-    """
-    Load the existing form fields in a page and returns their data as a JSON
-    object
-    """
-
-    # Maximum number of Templated URL tries before giving up on getting form
-    # data
-    MAX_TRIES = 5
-
-    base_url = request.GET.get('base_url')
-    req_type = request.GET.get('req_type')
-
-    params = json.loads(request.GET.get('url_param_data'))
-    responses = json.loads(request.GET.get('url_response_data'))
-
-    # Clear empty values from dicts
-    def clear_dict(entry):
-        return {k: v for k, v in entry.items() if v != ""}
-
-    params = list(map(clear_dict, params))
-    responses = list(map(clear_dict, responses))
-
-    probe = create_probing_object(base_url, req_type, responses)
-
-    try:
-        # Instantiate the parameter injectors for the URL
-        injectors = create_parameter_generators(probe, params, False)
-    except:
-        # Invalid templated URL configuration
-        return JsonResponse({
-            'error': 'Erro ao gerar URLs parametrizadas. Verifique se a ' +
-                     'injeção foi configurada corretamente.'
-        }, status=404)
-
-    # Generate the requests
-    generator = itertools.product(*injectors)
-
-    # Tries to find a valid page
-    for i in range(MAX_TRIES):
-        values = None
-        try:
-            values = next(generator)
-        except:
-            # No more values to generate
-            return JsonResponse({
-                'error': 'Nenhuma página válida encontrada com os valores ' +
-                         'gerados.'
-            }, status=404)
-
-        try:
-            is_valid = probe.check_entry(url_entries=values)
-        except MissingSchema as e:
-            # URL schema error
-            return JsonResponse({
-                'error': 'URL inválida, o protocolo foi especificado? (ex: ' +
-                         'http://, https://)'
-            }, status=404)
-
-        if is_valid:
-            curr_url = base_url.format(*values)
-            parser = None
-
-            try:
-                extractor = HTMLExtractor(url=curr_url)
-            except MissingSchema as e:
-                # URL schema error
-                return JsonResponse({
-                    'error': 'URL inválida, o protocolo foi especificado? ' +
-                             '(ex: http://, https://)'
-                }, status=404)
-
-            if not extractor.html_response.ok:
-                # Error during form extractor request
-                status_code = extractor.html_response.status_code
-                return JsonResponse({
-                    'error': 'Erro ao acessar a página (HTTP ' +
-                    str(status_code) + '). Verifique se a URL inicial ' +
-                    'está correta e se a página de interesse está ' +
-                    'funcionando.'
-                }, status=404)
-
-            forms = extractor.get_forms()
-
-            if len(forms) == 0:
-                # Failed to find a form in a valid page
-                return JsonResponse({
-                    'error': 'Nenhum formulário encontrado na página.'
-                }, status=404)
-
-            result = []
-            for form in forms:
-                current_data = {}
-                parser = HTMLParser(form=form)
-
-                if parser is not None:
-                    fields = parser.list_fields()
-
-                    def field_names(field):
-                        return parser.field_attributes(field).get('name', '')
-
-                    names = list(map(field_names, fields))
-
-                    method = parser.form.get('method', 'GET')
-                    if method == "":
-                        method = 'GET'
-
-                    method = method.upper()
-
-                    # Filter leading or trailing whitespace
-                    labels = [x.strip() for x in parser.list_field_labels()]
-
-                    result.append({
-                        'method': method,
-                        'length': parser.number_of_fields(),
-                        'names': names,
-                        'types': parser.list_input_types(),
-                        'labels': labels
-                    })
-
-            return JsonResponse({'forms': result})
-
-    return JsonResponse({
-        'error': f'Nenhuma página válida encontrada com os {MAX_TRIES} ' +
-        'primeiros valores gerados.'
-    }, status=404)
 
 
 def export_config(request, instance_id):
