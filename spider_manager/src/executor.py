@@ -115,6 +115,7 @@ class Executor:
                     }
                 }
             }
+            base_config["PLAYWRIGHT_BROWSER_TYPE"] = config["browser_type"]
 
         # Antiblock middlewares
         if config.get("antiblock_ip_rotation_type", "") == "tor":

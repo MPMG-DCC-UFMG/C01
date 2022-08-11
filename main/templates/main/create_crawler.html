@@ -254,6 +254,9 @@ New Crawler
                                 <hr>
                                 {{ form.expected_runtime_category | as_crispy_field }}
                                 <hr>
+                                {{ form.crawler_type_desc | as_crispy_field}}
+                                {{ form.crawler_description | as_crispy_field}}
+                                {{ form.crawler_issue | as_crispy_field}}
                                 {{ form.obey_robots | as_crispy_field}}
                                 {{ form.data_path | as_crispy_field}}
                             </div>
@@ -382,6 +385,9 @@ New Crawler
                             </div>
                         </div>
                         <br>
+                        <div id="dynamic-processing-browser-type" class="">
+                            {{ form.browser_type | as_crispy_field}}
+                        </div>
                         <div id="dynamic-processing-skip-errors" class="hidden">
                             {{ form.skip_iter_errors | as_crispy_field}}
                         </div>

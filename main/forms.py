@@ -14,6 +14,9 @@ class CrawlRequestForm(forms.ModelForm):
             'base_url',
             'obey_robots',
             'captcha',
+            'crawler_description',
+            'crawler_type_desc',
+            'crawler_issue',
 
             'sc_scheduler_persist',
             'sc_scheduler_queue_refresh',
@@ -55,6 +58,7 @@ class CrawlRequestForm(forms.ModelForm):
             'img_xpath',
             'sound_xpath',
             'dynamic_processing',
+            'browser_type',
             'skip_iter_errors',
             'browser_resolution_width',
             'browser_resolution_height',
@@ -113,6 +117,29 @@ class RawCrawlRequestForm(CrawlRequestForm):
         help_text="Esse caminho deve ser único para cada coletor. Caso a pasta não esteja criada, o coletor a criará automaticamente.",
         validators=[CrawlRequest.pathValid]
     )
+
+    crawler_description = forms.CharField(
+        label="Descrição do coletor",
+        widget=forms.TextInput(
+            attrs={'placeholder': 'Descrição geral do coletor, por exemplo, município e ano alvo de coleta.'})
+    )
+
+    crawler_type_desc = forms.ChoiceField(
+        label="Tipo do coletor",
+        choices=(
+            ('Contratos', 'Contratos'),
+            ('Despesas', 'Despesas'),
+            ('Diários', 'Diários'),
+            ('Licitação', 'Licitação'),
+            ('Não Informado', 'Não Informado'),
+            ('Processos', 'Processos'),
+            ('Servidores', 'Servidores'),
+            ('Transparência', 'Transparência'),
+            ('Outro', 'Outro'),
+        )
+    )
+
+    crawler_issue = forms.IntegerField(required=False, initial=0, label='Issue')
 
     # SCRAPY CLUSTER ##########################################################
 
@@ -382,6 +409,18 @@ class RawCrawlRequestForm(CrawlRequestForm):
             }
         )
     )
+
+    browser_type = forms.ChoiceField(
+        choices=(
+            ('chromium', 'Chromium'),
+            ('firefox', 'Mozilla Firefox'),
+            ('webkit', 'WebKit'),
+        ),
+        label='Navegador Web',
+        initial='chromium',
+        widget=forms.RadioSelect
+    )
+
     skip_iter_errors = forms.BooleanField(
         required=False, label="Pular iterações com erro"
     )

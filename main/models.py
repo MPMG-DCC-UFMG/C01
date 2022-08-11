@@ -32,7 +32,23 @@ class CrawlRequest(TimeStamped):
     source_name = models.CharField(max_length=200)
     base_url = models.TextField()
     obey_robots = models.BooleanField(blank=True, null=True)
+    crawler_description = models.TextField(default='')
+    CRAWLERS_TYPES = [
+        ('Contratos', 'Contratos'),
+        ('Despesas', 'Despesas'),
+        ('Diários', 'Diários'),
+        ('Licitação', 'Licitação'),
+        ('Não Informado', 'Não Informado'),
+        ('Processos', 'Processos'),
+        ('Servidores', 'Servidores'),
+        ('Transparência', 'Transparência'),
+        ('Outro', 'Outro'),
+    ]
+    crawler_type_desc = models.CharField(max_length=15,
+                                    choices=CRAWLERS_TYPES,
+                                    default='Não Informado')
 
+    crawler_issue = models.PositiveIntegerField(default=0)
     # This regex is a bit convolute, but in summary: it allows numbers,
     # letters, dashes and underlines. It allows forward and backward slashes
     # unless it occurs in the first character (since we don't allow absolute
@@ -141,11 +157,21 @@ class CrawlRequest(TimeStamped):
 
     # Steps activation
     dynamic_processing = models.BooleanField(blank=True, null=True)
+
+    # Browser options
+    BROWSER_TYPE = [
+        ('chromium', 'Chromium'),
+        ('webkit', 'Webkit'),
+        ('firefox', 'Mozilla Firefox'),
+    ]
+    browser_type = models.CharField(max_length=50, choices=BROWSER_TYPE, default='chromium')
+
     # If true, skips failing iterations with a warning, else, stops the crawler
     # if an iteration fails
     skip_iter_errors = models.BooleanField(default=False)
     browser_resolution_width = models.IntegerField(blank=True, null=True)
     browser_resolution_height = models.IntegerField(blank=True, null=True)
+
 
     # DETAILS #################################################################
     explore_links = models.BooleanField(blank=True, null=True)
