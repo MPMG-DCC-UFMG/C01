@@ -176,7 +176,7 @@ table.dataTable thead .sorting_desc_disabled:before {
     background-color: #E8F6EF;
 }
 
-#dynamic-processing-item-wrap.disabled, #dynamic-processing-skip-errors.disabled {
+#dynamic-processing-item-wrap.disabled, #dynamic-processing-skip-errors.disabled, #dynamic-processing-browser-type.disabled {
     opacity: .5;
     pointer-events: none;
 }

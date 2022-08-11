@@ -157,9 +157,19 @@ class CrawlRequest(TimeStamped):
 
     # Steps activation
     dynamic_processing = models.BooleanField(blank=True, null=True)
+
+    # Browser options
+    BROWSER_TYPE = [
+        ('chromium', 'Chromium'),
+        ('webkit', 'Webkit'),
+        ('firefox', 'Mozilla Firefox'),
+    ]
+    browser_type = models.CharField(max_length=50, choices=BROWSER_TYPE, default='chromium')
+
     # If true, skips failing iterations with a warning, else, stops the crawler
     # if an iteration fails
     skip_iter_errors = models.BooleanField(default=False)
+
 
     # DETAILS #################################################################
     explore_links = models.BooleanField(blank=True, null=True)
