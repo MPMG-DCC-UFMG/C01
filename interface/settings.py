@@ -54,7 +54,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'main.apps.MainConfig',
-    'scheduler.apps.SchedulerConfig',
     'crispy_forms',
     'rest_framework',
     'mathfilters',

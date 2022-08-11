@@ -1,54 +1,44 @@
-from django.conf import settings
-from django.utils import timezone
-from django.db import transaction
-from django.db.models import Q
-
-from django.http import HttpResponseRedirect, JsonResponse, \
-    FileResponse, HttpResponseNotFound, HttpResponse
-from django.shortcuts import render, get_object_or_404, redirect
-from django.core.exceptions import ObjectDoesNotExist
-from django.core.paginator import Paginator
-from django.db.models import Q
-
-from rest_framework import viewsets
-from rest_framework import status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-
-from .forms import CrawlRequestForm, RawCrawlRequestForm,\
-    ResponseHandlerFormSet, ParameterHandlerFormSet
-from .models import CrawlRequest, CrawlerInstance, CrawlerQueue, CrawlerQueueItem, Log, CRAWLER_QUEUE_DB_ID
-
-from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer, CrawlerQueueSerializer
-
-from crawler_manager.constants import *
-
-from datetime import datetime
-import json
 import base64
 import itertools
 import json
 import logging
-import time
-import os
 import multiprocessing as mp
+import os
+import time
 from datetime import datetime
 
 import crawler_manager.crawler_manager as crawler_manager
-
-from crawler_manager.injector_tools import create_probing_object,\
-    create_parameter_generators
-
-from requests.exceptions import MissingSchema
-
+from crawler_manager.constants import *
+from crawler_manager.injector_tools import (create_parameter_generators,
+                                            create_probing_object)
+from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.db.models import Q
+from django.http import (FileResponse, HttpResponse, HttpResponseNotFound,
+                         HttpResponseRedirect, JsonResponse)
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from formparser.html import HTMLExtractor, HTMLParser
+from requests.exceptions import MissingSchema
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from scrapy_puppeteer import iframe_loader
+
+from .forms import (CrawlRequestForm, ParameterHandlerFormSet,
+                    RawCrawlRequestForm, ResponseHandlerFormSet)
+from .models import (CRAWLER_QUEUE_DB_ID, CrawlerInstance, CrawlerQueue,
+                     CrawlerQueueItem, CrawlRequest, Log, Task)
+from .serializers import (CrawlerInstanceSerializer, CrawlerQueueSerializer,
+                          CrawlRequestSerializer, TaskSerializer)
+from .task_filter import task_filter_by_date_interval
 
 # Log the information to the file logger
 logger = logging.getLogger('file')
 
 # Helper methods
-
 
 try:
     CRAWLER_QUEUE = CrawlerQueue.object()
@@ -854,6 +844,49 @@ def load_iframe(request):
 def scheduler(request):
     context = {}
     return render(request, 'main/scheduler.html', context)
+
+class TaskViewSet(viewsets.ModelViewSet):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+
+    def __str2date(self, s: str) -> datetime:
+        date = None 
+
+        try:
+            date = datetime.strptime(s, '%d-%m-%Y') 
+
+        except Exception as e:
+            print(e)
+
+        return date
+    
+    @action(detail=False)
+    def filter(self, request):
+        query_params = self.request.query_params.dict()
+
+        end_date = None 
+        start_date = None 
+
+        if 'end_date' in query_params:
+            end_date = self.__str2date(query_params['end_date'])
+
+            start_date = None
+            if 'start_date' in query_params:
+                start_date = self.__str2date(query_params['start_date'])
+        if end_date is None or start_date is None:
+            msg = {'message': 'You must send the params start_date and end_date, both in the format day-month-year' + \
+                            ' in the query params of the url. Eg.: <api_address>?start_date=23-04-2023&end_date=01-01-2020, etc.'}
+
+            return Response(msg, status=status.HTTP_400_BAD_REQUEST)
+
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        
+        # serializer.data is ordered_dict
+        tasks = json.loads(json.dumps(serializer.data))
+        data = task_filter_by_date_interval(tasks, start_date, end_date)
+
+        return Response(data, status=status.HTTP_200_OK)  
 
 # API
 ########

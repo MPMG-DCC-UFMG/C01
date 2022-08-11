@@ -233,7 +233,7 @@ calendar.weekly.show = function () {
             calendar_cells.push(`<div id="calendar-weekly-hour-${hour_idx}" class="${FLEX_CENTER} text-muted small">${HOURS[hour_idx++]}</div>`)
         
         else 
-            calendar_cells.push(`<div id="calendar-weekly-cell-${hour_idx}-${i % 8 - 1}" class="">3</div>`);
+            calendar_cells.push(`<div id="calendar-weekly-cell-${hour_idx}-${i % 8 - 1}" class=""></div>`);
     }
 
     this.container.empty();
@@ -293,7 +293,8 @@ calendar.daily.get_daily_tasks = function () {
 
     let tasks_of_day = services.get_tasks_in_interval(start_date, end_date);
 
-    services.update_tasks(tasks_of_day[key]);
+    if (key in tasks_of_day)
+        services.update_tasks(tasks_of_day[key]);
     
     this.tasks = {};
     for (let hour = 0;hour<24;hour++)

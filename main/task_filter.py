@@ -5,7 +5,7 @@ from typing import Dict, List, Union
 
 from typing_extensions import Literal
 
-from scheduler.models import TaskType
+from .models import TaskType
 
 # adapta a saída dos dias da semana da biblioteca para que os dias da semana comecem
 # domingo (dia 0)

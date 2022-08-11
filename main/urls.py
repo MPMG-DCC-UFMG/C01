@@ -8,6 +8,7 @@ api_router = routers.DefaultRouter()
 api_router.register(r'crawlers', views.CrawlerViewSet)
 api_router.register(r'instances', views.CrawlerInstanceViewSet)
 api_router.register(r'crawler_queue', views.CrawlerQueueViewSet)
+api_router.register(r'tasks', views.TaskViewSet)
 
 urlpatterns = [
     path("", views.list_crawlers, name="list_crawlers"),
