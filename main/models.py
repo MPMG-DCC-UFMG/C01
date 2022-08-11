@@ -637,7 +637,7 @@ class CrawlerQueueItem(TimeStamped):
     crawl_request = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE, unique=True)
     forced_execution = models.BooleanField(default=False)
     running = models.BooleanField(default=False, blank=True)
-    position = models.PositiveIntegerField(null=False, default=1)
+    position = models.IntegerField(null=False, default=0)
 
 class Finish(TypedDict):
     '''Define qual parâmetro para parar de reagendar uma coleta, a saber:
