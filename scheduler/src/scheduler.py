@@ -11,10 +11,10 @@ from coolname import generate_slug
 import settings
 
 SERVER_SESSION = requests.sessions.Session()
-RUN_CRAWLER_URL = "endpoint/"
+RUN_CRAWLER_URL = "localhost:8000"
 
 def run_crawler(crawler_id, action):
-    SERVER_SESSION.get(RUN_CRAWLER_URL + f"{crawler_id}-{action}".format(crawler_id, action))
+    SERVER_SESSION.get(RUN_CRAWLER_URL + "/api/crawlers/{}/run?action={}".format(crawler_id, action))
 
 class Scheduler:
     def __init__(self, jobs):
