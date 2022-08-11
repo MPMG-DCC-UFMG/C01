@@ -11,10 +11,10 @@ from coolname import generate_slug
 import settings
 
 SERVER_SESSION = requests.sessions.Session()
-RUN_CRAWLER_URL = f"endpoint/{}-{}"
+RUN_CRAWLER_URL = "endpoint/"
 
 def run_crawler(crawler_id, action):
-    SERVER_SESSION.get(RUN_CRAWLER_URL.format(crawler_id, action))
+    SERVER_SESSION.get(RUN_CRAWLER_URL + f"{crawler_id}-{action}".format(crawler_id, action))
 
 class Scheduler:
     def __init__(self, jobs):
@@ -41,7 +41,7 @@ class Scheduler:
 
         for message in consumer:
             try:
-                task_data = ujson.loads(message.value.decode('utf-8')) 
+                task_data = ujson.loads(message.value.decode('utf-8'))
 
                 print(f'[{datetime.now()}] [TC] {worker_name} Worker: Processing task data')
 
@@ -51,7 +51,7 @@ class Scheduler:
                 print(f'[{datetime.now()}] [TC] {worker_name} Worker: Error processing task data: "{e}"')
 
     def _set_schedule_call_for_task(self, task_data):
-        #converte ação em sintaxe schedule
+        # converte ação em sintaxe schedule
         # executa metodo run_crawler
         # incluir personalizado
         # começar a partir da data
