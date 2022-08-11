@@ -354,6 +354,85 @@ def list_crawlers(request):
     return render(request, "main/list_crawlers.html", context)
 
 
+def get_grouped_crawlers_filtered(filter_crawler_id, filter_dynamic, filter_start_date, filter_end_date):
+    filters_url = ''
+
+    filter_string = ''
+    if filter_crawler_id != '':
+        filters_url += '&filter_crawler_id=' + filter_crawler_id
+        filter_string += f" and X.id = {filter_crawler_id}"
+    if filter_dynamic != '':
+        filters_url += '&filter_dynamic=' + filter_dynamic
+        if int(filter_dynamic) == 1:
+            filter_string += " and dynamic_processing = TRUE"
+        else:
+            filter_string += " and (dynamic_processing = FALSE or dynamic_processing IS NULL)"
+    if filter_start_date != '':
+        filters_url += '&filter_start_date=' + filter_start_date
+        filter_string += f" and creation_date >= '{filter_start_date}'"
+    if filter_end_date != '':
+        filters_url += '&filter_end_date=' + filter_end_date
+        filter_string += f" and creation_date <= '{filter_end_date}'"
+
+    grouped_crawlers = CrawlRequest.objects.raw(
+        "select X.id, X.source_name, Y.total, X.last_modified \
+        from main_crawlrequest as X inner join \
+        ( \
+            select B.id, A.steps, count(1) as total \
+            from main_crawlrequest as A inner join \
+            (select max(id) as id, steps from main_crawlrequest group by steps) as B on A.steps=B.steps \
+            where A.steps is not null and A.steps <> '' and A.steps <> '{}' \
+            group by B.id, A.steps \
+        ) as Y on X.id = Y.id \
+        where 1=1 "+filter_string+" order by X.last_modified desc"
+    )
+    
+    return grouped_crawlers, filters_url
+
+def list_grouped_crawlers(request):
+    page_number = request.GET.get('page', 1)
+    filter_crawler_id = request.GET.get('filter_crawler_id', '')
+    filter_dynamic = request.GET.get('filter_dynamic', '')
+    filter_start_date = request.GET.get('filter_start_date', '')
+    filter_end_date = request.GET.get('filter_end_date', '')
+    
+    grouped_crawlers, filters_url = get_grouped_crawlers_filtered(filter_crawler_id, filter_dynamic, filter_start_date, filter_end_date)
+    crawlers_paginator = Paginator(grouped_crawlers, 20)
+    
+    grouped_crawlers_page = crawlers_paginator.get_page(page_number)
+    
+    context = {
+        'grouped_crawlers_page': grouped_crawlers_page,
+        'filter_crawler_id': filter_crawler_id,
+        'filter_dynamic': filter_dynamic,
+        'filter_start_date': filter_start_date,
+        'filter_end_date': filter_end_date,
+        'filters_url': filters_url,
+    }
+
+    return render(request, "main/list_grouped_crawlers.html", context)
+
+def get_crawlers_from_same_group(request, crawler_id):
+    crawlers = CrawlRequest.objects.raw(
+        "select id, source_name \
+        from main_crawlrequest \
+        where steps=( \
+           select steps from main_crawlrequest where id = "+str(crawler_id)+") order by id desc")
+
+    json_data = []
+    for item in crawlers:
+        json_data.append({
+            'id': item.id,
+            'source_name': item.source_name,
+            'last_modified': item.last_modified,
+            'base_url': item.base_url,
+        })
+    
+    json_data = json.dumps(json_data, default=str)
+    
+    return JsonResponse(json_data, safe=False)
+
+
 def create_crawler(request):
     context = {}
 
@@ -395,6 +474,60 @@ def create_crawler(request):
     return render(request, "main/create_crawler.html", context)
 
 
+def create_grouped_crawlers(request):
+    context = {}
+
+    my_form = RawCrawlRequestForm(request.POST or None)
+    templated_parameter_formset, templated_response_formset = \
+        generate_injector_forms(request.POST or None,
+            injection_type='templated_url')
+
+    static_parameter_formset, static_response_formset = \
+        generate_injector_forms(request.POST or None,
+            injection_type='static_form')
+
+    if request.method == "POST":
+        source_names = request.POST.getlist('source_name')
+        base_urls = request.POST.getlist('base_url')
+        data_paths = request.POST.getlist('data_path')
+
+        if my_form.is_valid() and templated_parameter_formset.is_valid() and \
+           templated_response_formset.is_valid() and \
+           static_parameter_formset.is_valid() and \
+           static_response_formset.is_valid():
+
+            # new_crawl = my_form.save(commit=False)
+            form_new_crawl = CrawlRequestForm(my_form.cleaned_data)
+            new_crawl = form_new_crawl.save(commit=False)
+
+            for i in range(len(source_names)):
+                new_crawl.id = None
+                new_crawl.source_name = source_names[i]
+                new_crawl.base_url = base_urls[i]
+                new_crawl.data_path = data_paths[i]
+                new_crawl.save()
+
+                # save sub-forms and attribute to this crawler instance
+                templated_parameter_formset.instance = new_crawl
+                templated_parameter_formset.save()
+                templated_response_formset.instance = new_crawl
+                templated_response_formset.save()
+                static_parameter_formset.instance = new_crawl
+                static_parameter_formset.save()
+                static_response_formset.instance = new_crawl
+                static_response_formset.save()
+
+            return redirect('/edit_group/' + str(new_crawl.id))
+
+    context['form'] = my_form
+    context['templated_response_formset'] = templated_response_formset
+    context['templated_parameter_formset'] = templated_parameter_formset
+    context['static_response_formset'] = static_response_formset
+    context['static_parameter_formset'] = static_parameter_formset
+    context['page_context'] = 'new'
+    return render(request, "main/create_grouped_crawlers.html", context)
+
+
 def edit_crawler(request, crawler_id):
     crawler = get_object_or_404(CrawlRequest, pk=crawler_id)
 
@@ -430,6 +563,71 @@ def edit_crawler(request, crawler_id):
             'static_response_formset': static_response_formset,
             'crawler': crawler
         })
+
+
+def edit_grouped_crawlers(request, id):
+    # busca pelo crawler que representa o grupo (pra ajudar a preencher o form)
+    crawler = get_object_or_404(CrawlRequest, pk=id)
+    
+    # e busca por todos os crawlers do grupo
+    crawlers = CrawlRequest.objects.raw(
+        "select id, source_name \
+        from main_crawlrequest \
+        where steps=( \
+           select steps from main_crawlrequest where id = "+str(id)+") order by id desc")
+
+    
+    form = RawCrawlRequestForm(request.POST or None, instance=crawler)
+    templated_parameter_formset, templated_response_formset = \
+        generate_injector_forms(request.POST or None,
+            injection_type='templated_url', filter_queryset=True,
+            instance=crawler)
+
+    static_parameter_formset, static_response_formset = \
+        generate_injector_forms(request.POST or None,
+            injection_type='static_form', filter_queryset=True,
+            instance=crawler)
+    
+    if request.method == 'POST':
+        crawler_ids = request.POST.getlist('crawler_id')
+        source_names = request.POST.getlist('source_name')
+        base_urls = request.POST.getlist('base_url')
+        data_paths = request.POST.getlist('data_path')
+
+        # cria a instância do crawler com os dados do formulário, mas não salva no banco
+        post_crawler = form.save(commit=False)
+
+        # essa mesma instância será modificada com os dados de cada crawler e aí sim será
+        # salva no banco
+        for i, _id in enumerate(crawler_ids):
+            post_crawler.id = None if _id == '' else _id
+            post_crawler.source_name = source_names[i]
+            post_crawler.base_url = base_urls[i]
+            post_crawler.data_path = data_paths[i]
+            post_crawler.save()
+
+            templated_parameter_formset.instance = post_crawler
+            templated_parameter_formset.save()
+            templated_response_formset.instance = post_crawler
+            templated_response_formset.save()
+            static_parameter_formset.instance = post_crawler
+            static_parameter_formset.save()
+            static_response_formset.instance = post_crawler
+            static_response_formset.save()
+    
+    
+    context = {
+        'crawler': crawler,
+        'crawlers': crawlers,
+        'form': form,
+        'templated_response_formset': templated_response_formset,
+        'templated_parameter_formset': templated_parameter_formset,
+        'static_parameter_formset': static_parameter_formset,
+        'static_response_formset': static_response_formset,
+        'page_context': 'edit',
+    }
+
+    return render(request, 'main/create_grouped_crawlers.html', context)
 
 
 def delete_crawler(request, crawler_id):

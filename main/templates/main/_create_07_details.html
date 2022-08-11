@@ -1,0 +1,69 @@
+{% load crispy_forms_tags %}
+
+<div id="crawler-details-item-block" class="block" hidden>
+    <div class="row">
+        <div class="col md-6">
+            <div class="crawler-type-content-div" id="static_page">
+                <div id="explore_links">
+                    {{ form.explore_links | as_crispy_field}}
+                    {{ form.link_extractor_max_depth | as_crispy_field}}
+                    {{ form.link_extractor_allow_url | as_crispy_field}}
+
+                    <div class="btn btn-primary" id="collapse-adv-links">
+                        Opções Avançadas
+                    </div>
+                    <div class="mycollapse" id="adv-links">
+                        <div class="mycollapse-block  p-4 pb-0 rounded mt-3">
+                            {{ form.encoding_detection_method | as_crispy_field }}
+                            <p class="small">Essa configuração permite escolher como será obtida a codificação para salvamento das páginas salvas. 
+                                O padrão é via cabeçalho das respostas do servidor, que devem funcionar para a maiorias dos casos e é mais rápido. 
+                                O método automático tentará detectar a codificação automaticamente, o que é mais lento mas pode resolver caso de 
+                                respostas incorretas do servidor. A detecção de codificação não é perfeita, portanto, o nível de confiança de <strong>80%</strong> é adotado.
+                                <br>
+                                <br>
+                                <strong>Obs.:</strong>A detecção automática de codificação não é atualmente suportada em páginas dinâmicas.
+                            </p>
+
+                            {{ form.link_extractor_allow_domains | as_crispy_field }}
+                            {{ form.link_extractor_tags | as_crispy_field }}
+                            {{ form.link_extractor_attrs | as_crispy_field }}
+                            {{ form.link_extractor_check_type | as_crispy_field }}
+                            <p class="small">Se existirem urls que apontam para arquivos mas não <strong>terminam</strong>
+                                em uma extensão de arquivo, o coletor pode conferir o tipo da página pra qual a url aponta.
+                                Nesse caso, ele irá requisitar os <i>headers</i> da url. Se o tipo for <i>'text/html'</i>,
+                                a página será tratada com um html; caso contrário, como um arquivo. Habilitar essa opção
+                                pode deixar a coleta mais lenta, então priorize filtrar urls com regex.
+                            </p>
+                            {{ form.link_extractor_process_value | as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+
+                <div id="download_files" style="padding: 20px; border-top: 1px solid #DCDCDC;">
+                    {{ form.download_files | as_crispy_field}}
+                    {{ form.download_files_allow_url | as_crispy_field}}
+                    {{ form.download_files_allow_extensions | as_crispy_field}}
+
+                    <div class="btn btn-primary" id="collapse-adv-download">
+                        Opções Avançadas
+                    </div>
+                    <div class="mycollapse" id="adv-download">
+                        <div class="mycollapse-block p-4 pb-0 rounded mt-3">
+                            {{ form.download_files_allow_domains | as_crispy_field }}
+                            {{ form.download_files_tags | as_crispy_field }}
+                            {{ form.download_files_attrs | as_crispy_field }}
+                            {{ form.download_files_process_value | as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+
+                <div id="download_img" class="" style="padding: 20px 20px 0 20px; border-top: 1px solid #DCDCDC;">
+                    {{ form.download_imgs | as_crispy_field}}
+                </div>
+                <div class="download_check_large_files" style="padding: 0 20px 0 20px;">
+                    {{ form.download_files_check_large_content | as_crispy_field}}
+                    <p class="small">Caso não haja arquivos grandes (>1GB) a serem coletados, desabilite a opção acima para ganhar desempenho. </p>                     
+            </div>
+        </div>
+    </div>
+</div>

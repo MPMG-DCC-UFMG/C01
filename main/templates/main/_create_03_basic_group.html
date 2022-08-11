@@ -1,0 +1,81 @@
+{% load crispy_forms_tags %}
+
+<div id="basic-info-item-block" class="block">
+    <div class="row" style="padding:20px;">
+        <div class="col-12">
+            <div class="row bg-secondary text-light">
+                <div class="col-1"><input type="checkbox" name="check_all_crawlers" id="check_all_crawlers" checked /> ID</div>
+                <div class="col-3">Nome do Coletor</div>
+                <div class="col-4">URL Base</div>
+                <div class="col-4">Caminho para salvar arquivos</div>
+            </div>
+            <div id="crawler-line-template" class="d-none">
+                <div class="row mb-1">
+                    <div class="col-1">
+                        <input type="checkbox" name="template-crawler_id" value="" checked />
+                        Novo
+                    </div>
+                    <div class="col-3">
+                        <input type="text" name="template-source_name" value="" class="textinput textInput form-control">
+                    </div>
+                    <div class="col-4">
+                        <input type="text" name="template-base_url" value="" class="textinput textInput form-control">
+                    </div>
+                    <div class="col-4">
+                        <div class="input-group">
+                            <input type="text" name="template-data_path" value="" class="textinput textInput form-control">
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-danger ml-2 btn-remove-crawler"><i class="fa fa-minus"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="grouped_crawlers_container">
+                {% if page_context == 'new' %}
+                <div class="row mb-1">
+                    <div class="col-1">
+                        <input type="checkbox" name="crawler_id" value="" checked />
+                        Novo
+                    </div>
+                    <div class="col-3">
+                        <input type="text" name="source_name" value="" class="textinput textInput form-control">
+                    </div>
+                    <div class="col-4">
+                        <input type="text" name="base_url" value="" class="textinput textInput form-control">
+                    </div>
+                    <div class="col-4">
+                        <input type="text" name="data_path" value="" class="textinput textInput form-control">
+                    </div>
+                </div>
+                {% endif %}
+                {% for crawler in crawlers %}
+                <div class="row mb-1">
+                    <div class="col-1">
+                        <input type="checkbox" name="crawler_id" value="{{ crawler.id }}" checked />
+                        {{ crawler.id }}
+                    </div>
+                    <div class="col-3">
+                        <input type="text" name="source_name" value="{{ crawler.source_name }}" class="textinput textInput form-control">
+                    </div>
+                    <div class="col-4">
+                        <input type="text" name="base_url" value="{{ crawler.base_url }}" class="textinput textInput form-control">
+                    </div>
+                    <div class="col-4">
+                        <input type="text" name="data_path" value="{{ crawler.data_path }}" class="textinput textInput form-control">
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="row justify-content-end mt-2">
+                <button id="btn-add-crawler" type="button" class="btn btn-primary"><i class="fa fa-plus"></i></button>
+            </div>
+            
+            <hr>
+            {{ form.expected_runtime_category | as_crispy_field }}
+            <hr>
+            {{ form.obey_robots | as_crispy_field}}
+        </div>
+    </div>
+</div>
