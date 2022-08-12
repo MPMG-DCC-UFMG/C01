@@ -43,7 +43,7 @@ urlpatterns = [
     path("crawler_queue/remove/<int:crawler_id>", views.remove_crawl_request_view, name="remove_crawl_request"),
 
     path("scheduler/", views.scheduler, name="scheduler"),
-    
+
     # Includes the API endpoints in the URLs
     url(r'^api/', include(api_router.urls)),
 ]
