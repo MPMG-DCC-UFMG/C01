@@ -12,8 +12,10 @@ import settings
 
 SERVER_SESSION = requests.sessions.Session()
 
+
 def run_crawler(crawler_id, action):
     SERVER_SESSION.get(settings.RUN_CRAWLER_URL + "/api/crawlers/{}/run?action={}".format(crawler_id, action))
+
 
 class Scheduler:
     def __init__(self, jobs):
@@ -86,6 +88,7 @@ class Scheduler:
         while True:
             sleep(1)
             schedule.run_pending()
+
 
 if __name__ == '__main__':
     jobs = {}
