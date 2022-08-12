@@ -15,7 +15,7 @@ SERVER_SESSION = requests.sessions.Session()
 
 def run_crawler(crawler_id, action):
     SERVER_SESSION.get(settings.RUN_CRAWLER_URL + "/api/crawlers/{}/run?action={}".format(crawler_id, action))
-
+    print(f'[{datetime.now()}] [TC] Crawler {crawler_id} processed by schedule...')
 
 class Scheduler:
     def __init__(self, jobs):
@@ -56,8 +56,8 @@ class Scheduler:
         # executa metodo run_crawler
         # incluir personalizado
         # começar a partir da data
-        params = [run_crawler, task_data["data"]["id"], task_data["data"]["crawler_queue_behavior"]]
-        runtime = task_data["data"]["runtime"][-10:-1]
+        params = [run_crawler, task_data["data"]["crawl_request"], task_data["data"]["crawler_queue_behavior"]]
+        runtime = task_data["data"]["runtime"][-9:-1]
         if task_data["data"]["repeat_mode"] == "daily":
             job = schedule.every().day.at(runtime).do(*params)
         if task_data["data"]["repeat_mode"] == "yearly":
@@ -68,16 +68,16 @@ class Scheduler:
             job = schedule.every().month.at(runtime).do(*params)
         if task_data["data"]["repeat_mode"] == "personalized":
             pass
-        self.jobs[task_data["data"]["id"]] = job
+        self.jobs[task_data["data"]["crawl_request"]] = job
 
     def __process_task_data(self, task_data):
         if task_data["action"] == "cancel":
-            schedule.cancel_job(self.jobs[task_data["data"]["id"]])
+            schedule.cancel_job(self.jobs[task_data["data"]["crawl_request"]])
         if task_data["action"] == "update":
-            schedule.cancel_job(self.jobs[task_data["data"]["id"]])
-            schedule._set_schedule_call_for_task(task_data["data"])
+            schedule.cancel_job(self.jobs[task_data["data"]["crawl_request"]])
+            self._set_schedule_call_for_task(task_data)
         if task_data["action"] == "create":
-            schedule._set_schedule_call_for_task(task_data["data"])
+            self._set_schedule_call_for_task(task_data)
 
     def __create_task_consumer(self):
         self.thread = threading.Thread(target=self.__run_task_consumer, daemon=True)
