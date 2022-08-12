@@ -8,7 +8,6 @@ Agendamento de coletas
 
 {% block content %}
 
-
 <header class="container-fluid pb-3 border-bottom fixed-top bg-white" style="margin-top: 56px; padding-top: 16px;">
     <div class="d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center justify-content-start">
@@ -30,79 +29,6 @@ Agendamento de coletas
 </header>
 
 <main class="mt-3 container-fluid">
-    <style>
-        .calendar-monthly {
-            display: none;
-            column-gap: 15px;
-            row-gap: 15px;
-            height: calc(100vh - 148px);
-            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
-            grid-template-rows: 0fr 1fr 1fr 1fr 1fr 1fr 1fr;
-        }
-
-        .calendar-cell {
-            display: inline-grid;
-
-        }
-        .no-current-month {
-            color:lightgray;
-        }
-        
-        .calendar-cell-content {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            height: 100%;
-            flex-direction: column;
-        }
-
-        .calendar-yearly {
-            display: none;
-            column-gap: 25px;
-            row-gap: 25px;
-            height: calc(100vh - 148px);
-            grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-        }
-
-        .calendar-yearly-month {
-            display: none;
-            column-gap: 5px;
-            row-gap: 5px;
-            height: 100%;
-            grid-template-columns: repeat(7, 1fr);
-            grid-template-rows: repeat(6, 1fr);
-            margin-top: 15px;
-        }
-
-        .calendar-weekly {
-            display: none;
-            column-gap: 5px;
-            row-gap: 5px;
-            height: 100%;
-            grid-template-columns: repeat(8, 1fr);
-            grid-template-rows: repeat(25, 1fr);
-            margin-top: 82px;
-        }
-
-        .calendar {
-            margin-top: 82px;
-            display: none;
-        }
-
-        .float-btn {
-            position: fixed;
-            bottom:40px;
-        	right:40px;
-        }
-
-        .toast {
-            position: fixed;
-            top: 164px;
-            right: 15px;
-        }
-    </style>
-
     <div class="toast" data-delay="3000">
         <div class="toast-header bg-success">
             <strong class="mr-auto text-white">Notificação</strong>
@@ -233,7 +159,7 @@ Agendamento de coletas
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title font-weight-bold">Agendar coleta(s)</h5>
+                <h5 class="modal-title font-weight-bold">Agendar coleta</h5>
             </div>
             <div class="modal-body">
                 <div id="crawler-selector-wrapper" class="border rounded p-3 bg-light">
@@ -284,7 +210,7 @@ Agendamento de coletas
 
             <div class="modal-footer d-flex justify-content-end">
                 <div class="">
-                    <button type="button" class="btn">Cancelar</button>
+                    <button type="button" onclick="hide_new_scheduling()" class="btn">Cancelar</button>
                     <button type="button" onclick="valid_new_scheduling()" class="btn btn-success">Salvar</button>
                 </div>
             </div>
@@ -323,25 +249,25 @@ Agendamento de coletas
                 </div>
 
                 <div id="days-week-repeat-wrapper" class="d-none justify-content-around mt-3">
-                    <div id="dwr-0" weekday="0" weekday_active="false" onclick="toggle_weekday_select(this)" class="rounded-circle border text-muted small d-flex align-items-center justify-content-center" style="cursor: pointer; width: 36px; height: 35px; padding-bottom: 2px;">
+                    <div id="dwr-0" weekday="0" weekday_active="false" onclick="toggle_weekday_select(this)" class="rounded-circle border text-muted small d-flex align-items-center justify-content-center weekday" >
                     <span class="p-0 m-0">dom.</span>
                     </div>
-                    <div id="dwr-1" weekday="1" weekday_active="false" onclick="toggle_weekday_select(this)" class="rounded-circle border text-muted small d-flex align-items-center justify-content-center" style="cursor: pointer; width: 36px; height: 35px; padding-bottom: 2px;">
+                    <div id="dwr-1" weekday="1" weekday_active="false" onclick="toggle_weekday_select(this)" class="rounded-circle border text-muted small d-flex align-items-center justify-content-center weekday" >
                     <span class="p-0 m-0">seg.</span>
                     </div>
-                    <div id="dwr-2" weekday="2" weekday_active="false" onclick="toggle_weekday_select(this)" class="rounded-circle border text-muted small d-flex align-items-center justify-content-center" style="cursor: pointer; width: 36px; height: 35px; padding-bottom: 2px;">
+                    <div id="dwr-2" weekday="2" weekday_active="false" onclick="toggle_weekday_select(this)" class="rounded-circle border text-muted small d-flex align-items-center justify-content-center weekday" >
                     <span class="p-0 m-0">ter.</span>
                     </div>
-                    <div id="dwr-3" weekday="3" weekday_active="false" onclick="toggle_weekday_select(this)" class="rounded-circle border text-muted small d-flex align-items-center justify-content-center" style="cursor: pointer; width: 36px; height: 35px; padding-bottom: 2px;">
+                    <div id="dwr-3" weekday="3" weekday_active="false" onclick="toggle_weekday_select(this)" class="rounded-circle border text-muted small d-flex align-items-center justify-content-center weekday" >
                     <span class="p-0 m-0">qua.</span>
                     </div>
-                    <div id="dwr-4" weekday="4" weekday_active="false" onclick="toggle_weekday_select(this)" class="rounded-circle border text-muted small d-flex align-items-center justify-content-center" style="cursor: pointer; width: 36px; height: 35px; padding-bottom: 2px;">
+                    <div id="dwr-4" weekday="4" weekday_active="false" onclick="toggle_weekday_select(this)" class="rounded-circle border text-muted small d-flex align-items-center justify-content-center weekday" >
                     <span class="p-0 m-0">qui.</span>
                     </div>
-                    <div id="dwr-5" weekday="5" weekday_active="false" onclick="toggle_weekday_select(this)" class="rounded-circle border text-muted small d-flex align-items-center justify-content-center" style="cursor: pointer; width: 36px; height: 35px; padding-bottom: 2px;">
+                    <div id="dwr-5" weekday="5" weekday_active="false" onclick="toggle_weekday_select(this)" class="rounded-circle border text-muted small d-flex align-items-center justify-content-center weekday" >
                     <span class="p-0 m-0">sex.</span>
                     </div>
-                    <div id="dwr-6" weekday="6" weekday_active="false" onclick="toggle_weekday_select(this)" class="rounded-circle border text-muted small d-flex align-items-center justify-content-center" style="cursor: pointer; width: 36px; height: 35px; padding-bottom: 2px;">
+                    <div id="dwr-6" weekday="6" weekday_active="false" onclick="toggle_weekday_select(this)" class="rounded-circle border text-muted small d-flex align-items-center justify-content-center weekday" >
                     <span class="p-0 m-0">sáb.</span>
                     </div>
                 </div>

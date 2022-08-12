@@ -50,6 +50,10 @@ function open_new_scheduling() {
     $('#newScheduling').modal('show');
 }
 
+function hide_new_scheduling() {
+    $('#newScheduling').modal('hide');
+}
+
 function open_personalized_crawler_repetition() {
     $('#newScheduling').modal('hide');
     $('#personalizedCrawlerRepetion').modal('show');
