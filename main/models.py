@@ -169,6 +169,8 @@ class CrawlRequest(TimeStamped):
     # If true, skips failing iterations with a warning, else, stops the crawler
     # if an iteration fails
     skip_iter_errors = models.BooleanField(default=False)
+    browser_resolution_width = models.IntegerField(blank=True, null=True)
+    browser_resolution_height = models.IntegerField(blank=True, null=True)
 
 
     # DETAILS #################################################################
