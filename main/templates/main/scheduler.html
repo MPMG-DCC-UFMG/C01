@@ -22,9 +22,9 @@ Agendamento de coletas
     
         <select name="" id="calendar-mode" class="form-control font-weight-bold" style="width: auto;">
             <option value="daily">Dia</option>
-            <option value="weekly">Semana</option>
+            <!-- <option value="weekly">Semana</option>
             <option value="monthly">Mês</option>
-            <option value="yearly">Ano</option>
+            <option value="yearly">Ano</option> -->
         </select>
     </div>
 </header>
@@ -227,11 +227,6 @@ Agendamento de coletas
     </button>
 </main>
 
-<!-- <div class="d-flex justify-content-center">
-    <button class="btn btn-success mt-auto" onclick="new_scheduling_modal()">Novo</button>
-</div> -->
-
-
 
 <div class="modal fade" id="newScheduling" tabindex="-1" aria-labelledby="newSchedulingLabel"
     aria-hidden="true">
@@ -244,10 +239,10 @@ Agendamento de coletas
                 <div id="crawler-selector-wrapper" class="border rounded p-3 bg-light">
                     <label for="crawl-selector" class="font-weight-bold">Coletores: </label>
                     <select class="form-select bg-white" id="crawl-selector" >
-                        <option value="" disabled>Selecionar coletor...</option>
-                        <option value="0">[Realização-F01] Coleta deDespesas - empenhos_anulados de Patis</option>
-                        <option value="1" selected>[Realização-F01] Coleta de Despesas - empenhos_emitidos de Jenipapo de Minas</option>
-                        <option value="2">[Realização-F01] Coleta de Despesas - relatorio_gestao_fiscal de Turmalina</option>
+                        <option value="" disabled selected>Selecionar coletor...</option>
+                        {% for crawl_request in crawl_requests%}
+                        <option value="{{ crawl_request.id }}">{{ crawl_request.source_name }}</option>
+                        {% endfor %}
                     </select>
                 </div>
 

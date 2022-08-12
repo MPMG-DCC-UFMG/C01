@@ -684,7 +684,10 @@ def load_iframe(request):
         return render(request, 'main/error_iframe_loader.html', ctx)
 
 def scheduler(request):
-    context = {}
+    crawl_requests = CrawlRequest.objects.all()
+    context = {
+        'crawl_requests': crawl_requests
+    }
     return render(request, 'main/scheduler.html', context) 
 
 # API

@@ -290,6 +290,11 @@ function update_calendar_mode(mode) {
     calendar_mode = mode;
 }
 
+function sleep(ms) {
+    var now = new Date().getTime();
+    while (new Date().getTime() < now + ms) { /* Do nothing */ }
+}
+
 function valid_new_scheduling() {
 
     if (new_scheduling_config.crawl_request == null) {
@@ -310,6 +315,13 @@ function valid_new_scheduling() {
     }
 
     services.save_new_scheduling(new_scheduling_config);
+
+    // let year_month_day = new_scheduling_config.runtime.split('T')[0].split('-')
+    // calendar.daily.active_day = new Date(parseInt(year_month_day[0]), parseInt(year_month_day[1]), parseInt(year_month_day[2])); 
+
+    // sleep(1500);
+
+    // calendar.daily.show();
 }
 
 function fill_calendar(start_date, end_date) {
