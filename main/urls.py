@@ -33,6 +33,7 @@ urlpatterns = [
     path("download/page/error/<str:instance_id>", views.error_download_page, name="error_download_page"),
     path("download/page/duplicated/<str:instance_id>", views.duplicated_download_page, name="duplicated_download_page"),
     path("export_config/<str:instance_id>", views.export_config, name="export_config"),
+    path("urls_scanning", views.urls_scanning, name="urls_scanning"),
 
 
     path("info/form_fields", views.load_form_fields, name="load_form_fields"),

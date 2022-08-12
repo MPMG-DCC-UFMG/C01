@@ -1,0 +1,61 @@
+{% extends 'main/base.html' %}
+{% block title %}
+Home
+{% endblock %}
+{% block style %}
+<style>
+    #tags-container{
+        height: 300px;
+        overflow-y: scroll;
+        padding-right: 15px;
+        padding-left: 15px;
+        border: 1px solid #ddd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <h1 class="mt-5">Sondagem de URLs</h1>
+    <p class="lead">Informe uma lista de URLs sementes a serem scaneadas em busca de páginas que possam conter os itens de interesse selecionados.</p>
+    <hr class="mb-5" />
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col">
+                <div class="form-group">
+                    <label for="seed_urls">URLs Sementes:</label>
+                    <textarea id="seed_urls" name="seed_urls" class="form-control" rows="6"></textarea>
+                    <small class="form-text text-muted">Informe uma URL por linha.</small>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <div class="form-group">
+                    <label>Itens de Interesse:</label>
+                    <div id="tags-container">
+                        <div class="row">
+                            {% for tag in tags %}
+                            <div class="col">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="tag_{{forloop.counter}}" name="tags" value="{{ tag }}" checked>
+                                    <label class="form-check-label" for="tag_{{forloop.counter}}">{{ tag }}</label>
+                                </div>
+                            </div>
+                            {% if forloop.counter|divisibleby:3 %}
+                            <div class="w-100"></div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="float-right"><button type="submit" class="btn btn-primary">Iniciar Sondagem</button></div>
+    </form>
+</div>
+
+{% endblock %}

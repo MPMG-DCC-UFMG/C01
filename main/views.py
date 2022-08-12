@@ -1050,6 +1050,70 @@ def load_iframe(request):
         return render(request, 'main/error_iframe_loader.html', ctx)
 
 
+def urls_scanning(request):
+    import random
+    rng = random.Random(123)
+
+    tags = ["Transparência", "12.527/2011", "45.969/2012", "www.transparencia.mg.gov.br", "Lei de Acesso à Informação", "CODEMA", "CMDCA", "F.A.Q", "FAQ", "Perguntas Frequentes", "Pedidos", "Estrutura Organizacional", "Endereço", "Telefone", "Horário de Atendimento", "Conselhos Municipais", "Receitas", "Consolidado", "Liquida", "Previs", "Arrecada", "Classificação","Balanço", "Contas", "Meta", "Plano de Metas", "Gestão fiscal", "Resumido de Execução", "Diretrizes", "Orçament",  "Pagamentos", "Pagar", "Empenhos", "N° de empenho", "N° do empenho", "Valor", "Favorecido", "Licitaç", "Status", "Modalidade", "Resultado", "Status","Contrato", "Vigência", "Terceiro Setor", "Parcerias", "Repasses", "Data de celebração", "Data", "Conveniado", "Origem", "Recurso", "Concurso", "Conselho", "Pensão", "Plano Plurianual", "Concurso Público", "Obra", "Situação", "Servidor", "Nome", "Cargo", "Função", "Relatorio Mensal", "Despesa com Pessoal", "Despesas com pessoal", "Aposentado", "Pensionista", "Diária", "Viagen", "Viagem", "Periodo", "Convênios", "Destino", "Motivo", "Prestação"]
+    
+    seed_urls = [
+        "https://freigaspar.mg.gov.br/transparencia",
+        "https://coroaci.mg.gov.br/transparencia",
+        "https://www.antoniodias.mg.gov.br/transparencia",
+        "https://www.itaobim.mg.gov.br/transparencia",
+        "http://www.transparenciafacil.com.br/0147902",
+        "http://www.transparenciafacil.com.br/0165702",
+        "https://abrecampo-mg.portaltp.com.br/",
+        "https://manhuacu-mg.portaltp.com.br/",
+        "http://lai.memory.com.br/entidades/login/9CC4C5",
+        "http://lai.memory.com.br/entidades/login/9BG219",
+        "https://pm-aracitaba.publicacao.siplanweb.com.br/",
+        "https://pm-cruzilia.publicacao.siplanweb.com.br/",
+        "https://e-gov.betha.com.br/transparencia/01037-136/recursos.faces?mun=QEEEuPpMRS0="
+        "https://transparencia.betha.cloud/#/uA12YSnItzDDIAE8NxlsTA=="
+        "http://cidadesmg.com.br/portaltransparencia/faces/user/portal.xhtml?Param=BonitoDeMinas"
+        "http://cidadesmg.com.br/portaltransparencia/faces/user/portal.xhtml?Param=Gameleiras"
+        "http://esic.vespasiano.mg.gov.br/Home/Index/",
+        "http://transparencia.serranos.mg.gov.br/",
+        "https://ptn.tiradentes.mg.gov.br/",
+        "https://pt.ritapolis.mg.gov.br",
+        "http://www.adpmnet.com.br/index.php?option=com_contpubl&idorg=26&tpform=1",
+        "http://www.adpmnet.com.br/index.php?option=com_contpubl&idorg=139&tpform=1",
+        "https://www.municipalnet.com.br/index/?uid=eloi-mendes",
+        "https://www.municipalnet.com.br/index/?uid=congonhal",
+        "http://portal.conquista.mg.gov.br:8080/portalcidadao/",
+        "https://cidadao.divinopolis.mg.gov.br/portalcidadao/",
+        "https://transparencia.pbh.gov.br/bh_prd_transparencia/web/",
+        "http://transparencia.itamonte.mg.gov.br/",
+        "http://187.72.75.161:8444/transparencia/",
+        "http://prefriopara.ddns.net:8444/transparencia/",
+    ]
+
+    coverage_matrix = []
+    for tag in tags:
+        url_coverage = [tag]
+        for i in range(len(seed_urls)):
+            if rng.random() > rng.random():
+                url_coverage.append(1)
+            else:
+                url_coverage.append(0)
+        coverage_matrix.append(url_coverage)
+    
+    # found_urls = CrawlRequest.objects.values('base_url').all()[:40]
+
+    context = {
+        'tags': tags,
+        'seed_urls': seed_urls,
+        'coverage_matrix': coverage_matrix,
+        'range': range(10)
+    }
+
+
+    if request.method == "POST":
+        return render(request, "main/urls_scanning_result.html", context)
+    
+    return render(request, "main/urls_scanning.html", context)
+
 # API
 ########
 
