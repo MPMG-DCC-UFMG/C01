@@ -35,7 +35,6 @@ urlpatterns = [
     path("export_config/<str:instance_id>", views.export_config, name="export_config"),
 
 
-    path("info/form_fields", views.load_form_fields, name="load_form_fields"),
     path("info/screenshots/<str:instance_id>/<int:page>", views.view_screenshots, name="view_screenshots"),
 
     path("iframe/load", views.load_iframe, name="load_iframe"),

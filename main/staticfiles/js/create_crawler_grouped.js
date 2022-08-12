@@ -35,7 +35,7 @@ $(function(){
     // adiciona uma linha com novo crawler
     $("#btn-add-crawler").click(function(){
         let $template = $($("#crawler-line-template").html());
-        $template.find("input").each(function(i){
+        $template.find("input, select").each(function(i){
             $(this).attr("name", $(this).attr("name").replace("template-", ""));
         });
         let $container = $(".grouped_crawlers_container");

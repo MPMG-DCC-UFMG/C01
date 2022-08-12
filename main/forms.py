@@ -4,22 +4,19 @@ from .models import CrawlRequest, ParameterHandler, ResponseHandler
 from django.core.exceptions import ValidationError
 from crawling_utils.constants import HEADER_ENCODE_DETECTION
 
+
 class CrawlRequestForm(forms.ModelForm):
     class Meta:
         model = CrawlRequest
 
-        labels = {
-            # 'request_type': 'Método da requisição',
-            'form_request_type': 'Método da requisição ao injetar em formulários',
-        }
-
         fields = [
             'source_name',
             'base_url',
-            # 'request_type',
-            'form_request_type',
             'obey_robots',
             'captcha',
+            'crawler_description',
+            'crawler_type_desc',
+            'crawler_issue',
 
             'sc_scheduler_persist',
             'sc_scheduler_queue_refresh',
@@ -61,7 +58,10 @@ class CrawlRequestForm(forms.ModelForm):
             'img_xpath',
             'sound_xpath',
             'dynamic_processing',
+            'browser_type',
             'skip_iter_errors',
+            'browser_resolution_width',
+            'browser_resolution_height',
             'explore_links',
 
             'link_extractor_max_depth',
@@ -117,6 +117,29 @@ class RawCrawlRequestForm(CrawlRequestForm):
         help_text="Esse caminho deve ser único para cada coletor. Caso a pasta não esteja criada, o coletor a criará automaticamente.",
         validators=[CrawlRequest.pathValid]
     )
+
+    crawler_description = forms.CharField(
+        label="Descrição do coletor",
+        widget=forms.TextInput(
+            attrs={'placeholder': 'Descrição geral do coletor, por exemplo, município e ano alvo de coleta.'})
+    )
+
+    crawler_type_desc = forms.ChoiceField(
+        label="Tipo do coletor",
+        choices=(
+            ('Contratos', 'Contratos'),
+            ('Despesas', 'Despesas'),
+            ('Diários', 'Diários'),
+            ('Licitação', 'Licitação'),
+            ('Não Informado', 'Não Informado'),
+            ('Processos', 'Processos'),
+            ('Servidores', 'Servidores'),
+            ('Transparência', 'Transparência'),
+            ('Outro', 'Outro'),
+        )
+    )
+
+    crawler_issue = forms.IntegerField(required=False, initial=0, label='Issue')
 
     # SCRAPY CLUSTER ##########################################################
 
@@ -362,6 +385,42 @@ class RawCrawlRequestForm(CrawlRequestForm):
             attrs={'onchange': 'detailDynamicProcessing();'}
         )
     )
+    browser_resolution_width = forms.IntegerField(
+        required=False,
+        label="Largura da janela do navegador (em pixels)",
+        initial=1280,
+        min_value=640,
+        widget=forms.NumberInput(
+            attrs={
+                'style': 'display:inline',
+                'class': 'form-control col-5'
+            }
+        )
+    )
+    browser_resolution_height = forms.IntegerField(
+        required=False,
+        label="Altura da janela do navegador (em pixels)",
+        initial=720,
+        min_value=360,
+        widget=forms.NumberInput(
+            attrs={
+                'style': 'display:inline',
+                'class': 'form-control col-5'
+            }
+        )
+    )
+
+    browser_type = forms.ChoiceField(
+        choices=(
+            ('chromium', 'Chromium'),
+            ('firefox', 'Mozilla Firefox'),
+            ('webkit', 'WebKit'),
+        ),
+        label='Navegador Web',
+        initial='chromium',
+        widget=forms.RadioSelect
+    )
+
     skip_iter_errors = forms.BooleanField(
         required=False, label="Pular iterações com erro"
     )
@@ -487,14 +546,15 @@ class RawCrawlRequestForm(CrawlRequestForm):
                                                   widget=forms.RadioSelect)
 
     expected_runtime_category = forms.ChoiceField(choices=(
-            ('fast', 'Rápido (até algumas horas)'),
-            ('medium', 'Médio (até um dia)'),
-            ('slow', 'Lento (mais de um dia)'),
-        ),
+        ('fast', 'Rápido (até algumas horas)'),
+        ('medium', 'Médio (até um dia)'),
+        ('slow', 'Lento (mais de um dia)'),
+    ),
         label='Expectativa de tempo de execução',
         initial='medium',
         help_text='Escolha subjetiva de quanto tempo o coletor demorará para completar a coleta. Na prática, está se definindo em qual fila de execução o coletor irá aguardar.',
         widget=forms.RadioSelect)
+
 
 class ResponseHandlerForm(forms.ModelForm):
     """
@@ -515,8 +575,7 @@ class ResponseHandlerForm(forms.ModelForm):
         widgets = {
             'handler_type': forms.Select(attrs={
                 'onchange': 'detailResponseType(event);'
-            }),
-            'injection_type': forms.HiddenInput(),
+            })
         }
 
 
@@ -525,29 +584,6 @@ class ParameterHandlerForm(forms.ModelForm):
     Contains the fields related to the configuration of the request parameters
     to be injected
     """
-
-    def __init__(self, *args, **kwargs):
-        super(ParameterHandlerForm, self).__init__(*args, **kwargs)
-
-        injection_type = ""
-        if self.initial:
-            injection_type = self.initial['injection_type']
-
-        def filter_option(opt):
-            if injection_type == "templated_url" and opt[0] == "const_value":
-                return False
-            return True
-
-        # Templated URL forms shouldn't have a constant injector option
-        choices = list(filter(filter_option, ParameterHandler.PARAM_TYPES))
-
-        self.fields['parameter_type'] = forms.ChoiceField(
-            choices=choices,
-            label='Tipo de parâmetro',
-            widget=forms.Select(attrs={
-                'onchange': 'detailParamType(event);'
-            })
-        )
 
     def clean(self):
         """
@@ -630,10 +666,8 @@ class ParameterHandlerForm(forms.ModelForm):
             'origin_ids_proc_param': ('Identificadores de origens a buscar, '
                                       'separados por vírgula'),
             'value_list_param': 'Lista de valores a gerar (separados por vírgula)',
-            'value_const_param': 'Valor a gerar',
             'filter_range': 'Filtrar limites',
-            'parameter_label': 'Descrição do campo',
-            'parameter_key': 'Nome do campo',
+            'parameter_type': 'Tipo de parâmetro'
         }
 
         widgets = {
@@ -660,7 +694,9 @@ class ParameterHandlerForm(forms.ModelForm):
                 'pattern': ParameterHandler.LIST_REGEX,
                 'title': 'Insira uma lista de números separados por vírgula.',
             }),
-            'injection_type': forms.HiddenInput(),
+            'parameter_type': forms.Select(attrs={
+                'onchange': 'detailParamType(event);'
+            }),
         }
 
     step_num_param = forms.IntegerField(initial=1, required=False,

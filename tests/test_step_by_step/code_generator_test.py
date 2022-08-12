@@ -87,12 +87,6 @@ class TestExtractInfo(unittest.TestCase):
         expected_result += "        imprime(texto = \"teste\")\n"
         self.assertEqual(expected_result, result)
 
-        result = cg.generate_body(atom.extend(
-            recipe_examples['simple_while']['recipe'])[0], ff, False)
-        expected_result = "    while await objeto(**missing_arguments, objeto = True == 1):\n"
-        expected_result += "        imprime(texto = \"teste\")\n"
-        self.assertEqual(expected_result, result)
-
     def test_generate_para_cada(self):
         with open("tests/test_step_by_step/examples/recipe_examples.json") as file:
             recipe_examples = json.load(file)
@@ -123,6 +117,42 @@ class TestExtractInfo(unittest.TestCase):
         expected_result += "            while len(page_stack) > initial_page_stack_len1:\n"
         expected_result += cg.generate_fechar_aba({'depth': 4}, ff)
 
+        self.assertEqual(expected_result, result)
+
+    def test_generate_enquanto(self):
+        with open("tests/test_step_by_step/examples/recipe_examples.json") as file:
+            recipe_examples = json.load(file)
+
+        # Regular while loop
+        result = cg.generate_body(atom.extend(
+            recipe_examples['simple_while']['recipe'])[0], ff, False)
+        expected_result = "    while await objeto(**missing_arguments, objeto = True == 1):\n"
+        expected_result += "        imprime(texto = \"teste\")\n"
+        self.assertEqual(expected_result, result)
+
+        # Inverted while loop
+        result = cg.generate_body(atom.extend(
+            recipe_examples['inverted_while']['recipe'])[0], ff, False)
+        expected_result = "    while not await objeto(**missing_arguments, objeto = True == 1):\n"
+        expected_result += "        imprime(texto = \"teste\")\n"
+        self.assertEqual(expected_result, result)
+
+    def test_generate_se(self):
+        with open("tests/test_step_by_step/examples/recipe_examples.json") as file:
+            recipe_examples = json.load(file)
+
+        # Regular if statement
+        result = cg.generate_body(atom.extend(
+            recipe_examples['simple_if']['recipe'])[0], ff, False)
+        expected_result = "    if await objeto(**missing_arguments, objeto = True == 1):\n"
+        expected_result += "        imprime(texto = \"teste\")\n"
+        self.assertEqual(expected_result, result)
+
+        # Inverted if statement
+        result = cg.generate_body(atom.extend(
+            recipe_examples['inverted_if']['recipe'])[0], ff, False)
+        expected_result = "    if not await objeto(**missing_arguments, objeto = True == 1):\n"
+        expected_result += "        imprime(texto = \"teste\")\n"
         self.assertEqual(expected_result, result)
 
     # def test_generate_code(self):

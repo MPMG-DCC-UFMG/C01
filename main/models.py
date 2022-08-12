@@ -32,7 +32,23 @@ class CrawlRequest(TimeStamped):
     source_name = models.CharField(max_length=200)
     base_url = models.TextField()
     obey_robots = models.BooleanField(blank=True, null=True)
+    crawler_description = models.TextField(default='')
+    CRAWLERS_TYPES = [
+        ('Contratos', 'Contratos'),
+        ('Despesas', 'Despesas'),
+        ('Diários', 'Diários'),
+        ('Licitação', 'Licitação'),
+        ('Não Informado', 'Não Informado'),
+        ('Processos', 'Processos'),
+        ('Servidores', 'Servidores'),
+        ('Transparência', 'Transparência'),
+        ('Outro', 'Outro'),
+    ]
+    crawler_type_desc = models.CharField(max_length=15,
+                                    choices=CRAWLERS_TYPES,
+                                    default='Não Informado')
 
+    crawler_issue = models.PositiveIntegerField(default=0)
     # This regex is a bit convolute, but in summary: it allows numbers,
     # letters, dashes and underlines. It allows forward and backward slashes
     # unless it occurs in the first character (since we don't allow absolute
@@ -40,14 +56,6 @@ class CrawlRequest(TimeStamped):
     pathValid = RegexValidator(r'^[0-9a-zA-Z\-_][0-9a-zA-Z\/\\\-_]*$',
                                'Esse não é um caminho relativo válido.')
     data_path = models.CharField(max_length=2000, validators=[pathValid])
-
-    REQUEST_TYPES = [
-        ('GET', 'GET'),
-        ('POST', 'POST'),
-    ]
-    request_type = models.CharField(max_length=15,
-                                    choices=REQUEST_TYPES,
-                                    default='GET')
 
     # SCRAPY CLUSTER ##########################################################
 
@@ -102,10 +110,6 @@ class CrawlRequest(TimeStamped):
 
     sc_download_timeout = models.PositiveIntegerField(default=10)
 
-    form_request_type = models.CharField(max_length=15,
-                                    choices=REQUEST_TYPES,
-                                    default='POST')
-
     # ANTIBLOCK ###############################################################
     # Options for Delay
     antiblock_download_delay = models.IntegerField(blank=True, null=True)
@@ -153,9 +157,21 @@ class CrawlRequest(TimeStamped):
 
     # Steps activation
     dynamic_processing = models.BooleanField(blank=True, null=True)
+
+    # Browser options
+    BROWSER_TYPE = [
+        ('chromium', 'Chromium'),
+        ('webkit', 'Webkit'),
+        ('firefox', 'Mozilla Firefox'),
+    ]
+    browser_type = models.CharField(max_length=50, choices=BROWSER_TYPE, default='chromium')
+
     # If true, skips failing iterations with a warning, else, stops the crawler
     # if an iteration fails
     skip_iter_errors = models.BooleanField(default=False)
+    browser_resolution_width = models.IntegerField(blank=True, null=True)
+    browser_resolution_height = models.IntegerField(blank=True, null=True)
+
 
     # DETAILS #################################################################
     explore_links = models.BooleanField(blank=True, null=True)
@@ -222,16 +238,14 @@ class CrawlRequest(TimeStamped):
     def process_parameter_data(param_list):
         """
         Processes the parameter data turning it into a format recognizable by
-        the spider, while also separating Templated URL and Static Form params
+        the spider
 
         :param param_list: list of parameters (as specified in the
                            ParameterHandler model)
 
-        :returns: tuple of parameter lists, for the Templated URLs and Static
-                  Forms, respectively
+        :returns: list of parameters for the Templated URL
         """
         url_parameter_handlers = []
-        form_parameter_handlers = []
         for param in param_list:
             if 'id' in param:
                 del param['id']
@@ -247,41 +261,32 @@ class CrawlRequest(TimeStamped):
                 iso_str = param['end_date_date_param'].isoformat()
                 param['end_date_date_param'] = iso_str
 
-            if param['injection_type'] == 'templated_url':
-                url_parameter_handlers.append(param)
-            elif param['injection_type'] == 'static_form':
-                form_parameter_handlers.append(param)
+            url_parameter_handlers.append(param)
 
-        return url_parameter_handlers, form_parameter_handlers
+        return url_parameter_handlers
 
 
     @staticmethod
     def process_response_data(resp_list):
         """
         Processes the response handler data turning it into a format
-        recognizable by the spider, while also separating Templated URL and
-        Static Form response handlers
+        recognizable by the spider
 
         :param resp_list: list of response handlers (as specified in the
                           ResponseHandler model)
 
-        :returns: tuple of response handler lists, for the Templated URLs and
-                  Static Forms, respectively
+        :returns: list of response handlers for the Templated URL
         """
         url_response_handlers = []
-        form_response_handlers = []
         for resp in resp_list:
             if 'id' in resp:
                 del resp['id']
             if 'crawler_id' in resp:
                 del resp['crawler_id']
 
-            if resp['injection_type'] == 'templated_url':
-                url_response_handlers.append(resp)
-            elif resp['injection_type'] == 'static_form':
-                form_response_handlers.append(resp)
+            url_response_handlers.append(resp)
 
-        return url_response_handlers, form_response_handlers
+        return url_response_handlers
 
 
     @staticmethod
@@ -305,14 +310,12 @@ class CrawlRequest(TimeStamped):
         # Include information on parameter handling
         param_list = crawler.parameter_handlers.values()
         parameter_handlers = CrawlRequest.process_parameter_data(param_list)
-        config['templated_url_parameter_handlers'] = parameter_handlers[0]
-        config['static_form_parameter_handlers'] = parameter_handlers[1]
+        config['templated_url_parameter_handlers'] = parameter_handlers
 
         # Include information on response handling
         resp_list = crawler.response_handlers.values()
         response_handlers = CrawlRequest.process_response_data(resp_list)
-        config['templated_url_response_handlers'] = response_handlers[0]
-        config['static_form_response_handlers'] = response_handlers[1]
+        config['templated_url_response_handlers'] = response_handlers
 
         return config
 
@@ -359,19 +362,6 @@ class ParameterHandler(models.Model):
     crawler = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE,
                                 related_name="parameter_handlers")
 
-    # Specify if this is a URL or form parameter
-    INJECTION_TYPES = [
-        ('templated_url', 'Templated URL'),
-        ('static_form', 'Static Form'),
-    ]
-    injection_type = models.CharField(max_length=15,
-                                      choices=INJECTION_TYPES,
-                                      default='none')
-
-    # Parameter key and label for form parameters
-    parameter_key = models.CharField(max_length=1000, blank=True)
-    parameter_label = models.CharField(max_length=1000, blank=True)
-
     # Whether or not to filter the range for this parameter
     filter_range = models.BooleanField(default=False)
     # Number of consecutive entries to search during "binary search" if
@@ -385,7 +375,6 @@ class ParameterHandler(models.Model):
         ('alpha_seq', 'Sequência alfabética'),
         ('process_code', 'Código de processo'),
         ('value_list', 'Lista pré-definida'),
-        ('const_value', 'Valor constante'),
     ]
 
     parameter_type = models.CharField(max_length=15,
@@ -426,7 +415,6 @@ class ParameterHandler(models.Model):
                                  choices=DATE_FREQ,
                                  default='D')
 
-    value_const_param = models.CharField(max_length=5000, blank=True)
     value_list_param = models.CharField(max_length=50000, blank=True)
 
 
@@ -438,15 +426,6 @@ class ResponseHandler(models.Model):
     # Crawler to which this handler is associated
     crawler = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE,
                                 related_name="response_handlers")
-
-    # Specify if this is a URL or form validation
-    INJECTION_TYPES = [
-        ('templated_url', 'Templated URL'),
-        ('static_form', 'Static Form'),
-    ]
-    injection_type = models.CharField(max_length=15,
-                                      choices=INJECTION_TYPES,
-                                      default='none')
 
     HANDLER_TYPES = [
         ('text', 'Texto na página'),
@@ -539,6 +518,7 @@ class Log(TimeStamped):
     logger_name = models.CharField(max_length=50, blank=True, null=True)
     log_level = models.CharField(max_length=10, blank=True, null=True)
     raw_log = models.TextField(blank=True, null=True)
+
 
 class CrawlerQueue(models.Model):
     max_fast_runtime_crawlers_running = models.PositiveIntegerField(default=1, blank=True)
