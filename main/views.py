@@ -91,12 +91,14 @@ def add_crawl_request(crawler_id, wait_on: Literal['last_position', 'first_posit
     position = 0
 
     if wait_on == 'first_position':
-        first_queue_item_created = CrawlerQueueItem.objects.filter(queue_type=cr_expec_runtime_cat).order_by('position').first()
+        first_queue_item_created = CrawlerQueueItem.objects.filter(
+            queue_type=cr_expec_runtime_cat).order_by('position').first()
         if first_queue_item_created:
             position = first_queue_item_created.position - 1
 
     else:
-        first_queue_item_created = CrawlerQueueItem.objects.filter(queue_type=cr_expec_runtime_cat).order_by('position').last()
+        first_queue_item_created = CrawlerQueueItem.objects.filter(
+            queue_type=cr_expec_runtime_cat).order_by('position').last()
         if first_queue_item_created:
             position = first_queue_item_created.position + 1
 
@@ -683,12 +685,13 @@ def load_iframe(request):
         }
         return render(request, 'main/error_iframe_loader.html', ctx)
 
+
 def scheduler(request):
     crawl_requests = CrawlRequest.objects.all()
     context = {
         'crawl_requests': crawl_requests
     }
-    return render(request, 'main/scheduler.html', context) 
+    return render(request, 'main/scheduler.html', context)
 
 # API
 ########
@@ -755,13 +758,13 @@ class CrawlerViewSet(viewsets.ModelViewSet):
 
         if wait_on == 'first_position':
             message = 'Crawler added to crawler queue in first position'
-        
+
         else:
             message = 'Crawler added to crawler queue in last position'
-        
+
         data = {
             'status': settings.API_SUCCESS,
-            'message': message 
+            'message': message
         }
 
         return JsonResponse(data)
@@ -900,6 +903,7 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
 
         return response
 
+
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
@@ -910,7 +914,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             message = {
                 'action': 'create',
                 'data': response.data
-            } 
+            }
             crawler_manager.message_sender.send(TASK_TOPIC, message)
         return response
 
@@ -920,7 +924,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             message = {
                 'action': 'update',
                 'data': response.data
-            } 
+            }
             crawler_manager.message_sender.send(TASK_TOPIC, message)
         return response
 
@@ -930,7 +934,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             message = {
                 'action': 'update',
                 'data': response.data
-            } 
+            }
             crawler_manager.message_sender.send(TASK_TOPIC, message)
         return response
 
@@ -947,22 +951,22 @@ class TaskViewSet(viewsets.ModelViewSet):
         return response
 
     def __str2date(self, s: str) -> datetime:
-        date = None 
+        date = None
 
         try:
-            date = datetime.strptime(s, '%d-%m-%Y') 
+            date = datetime.strptime(s, '%d-%m-%Y')
 
         except Exception as e:
             print(e)
 
         return date
-    
+
     @action(detail=False)
     def filter(self, request):
         query_params = self.request.query_params.dict()
 
-        end_date = None 
-        start_date = None 
+        end_date = None
+        start_date = None
 
         if 'end_date' in query_params:
             end_date = self.__str2date(query_params['end_date'])
@@ -971,16 +975,16 @@ class TaskViewSet(viewsets.ModelViewSet):
             if 'start_date' in query_params:
                 start_date = self.__str2date(query_params['start_date'])
         if end_date is None or start_date is None:
-            msg = {'message': 'You must send the params start_date and end_date, both in the format day-month-year' + \
-                            ' in the query params of the url. Eg.: <api_address>?start_date=23-04-2023&end_date=01-01-2020, etc.'}
+            msg = {'message': 'You must send the params start_date and end_date, both in the format day-month-year' +
+                   ' in the query params of the url. Eg.: <api_address>?start_date=23-04-2023&end_date=01-01-2020, etc.'}
 
             return Response(msg, status=status.HTTP_400_BAD_REQUEST)
 
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
-        
+
         # serializer.data is ordered_dict
         tasks = json.loads(json.dumps(serializer.data))
         data = task_filter_by_date_interval(tasks, start_date, end_date)
 
-        return Response(data, status=status.HTTP_200_OK) 
+        return Response(data, status=status.HTTP_200_OK)
