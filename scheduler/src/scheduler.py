@@ -75,7 +75,7 @@ class Scheduler:
             job = schedule.every().year.at(runtime).do(*params)
         
         if task_data["data"]["repeat_mode"] == "weekly":
-            job = schedule.every().week.at(runtime).do(*params)
+            job = schedule.every().weeks.at(runtime).do(*params)
         
         if task_data["data"]["repeat_mode"] == "montly":
             job = schedule.every().month.at(runtime).do(*params)
