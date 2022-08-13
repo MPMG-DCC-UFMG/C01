@@ -763,7 +763,11 @@ class CrawlerViewSet(viewsets.ModelViewSet):
 
         try:
             add_crawl_request(pk, wait_on)
-            unqueue_crawl_requests()
+
+            crawl_request = CrawlRequest.objects.get(pk=pk)
+            queue_type = crawl_request.expected_runtime_category
+
+            unqueue_crawl_requests(queue_type)
 
         except Exception as e:
             data = {
@@ -773,10 +777,10 @@ class CrawlerViewSet(viewsets.ModelViewSet):
             return JsonResponse(data)
 
         if wait_on == 'first_position':
-            message = 'Crawler added to crawler queue in first position'
+            message = f'Crawler added to crawler queue in first position'
 
         else:
-            message = 'Crawler added to crawler queue in last position'
+            message = f'Crawler added to crawler queue in last position'
 
         data = {
             'status': settings.API_SUCCESS,
