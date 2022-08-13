@@ -632,6 +632,8 @@ class CrawlerQueue(models.Model):
 
 
 class CrawlerQueueItem(TimeStamped):
+    NO_WAIT_POSITION = -99999999
+
     queue = models.ForeignKey(CrawlerQueue, on_delete=models.CASCADE, default=1, related_name='items')
     queue_type = models.CharField(max_length=8, default="medium")
     crawl_request = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE, unique=True)

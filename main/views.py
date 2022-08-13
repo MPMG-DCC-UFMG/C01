@@ -76,7 +76,7 @@ def process_run_crawl(crawler_id):
     return instance
 
 
-def add_crawl_request(crawler_id, wait_on: Literal['last_position', 'first_position'] = 'last_position'):
+def add_crawl_request(crawler_id, wait_on: Literal['last_position', 'first_position', 'no_wait'] = 'last_position'):
     already_in_queue = CrawlerQueueItem.objects.filter(crawl_request_id=crawler_id).exists()
 
     if already_in_queue:
@@ -85,27 +85,37 @@ def add_crawl_request(crawler_id, wait_on: Literal['last_position', 'first_posit
     crawl_request = CrawlRequest.objects.get(pk=crawler_id)
     cr_expec_runtime_cat = crawl_request.expected_runtime_category
 
-    # The new element of the crawler queue must be in the correct position (after the last added) and
-    # in the correct queue: fast, normal or slow
-
-    position = 0
-
-    if wait_on == 'first_position':
-        first_queue_item_created = CrawlerQueueItem.objects.filter(
-            queue_type=cr_expec_runtime_cat).order_by('position').first()
-        if first_queue_item_created:
-            position = first_queue_item_created.position - 1
+    if wait_on == 'no_wait':
+        queue_item = CrawlerQueueItem(crawl_request_id=crawler_id,
+                                    position=CrawlerQueueItem.NO_WAIT_POSITION,
+                                    running=True,
+                                    forced_execution=True,
+                                    queue_type=cr_expec_runtime_cat)
+        queue_item.save()
 
     else:
-        first_queue_item_created = CrawlerQueueItem.objects.filter(
-            queue_type=cr_expec_runtime_cat).order_by('position').last()
-        if first_queue_item_created:
-            position = first_queue_item_created.position + 1
+        # The new element of the crawler queue must be in the correct position (after the last added) and
+        # in the correct queue: fast, normal or slow
 
-    queue_item = CrawlerQueueItem(crawl_request_id=crawler_id,
-                                position=position,
-                                queue_type=cr_expec_runtime_cat)
-    queue_item.save()
+        position = 0
+
+        if wait_on == 'first_position':
+            first_queue_item_created = CrawlerQueueItem.objects.filter(
+                queue_type=cr_expec_runtime_cat).order_by('position').first()
+                
+            if first_queue_item_created:
+                position = first_queue_item_created.position - 1
+
+        else:
+            last_queue_item_created = CrawlerQueueItem.objects.filter(
+                queue_type=cr_expec_runtime_cat).order_by('position').last()
+            if last_queue_item_created:
+                position = last_queue_item_created.position + 1
+
+        queue_item = CrawlerQueueItem(crawl_request_id=crawler_id,
+                                    position=position,
+                                    queue_type=cr_expec_runtime_cat)
+        queue_item.save()
 
 
 def remove_crawl_request(crawler_id):
@@ -734,16 +744,22 @@ class CrawlerViewSet(viewsets.ModelViewSet):
         action = query_params.get('action', '')
 
         if action == 'run_immediately':
+            wait_on = 'no_wait'
+
+            add_crawl_request(pk, wait_on)
             instance = process_run_crawl(pk)
             data = {
                 'status': settings.API_SUCCESS,
                 'instance': CrawlerInstanceSerializer(instance).data
             }
+
             return JsonResponse(data)
 
-        wait_on = 'last_position'
-        if action == 'wait_on_first_queue_position':
+        elif action == 'wait_on_first_queue_position':
             wait_on = 'first_position'
+
+        else: 
+            wait_on = 'last_position'
 
         try:
             add_crawl_request(pk, wait_on)
