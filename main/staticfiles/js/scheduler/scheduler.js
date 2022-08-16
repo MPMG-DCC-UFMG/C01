@@ -319,12 +319,10 @@ function valid_new_scheduling() {
 
     services.save_new_scheduling(new_scheduling_config);
 
-    // let year_month_day = new_scheduling_config.runtime.split('T')[0].split('-')
-    // calendar.daily.active_day = new Date(parseInt(year_month_day[0]), parseInt(year_month_day[1]), parseInt(year_month_day[2])); 
+    let year_month_day = new_scheduling_config.runtime.split('T')[0].split('-')
+    calendar.daily.active_day = new Date(parseInt(year_month_day[0]), parseInt(year_month_day[1]), parseInt(year_month_day[2])); 
 
-    // sleep(1500);
-
-    // calendar.daily.show();
+    calendar.daily.show();
 }
 
 
@@ -412,12 +410,12 @@ function show_task_detail(task_id) {
                         <i class="far fa-eye text-muted"></i>
                     </a>
                     <button title="Editar agendamento." 
-                        onclick="edit_scheduling_task(${task.crawl_request})"
+                        onclick="edit_scheduling_task(${task.id})"
                         class="rounded-circle bg-white border mx-3 scheduling-detail-options">
                         <i class="fas fa-pen text-muted"></i>
                     </button>
                     <button title="Excluir agendamento." 
-                        onclick="delete_scheduling_task(${task.crawl_request})"
+                        onclick="delete_schedule_task(${task.id})"
                         class="rounded-circle border bg-white scheduling-detail-options">
                         <i class="far fa-trash-alt text-muted"></i>
                     </button>
@@ -428,6 +426,17 @@ function show_task_detail(task_id) {
 
     $('#detailScheduling').modal('show');
 
+}
+
+function delete_schedule_task(task_id) {
+    $('#detailScheduling').modal('hide');
+
+    let delete_confirmed = confirm('Tem certeza que deseja deletar o agendamento?');
+
+    if (!delete_confirmed)
+        return;
+
+    services.delete_task(task_id);
 }
 
 $(document).ready(function () {

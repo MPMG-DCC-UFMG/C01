@@ -293,9 +293,11 @@ calendar.daily.get_daily_tasks = function () {
 
     let tasks_of_day = services.get_tasks_in_interval(start_date, end_date);
 
+    // global variable
+    tasks = {};
     if (key in tasks_of_day)
         services.update_tasks(tasks_of_day[key]);
-    
+
     this.tasks = {};
     for (let hour = 0;hour<24;hour++)
         this.tasks[String(hour).padStart(2, '0')] = [];
@@ -306,8 +308,6 @@ calendar.daily.get_daily_tasks = function () {
         key = calendar.get_hour_from_str_datetime(task_runtime);
         this.tasks[key].push(tasks[task_id]);
     }
-    
-    console.log(this.tasks);
 
 }
 
@@ -362,7 +362,6 @@ calendar.daily.show = function () {
                 </div>
             `);
 
-            console.log(key, task)
         }
 
         mb_size = tasks_in_hour.length? 'mb-2' : 'mb-4';

@@ -1,5 +1,10 @@
 var services = {};
 
+services.sleep = function (ms) {
+    var now = new Date().getTime();
+    while (new Date().getTime() < now + ms) { /* Do nothing */ }
+}
+
 services.save_new_scheduling = function (new_scheduling_config) {
     $('#newScheduling').modal('hide');
 
@@ -64,4 +69,18 @@ services.update_tasks = function (tarks_ids) {
         task_id = tarks_ids[i];
         tasks[task_id] = this.get_task(task_id);
     }
+}
+
+services.delete_task = function(task_id) {
+    $.ajax({
+        url: `/api/tasks/${task_id}`,
+        type: 'delete',
+        async: false,
+        success: function (data) {
+            calendar.daily.today();
+        },
+        error: function (data) {
+            console.error(data.responseText);
+        }
+    });   
 }
