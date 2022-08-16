@@ -218,6 +218,40 @@ Agendamento de coletas
     </div>
 </div>
 
+<div class="modal fade" id="detailScheduling" tabindex="-1" aria-labelledby="detailSchedulingLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center" id="detailSchedulingContent">
+                <h3 class="h5">Coleta de São Miguel Abade</h3>
+                <p class="m-0 mt-3">24 de mar. de 2023 às 19h45.</p>
+                <small class="text-muted">Não se repete.</small>
+                <br>
+                <p class="m-0 mt-3 bg-danger border rounded-pill small text-white font-weight-bold px-2" style="display: inline-block;">Executa imediatamente.</p>
+                <div class="d-flex justify-content-center mt-4 text-muted">
+                    <a href="http://" 
+                        target="_blank"
+                        title="Visualizar coletor." class="rounded-circle bg-white border d-flex align-items-center justify-content-center scheduling-detail-options" 
+                        rel="noopener noreferrer"
+                        >
+                        <i class="far fa-eye text-muted"></i>
+                    </a>
+                    <button title="Editar agendamento." class="rounded-circle bg-white border mx-3 scheduling-detail-options">
+                        <i class="fas fa-pen text-muted"></i>
+                    </button>
+                    <button title="Excluir agendamento." class="rounded-circle border bg-white scheduling-detail-options">
+                        <i class="far fa-trash-alt text-muted"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="personalizedCrawlerRepetion" tabindex="-1" aria-labelledby="personalizedCrawlerRepetionLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 25rem;">
         <div class="modal-content">
@@ -398,6 +432,7 @@ Agendamento de coletas
         </div>
     </div>
 </div>
+
 
 {% endblock %}
 

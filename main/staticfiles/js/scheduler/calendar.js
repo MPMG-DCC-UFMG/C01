@@ -36,18 +36,18 @@ var HOURS = [
 ];
 
 var MONTHS = [
-    'Janeiro',
-    'Fevereiro',
-    'Março',
-    'Abril',
-    'Maio',
-    'Junho',
-    'Julho',
-    'Agosto',
-    'Setembro',
-    'Outubro',
-    'Novembro',
-    'Dezembro',
+    'Jan.',
+    'Fev.',
+    'Mar.',
+    'Abr.',
+    'Mai.',
+    'Jun.',
+    'Jul.',
+    'Ago.',
+    'Set.',
+    'Out.',
+    'Nov.',
+    'Dez.',
 ];
 
 var FLEX_CENTER = 'd-flex justify-content-center align-items-center';
@@ -353,7 +353,10 @@ calendar.daily.show = function () {
             }
 
             tasks_in_hour.push(`
-                <div class="${bg_color} text-white rounded-pill px-2 ml-2 mt-2">
+                <div
+                    style="cursor: pointer;" 
+                    onclick="show_task_detail(${task.id})" 
+                    class="${bg_color} text-white rounded-pill px-2 ml-2 mt-2">
                     ${task.crawler_name}
                 </div>
             `);

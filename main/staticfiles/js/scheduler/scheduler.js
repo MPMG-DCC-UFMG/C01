@@ -1,4 +1,3 @@
-
 var el_days_of_week_repeat_option = $('#days-week-repeat-wrapper');
 var el_montly_repeat_option = $('#monthly-repeat-wrapper');
 
@@ -328,7 +327,106 @@ function valid_new_scheduling() {
     // calendar.daily.show();
 }
 
-function fill_calendar(start_date, end_date) {
+
+function task_runtime_to_date(runtime) {
+    // runtime follows the format <year>-<month>-<day>T<hour>:<minute>:<seconds>Z'
+    let splited_runtime = runtime.split('T');
+    
+    let runtime_date = splited_runtime[0].split('-');
+    let runtime_time = splited_runtime[1].split(':');
+
+    return new Date(parseInt(runtime_date[0]), 
+                    parseInt(runtime_date[1]) - 1, 
+                    parseInt(runtime_date[2]),
+                    parseInt(runtime_time[0]),
+                    parseInt(runtime_time[1]));
+
+}
+
+function show_task_detail(task_id) {
+    let task = tasks[task_id];
+
+    let cur_date = new Date()
+ 
+    let runtime = task_runtime_to_date(task.runtime);
+
+    let repetition_info = '';
+    
+    
+    let since = cur_date > runtime ? 'Desde de ' : 'A partir de ';
+    since += `${runtime.getDate()} de ${MONTHS[runtime.getMonth()]} de ${runtime.getFullYear()}.`;
+
+
+    switch (task.repeat_mode) {
+        case 'no_repeat':
+            repetition_info = `${runtime.getDate()} de ${MONTHS[runtime.getMonth()]} de ${runtime.getFullYear()} às ${runtime.getHours()}h${String(runtime.getMinutes()).padStart(2, '0')}.`;
+            since = 'Não se repete.';    
+            break;
+        
+        case 'daily':
+            repetition_info = `Repete diariamente às ${runtime.getHours()}h${String(runtime.getMinutes()).padStart(2, '0') }.`;
+
+        case 'weekly':
+            let weedays = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+            repetition_info = `Repete toda(o) ${weedays[runtime.getDay()]} às ${runtime.getHours()}h${String(runtime.getMinutes()).padStart(2, '0') }.`;
+
+        default:
+            break;
+    };
+
+    let bg_crawler_queue_info = '';
+    let crawler_queue_info = '';
+
+    switch (task.crawler_queue_behavior) {
+        case 'run_immediately':
+            bg_crawler_queue_info = 'bg-danger';
+            crawler_queue_info = 'Executa imediatamente.';
+            break;
+
+        case 'wait_on_first_queue_position':
+            bg_crawler_queue_info = 'bg-warning';
+            crawler_queue_info = 'Aguarda na primeira posição da fila de coletas.';
+            break;
+    
+        case 'wait_on_last_queue_position':
+            bg_crawler_queue_info = 'bg-info';
+            crawler_queue_info = 'Aguarda na última posição da fila de coletas.';
+            break;
+
+        default:
+            break;
+    };
+
+    let task_detail_html = `
+                <h3 class="h5 font-weight-bold">${task.crawler_name}</h3>
+                <p class="m-0 mt-3">${repetition_info}</p>
+                <small class="text-muted">${since}</small>
+                <br>
+                <p class="m-0 mt-3 ${bg_crawler_queue_info} border rounded-pill small text-white font-weight-bold px-2" style="display: inline-block;">${crawler_queue_info}</p>
+                <div class="d-flex justify-content-center mt-4 text-muted">
+                    <a href="/detail/${task.crawl_request}/" 
+                        target="_blank"
+                        title="Visualizar coletor." class="rounded-circle bg-white border d-flex align-items-center justify-content-center scheduling-detail-options" 
+                        rel="noopener noreferrer"
+                        >
+                        <i class="far fa-eye text-muted"></i>
+                    </a>
+                    <button title="Editar agendamento." 
+                        onclick="edit_scheduling_task(${task.crawl_request})"
+                        class="rounded-circle bg-white border mx-3 scheduling-detail-options">
+                        <i class="fas fa-pen text-muted"></i>
+                    </button>
+                    <button title="Excluir agendamento." 
+                        onclick="delete_scheduling_task(${task.crawl_request})"
+                        class="rounded-circle border bg-white scheduling-detail-options">
+                        <i class="far fa-trash-alt text-muted"></i>
+                    </button>
+                </div>
+    `;
+
+    $('#detailSchedulingContent').html(task_detail_html);
+
+    $('#detailScheduling').modal('show');
 
 }
 
