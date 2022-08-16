@@ -71,17 +71,17 @@ class Scheduler:
         if task_data["data"]["repeat_mode"] == "daily":
             job = schedule.every().day.at(runtime).do(*params)
         
-        if task_data["data"]["repeat_mode"] == "yearly":
-            job = schedule.every().year.at(runtime).do(*params)
+        # if task_data["data"]["repeat_mode"] == "yearly":
+        #     job = schedule.every().year.at(runtime).do(*params)
         
         if task_data["data"]["repeat_mode"] == "weekly":
-            job = schedule.every().week.at(runtime).do(*params)
+            job = schedule.every(7).day.at(runtime).do(*params)
         
-        if task_data["data"]["repeat_mode"] == "monthly":
-            job = schedule.every().month.at(runtime).do(*params)
+        # if task_data["data"]["repeat_mode"] == "monthly":
+        #     job = schedule.every().month.at(runtime).do(*params)
         
-        if task_data["data"]["repeat_mode"] == "personalized":
-            pass
+        # if task_data["data"]["repeat_mode"] == "personalized":
+        #     pass
         
         self.jobs[task_data["data"]["crawl_request"]] = job
 
