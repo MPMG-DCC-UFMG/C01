@@ -356,6 +356,7 @@ calendar.daily.show = function () {
                 <div
                     style="cursor: pointer;" 
                     onclick="show_task_detail(${task.id})" 
+                    title="Clique para opções."
                     class="${bg_color} text-white rounded-pill px-2 ml-2 mt-2">
                     ${task.crawler_name}
                 </div>
