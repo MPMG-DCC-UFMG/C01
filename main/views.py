@@ -352,10 +352,10 @@ def get_grouped_crawlers_filtered(filter_crawler_id, filter_dynamic, filter_star
             filter_string += " and (dynamic_processing = FALSE or dynamic_processing IS NULL)"
     if filter_start_date != '':
         filters_url += '&filter_start_date=' + filter_start_date
-        filter_string += f" and creation_date >= '{filter_start_date}'"
+        filter_string += f" and date(creation_date) >= '{filter_start_date}'"
     if filter_end_date != '':
         filters_url += '&filter_end_date=' + filter_end_date
-        filter_string += f" and creation_date <= '{filter_end_date}'"
+        filter_string += f" and date(creation_date) <= '{filter_end_date}'"
 
     grouped_crawlers = CrawlRequest.objects.raw(
         "select X.id, X.source_name, Y.total, X.last_modified \
@@ -482,13 +482,13 @@ def create_grouped_crawlers(request):
                 templated_response_formset.instance = new_crawl
                 templated_response_formset.save()
 
-            return redirect('/edit_group/' + str(new_crawl.id))
+            return redirect('/grouped_crawlers')
 
     context['form'] = my_form
     context['templated_response_formset'] = templated_response_formset
     context['templated_parameter_formset'] = templated_parameter_formset
     context['crawler_types'] = CrawlRequest.CRAWLERS_TYPES
-    context['page_context'] = 'new'
+    context['page_context'] = 'new_group'
     return render(request, "main/create_grouped_crawlers.html", context)
 
 
@@ -563,6 +563,8 @@ def edit_grouped_crawlers(request, id):
             templated_parameter_formset.save()
             templated_response_formset.instance = post_crawler
             templated_response_formset.save()
+        
+        return redirect('/grouped_crawlers')
     
     context = {
         'crawler': crawler,

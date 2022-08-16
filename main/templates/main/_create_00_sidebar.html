@@ -1,7 +1,7 @@
 <!-- d-* hiddens the Sidebar in smaller devices. Its itens can be kept on the Navbar 'Menu' -->
 <!-- Bootstrap List Group -->
 <ul class="list-group list-group-mine sticky-top sticky-offset">
-    {% if not form.instance.pk %}
+    {% if not form.instance.pk and page_context != 'new_group' %}
     <!-- import settings -->
     <a onClick="showBlock(this.id);" href="#" class="button-block bg-dark list-group-item list-group-item-action"
         id="import-settings-item">

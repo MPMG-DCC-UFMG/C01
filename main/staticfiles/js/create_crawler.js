@@ -22,7 +22,7 @@ function enableCreateButton() {
     var blocks = document.getElementsByClassName('valid-icon');
     var isValid = true;
     for (var i = 0; i < blocks.length; i++) {
-        if (blocks[i].classList.contains('fa-warning')) {
+        if (blocks[i].classList.contains('fa-exclamation-triangle')) {
             isValid = false;
             break;
         }
