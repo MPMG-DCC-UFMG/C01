@@ -439,6 +439,22 @@ function delete_schedule_task(task_id) {
     services.delete_task(task_id);
 }
 
+function fill_new_scheduling_modal(task_id) {
+    let task = tasks[task_id];
+
+    let runtime = task.runtime.substr(0, 16);
+
+    console.log(runtime);
+
+
+    $(`#crawl-selector option[value="${task.crawl_request}"]`).attr('selected', 'selected');
+    $(`#crawl-selector option[value="${task.crawl_request}"]`).prop("disabled", true);
+    $('#scheduling-time').val(runtime);
+    $(`#repeat-crawling-select option[value="${task.repeat_mode}"]`).attr('selected', 'selected');
+    $(`#crawler_queue_behavior option[value="${task.crawler_queue_behavior}"]`).attr('selected', 'selected');
+
+}
+
 $(document).ready(function () {
     $('#crawl-selector').multiselect({
         includeSelectAllOption: true,

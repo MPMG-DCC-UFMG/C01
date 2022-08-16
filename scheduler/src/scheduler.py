@@ -61,6 +61,7 @@ class Scheduler:
         # incluir personalizado
         # começar a partir da data
         runtime = task_data["data"]["runtime"][-9:-1]
+
         if task_data["data"]["repeat_mode"] == "no_repeat":
             params = [run_crawler_once, task_data["data"]["crawl_request"], task_data["data"]["crawler_queue_behavior"]]
             schedule.every().day.at(runtime).do(*params)
@@ -71,17 +72,23 @@ class Scheduler:
         if task_data["data"]["repeat_mode"] == "daily":
             job = schedule.every().day.at(runtime).do(*params)
         
-        # if task_data["data"]["repeat_mode"] == "yearly":
-        #     job = schedule.every().year.at(runtime).do(*params)
-        
         if task_data["data"]["repeat_mode"] == "weekly":
-            job = schedule.every(7).day.at(runtime).do(*params)
-        
-        # if task_data["data"]["repeat_mode"] == "monthly":
-        #     job = schedule.every().month.at(runtime).do(*params)
-        
-        # if task_data["data"]["repeat_mode"] == "personalized":
-        #     pass
+            # Checks if it is possible to put the collection to run today (if the time it should run has passed), if not, it runs next week
+            now = datetime.now()
+
+            str_runtime = task_data["data"]["runtime"]
+            runtime_datetime = datetime.fromisoformat(str_runtime.replace('Z', ''))
+
+            # runs once to include today's day
+            if now <= runtime_datetime:
+                params = [run_crawler_once, task_data["data"]["crawl_request"], task_data["data"]["crawler_queue_behavior"]]
+                schedule.every().day.at(runtime).do(*params)
+                
+            # Weekly repetition (which does not consider the current day)
+            job = schedule.every(7).days.at(runtime).do(*params)
+            
+        else:
+            job = None
         
         self.jobs[task_data["data"]["crawl_request"]] = job
 
