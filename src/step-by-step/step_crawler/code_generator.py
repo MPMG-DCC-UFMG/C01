@@ -153,7 +153,7 @@ def generate_screenshot(child, module):
 
 
 def generate_executar_em_iframe(child, module):
-    xpath = child['arguments']['xpath']
+    xpath = child['xpath']
     code = "\n"
     code += child['depth'] * '    ' + "### Início: Passando o contexto de execução para iframe ###\n"
     code += child['depth'] * '    ' + f'el_locator_xpath = {xpath}\n'
