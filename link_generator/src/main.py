@@ -2,12 +2,13 @@ import ujson
 from multiprocessing import Process
 from kafka import KafkaConsumer
 
-from generator import generate_requests, generate_templated_urls
+from generator import generate_requests
 import settings
+
 
 def run() -> None:
     consumer = KafkaConsumer(settings.LINK_GENERATOR_TOPIC,
-                            bootstrap_servers=settings.KAFKA_HOSTS,            
+                            bootstrap_servers=settings.KAFKA_HOSTS,
                             auto_offset_reset=settings.KAFKA_CONSUMER_AUTO_OFFSET_RESET,
                             connections_max_idle_ms=settings.KAFKA_CONNECTIONS_MAX_IDLE_MS,
                             request_timeout_ms=settings.KAFKA_REQUEST_TIMEOUT_MS,
@@ -31,7 +32,7 @@ def run() -> None:
 
                 print('\tStarting a new process...')
                 processes[crawler_id] = Process(target=generate_requests, args=(config,))
-                processes[crawler_id].start() 
+                processes[crawler_id].start()
                 print('\tProcess started')
 
             elif 'stop' in message:
@@ -41,12 +42,13 @@ def run() -> None:
                     processes[crawler_id].terminate()
 
                 print(f'Generation of URLs for "{crawler_id}" stopped')
-            
+
             else:
-                pass 
-        
+                pass
+
         except Exception as e:
             print(f'Error processing message: {e}')
+
 
 if __name__ == '__main__':
     run()

@@ -21,12 +21,8 @@ class MessageSender:
             'base_url': config['base_url'],
             'crawler_id': config['crawler_id'],
             'instance_id': config['instance_id'],
-            'req_type': config['request_type'],
-            'form_req_type': config['form_request_type'],
             'templated_url_response_handlers': config['templated_url_response_handlers'],
             'templated_url_parameter_handlers': config['templated_url_parameter_handlers'],
-            'static_form_parameter_handlers': config['static_form_parameter_handlers'],
-            'static_form_response_handlers': config['static_form_response_handlers']
         }
 
         # writer module

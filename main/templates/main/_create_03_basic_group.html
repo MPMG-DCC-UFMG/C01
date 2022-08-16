@@ -5,9 +5,12 @@
         <div class="col-12">
             <div class="row bg-secondary text-light">
                 <div class="col-1"><input type="checkbox" name="check_all_crawlers" id="check_all_crawlers" checked /> ID</div>
-                <div class="col-3">Nome do Coletor</div>
-                <div class="col-4">URL Base</div>
-                <div class="col-4">Caminho para salvar arquivos</div>
+                <div class="col-2">Nome do Coletor</div>
+                <div class="col-2">URL Base</div>
+                <div class="col-2">Caminho arquivos</div>
+                <div class="col-2">Categoria</div>
+                <div class="col-2">Descrição</div>
+                <div class="col-1">Issue</div>
             </div>
             <div id="crawler-line-template" class="d-none">
                 <div class="row mb-1">
@@ -15,15 +18,28 @@
                         <input type="checkbox" name="template-crawler_id" value="" checked />
                         Novo
                     </div>
-                    <div class="col-3">
-                        <input type="text" name="template-source_name" value="" class="textinput textInput form-control">
+                    <div class="col-2">
+                        <input type="text" name="template-source_name" value="" class="textinput textInput form-control" autocomplete="off">
                     </div>
-                    <div class="col-4">
-                        <input type="text" name="template-base_url" value="" class="textinput textInput form-control">
+                    <div class="col-2">
+                        <input type="text" name="template-base_url" value="" class="textinput textInput form-control" autocomplete="off">
                     </div>
-                    <div class="col-4">
+                    <div class="col-2">
+                        <input type="text" name="template-data_path" value="" class="textinput textInput form-control" autocomplete="off">
+                    </div>
+                    <div class="col-2">
+                        <select name="template-crawler_type_desc" value="" class="select textInput form-control">
+                            {% for item in crawler_types %}
+                            <option value="{{ item.0 }}" {% if 'Não Informado' == item.0 %}selected="selected"{% endif %}>{{ item.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-2">
+                        <input type="text" name="template-crawler_description" value="" class="textinput textInput form-control" autocomplete="off">
+                    </div>
+                    <div class="col-1">
                         <div class="input-group">
-                            <input type="text" name="template-data_path" value="" class="textinput textInput form-control">
+                            <input type="text" name="template-crawler_issue" value="" class="textinput textInput form-control p-0" autocomplete="off">
                             <div class="input-group-append">
                                 <button type="button" class="btn btn-danger ml-2 btn-remove-crawler"><i class="fa fa-minus"></i></button>
                             </div>
@@ -32,20 +48,33 @@
                 </div>
             </div>
             <div class="grouped_crawlers_container">
-                {% if page_context == 'new' %}
+                {% if page_context == 'new_group' %}
                 <div class="row mb-1">
                     <div class="col-1">
                         <input type="checkbox" name="crawler_id" value="" checked />
                         Novo
                     </div>
-                    <div class="col-3">
-                        <input type="text" name="source_name" value="" class="textinput textInput form-control">
+                    <div class="col-2">
+                        <input type="text" name="source_name" value="" class="textinput textInput form-control" autocomplete="off">
                     </div>
-                    <div class="col-4">
-                        <input type="text" name="base_url" value="" class="textinput textInput form-control">
+                    <div class="col-2">
+                        <input type="text" name="base_url" value="" class="textinput textInput form-control" autocomplete="off">
                     </div>
-                    <div class="col-4">
-                        <input type="text" name="data_path" value="" class="textinput textInput form-control">
+                    <div class="col-2">
+                        <input type="text" name="data_path" value="" class="textinput textInput form-control" autocomplete="off">
+                    </div>
+                    <div class="col-2">
+                        <select name="crawler_type_desc" value="" class="select textInput form-control">
+                            {% for item in crawler_types %}
+                            <option value="{{ item.0 }}" {% if 'Não Informado' == item.0 %}selected="selected"{% endif %}>{{ item.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-2">
+                        <input type="text" name="crawler_description" value="" class="textinput textInput form-control" autocomplete="off">
+                    </div>
+                    <div class="col-1">
+                        <input type="text" name="crawler_issue" value="" class="textinput textInput form-control" autocomplete="off">
                     </div>
                 </div>
                 {% endif %}
@@ -55,14 +84,27 @@
                         <input type="checkbox" name="crawler_id" value="{{ crawler.id }}" checked />
                         {{ crawler.id }}
                     </div>
-                    <div class="col-3">
-                        <input type="text" name="source_name" value="{{ crawler.source_name }}" class="textinput textInput form-control">
+                    <div class="col-2">
+                        <input type="text" name="source_name" value="{{ crawler.source_name }}" class="textinput textInput form-control" autocomplete="off">
                     </div>
-                    <div class="col-4">
-                        <input type="text" name="base_url" value="{{ crawler.base_url }}" class="textinput textInput form-control">
+                    <div class="col-2">
+                        <input type="text" name="base_url" value="{{ crawler.base_url }}" class="textinput textInput form-control" autocomplete="off">
                     </div>
-                    <div class="col-4">
-                        <input type="text" name="data_path" value="{{ crawler.data_path }}" class="textinput textInput form-control">
+                    <div class="col-2">
+                        <input type="text" name="data_path" value="{{ crawler.data_path }}" class="textinput textInput form-control" autocomplete="off">
+                    </div>
+                    <div class="col-2">
+                        <select name="crawler_type_desc" value="" class="select textInput form-control">
+                            {% for item in crawler_types %}
+                            <option value="{{ item.0 }}" {% if crawler.crawler_type_desc == item.0 %}selected="selected"{% endif %}>{{ item.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-2">
+                        <input type="text" name="crawler_description" value="{{ crawler.crawler_description }}" class="textinput textInput form-control" autocomplete="off">
+                    </div>
+                    <div class="col-1">
+                        <input type="text" name="crawler_issue" value="{{ crawler.crawler_issue }}" class="textinput textInput form-control" autocomplete="off">
                     </div>
                 </div>
                 {% endfor %}
@@ -74,7 +116,6 @@
             
             <hr>
             {{ form.expected_runtime_category | as_crispy_field }}
-            <hr>
             {{ form.obey_robots | as_crispy_field}}
         </div>
     </div>

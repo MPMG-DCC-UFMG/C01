@@ -37,9 +37,6 @@ New Crawler
             <div class="row justify-content-center">
                 <div class="col-12">
                     <hr class="mt-0 mb-4">
-
-                    {% include "main/_create_01_import.html" %}
-
                     {% include "main/_create_02_scheduler.html" %}
 
                     {% include "main/_create_03_basic_group.html" %}
@@ -51,13 +48,8 @@ New Crawler
                     {% include "main/_create_06_dynamic.html" %}
 
                     {% include "main/_create_07_details.html" %}
-                    
                 </div>
-
                 {% include "main/_create_08_url.html" %}
-
-                {% include "main/_create_09_static.html" %}
-
             </div>
         </div>
     </div>
@@ -87,32 +79,6 @@ New Crawler
         rmBtnClass: 'close',
         added: () => checkTemplatedURL(),
         removed: () => checkTemplatedURL(),
-    });
-
-    $('#static_form_param').formset({
-        prefix: '{{ static_parameter_formset.prefix }}',
-        templateId: 'base_static_form_param_template',
-        subformSelector: '.param-step',
-        addBtnContent: $('<a><span class="fa fa-plus"></span> ' +
-                         'Adicionar campo</a>'),
-        addBtnClass: 'add_form',
-        rmBtnClass: 'close',
-        added: () => {
-            updateInjectionFields('static_form');
-            checkStaticForm();
-        },
-        removed: () => checkStaticForm(),
-    });
-    $('#static_form_response').formset({
-        prefix: '{{ static_response_formset.prefix }}',
-        templateId: 'base_static_form_response_template',
-        subformSelector: '.resp-step',
-        addBtnContent: $('<a><span class="fa fa-plus"></span> ' +
-                         'Adicionar validação</a>'),
-        addBtnClass: 'add_form',
-        rmBtnClass: 'close',
-        added: () => checkStaticForm(),
-        removed: () => checkStaticForm(),
     });
     $(function () {$('[data-toggle="popover"]').popover({
         trigger: 'hover',

@@ -44,10 +44,6 @@ services:
         build:
             context: .
             dockerfile: ./docker/django-gunicorn/Dockerfile
-            args:
-                EXECUTION_TYPE: distributed
-                INSTALL_REDIS: "False"
-                INSTALL_KAFKA: "False"
         command: ./django_run.sh
         volumes:
             - static_volume:/home/django/C01/staticfiles

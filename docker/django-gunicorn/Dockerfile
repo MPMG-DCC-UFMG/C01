@@ -34,11 +34,6 @@ COPY crawler_manager crawler_manager
 
 RUN mkdir logs
 
-# Get variables from build args
-ENV EXECUTION_TYPE=$EXECUTION_TYPE
-ENV INSTALL_REDIS=$INSTALL_REDIS
-ENV INSTALL_KAFKA=$INSTALL_KAFKA
-
 RUN python3 web_install.py
 
 RUN mkdir /data
