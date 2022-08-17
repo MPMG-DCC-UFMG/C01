@@ -6,8 +6,6 @@ services.sleep = function (ms) {
 }
 
 services.save_new_scheduling = function (new_scheduling_config) {
-    $('#newScheduling').modal('hide');
-
     let parsed_data = JSON.stringify(new_scheduling_config);
 
     $.ajax({
@@ -18,7 +16,8 @@ services.save_new_scheduling = function (new_scheduling_config) {
         async: false,
         data: parsed_data,
         success: function (data) {
-            $('.toast').toast('show');
+            $('#toast-success-text').text('Agendamento realizado com sucesso!');
+            $('#toast').toast('show');
         },
         error: function (data) {
             alert('Houve um erro no agendamento, tente novamente!');
@@ -83,4 +82,27 @@ services.delete_task = function(task_id) {
             console.error(data.responseText);
         }
     });   
+}
+
+services.save_updated_scheduling = function (task_being_edited) {
+
+    let task_id = task_being_edited.id;
+    let parsed_data = JSON.stringify(task_being_edited);
+
+    $.ajax({
+        url: `/api/tasks/${task_id}/`,
+        type: 'put',
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        async: false,
+        data: parsed_data,
+        success: function (data) {
+            $('#toast-success-text').text('Agendamento alterado com sucesso!');
+            $('#toast').toast('show');
+            // calendar.daily.today();
+        },
+        error: function (data) {
+            console.error(data.responseText);
+        }
+    });
 }

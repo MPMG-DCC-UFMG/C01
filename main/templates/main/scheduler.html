@@ -29,13 +29,13 @@ Agendamento de coletas
 </header>
 
 <main class="mt-3 container-fluid">
-    <div class="toast" data-delay="3000">
+    <div class="toast" id="toast" data-delay="3000">
         <div class="toast-header bg-success">
             <strong class="mr-auto text-white">Notificação</strong>
             <button type="button" class="ml-2 mb-1 close" data-dismiss="toast">&times;</button>
         </div>
         <div class="toast-body font-weight-bold">
-            Agendamento realizado com sucesso!
+            <span id="toast-success-text"></span>
         </div>
     </div>
 
@@ -147,14 +147,14 @@ Agendamento de coletas
         </ul>
     </div>
 
-    <button class="btn border rounded-pill float-btn bg-primary text-white shadow-sm" onclick="open_new_scheduling()">
+    <button class="btn border rounded-pill float-btn bg-primary text-white shadow-sm" onclick="open_set_scheduling()">
         <i class="fa fa-plus mr-2 shadow-sm"></i>
         <strong class="font-weight-bold h5">Criar</strong>
     </button>
 </main>
 
 
-<div class="modal fade" id="newScheduling" tabindex="-1" aria-labelledby="newSchedulingLabel"
+<div class="modal fade" id="setSchedulingModal" tabindex="-1" aria-labelledby="setSchedulingModalLabel"
     aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -163,9 +163,9 @@ Agendamento de coletas
             </div>
             <div class="modal-body">
                 <div id="crawler-selector-wrapper" class="border rounded p-3 bg-light">
-                    <label for="crawl-selector" class="font-weight-bold">Coletores: </label>
+                    <label for="crawl-selector" class="font-weight-bold">Coletor: </label>
                     <select class="form-select bg-white" id="crawl-selector" >
-                        <option value="" disabled selected>Selecionar coletor...</option>
+                        <option value="no_selected" disabled selected>Selecionar coletor...</option>
                         {% for crawl_request in crawl_requests%}
                         <option value="{{ crawl_request.id }}">{{ crawl_request.source_name }}</option>
                         {% endfor %}
@@ -184,7 +184,7 @@ Agendamento de coletas
                                 class="border rounded px-2 bg-white w-100"
                                 style="padding-top: 7px; padding-bottom: 7px;"
                                 >
-                                <option value="no_repeat">Não se repete</option>
+                                <option value="no_repeat" id="no-repeat-sel-opt">Não se repete</option>
                                 <option value="daily">Diariamente</option>
                                 <option value="weekly">Semanalmente</option>
                                 <option disabled title="Available soon!" value="monthly">Mensalmente</option>
@@ -201,7 +201,7 @@ Agendamento de coletas
                 <div id="crawler-queue-wrapper" class="mt-3 rounded border bg-light p-3">
                     <label for="" class="font-weight-bold">Fila de coletas</label>
                     <select name="" id="crawler_queue_behavior" class="form-control">
-                        <option value="wait_on_last_queue_position">Aguardar na última posição da fila</option>
+                        <option value="wait_on_last_queue_position" id="wait-last-sel-opt">Aguardar na última posição da fila</option>
                         <option value="wait_on_first_queue_position">Aguardar na primeira posição da fila</option>
                         <option value="run_immediately">Executar imediatamente</option>
                     </select>
@@ -210,7 +210,7 @@ Agendamento de coletas
 
             <div class="modal-footer d-flex justify-content-end">
                 <div class="">
-                    <button type="button" onclick="hide_new_scheduling()" class="btn">Cancelar</button>
+                    <button type="button" onclick="hide_set_scheduling()" class="btn">Cancelar</button>
                     <button type="button" onclick="valid_new_scheduling()" class="btn btn-success">Salvar</button>
                 </div>
             </div>
@@ -440,10 +440,5 @@ Agendamento de coletas
 <script src="{% static 'js/scheduler/scheduler.js' %}"></script>
 <script src="{% static 'js/scheduler/calendar.js' %}"></script>
 <script src="{% static 'js/scheduler/services.js' %}"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.css"
-    rel="stylesheet" />
-<script
-    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.pt-BR.min.js"></script>
 
 {% endblock %}

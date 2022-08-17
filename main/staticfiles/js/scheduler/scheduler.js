@@ -44,17 +44,26 @@ var repeat_finish_date;
 var calendar_mode = null; //daily, weekly, monthly or yearly
 
 var tasks;
+var task_being_edited = null;
 
-function open_new_scheduling() {    
-    $('#newScheduling').modal('show');
+function open_set_scheduling(creating_task = true) {
+    
+    if (creating_task) {
+        init_default_options();
+    }
+
+    $('#setSchedulingModal').modal('show');
 }
 
-function hide_new_scheduling() {
-    $('#newScheduling').modal('hide');
+function hide_set_scheduling() {
+    $('#setSchedulingModal').modal('hide');
+
+    if (task_being_edited)
+        task_being_edited = null;
 }
 
 function open_personalized_crawler_repetition() {
-    $('#newScheduling').modal('hide');
+    $('#setSchedulingModal').modal('hide');
     $('#personalizedCrawlerRepetion').modal('show');
 }
 
@@ -101,11 +110,18 @@ function toggle_weekday_select(el) {
 function init_default_options() {
     let curr_day = date.getDate();
     let weekday = date.getDay();
+
+    $('#crawl-selector').multiselect('select', ['no_selected']);
+    $('#no-repeat-sel-opt').prop('selected', true);
+    $('#wait-last-sel-opt').prop('selected', true);
+    $('#scheduling-time').val('')
     
-    $(`#medx-${curr_day}`).attr('selected', 'selected');
-    $(`#mfws-${weekday}`).attr('selected', 'selected');
-    $(`#mlws-${weekday}`).attr('selected', 'selected');
+    $(`#medx-${curr_day}`).prop('selected', true);
+    $(`#mfws-${weekday}`).prop('selected', true);
+    $(`#mlws-${weekday}`).prop('selected', true);
     $(`#dwr-${weekday}`).click();
+
+    $('#scheduling-personalized-repetition-info').css('display', 'none');
 
     let future_date = new Date()
     future_date.setFullYear(date.getFullYear() + 1);
@@ -120,6 +136,14 @@ function init_default_options() {
 
     $('#finish-date-in').val(parsed_date);
 
+    new_scheduling_config = {
+        crawl_request: null,
+        runtime: null,
+        crawler_queue_behavior: 'wait_on_last_queue_position',
+        repeat_mode: 'no_repeat',
+        personalized_repetition_mode: null
+    };
+
     repetion = {
         type: 'daily',
         interval: 1,
@@ -131,74 +155,70 @@ function init_default_options() {
     };
 }
 
-function update_repetition_info() {
-    
-    if (new_scheduling_config.repeat_mode != 'personalized') 
-        return;
-
+function repetition_to_text(repetition) {
     let s = '';
-    
-    switch (repetion.type) {
+
+    switch (repetition.type) {
         case 'daily':
-            if (repetion.interval == 1)
+            if (repetition.interval == 1)
                 s = 'Repete diariamente.'
-            
+
             else
-                s = `Repete a cada ${repetion.interval} dias.`
+                s = `Repete a cada ${repetition.interval} dias.`
 
             break;
-        
-        case 'weekly':
-            
-            if (repetion.additional_data.length > 0) {
-                if (repetion.interval == 1)
-                    s = 'Repete semanalmente aos/às ';
-    
-                else 
-                    s = `Repete a cada ${repetion.interval} semanas aos/às `
 
-                    let days = [];
+        case 'weekly':
+
+            if (repetition.additional_data.length > 0) {
+                if (repetition.interval == 1)
+                    s = 'Repete semanalmente aos/às ';
+
+                else
+                    s = `Repete a cada ${repetition.interval} semanas aos/às `
+
+                let days = [];
                 let day_number;
-                
-                for (let i = 0;i < repetion.additional_data.length;i++) {
-                    day_number = repetion.additional_data[i];
+
+                for (let i = 0; i < repetition.additional_data.length; i++) {
+                    day_number = repetition.additional_data[i];
                     days.push(day_number_to_weekday[day_number]);
                 }
-                
+
                 if (days.length == 1)
                     s += days[0] + '.';
 
                 else {
-                    for (let i=0;i<days.length-1;i++)
+                    for (let i = 0; i < days.length - 1; i++)
                         s += days[i] + ', '
                     s = s.substring(0, s.length - 2) + ` e ${days[days.length - 1]}.`;
 
                 }
 
-            } else 
+            } else
                 s = 'Repete semanalmente.'
 
             break
-        
-        case 'monthly':
-            if (repetion.interval == 1)
-                s = 'Repete mensalmente ';
-            
-            else 
-                s = `Repete a cada ${repetion.interval} meses `
 
-            switch (repetion.additional_data.type) {
+        case 'monthly':
+            if (repetition.interval == 1)
+                s = 'Repete mensalmente ';
+
+            else
+                s = `Repete a cada ${repetition.interval} meses `
+
+            switch (repetition.additional_data.type) {
                 case 'day-x':
-                    s += `no dia ${repetion.additional_data.value}.`;
+                    s += `no dia ${repetition.additional_data.value}.`;
                     break;
-                
+
                 case 'first-weekday':
 
-                    s += `no/na primeiro(a) ${day_number_to_weekday[repetion.additional_data.value]}.`
+                    s += `no/na primeiro(a) ${day_number_to_weekday[repetition.additional_data.value]}.`
                     break
 
                 case 'last-weekday':
-                    s += `no/na último(a) ${day_number_to_weekday[repetion.additional_data.value]}.`
+                    s += `no/na último(a) ${day_number_to_weekday[repetition.additional_data.value]}.`
                     break;
 
                 default:
@@ -208,40 +228,56 @@ function update_repetition_info() {
             break
 
         case 'yearly':
-            if (repetion.interval == 1)
+            if (repetition.interval == 1)
                 s = 'Repete anualmente.'
 
             else
-                s = `Repete a cada ${repetion.interval} anos.`
+                s = `Repete a cada ${repetition.interval} anos.`
 
-            break 
+            break
     }
 
-    switch (repetion.finish.type) {
+    switch (repetition.finish.type) {
         case 'occurrence':
-            s += ` Ocorre ${repetion.finish.additional_data} vezes.`
+            s += ` Ocorre ${repetition.finish.additional_data} vezes.`
             break;
-        
+
         case 'date':
-            s += ` Ocorre até ${repetion.finish.additional_data}.`
+            s += ` Ocorre até ${repetition.finish.additional_data}.`
             break;
 
         default:
             break;
     }
 
-    $('#repetition-info').text(s);
+    return s;    
+}
+
+function update_repetition_info() {
+    if (task_being_edited) {
+        scheduling_task = task_being_edited;
+        raw_repetition = scheduling_task.personalized_repetition_mode;
+    } else {
+        scheduling_task = new_scheduling_config;
+        raw_repetition = repetion; 
+    }
+    
+    if (scheduling_task.repeat_mode != 'personalized') 
+        return;
+
+    let parsed_repetition = repetition_to_text(raw_repetition);
+    $('#repetition-info').text(parsed_repetition);
 
     let personalized_repetition_info = $('#scheduling-personalized-repetition-info');
     personalized_repetition_info.css('display', 'inline-block');
-    personalized_repetition_info.text(s);
+    personalized_repetition_info.text(parsed_repetition);
 
-    new_scheduling_config.personalized_repetition_mode = repetion;
+    scheduling_task.personalized_repetition_mode = repetion;
 }
 
 function close_personalized_repetition_modal() {
     $('#personalizedCrawlerRepetion').modal('hide');
-    $('#newScheduling').modal('show');
+    $('#setSchedulingModal').modal('show');
 }
 
 function update_calendar_mode(mode) {
@@ -299,28 +335,42 @@ function sleep(ms) {
 }
 
 function valid_new_scheduling() {
+    if (task_being_edited)
+        scheduling_task = task_being_edited;
 
-    if (new_scheduling_config.crawl_request == null) {
+    else
+        scheduling_task = new_scheduling_config; 
+
+    if (scheduling_task.crawl_request == null) {
         alert('Escolha um coletor válido!');
         return;
     }
 
-    if (new_scheduling_config.runtime == null) {
+    if (scheduling_task.runtime == null) {
         alert('Escolha um horário válido!');
         return;
     }
 
-    if (new_scheduling_config.repeat_mode == 'personalized' 
-        && new_scheduling_config.personalized_repetition_mode.type == 'weekly'
-        && new_scheduling_config.personalized_repetition_mode.additional_data.length == 0) {
+    if (scheduling_task.repeat_mode == 'personalized' 
+        && scheduling_task.personalized_repetition_mode.type == 'weekly'
+        && scheduling_task.personalized_repetition_mode.additional_data.length == 0) {
         alert('Você configurou uma coleta personalizada semanal, porém não escolheu o(s) dia(s) que ela deve ocorrer!');
         return;
     }
 
-    services.save_new_scheduling(new_scheduling_config);
-
-    let year_month_day = new_scheduling_config.runtime.split('T')[0].split('-')
-    calendar.daily.active_day = new Date(parseInt(year_month_day[0]), parseInt(year_month_day[1]), parseInt(year_month_day[2])); 
+    
+    if (task_being_edited) {
+        services.save_updated_scheduling(task_being_edited);
+        task_being_edited = null;
+    }
+    
+    else
+    services.save_new_scheduling(scheduling_task);
+    
+    hide_set_scheduling();
+    
+    let year_month_day = scheduling_task.runtime.split('T')[0].split('-')
+    calendar.daily.active_day = new Date(parseInt(year_month_day[0]), parseInt(year_month_day[1]) - 1, parseInt(year_month_day[2])); 
 
     calendar.daily.show();
 }
@@ -354,7 +404,6 @@ function show_task_detail(task_id) {
     let since = cur_date > runtime ? 'Desde de ' : 'A partir de ';
     since += `${runtime.getDate()} de ${MONTHS[runtime.getMonth()]} de ${runtime.getFullYear()}.`;
 
-
     switch (task.repeat_mode) {
         case 'no_repeat':
             repetition_info = `${runtime.getDate()} de ${MONTHS[runtime.getMonth()]} de ${runtime.getFullYear()} às ${runtime.getHours()}h${String(runtime.getMinutes()).padStart(2, '0')}.`;
@@ -363,6 +412,7 @@ function show_task_detail(task_id) {
         
         case 'daily':
             repetition_info = `Repete diariamente às ${runtime.getHours()}h${String(runtime.getMinutes()).padStart(2, '0') }.`;
+            break;
 
         case 'weekly':
             let weedays = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
@@ -428,6 +478,27 @@ function show_task_detail(task_id) {
 
 }
 
+function edit_scheduling_task(task_id) {
+    $('#detailScheduling').modal('hide');
+
+    if (!tasks[task_id]) {
+        console.error('Invalid task id!');
+        return;
+    }
+
+    task_being_edited = {
+        id: tasks[task_id].id,
+        crawl_request: tasks[task_id].crawl_request,
+        runtime: tasks[task_id].runtime,
+        crawler_queue_behavior: tasks[task_id].crawler_queue_behavior,
+        repeat_mode: tasks[task_id].repeat_mode,
+        personalized_repetition_mode: tasks[task_id].personalized_repetition_mode
+    };
+
+    fill_set_scheduling(task_id);
+    open_set_scheduling(false);    
+}
+
 function delete_schedule_task(task_id) {
     $('#detailScheduling').modal('hide');
 
@@ -439,20 +510,23 @@ function delete_schedule_task(task_id) {
     services.delete_task(task_id);
 }
 
-function fill_new_scheduling_modal(task_id) {
+function fill_set_scheduling(task_id) {
     let task = tasks[task_id];
+
+    if (!task)
+        return;
 
     let runtime = task.runtime.substr(0, 16);
 
-    console.log(runtime);
-
-
-    $(`#crawl-selector option[value="${task.crawl_request}"]`).attr('selected', 'selected');
-    $(`#crawl-selector option[value="${task.crawl_request}"]`).prop("disabled", true);
+    $(`#crawl-selector option[value='${task.crawl_request}']`).attr('selected', 'selected');
     $('#scheduling-time').val(runtime);
-    $(`#repeat-crawling-select option[value="${task.repeat_mode}"]`).attr('selected', 'selected');
-    $(`#crawler_queue_behavior option[value="${task.crawler_queue_behavior}"]`).attr('selected', 'selected');
+    $(`#repeat-crawling-select option[value='${task.repeat_mode}']`).attr('selected', 'selected');
+    $(`#crawler_queue_behavior option[value='${task.crawler_queue_behavior}']`).attr('selected', 'selected');
+    
 
+    $('#scheduling-personalized-repetition-info').css('display', 'none');
+
+    $(`#crawl-selector`).multiselect('rebuild');
 }
 
 $(document).ready(function () {
@@ -467,23 +541,28 @@ $(document).ready(function () {
         maxHeight: 380,
         maxWidth: 240,
         enableCaseInsensitiveFiltering: true,
-        
     });
 
     // $('#personalizedCrawlerRepetion').modal('show');
 
-    // $('#newScheduling').modal('show');
+    // $('#setSchedulingModal').modal('show');
 
     $('#repeat-crawling-select').on('click', function () {
         let repeat_mode = $(this).val();
 
-        new_scheduling_config.repeat_mode = repeat_mode;
+        if (task_being_edited)
+            scheduling_task = task_being_edited;
+
+        else
+            scheduling_task = new_scheduling_config; 
+
+        scheduling_task.repeat_mode = repeat_mode;
 
         if (repeat_mode == 'personalized') {
             update_repetition_info();
             open_personalized_crawler_repetition();
         } else {
-            new_scheduling_config.personalized_repetition_mode = null;
+            scheduling_task.personalized_repetition_mode = null;
             $('#scheduling-personalized-repetition-info').css('display', 'none');
         }
         
@@ -700,15 +779,33 @@ $(document).ready(function () {
     });
     
     $('#crawler_queue_behavior').on('change', function () {
-        new_scheduling_config.crawler_queue_behavior = $(this).val();    
+        if (task_being_edited)
+            scheduling_task = task_being_edited;
+
+        else
+            scheduling_task = new_scheduling_config; 
+
+        scheduling_task.crawler_queue_behavior = $(this).val();    
     });
 
     $('#scheduling-time').on('change', function () {
-       new_scheduling_config.runtime = $(this).val(); 
+        if (task_being_edited)
+            scheduling_task = task_being_edited;
+
+        else
+            scheduling_task = new_scheduling_config; 
+
+        scheduling_task.runtime = $(this).val(); 
     });
 
     $('#crawl-selector').on('change', function() {
-        new_scheduling_config.crawl_request = parseInt($(this).val());
+        if (task_being_edited)
+            scheduling_task = task_being_edited;
+
+        else
+            scheduling_task = new_scheduling_config; 
+
+        scheduling_task.crawl_request = parseInt($(this).val());
     });
 
     update_calendar_mode('daily');
