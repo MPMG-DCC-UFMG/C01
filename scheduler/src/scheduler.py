@@ -63,11 +63,11 @@ class Scheduler:
         runtime = task_data["data"]["runtime"][-9:-1]
 
         if task_data["data"]["repeat_mode"] == "no_repeat":
-            params = [run_crawler_once, task_data["data"]["id"], task_data["data"]["crawler_queue_behavior"]]
+            params = [run_crawler_once, task_data["data"]["crawl_request"], task_data["data"]["crawler_queue_behavior"]]
             schedule.every().day.at(runtime).do(*params)
             return 
 
-        params = [run_crawler, task_data["data"]["id"], task_data["data"]["crawler_queue_behavior"]]
+        params = [run_crawler, task_data["data"]["crawl_request"], task_data["data"]["crawler_queue_behavior"]]
 
         if task_data["data"]["repeat_mode"] == "daily":
             job = schedule.every().day.at(runtime).do(*params)
@@ -81,7 +81,7 @@ class Scheduler:
 
             # runs once to include today's day
             if now <= runtime_datetime:
-                params = [run_crawler_once, task_data["data"]["id"], task_data["data"]["crawler_queue_behavior"]]
+                params = [run_crawler_once, task_data["data"]["crawl_request"], task_data["data"]["crawler_queue_behavior"]]
                 schedule.every().day.at(runtime).do(*params)
                 
             # Weekly repetition (which does not consider the current day)
