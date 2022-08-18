@@ -1,48 +1,42 @@
-from django.conf import settings
-from django.utils import timezone
-from django.db import transaction
-from django.db.models import Q
-
-from django.http import HttpResponseRedirect, JsonResponse, \
-    FileResponse, HttpResponseNotFound, HttpResponse
-from django.shortcuts import render, get_object_or_404, redirect
-from django.core.exceptions import ObjectDoesNotExist
-from django.core.paginator import Paginator
-from django.db.models import Q
-
-from rest_framework import viewsets
-from rest_framework import status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-
-from .forms import CrawlRequestForm, RawCrawlRequestForm,\
-    ResponseHandlerFormSet, ParameterHandlerFormSet
-from .models import CrawlRequest, CrawlerInstance, CrawlerQueue, CrawlerQueueItem, Log, CRAWLER_QUEUE_DB_ID
-
-from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer, CrawlerQueueSerializer
-
-from crawler_manager.constants import *
-
-from datetime import datetime
-import json
 import base64
-import itertools
 import json
 import logging
-import time
-import os
 import multiprocessing as mp
+import os
+import time
 from datetime import datetime
+from typing_extensions import Literal
 
 import crawler_manager.crawler_manager as crawler_manager
+from crawler_manager.settings import TASK_TOPIC
+from crawler_manager.constants import *
 
+from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.db.models import Q
+from django.http import (FileResponse, HttpResponse, HttpResponseNotFound,
+                         HttpResponseRedirect, JsonResponse)
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from scrapy_puppeteer import iframe_loader
+
+from .forms import (CrawlRequestForm, ParameterHandlerFormSet,
+                    RawCrawlRequestForm, ResponseHandlerFormSet)
+from .models import (CRAWLER_QUEUE_DB_ID, CrawlerInstance, CrawlerQueue,
+                     CrawlerQueueItem, CrawlRequest, Log, Task)
+from .serializers import (CrawlerInstanceSerializer, CrawlerQueueSerializer,
+                          CrawlRequestSerializer, TaskSerializer)
+from .task_filter import task_filter_by_date_interval
 
 # Log the information to the file logger
 logger = logging.getLogger('file')
 
 # Helper methods
-
 
 try:
     CRAWLER_QUEUE = CrawlerQueue.object()
@@ -82,7 +76,7 @@ def process_run_crawl(crawler_id):
     return instance
 
 
-def add_crawl_request(crawler_id):
+def add_crawl_request(crawler_id, wait_on: Literal['last_position', 'first_position', 'no_wait'] = 'last_position'):
     already_in_queue = CrawlerQueueItem.objects.filter(crawl_request_id=crawler_id).exists()
 
     if already_in_queue:
@@ -91,19 +85,37 @@ def add_crawl_request(crawler_id):
     crawl_request = CrawlRequest.objects.get(pk=crawler_id)
     cr_expec_runtime_cat = crawl_request.expected_runtime_category
 
-    # The new element of the crawler queue must be in the correct position (after the last added) and
-    # in the correct queue: fast, normal or slow
+    if wait_on == 'no_wait':
+        queue_item = CrawlerQueueItem(crawl_request_id=crawler_id,
+                                    position=CrawlerQueueItem.NO_WAIT_POSITION,
+                                    running=True,
+                                    forced_execution=True,
+                                    queue_type=cr_expec_runtime_cat)
+        queue_item.save()
 
-    position = 1
-    last_queue_item_created = CrawlerQueueItem.objects.filter(queue_type=cr_expec_runtime_cat).last()
+    else:
+        # The new element of the crawler queue must be in the correct position (after the last added) and
+        # in the correct queue: fast, normal or slow
 
-    if last_queue_item_created:
-        position = last_queue_item_created.position + 1
+        position = 0
 
-    queue_item = CrawlerQueueItem(crawl_request_id=crawler_id,
-                                position=position,
-                                queue_type=cr_expec_runtime_cat)
-    queue_item.save()
+        if wait_on == 'first_position':
+            first_queue_item_created = CrawlerQueueItem.objects.filter(
+                queue_type=cr_expec_runtime_cat).order_by('position').first()
+                
+            if first_queue_item_created:
+                position = first_queue_item_created.position - 1
+
+        else:
+            last_queue_item_created = CrawlerQueueItem.objects.filter(
+                queue_type=cr_expec_runtime_cat).order_by('position').last()
+            if last_queue_item_created:
+                position = last_queue_item_created.position + 1
+
+        queue_item = CrawlerQueueItem(crawl_request_id=crawler_id,
+                                    position=position,
+                                    queue_type=cr_expec_runtime_cat)
+        queue_item.save()
 
 
 def remove_crawl_request(crawler_id):
@@ -684,6 +696,13 @@ def load_iframe(request):
         return render(request, 'main/error_iframe_loader.html', ctx)
 
 
+def scheduler(request):
+    crawl_requests = CrawlRequest.objects.all()
+    context = {
+        'crawl_requests': crawl_requests
+    }
+    return render(request, 'main/scheduler.html', context)
+
 # API
 ########
 
@@ -721,11 +740,34 @@ class CrawlerViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def run(self, request, pk):
+        query_params = self.request.query_params.dict()
+        action = query_params.get('action', '')
 
-        # instance = None
+        if action == 'run_immediately':
+            wait_on = 'no_wait'
+
+            add_crawl_request(pk, wait_on)
+            instance = process_run_crawl(pk)
+            data = {
+                'status': settings.API_SUCCESS,
+                'instance': CrawlerInstanceSerializer(instance).data
+            }
+
+            return JsonResponse(data)
+
+        elif action == 'wait_on_first_queue_position':
+            wait_on = 'first_position'
+
+        else: 
+            wait_on = 'last_position'
+
         try:
-            add_crawl_request(pk)
-            unqueue_crawl_requests()
+            add_crawl_request(pk, wait_on)
+
+            crawl_request = CrawlRequest.objects.get(pk=pk)
+            queue_type = crawl_request.expected_runtime_category
+
+            unqueue_crawl_requests(queue_type)
 
         except Exception as e:
             data = {
@@ -734,9 +776,15 @@ class CrawlerViewSet(viewsets.ModelViewSet):
             }
             return JsonResponse(data)
 
+        if wait_on == 'first_position':
+            message = f'Crawler added to crawler queue in first position'
+
+        else:
+            message = f'Crawler added to crawler queue in last position'
+
         data = {
             'status': settings.API_SUCCESS,
-            'message': f'Crawler added to crawler queue'
+            'message': message
         }
 
         return JsonResponse(data)
@@ -874,3 +922,89 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
             unqueue_crawl_requests('slow')
 
         return response
+
+
+class TaskViewSet(viewsets.ModelViewSet):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+
+    def create(self, request):
+        response = super().create(request)
+        if response.status_code == status.HTTP_201_CREATED:
+            message = {
+                'action': 'create',
+                'data': response.data
+            }
+            crawler_manager.message_sender.send(TASK_TOPIC, message)
+        return response
+
+    def update(self, request, pk=None):
+        response = super().update(request, pk=pk)
+        if response.status_code == status.HTTP_200_OK:
+            message = {
+                'action': 'update',
+                'data': response.data
+            }
+            crawler_manager.message_sender.send(TASK_TOPIC, message)
+        return response
+
+    def partial_update(self, request, pk=None):
+        response = super().partial_update(request, pk=pk)
+        if response.status_code == status.HTTP_200_OK:
+            message = {
+                'action': 'update',
+                'data': response.data
+            }
+            crawler_manager.message_sender.send(TASK_TOPIC, message)
+        return response
+
+    def destroy(self, request, pk=None):
+        response = super().destroy(request, pk=pk)
+        if response.status_code == status.HTTP_204_NO_CONTENT:
+            message = {
+                'action': 'cancel',
+                'data': {
+                    'id': pk
+                }
+            }
+        crawler_manager.message_sender.send(TASK_TOPIC, message)
+        return response
+
+    def __str2date(self, s: str) -> datetime:
+        date = None
+
+        try:
+            date = datetime.strptime(s, '%d-%m-%Y')
+
+        except Exception as e:
+            print(e)
+
+        return date
+
+    @action(detail=False)
+    def filter(self, request):
+        query_params = self.request.query_params.dict()
+
+        end_date = None
+        start_date = None
+
+        if 'end_date' in query_params:
+            end_date = self.__str2date(query_params['end_date'])
+
+            start_date = None
+            if 'start_date' in query_params:
+                start_date = self.__str2date(query_params['start_date'])
+        if end_date is None or start_date is None:
+            msg = {'message': 'You must send the params start_date and end_date, both in the format day-month-year' +
+                   ' in the query params of the url. Eg.: <api_address>?start_date=23-04-2023&end_date=01-01-2020, etc.'}
+
+            return Response(msg, status=status.HTTP_400_BAD_REQUEST)
+
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+
+        # serializer.data is ordered_dict
+        tasks = json.loads(json.dumps(serializer.data))
+        data = task_filter_by_date_interval(tasks, start_date, end_date)
+
+        return Response(data, status=status.HTTP_200_OK)
