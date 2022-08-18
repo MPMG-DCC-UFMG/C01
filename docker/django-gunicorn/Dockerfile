@@ -41,6 +41,10 @@ ENV INSTALL_KAFKA=$INSTALL_KAFKA
 
 RUN python3 web_install.py
 
+# install Playwright
+RUN playwright install-deps
+RUN playwright install
+
 RUN mkdir /data
 RUN chown django:django /data
 
