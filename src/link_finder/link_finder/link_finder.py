@@ -55,7 +55,7 @@ class LinkFinder:
             except:
                 continue
 
-    def get_urls(self, seed_url: str, max_depth: int = 2, allowed_domains: List[str] = [], 
+    def get_urls(self, seed_url: str, max_depth: int = 1, allowed_domains: List[str] = [], 
                         page_must_have_text: List[str] = [''], browser_headless_mode: bool = True) -> Set[str]:
         with sync_playwright() as playwright:
             self.browser = playwright.chromium.launch(headless=browser_headless_mode)
