@@ -38,6 +38,8 @@ import crawler_manager.crawler_manager as crawler_manager
 
 from scrapy_puppeteer import iframe_loader
 
+from link_finder import LinkFinder 
+
 # Log the information to the file logger
 logger = logging.getLogger('file')
 
@@ -923,18 +925,22 @@ def urls_scanning(request):
         coverage_matrix.append(url_coverage)
     
     # found_urls = CrawlRequest.objects.values('base_url').all()[:40]
+    link_finder = LinkFinder()
+    links_founds = link_finder.get_urls('https://www.google.com/')
 
     context = {
         'tags': tags,
         'seed_urls': seed_urls,
         'coverage_matrix': coverage_matrix,
-        'range': range(10)
+        'range': range(10),
+        'links_founds': links_founds
     }
 
 
     if request.method == "POST":
         return render(request, "main/urls_scanning_result.html", context)
     
+
     return render(request, "main/urls_scanning.html", context)
 
 # API
