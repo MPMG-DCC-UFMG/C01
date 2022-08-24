@@ -53,6 +53,7 @@ services:
             - 8000
         env_file:
             - ./docker/config/.env
+            - ./docker/config/${DEBUGENV}.env
         depends_on:
             kafka:
                 condition: service_healthy
