@@ -1,7 +1,8 @@
-import cgi
+import chunk
 import datetime
 import json
 import magic
+import hashlib
 import mimetypes
 import os
 import pathlib
@@ -236,7 +237,7 @@ class StaticPageSpider(BaseSpider):
             # Pending downloads in chrome have the .crdownload extension.
             # So, if any of these files exist, we know that a download is
             # running.
-            pending_downloads = glob(f'{temp_download_path}*.crdownload')
+            pending_downloads = glob(f'{temp_download_path}*.crdownload*')
             return len(pending_downloads) > 0
 
         for _ in range(DOWNLOAD_START_TIMEOUT):
@@ -253,6 +254,15 @@ class StaticPageSpider(BaseSpider):
             os.rename(os.path.join(temp_download_path, f), os.path.join(download_path, f))
 
         shutil.rmtree(temp_download_path)
+
+    def get_file_hash(self, filepath: str) -> str:
+        content_hash = hashlib.md5()
+        with open(filepath, 'rb') as downloaded_file:
+            chunk = downloaded_file.read(1024)
+            while chunk != b'':
+                content_hash.update(chunk)
+                chunk = downloaded_file.read(1024)
+        return content_hash.hexdigest()
 
     def generate_file_descriptions(self, download_path):
         """Generates descriptions for downloaded files."""
@@ -278,12 +288,14 @@ class StaticPageSpider(BaseSpider):
                 # So, we get only the filename.ext in the next line
                 file_name = file_with_extension.split('/')[-1]
 
+
                 description = {
                     'url': '<triggered by dynamic page click>',
                     'file_name': file_name,
                     'crawler_id': self.config['crawler_id'],
                     'instance_id': self.config['instance_id'],
                     'crawled_at_date': str(creation_time),
+                    'content_hash': self.get_file_hash(file_with_extension),
                     'referer': '<from unique dynamic crawl>',
                     'type': ext.replace('.', '') if ext != '' else '<unknown>',
                 }

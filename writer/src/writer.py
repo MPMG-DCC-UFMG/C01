@@ -87,6 +87,8 @@ class Writer:
 
         relative_path = os.path.join(instance_path, 'data', 'raw_pages', f'{hsh}.html')
 
+        content_hash = hashlib.md5(raw_body.encode()).hexdigest() 
+
         description = {
             'file_name': f"{hsh}.html",
             'encoding': encoding,
@@ -97,7 +99,8 @@ class Writer:
             'type': crawled_data['content_type'],
             'crawled_at_date': crawled_data['crawled_at_date'],
             'referer': crawled_data['referer'],
-            "attrs": crawled_data['attrs']
+            'content_hash': content_hash,
+            'attrs': crawled_data['attrs']
         }
 
         if encoding is None:

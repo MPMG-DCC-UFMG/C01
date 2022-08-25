@@ -114,7 +114,7 @@ class FileDownloader:
                 'referer': referer,
                 'filetype': '',
                 'filename': '',
-                "attrs": crawled_data['attrs'],
+                'attrs': crawled_data['attrs'],
                 'data_path': data_path,
                 'crawled_at_date': ''
             }
