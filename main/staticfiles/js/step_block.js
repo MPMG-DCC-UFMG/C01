@@ -550,7 +550,7 @@ function refresh_steps_option_below_index(index) {
         return;
 
     for (let i = start_index; i < step_blocks.length; i++) {
-        let context = get_insertion_index_context(index, 'down')
+        let context = get_insertion_index_context(i, 'up')
         refresh_step_options(step_blocks[i], context)
     }
 }
