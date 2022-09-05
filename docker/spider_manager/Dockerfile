@@ -43,5 +43,6 @@ RUN playwright install-deps
 RUN playwright install
 
 COPY spider_manager/src /usr/src/app
+COPY settings.py /usr/src/app/
 
 ENTRYPOINT [ "python3", "command_listener.py" ]

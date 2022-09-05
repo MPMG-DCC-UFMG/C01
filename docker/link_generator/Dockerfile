@@ -16,5 +16,6 @@ WORKDIR /usr/src/app
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY link_generator/src /usr/src/app
+COPY settings.py /usr/src/app/
 
 ENTRYPOINT [ "python", "main.py" ]

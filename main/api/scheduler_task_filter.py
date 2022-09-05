@@ -5,7 +5,7 @@ from typing import Dict, List, Union
 
 from typing_extensions import Literal
 
-from .models import TaskType
+from ..models import TaskType
 
 # adapta a saída dos dias da semana da biblioteca para que os dias da semana comecem
 # domingo (dia 0)
@@ -267,7 +267,7 @@ def process_yearly_repeat_mode(filtered_tasks_ids: Dict[str, int],
         num_occorrences += 1
 
 
-def task_filter_by_date_interval(tasks: List[TaskType], start_date: datetime, end_date: datetime) -> Dict[str, int]:
+def scheduler_task_filter_by_date_interval(tasks: List[TaskType], start_date: datetime, end_date: datetime) -> Dict[str, int]:
     filtered_tasks_ids: Dict[str, int] = dict()
 
     for task in tasks:

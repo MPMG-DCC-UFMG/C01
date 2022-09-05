@@ -195,3 +195,5 @@ if env('LOG_TO_FILE'):
 
 # Folder where collector outputs are stored
 OUTPUT_FOLDER = env('OUTPUT_FOLDER')
+
+IMGS_PER_PAGE = 20

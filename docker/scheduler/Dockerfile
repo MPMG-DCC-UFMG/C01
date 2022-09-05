@@ -12,6 +12,8 @@ WORKDIR /usr/src/app
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY scheduler/src /usr/src/app
+COPY settings.py /usr/src/app/
+
 USER root
 
 ENV TZ=America/Sao_Paulo

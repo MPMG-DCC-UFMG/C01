@@ -1,13 +1,11 @@
 from rest_framework import serializers
 
-from .models import CrawlRequest, CrawlerInstance, CrawlerQueue, CrawlerQueueItem, Task
-
+from .models import CrawlRequest, CrawlerInstance, CrawlerQueue, CrawlerQueueItem, SchedulerTask
 
 class CrawlerInstanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = CrawlerInstance
         fields = '__all__'
-
 
 class CrawlRequestSerializer(serializers.ModelSerializer):
     instances = CrawlerInstanceSerializer(many=True, read_only=True)
@@ -23,7 +21,6 @@ class CrawlRequestSerializer(serializers.ModelSerializer):
 class TimestampField(serializers.Field):
     def to_representation(self, value):
         return round(value.timestamp() * 1000)
-
 
 class CrawlerQueueItemSerializer(serializers.ModelSerializer):
     # crawl_request = CrawlRequestSerializer(many=False, read_only=True)
@@ -48,12 +45,11 @@ class CrawlerQueueSerializer(serializers.ModelSerializer):
 
         fields = '__all__'
 
-
-class TaskSerializer(serializers.ModelSerializer):
+class SchedulerTaskSerializer(serializers.ModelSerializer):
     crawler_name = serializers.ReadOnlyField(source='crawl_request.source_name')
 
     class Meta:
-        model = Task
+        model = SchedulerTask
         read_only_fields = ['id', 'creation_date', 'last_modified']
 
         fields = ['id', 'creation_date', 'last_modified', 'crawl_request', 'runtime', 'crawler_name',
