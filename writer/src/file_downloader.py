@@ -56,7 +56,7 @@ class FileDownloader:
                             max_partition_fetch_bytes=settings.KAFKA_CONSUMER_FETCH_MESSAGE_MAX_BYTES)
 
         for message in consumer:
-            try:
+            # try:
                 print(f'\t[{datetime.now()}][FILE-DOWNLOADER] {worker_name} Worker: Processing new download request. topic={message.topic} partition={message.partition} offset={message.offset}')
 
                 message_decoded = ujson.loads(message.value.decode('utf-8')) 
@@ -69,8 +69,10 @@ class FileDownloader:
 
                 download_request = self.__parse_message(message_decoded)
 
+
                 if download_request.exec_download(worker_name):
-                    if download_request.content_hash in self.__hashes_of_already_crawled_files:
+                    if download_request.content_hash in self.__hashes_of_already_crawled_files[crawler_id]:
+                        print(f'\t[{datetime.now()}] [FILE-DOWNLOADER] {worker_name} Worker: File already crawled in a previous instance. Ignoring...')
                         download_request.cancel()
 
                     else:
@@ -80,11 +82,11 @@ class FileDownloader:
 
                 del download_request
             
-            except Exception as e:
-                print(f'\t[{datetime.now()}] [FILE-DOWNLOADER] {worker_name} Worker: Error processing download request: "{e}"')
+            # except Exception as e:
+            #     print(f'\t[{datetime.now()}] [FILE-DOWNLOADER] {worker_name} Worker: Error processing download request: "{e}"')
 
     def __get_hashes_of_already_crawled(self, data_path: str) -> set:
-        data_path = data_path if data_path[-1] == '/' else f'{data_path[-1]}/'
+        data_path = data_path if data_path[-1] == '/' else f'{data_path}/'
 
         root_path = os.path.join(settings.OUTPUT_FOLDER, data_path)
         root_path_rgx = f'{root_path}*/data/files/file_description.jsonl'

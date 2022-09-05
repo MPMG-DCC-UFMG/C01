@@ -43,7 +43,7 @@ class DownloadRequest:
             str(instance_id), 'data', 'files', self.filename)
 
         self.data_path = data_path
-        self.content_hash = ''
+        self.content_hash = None
         self.crawled_at_date = crawled_at_date
 
 
@@ -109,10 +109,11 @@ class DownloadRequest:
                     time.sleep(attempt * INTERVAL_BETWEEN_ATTEMPTS)
                     continue
                 
-                with open(self.path_to_save, 'wb') as f:
+                with open(self.temp_path_to_save, 'wb') as f:
                     for chunk in req.iter_content(chunk_size=8192):
                         f.write(chunk)
                         self.content_hash.update(chunk)
+                    self.content_hash = self.content_hash.hexdigest()
                     break
 
         if attempt == MAX_ATTEMPTS:
@@ -141,7 +142,7 @@ class DownloadRequest:
             'file_name': self.filename,
             'type': self.filetype,
             'attrs': self.attrs,
-            'content_hash': self.content_hash.hexdigest(),
+            'content_hash': self.content_hash,
             'crawled_at_date': self.crawled_at_date,
             'extracted_files': [
 
