@@ -6,6 +6,7 @@ import os
 
 from kafka import KafkaConsumer
 from coolname import generate_slug
+from bs4 import BeautifulSoup
 
 import settings
 
@@ -73,6 +74,10 @@ class Writer:
         print(f'[{datetime.now()}] Writer: Stoping crawler with ID {crawler_id}')
         self.__file_downloader.remove_crawler_source(crawler_id)
 
+    def __get_html_body_hash(self, raw_body: str) -> str:
+        soup = BeautifulSoup(raw_body, 'html.parser')
+        return hashlib.md5(soup.text.encode()).hexdigest() 
+    
     def __persist_html(self, crawled_data: dict):
         crawler_id = str(crawled_data['crawler_id'])
         encoding = crawled_data['encoding']
@@ -87,7 +92,7 @@ class Writer:
 
         relative_path = os.path.join(instance_path, 'data', 'raw_pages', f'{hsh}.html')
 
-        content_hash = hashlib.md5(raw_body.encode()).hexdigest() 
+        content_hash = self.__get_html_body_hash(raw_body)
 
         description = {
             'file_name': f"{hsh}.html",
