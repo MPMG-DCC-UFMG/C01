@@ -17,6 +17,7 @@ class FileDownloader:
                                         value_serializer=lambda m: ujson.dumps(m).encode('utf-8'))
         self.__crawlers_running = set()
         self.__download_urls_already_seen = dict()
+        self.__hashes_of_already_crawled_files = dict()
 
     def __parse_message(self, message: dict) -> DownloadRequest:
         return DownloadRequest(**message)
@@ -67,24 +68,37 @@ class FileDownloader:
                 download_request = self.__parse_message(message_decoded)
 
                 if download_request.exec_download(worker_name):
-                    description = download_request.get_description()
-                    self.__feed_download_description(description)
+                    if download_request.content_hash in self.__hashes_of_already_crawled_files:
+                        download_request.cancel()
+
+                    else:
+                        download_request.save()
+                        description = download_request.get_description()
+                        self.__feed_download_description(description)
 
                 del download_request
             
             except Exception as e:
                 print(f'\t[{datetime.now()}] [FILE-DOWNLOADER] {worker_name} Worker: Error processing download request: "{e}"')
 
-    def add_crawler_source(self, crawler_id: str):
+    def __get_hashes_of_already_crawled(self, data_path: str) -> set:
+        # TODO
+        pass 
+
+    def add_crawler_source(self, crawler_id: str, data_path: str):
         self.__crawlers_running.add(crawler_id)
         self.__download_urls_already_seen[crawler_id] = set()
+        self.__hashes_of_already_crawled_files[crawler_id] = self.__get_hashes_of_already_crawled(data_path)
 
     def remove_crawler_source(self, crawler_id: str):
-        try:
+        if crawler_id in self.__crawlers_running:
             self.__crawlers_running.remove(crawler_id)
+
+        if crawler_id in self.__download_urls_already_seen: 
             del self.__download_urls_already_seen[crawler_id]
-        except KeyError:
-            pass 
+
+        if crawler_id in self.__hashes_of_already_crawled_files:
+            del self.__hashes_of_already_crawled_files[crawler_id]
 
     def feed(self, crawled_data: dict, data_path=str):
         urls = crawled_data['files_found'] + crawled_data['images_found']

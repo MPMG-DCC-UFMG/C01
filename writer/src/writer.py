@@ -48,6 +48,7 @@ class Writer:
             f'{instance_path}/data/raw_pages/',
             f'{instance_path}/data/csv/',
             f'{instance_path}/data/files/',
+            f'{instance_path}/data/files/temp/',
             f'{instance_path}/data/screenshots/',
         ]
 
@@ -68,7 +69,8 @@ class Writer:
 
         self.__crawls_running[crawler_id] = config
         self.__create_folder_structure(config)
-        self.__file_downloader.add_crawler_source(crawler_id)
+
+        self.__file_downloader.add_crawler_source(crawler_id, config['data_path'])
         
     def __stop_crawl(self, crawler_id: str):
         print(f'[{datetime.now()}] Writer: Stoping crawler with ID {crawler_id}')

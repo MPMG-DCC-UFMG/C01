@@ -35,8 +35,13 @@ class DownloadRequest:
         self.referer = referer
         self.filetype = filetype if bool(filetype) else self.__detect_filetype()
         self.filename = filename if bool(filename) else self.__generate_filename()
+        
+        self.temp_path_to_save = os.path.join(settings.OUTPUT_FOLDER, data_path,
+            str(instance_id), 'data', 'files', 'temp', self.filename)
+
         self.path_to_save = os.path.join(settings.OUTPUT_FOLDER, data_path,
             str(instance_id), 'data', 'files', self.filename)
+
         self.data_path = data_path
         self.content_hash = ''
         self.crawled_at_date = crawled_at_date
@@ -110,7 +115,6 @@ class DownloadRequest:
                         self.content_hash.update(chunk)
                     break
 
-
         if attempt == MAX_ATTEMPTS:
             notify_file_downloaded_with_error(self.instance_id)
             return False
@@ -119,6 +123,12 @@ class DownloadRequest:
             self.crawled_at_date = str(datetime.today())
             notify_file_downloaded_successfully(self.instance_id)
             return True
+
+    def cancel(self):
+        os.remove(self.temp_path_to_save) 
+
+    def save(self):
+        os.replace(self.temp_path_to_save, self.path_to_save)
 
     def get_description(self) -> dict:
         return {
