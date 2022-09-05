@@ -1,6 +1,8 @@
 import os
 import threading
 import ujson
+
+from glob import glob
 from datetime import datetime
 
 from kafka import KafkaConsumer, KafkaProducer
@@ -82,8 +84,20 @@ class FileDownloader:
                 print(f'\t[{datetime.now()}] [FILE-DOWNLOADER] {worker_name} Worker: Error processing download request: "{e}"')
 
     def __get_hashes_of_already_crawled(self, data_path: str) -> set:
-        # TODO
-        pass 
+        data_path = data_path if data_path[-1] == '/' else f'{data_path[-1]}/'
+
+        root_path = os.path.join(settings.OUTPUT_FOLDER, data_path)
+        root_path_rgx = f'{root_path}*/data/files/file_description.jsonl'
+        description_files = glob(root_path_rgx)
+
+        hashes = set()
+        for description_file in description_files:
+            with open(description_file) as file:
+                for line in file.readlines():
+                    hash = ujson.loads(line)['content_hash'] 
+                    hashes.add(hash)
+                    
+        return hashes
 
     def add_crawler_source(self, crawler_id: str, data_path: str):
         self.__crawlers_running.add(crawler_id)
