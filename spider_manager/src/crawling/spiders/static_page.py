@@ -237,7 +237,7 @@ class StaticPageSpider(BaseSpider):
                     
         return hashes
 
-    def block_until_downloads_complete(self, data_path, instance_id):
+    def block_until_downloads_complete(self, data_path, instance_id, ignore_data_crawled_in_previous_instances):
         """
         Blocks the flow of execution until all files are downloaded, and then
         moves files from the temporary folder to the final one.
@@ -263,7 +263,9 @@ class StaticPageSpider(BaseSpider):
         while pending_downloads_exist():
             time.sleep(1)
 
-        hashes_of_already_crawled_files = self.get_hashes_of_already_crawled(data_path)
+        hashes_of_already_crawled_files = set()
+        if ignore_data_crawled_in_previous_instances:
+            hashes_of_already_crawled_files = self.get_hashes_of_already_crawled(data_path)
 
         # Copy files to proper location
         allfiles = os.listdir(temp_download_path)
@@ -370,8 +372,12 @@ class StaticPageSpider(BaseSpider):
         for entry in list(page_dict.values()):
             results.append(self.page_to_response(entry, response))
 
+        ignore_data_crawled_in_previous_instances = self.config['ignore_data_crawled_in_previous_instances']
+
         # Maybe move this to the end of the whole parsing method
-        self.block_until_downloads_complete(os.path.join(output_folder, data_path), instance_id)
+        self.block_until_downloads_complete(os.path.join(output_folder, data_path), instance_id, 
+                                            ignore_data_crawled_in_previous_instances)
+                                            
         self.generate_file_descriptions(download_path)
 
         # TODO ideally the page would be closed here or at the end of the parse

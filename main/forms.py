@@ -13,6 +13,7 @@ class CrawlRequestForm(forms.ModelForm):
             'source_name',
             'base_url',
             'obey_robots',
+            'ignore_data_crawled_in_previous_instances',
             'captcha',
             'crawler_description',
             'crawler_type_desc',
@@ -106,6 +107,12 @@ class RawCrawlRequestForm(CrawlRequestForm):
         }),
         help_text="A URL pode conter espaços para parâmetros, representados como um conjunto de chaves vazias {}. Os parâmetros são configurados na aba URL Parametrizada."
     )
+
+    ignore_data_crawled_in_previous_instances = forms.BooleanField(
+            required=False,
+            initial=True, 
+            label="Ignorar dados já coletados em instâncias anteriores")
+
     obey_robots = forms.BooleanField(
         required=False, label="Obedecer robots.txt")
 

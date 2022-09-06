@@ -1,4 +1,5 @@
 import datetime
+from statistics import mode
 from typing import List, Union
 
 from crawler_manager.constants import *
@@ -34,7 +35,11 @@ class CrawlRequest(TimeStamped):
     source_name = models.CharField(max_length=200)
     base_url = models.TextField()
     obey_robots = models.BooleanField(blank=True, null=True)
+    
+    ignore_data_crawled_in_previous_instances = models.BooleanField(blank=True, null=True, default=True)
+
     crawler_description = models.TextField(default='')
+
     CRAWLERS_TYPES = [
         ('Contratos', 'Contratos'),
         ('Despesas', 'Despesas'),

@@ -101,10 +101,13 @@ class FileDownloader:
                     
         return hashes
 
-    def add_crawler_source(self, crawler_id: str, data_path: str):
+    def add_crawler_source(self, crawler_id: str, data_path: str, ignore_data_crawled_in_previous_instances: bool):
         self.__crawlers_running.add(crawler_id)
         self.__download_urls_already_seen[crawler_id] = set()
-        self.__hashes_of_already_crawled_files[crawler_id] = self.__get_hashes_of_already_crawled(data_path)
+
+        self.__hashes_of_already_crawled_files[crawler_id] = set()
+        if ignore_data_crawled_in_previous_instances:
+            self.__hashes_of_already_crawled_files[crawler_id] = self.__get_hashes_of_already_crawled(data_path)
 
     def remove_crawler_source(self, crawler_id: str):
         if crawler_id in self.__crawlers_running:
