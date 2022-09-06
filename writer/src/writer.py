@@ -18,6 +18,7 @@ from file_descriptor import FileDescriptor
 
 from crawling_utils import notify_page_crawled_successfully, hash
 
+
 class Writer:
     def __init__(self) -> None:
         self.__crawls_running = dict()
@@ -40,7 +41,7 @@ class Writer:
 
         self.__crawled_data_consumer_threads = list()
 
-    
+
     def __get_hashes_of_already_crawled(self, data_path: str) -> set:
         data_path = data_path if data_path[-1] == '/' else f'{data_path}/'
 
@@ -52,9 +53,9 @@ class Writer:
         for description_file in description_files:
             with open(description_file) as file:
                 for line in file.readlines():
-                    hash = ujson.loads(line)['content_hash'] 
+                    hash = ujson.loads(line)['content_hash']
                     hashes.add(hash)
-                    
+
         return hashes
 
     def __create_folder_structure(self, config: dict):
@@ -95,13 +96,14 @@ class Writer:
         self.__crawls_running[crawler_id] = config
         self.__create_folder_structure(config)
 
-        self.__file_downloader.add_crawler_source(crawler_id, config['data_path'], 
-                                                    ignore_data_crawled_in_previous_instances)
-        
+        self.__file_downloader.add_crawler_source(crawler_id, config['data_path'],
+                                                  ignore_data_crawled_in_previous_instances)
+
         self.__hashes_of_already_crawled_pages[crawler_id] = set()
 
         if ignore_data_crawled_in_previous_instances:
-            self.__hashes_of_already_crawled_pages[crawler_id] = self.__get_hashes_of_already_crawled(config['data_path'])
+            self.__hashes_of_already_crawled_pages[crawler_id] = self.__get_hashes_of_already_crawled(
+                config['data_path'])
 
         print('>' * 15)
         print(ignore_data_crawled_in_previous_instances)
@@ -117,8 +119,8 @@ class Writer:
         instance_id = self.__crawls_running[crawler_id]['instance_id']
 
         temp_files_path = os.path.join(settings.OUTPUT_FOLDER, data_path,
-                                        instance_id, 'data', 'files', 'temp')
-        
+                                       instance_id, 'data', 'files', 'temp')
+
         if os.path.exists:
             try:
                 shutil.rmtree(temp_files_path)
@@ -130,8 +132,8 @@ class Writer:
 
     def __get_html_body_hash(self, raw_body: str) -> str:
         soup = BeautifulSoup(raw_body, 'html.parser')
-        return hashlib.md5(soup.text.encode()).hexdigest() 
-    
+        return hashlib.md5(soup.text.encode()).hexdigest()
+
     def __persist_html(self, crawled_data: dict):
         crawler_id = str(crawled_data['crawler_id'])
 
@@ -215,8 +217,8 @@ class Writer:
 
         for message in consumer:
             try:
-                crawled_data = ujson.loads(message.value.decode('utf-8')) 
-                url_hash =  hash(crawled_data['url'].encode())
+                crawled_data = ujson.loads(message.value.decode('utf-8'))
+                url_hash = hash(crawled_data['url'].encode())
 
                 print(f'[{datetime.now()}] [CC] {worker_name} Worker: Processing crawled data with URL hash {url_hash}...')
 
@@ -250,7 +252,7 @@ class Writer:
         for message in self.__command_consumer:
             print(f'[{datetime.now()}] Writer: New command received')
 
-            command = ujson.loads(message.value.decode('utf-8')) 
+            command = ujson.loads(message.value.decode('utf-8'))
             self.__process_command(command)
 
 
