@@ -20,7 +20,7 @@ import ujson
 import validators
 
 import crawling_utils
-from crawling_utils.constants import HEADER_ENCODE_DETECTION, AUTO_ENCODE_DETECTION,AUTO_ENCODE_DETECTION_CONFIDENCE_THRESHOLD
+from crawling_utils.constants import HEADER_ENCODE_DETECTION, AUTO_ENCODE_DETECTION, AUTO_ENCODE_DETECTION_CONFIDENCE_THRESHOLD
 
 from crawling.items import RawResponseItem
 from crawling.spiders.base_spider import BaseSpider
@@ -35,6 +35,7 @@ HTTP_HEADERS = {
 # System waits for up to DOWNLOAD_START_TIMEOUT seconds for a download to
 # begin. The value below is arbitrary
 DOWNLOAD_START_TIMEOUT = 7
+
 
 class StaticPageSpider(BaseSpider):
     # nome temporário, que será alterado no __init__
@@ -232,9 +233,9 @@ class StaticPageSpider(BaseSpider):
         for description_file in description_files:
             with open(description_file) as file:
                 for line in file.readlines():
-                    hash = ujson.loads(line)['content_hash'] 
+                    hash = ujson.loads(line)['content_hash']
                     hashes.add(hash)
-                    
+
         return hashes
 
     def block_until_downloads_complete(self, data_path, instance_id, ignore_data_crawled_in_previous_instances):
@@ -270,10 +271,10 @@ class StaticPageSpider(BaseSpider):
         # Copy files to proper location
         allfiles = os.listdir(temp_download_path)
         for f in allfiles:
-            temp_downloaded_file_path = os.path.join(temp_download_path, f) 
+            temp_downloaded_file_path = os.path.join(temp_download_path, f)
             if self.get_file_hash(temp_downloaded_file_path) in hashes_of_already_crawled_files:
                 os.remove(temp_downloaded_file_path)
-            
+
             else:
                 os.rename(os.path.join(temp_download_path, f), os.path.join(download_path, f))
 
@@ -348,7 +349,7 @@ class StaticPageSpider(BaseSpider):
 
         data_path = self.config['data_path']
         skip_iter_errors = self.config['skip_iter_errors']
-        
+
         output_folder = self.settings['OUTPUT_FOLDER']
         instance_path = os.path.join(output_folder, data_path, str(instance_id))
 
@@ -375,9 +376,9 @@ class StaticPageSpider(BaseSpider):
         ignore_data_crawled_in_previous_instances = self.config['ignore_data_crawled_in_previous_instances']
 
         # Maybe move this to the end of the whole parsing method
-        self.block_until_downloads_complete(os.path.join(output_folder, data_path), instance_id, 
+        self.block_until_downloads_complete(os.path.join(output_folder, data_path), instance_id,
                                             ignore_data_crawled_in_previous_instances)
-                                            
+
         self.generate_file_descriptions(download_path)
 
         # TODO ideally the page would be closed here or at the end of the parse
@@ -431,7 +432,7 @@ class StaticPageSpider(BaseSpider):
                                             'referer': response.url,
                                             'instance_id': self.config["instance_id"],
                                             'curdepth': response.meta['curdepth'] + 1
-                                            #adicionar informações da req inicial
+                                            # adicionar informações da req inicial
                                         },
                                         'curdepth': response.meta['curdepth'] + 1
                                     },
