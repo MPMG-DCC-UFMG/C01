@@ -1,4 +1,3 @@
-import chunk
 import datetime
 import json
 import magic
@@ -15,6 +14,7 @@ from glob import glob
 from scrapy.linkextractors import LinkExtractor
 from scrapy.http import Request, HtmlResponse, Response
 import cchardet as chardet
+import ujson
 
 # Checks if an url is valid
 import validators
@@ -223,11 +223,26 @@ class StaticPageSpider(BaseSpider):
 
         return item
 
-    def block_until_downloads_complete(self, download_path):
+    def get_hashes_of_already_crawled(self, data_path: str) -> set:
+        data_path = data_path if data_path[-1] == '/' else f'{data_path}/'
+        root_path_rgx = f'{data_path}*/data/files/file_description.jsonl'
+        description_files = glob(root_path_rgx)
+
+        hashes = set()
+        for description_file in description_files:
+            with open(description_file) as file:
+                for line in file.readlines():
+                    hash = ujson.loads(line)['content_hash'] 
+                    hashes.add(hash)
+                    
+        return hashes
+
+    def block_until_downloads_complete(self, data_path, instance_id):
         """
         Blocks the flow of execution until all files are downloaded, and then
         moves files from the temporary folder to the final one.
         """
+        download_path = os.path.join(data_path, str(instance_id), 'data', 'files')
 
         temp_download_path = os.path.join(download_path, 'temp')
         if not os.path.exists(temp_download_path):
@@ -248,10 +263,17 @@ class StaticPageSpider(BaseSpider):
         while pending_downloads_exist():
             time.sleep(1)
 
+        hashes_of_already_crawled_files = self.get_hashes_of_already_crawled(data_path)
+
         # Copy files to proper location
         allfiles = os.listdir(temp_download_path)
         for f in allfiles:
-            os.rename(os.path.join(temp_download_path, f), os.path.join(download_path, f))
+            temp_downloaded_file_path = os.path.join(temp_download_path, f) 
+            if self.get_file_hash(temp_downloaded_file_path) in hashes_of_already_crawled_files:
+                os.remove(temp_downloaded_file_path)
+            
+            else:
+                os.rename(os.path.join(temp_download_path, f), os.path.join(download_path, f))
 
         shutil.rmtree(temp_download_path)
 
@@ -324,7 +346,7 @@ class StaticPageSpider(BaseSpider):
 
         data_path = self.config['data_path']
         skip_iter_errors = self.config['skip_iter_errors']
-
+        
         output_folder = self.settings['OUTPUT_FOLDER']
         instance_path = os.path.join(output_folder, data_path, str(instance_id))
 
@@ -349,7 +371,7 @@ class StaticPageSpider(BaseSpider):
             results.append(self.page_to_response(entry, response))
 
         # Maybe move this to the end of the whole parsing method
-        self.block_until_downloads_complete(download_path)
+        self.block_until_downloads_complete(os.path.join(output_folder, data_path), instance_id)
         self.generate_file_descriptions(download_path)
 
         # TODO ideally the page would be closed here or at the end of the parse

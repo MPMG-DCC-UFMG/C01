@@ -3,6 +3,7 @@ import threading
 import ujson
 import hashlib
 import os
+import shutil
 from glob import glob
 
 from kafka import KafkaConsumer
@@ -106,7 +107,7 @@ class Writer:
         
         if os.path.exists:
             try:
-                os.rmdir(temp_files_path)
+                shutil.rmtree(temp_files_path)
 
             except Exception as e:
                 print(f'[{datetime.now()}] Writer: Error deleting temporary folder in: {temp_files_path}: {e}')
