@@ -35,7 +35,7 @@ class DownloadRequest:
         self.referer = referer
         self.filetype = filetype if bool(filetype) else self.__detect_filetype()
         self.filename = filename if bool(filename) else self.__generate_filename()
-        
+
         self.temp_path_to_save = os.path.join(settings.OUTPUT_FOLDER, data_path,
             str(instance_id), 'data', 'files', 'temp', self.filename)
 
@@ -108,7 +108,7 @@ class DownloadRequest:
                     attempt += 1
                     time.sleep(attempt * INTERVAL_BETWEEN_ATTEMPTS)
                     continue
-                
+
                 with open(self.temp_path_to_save, 'wb') as f:
                     for chunk in req.iter_content(chunk_size=8192):
                         f.write(chunk)
@@ -127,7 +127,7 @@ class DownloadRequest:
     def cancel(self):
         # TODO: notify server that the downloaded file is duplicated
         notify_file_downloaded_successfully(self.instance_id)
-        os.remove(self.temp_path_to_save) 
+        os.remove(self.temp_path_to_save)
 
     def save(self):
         notify_file_downloaded_successfully(self.instance_id)

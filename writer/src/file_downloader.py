@@ -13,6 +13,7 @@ from crawling_utils import hash, notify_files_found
 from download_request import DownloadRequest
 import settings
 
+
 class FileDownloader:
     def __init__(self) -> None:
         self.__producer = KafkaProducer(bootstrap_servers=settings.KAFKA_HOSTS,
@@ -45,7 +46,7 @@ class FileDownloader:
 
         consumer = KafkaConsumer(settings.FILE_DOWNLOADER_TOPIC,
                             group_id=settings.FILE_DOWNLOADER_CONSUMER_GROUP,
-                            bootstrap_servers=settings.KAFKA_HOSTS,            
+                            bootstrap_servers=settings.KAFKA_HOSTS,
                             auto_offset_reset=settings.KAFKA_CONSUMER_AUTO_OFFSET_RESET,
                             connections_max_idle_ms=settings.KAFKA_CONNECTIONS_MAX_IDLE_MS,
                             request_timeout_ms=settings.KAFKA_REQUEST_TIMEOUT_MS,
@@ -59,8 +60,8 @@ class FileDownloader:
             try:
                 print(f'\t[{datetime.now()}][FILE-DOWNLOADER] {worker_name} Worker: Processing new download request. topic={message.topic} partition={message.partition} offset={message.offset}')
 
-                message_decoded = ujson.loads(message.value.decode('utf-8')) 
-                
+                message_decoded = ujson.loads(message.value.decode('utf-8'))
+
                 crawler_id = message_decoded['crawler_id']
                 if crawler_id not in self.__crawlers_running:
                     url = message_decoded['url']
@@ -72,7 +73,8 @@ class FileDownloader:
 
                 if download_request.exec_download(worker_name):
                     if download_request.content_hash in self.__hashes_of_already_crawled_files[crawler_id]:
-                        print(f'\t[{datetime.now()}] [FILE-DOWNLOADER] {worker_name} Worker: File already crawled in a previous instance. Ignoring...')
+                        print(
+                            f'\t[{datetime.now()}] [FILE-DOWNLOADER] {worker_name} Worker: File already crawled in a previous instance. Ignoring...')
                         download_request.cancel()
 
                     else:
@@ -81,7 +83,7 @@ class FileDownloader:
                         self.__feed_download_description(description)
 
                 del download_request
-            
+
             except Exception as e:
                 print(f'\t[{datetime.now()}] [FILE-DOWNLOADER] {worker_name} Worker: Error processing download request: "{e}"')
 
@@ -96,9 +98,9 @@ class FileDownloader:
         for description_file in description_files:
             with open(description_file) as file:
                 for line in file.readlines():
-                    hash = ujson.loads(line)['content_hash'] 
+                    hash = ujson.loads(line)['content_hash']
                     hashes.add(hash)
-                    
+
         return hashes
 
     def add_crawler_source(self, crawler_id: str, data_path: str, ignore_data_crawled_in_previous_instances: bool):
@@ -113,7 +115,7 @@ class FileDownloader:
         if crawler_id in self.__crawlers_running:
             self.__crawlers_running.remove(crawler_id)
 
-        if crawler_id in self.__download_urls_already_seen: 
+        if crawler_id in self.__download_urls_already_seen:
             del self.__download_urls_already_seen[crawler_id]
 
         if crawler_id in self.__hashes_of_already_crawled_files:
@@ -123,7 +125,7 @@ class FileDownloader:
         urls = crawled_data['files_found'] + crawled_data['images_found']
 
         if len(urls) == 0:
-            return 
+            return
 
 
         referer = crawled_data['url']
@@ -137,7 +139,7 @@ class FileDownloader:
             if url_hash in self.__download_urls_already_seen[crawler_id]:
                 print(f'[{datetime.now()}] File Downloader: Download request for {url} ignored as it has already been processed.')
                 continue
-            
+
             self.__download_urls_already_seen[crawler_id].add(url_hash)
 
             message = {

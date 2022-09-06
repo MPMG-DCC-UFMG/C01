@@ -109,9 +109,9 @@ class RawCrawlRequestForm(CrawlRequestForm):
     )
 
     ignore_data_crawled_in_previous_instances = forms.BooleanField(
-            required=False,
-            initial=True, 
-            label="Ignorar dados já coletados em instâncias anteriores")
+        required=False,
+        initial=True,
+        label="Ignorar dados já coletados em instâncias anteriores")
 
     obey_robots = forms.BooleanField(
         required=False, label="Obedecer robots.txt")
