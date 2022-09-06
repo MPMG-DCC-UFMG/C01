@@ -5,6 +5,7 @@ import hashlib
 import os
 import shutil
 from glob import glob
+from pathlib import Path
 
 from kafka import KafkaConsumer
 from coolname import generate_slug
@@ -78,6 +79,9 @@ class Writer:
 
         with open(f'{instance_path}/config/{config["instance_id"]}.json', 'w') as f:
             f.write(ujson.dumps(config, indent=4))
+
+        Path(f'{instance_path}/data/files/file_description.jsonl').touch()
+        Path(f'{instance_path}/data/raw_pages/file_description.jsonl').touch()
 
         print(f'[{datetime.now()}] Writer: Folder structure for "{config["source_name"]}" created...')
 
