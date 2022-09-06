@@ -105,11 +105,6 @@ class Writer:
             self.__hashes_of_already_crawled_pages[crawler_id] = self.__get_hashes_of_already_crawled(
                 config['data_path'])
 
-        print('>' * 15)
-        print(ignore_data_crawled_in_previous_instances)
-        print(self.__hashes_of_already_crawled_pages[crawler_id])
-        print('<' * 15)
-
     def __stop_crawl(self, crawler_id: str):
         print(f'[{datetime.now()}] Writer: Stoping crawler with ID {crawler_id}')
         self.__file_downloader.remove_crawler_source(crawler_id)
@@ -139,11 +134,6 @@ class Writer:
 
         raw_body = crawled_data['body']
         content_hash = self.__get_html_body_hash(raw_body)
-
-        print('?' * 15)
-        print(content_hash)
-        print(self.__hashes_of_already_crawled_pages[crawler_id])
-        print('?' * 15)
 
         if content_hash in self.__hashes_of_already_crawled_pages[crawler_id]:
             print(f'\t[{datetime.now()}] [FILE-DOWNLOADER] Writer: Page already crawled in a previous instance. Ignoring...')
