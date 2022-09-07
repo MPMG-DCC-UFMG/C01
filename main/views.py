@@ -33,6 +33,8 @@ from .serializers import (CrawlerInstanceSerializer, CrawlerQueueSerializer,
                           CrawlRequestSerializer, TaskSerializer)
 from .task_filter import task_filter_by_date_interval
 
+from .crawler_tester import CrawlerTester
+
 # Log the information to the file logger
 logger = logging.getLogger('file')
 
@@ -156,7 +158,7 @@ def unqueue_crawl_requests(queue_type: str):
     return response
 
 
-def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
+def process_stop_crawl(crawler_id, from_sm_listener: bool = False, testing_crawler: bool = False):
     instance = CrawlRequest.objects.filter(
         id=crawler_id).get().running_instance
     # instance = CrawlerInstance.objects.get(instance_id=instance_id)
@@ -201,9 +203,10 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
         instance.num_data_files = num_data_files
         instance.save()
 
-        queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
-        queue_type = queue_item.queue_type
-        queue_item.delete()
+        if not testing_crawler:
+            queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
+            queue_type = queue_item.queue_type
+            queue_item.delete()
 
     # As soon as the instance is created, it starts to collect and is only modified when it stops,
     # we use these fields to define when a collection started and ended
@@ -217,8 +220,8 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
 
     crawler_manager.stop_crawler(crawler_id)
 
-    unqueue_crawl_requests(queue_type)
-
+    if not testing_crawler:
+        unqueue_crawl_requests(queue_type)
 
 def list_process(request):
     text = ''
@@ -789,18 +792,17 @@ class CrawlerViewSet(viewsets.ModelViewSet):
 
         return JsonResponse(data)
 
-    @action(detail=True, methods=['get'])
-    def stop(self, request, pk):
+    def __stop(self, request, pk, testing_crawler) -> JsonResponse:
         instance = None
         try:
-            instance = process_stop_crawl(pk)
+            instance = process_stop_crawl(pk, testing_crawler=testing_crawler)
 
         except Exception as e:
             data = {
                 'status': settings.API_ERROR,
                 'message': str(e)
             }
-            return JsonResponse(data,)
+            return JsonResponse(data)
 
         data = {
             'status': settings.API_SUCCESS,
@@ -808,6 +810,53 @@ class CrawlerViewSet(viewsets.ModelViewSet):
         }
         return JsonResponse(data)
 
+    @action(detail=True, methods=['get'])
+    def stop(self, request, pk):
+        return self.__stop(request, pk, False)
+
+    @action(detail=True, methods=['get'])
+    def stop_test(self, request, pk):
+        return self.__stop(request, pk, True)
+
+    @action(detail=True, methods=['get'])
+    def start_test(self, request, pk):
+        instance = None
+        try:
+            instance = process_run_crawl(pk)
+
+        except Exception as e:
+            data = {
+                'status': settings.API_ERROR,
+                'message': str(e)
+            }
+            return JsonResponse(data)
+
+
+        try:
+            test_instance_id = CrawlerInstanceSerializer(instance).data['instance_id']
+            
+            crawler = CrawlRequest.objects.get(pk=pk)
+            
+            data_path = crawler.data_path
+
+            query_params = self.request.query_params.dict()
+            runtime = float(query_params.get('runtime', '30'))
+            
+            crawler_tester = CrawlerTester(pk, test_instance_id, data_path, runtime)
+            crawler_tester.evaluate()
+
+            data = {
+                'status': settings.API_SUCCESS,
+                'message': f'Testing {pk} for {runtime}s'
+            }
+
+        except Exception as e:
+            data = {
+                'status': settings.API_ERROR,
+                'message': str(e)
+            }
+            
+        return JsonResponse(data)
 
 class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     """
