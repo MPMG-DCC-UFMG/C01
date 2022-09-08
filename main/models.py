@@ -370,7 +370,7 @@ class CrawlRequest(TimeStamped):
         self.date_last_functional_test = timezone.now() 
 
         self.save()
-
+        
     def __str__(self):
         return self.source_name
 

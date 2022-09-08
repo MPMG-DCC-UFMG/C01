@@ -406,7 +406,10 @@ def create_crawler(request):
 
 def edit_crawler(request, crawler_id):
     crawler = get_object_or_404(CrawlRequest, pk=crawler_id)
-
+    
+    crawler.functional_status = 'not_tested'
+    crawler.date_last_functional_test = None
+    
     form = RawCrawlRequestForm(request.POST or None, instance=crawler)
     templated_parameter_formset, templated_response_formset = \
         generate_injector_forms(request.POST or None, filter_queryset=True,
