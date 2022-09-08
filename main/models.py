@@ -1,5 +1,4 @@
 import datetime
-from statistics import mode
 from typing import List, Union
 
 from crawler_manager.constants import *
