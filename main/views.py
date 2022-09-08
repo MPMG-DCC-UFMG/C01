@@ -1,4 +1,5 @@
 import base64
+from distutils import log
 import json
 import logging
 import multiprocessing as mp
@@ -50,30 +51,30 @@ except:
     pass
 
 
-def process_run_crawl(crawler_id):
+def process_run_crawl(crawler_id, test_mode = False):
     instance = None
-    instance_info = dict()
 
-    crawler_entry = CrawlRequest.objects.filter(id=crawler_id)
-    data = crawler_entry.values()[0]
+    crawler = CrawlRequest.objects.get(pk=crawler_id)
+    data = CrawlRequestSerializer(crawler).data
 
     # Instance already running
-    if crawler_entry.get().running:
-        instance_id = crawler_entry.get().running_instance.instance_id
+    if crawler.running:
+        instance_id = crawler.running_instance.instance_id
         raise ValueError("An instance is already running for this crawler "
                          f"({instance_id})")
 
-    data = CrawlRequest.process_config_data(crawler_entry.get(), data)
 
-    data["instance_id"] = crawler_manager.gen_key()
-    instance = create_instance(data['id'], data["instance_id"])
-    crawler_manager.start_crawler(data.copy())
+    data = CrawlRequest.process_config_data(crawler, data)
 
-    instance_info["started_at"] = str(instance.creation_date)
-    instance_info["finished_at"] = None
 
-    crawler_manager.update_instances_info(
-        data["data_path"], str(data["instance_id"]), instance_info)
+    instance_id = crawler_manager.gen_key()
+    instance = create_instance(crawler_id, instance_id, test_mode)
+
+    data['instance_id'] = instance_id
+    crawler_manager.start_crawler(data)
+
+    crawler.functional_status = 'testing'
+    crawler.save()
 
     return instance
 
@@ -132,7 +133,6 @@ def remove_crawl_request_view(request, crawler_id):
     remove_crawl_request(crawler_id)
     return redirect('/detail/' + str(crawler_id))
 
-
 def unqueue_crawl_requests(queue_type: str):
     crawlers_runnings = list()
     has_items_from_another_queue, queue_items = CRAWLER_QUEUE.get_next(queue_type)
@@ -158,7 +158,7 @@ def unqueue_crawl_requests(queue_type: str):
     return response
 
 
-def process_stop_crawl(crawler_id, from_sm_listener: bool = False, testing_crawler: bool = False):
+def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
     instance = CrawlRequest.objects.filter(
         id=crawler_id).get().running_instance
     # instance = CrawlerInstance.objects.get(instance_id=instance_id)
@@ -173,54 +173,60 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False, testing_crawl
 
         return
 
+    crawler_manager.stop_crawler(crawler_id)
+
     instance_id = instance.instance_id
-    config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
+    running_crawler_test = instance.execution_context == 'testing'
 
-    # FIXME: Colocar esse trecho de código no módulo writer
-    # computa o tamanho em kbytes do diretório "data"
-    # command_output = subprocess.run(["du " + config['data_path'] + "/data -d 0"], shell=True, stdout=subprocess.PIPE)
-    # output_line = command_output.stdout.decode('utf-8').strip('\n')
-    # parts = output_line.split('\t')
-    data_size_kbytes = 0  # int(parts[0])
+    crawler = CrawlRequest.objects.get(id=int(crawler_id))
+    crawler.update_functional_status_after_run(instance_id)
 
-    # FIXME: Colocar esse trecho de código no módulo writer
-    # conta a qtde de arquivos no diretório "data"
-    # command_output = subprocess.run(
-    #     ["find " + config['data_path'] + "/data -type f | wc -l"], shell=True, stdout=subprocess.PIPE)
-    # output_line = command_output.stdout.decode('utf-8').strip('\n')
-    num_data_files = 0  # int(output_line)
+    if running_crawler_test:
+        print(f'Deletando {instance_id}')
+        # print('Logs')
+        # logs = Log.objects.filter(instance_id=instance_id)
+        # print('<<', len(logs))
+        # logs.delete()
+        # logs = Log.objects.filter(instance_id=instance_id)
+        # print('>>', len(logs))
+        # print('End log')
+        print('Instance deeltion')
+        time.sleep(10)
+        CrawlerInstance.objects.get(instance_id=instance_id).delete()
+        
+        print(f'Removendo para de {instance_id}')
 
-    instance = None
-    instance_info = {}
-    queue_type = None
+    else:
+        # FIXME: Colocar esse trecho de código no módulo writer
+        # computa o tamanho em kbytes do diretório "data"
+        # command_output = subprocess.run(["du " + config['data_path'] + "/data -d 0"], shell=True, stdout=subprocess.PIPE)
+        # output_line = command_output.stdout.decode('utf-8').strip('\n')
+        # parts = output_line.split('\t')
+        data_size_kbytes = 0  # int(parts[0])
 
-    with transaction.atomic():
-        # Execute DB commands atomically
-        instance = CrawlerInstance.objects.get(instance_id=instance_id)
-        instance.running = False
-        instance.finished_at = timezone.now()
-        instance.data_size_kbytes = data_size_kbytes
-        instance.num_data_files = num_data_files
-        instance.save()
+        # FIXME: Colocar esse trecho de código no módulo writer
+        # conta a qtde de arquivos no diretório "data"
+        # command_output = subprocess.run(
+        #     ["find " + config['data_path'] + "/data -type f | wc -l"], shell=True, stdout=subprocess.PIPE)
+        # output_line = command_output.stdout.decode('utf-8').strip('\n')
+        num_data_files = 0  # int(output_line)
 
-        if not testing_crawler:
+        instance = None
+        queue_type = None
+
+        with transaction.atomic():
+            # Execute DB commands atomically
+            instance = CrawlerInstance.objects.get(instance_id=instance_id)
+            instance.running = False
+            instance.finished_at = timezone.now()
+            instance.data_size_kbytes = data_size_kbytes
+            instance.num_data_files = num_data_files
+            instance.save()
+
             queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
             queue_type = queue_item.queue_type
             queue_item.delete()
-
-    # As soon as the instance is created, it starts to collect and is only modified when it stops,
-    # we use these fields to define when a collection started and ended
-    instance_info["started_at"] = str(instance.creation_date)
-    instance_info["finished_at"] = str(instance.last_modified)
-    instance_info["data_size_kbytes"] = data_size_kbytes
-    instance_info["num_data_files"] = num_data_files
-
-    crawler_manager.update_instances_info(
-        config["data_path"], str(instance_id), instance_info)
-
-    crawler_manager.stop_crawler(crawler_id)
-
-    if not testing_crawler:
+        
         unqueue_crawl_requests(queue_type)
 
 def list_process(request):
@@ -283,10 +289,13 @@ def getAllDataFiltered(filter_crawler_id, filter_name, filter_base_url, filter_d
     return (all_crawlers, filters_url)
 
 
-def create_instance(crawler_id, instance_id):
+def create_instance(crawler_id, instance_id, test_mode):
     mother = CrawlRequest.objects.filter(id=crawler_id)
     obj = CrawlerInstance.objects.create(
-        crawler=mother[0], instance_id=instance_id, running=True)
+        crawler=mother[0], 
+        instance_id=instance_id, 
+        execution_context = 'testing' if test_mode else 'crawling',
+        running=True)
     return obj
 
 
@@ -465,7 +474,22 @@ def run_crawl(request, crawler_id):
 
 
 def tail_log_file(request, instance_id):
-    instance = CrawlerInstance.objects.get(instance_id=instance_id)
+    try:
+        instance = CrawlerInstance.objects.get(instance_id=instance_id)
+    
+    except ObjectDoesNotExist:
+        return JsonResponse({
+            "files_found": 0,
+            "files_success": 0,
+            "files_error": 0,
+            "pages_found": 0,
+            "pages_success": 0,
+            "pages_error": 0,
+            "pages_duplicated": 0,
+            "out": '',
+            "err": '',
+            "time": str(datetime.fromtimestamp(time.time())),
+        })
 
     files_found = instance.number_files_found
     download_file_success = instance.number_files_success_download
@@ -498,7 +522,6 @@ def tail_log_file(request, instance_id):
         "err": err_text,
         "time": str(datetime.fromtimestamp(time.time())),
     })
-
 
 def raw_log(request, instance_id):
     logs = Log.objects.filter(instance_id=instance_id)\
@@ -792,47 +815,42 @@ class CrawlerViewSet(viewsets.ModelViewSet):
 
         return JsonResponse(data)
 
-    def __stop(self, request, pk, testing_crawler) -> JsonResponse:
-        instance = None
-        try:
-            instance = process_stop_crawl(pk, testing_crawler=testing_crawler)
+    def __stop(self, request, pk) -> JsonResponse:
+        # try:
+        process_stop_crawl(pk)
 
-        except Exception as e:
-            data = {
-                'status': settings.API_ERROR,
-                'message': str(e)
-            }
-            return JsonResponse(data)
+        # except Exception as e:
+        #     data = {
+        #         'status': settings.API_ERROR,
+        #         'message': str(e)
+        #     }
+        #     return JsonResponse(data)
 
-        data = {
-            'status': settings.API_SUCCESS,
-            'instance': CrawlerInstanceSerializer(instance).data
-        }
-        return JsonResponse(data)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['get'])
     def stop(self, request, pk):
-        return self.__stop(request, pk, False)
+        return self.__stop(request, pk)
 
     @action(detail=True, methods=['get'])
     def stop_test(self, request, pk):
-        return self.__stop(request, pk, True)
+        return self.__stop(request, pk)
 
     @action(detail=True, methods=['get'])
     def start_test(self, request, pk):
         instance = None
         try:
-            instance = process_run_crawl(pk)
+            instance = process_run_crawl(pk, True)
 
         except Exception as e:
             data = {
                 'status': settings.API_ERROR,
-                'message': str(e)
+                'message1': str(e)
             }
             return JsonResponse(data)
 
-
         try:
+
             test_instance_id = CrawlerInstanceSerializer(instance).data['instance_id']
             
             crawler = CrawlRequest.objects.get(pk=pk)
@@ -847,13 +865,13 @@ class CrawlerViewSet(viewsets.ModelViewSet):
 
             data = {
                 'status': settings.API_SUCCESS,
-                'message': f'Testing {pk} for {runtime}s'
+                'message2': f'Testing {pk} for {runtime}s'
             }
 
         except Exception as e:
             data = {
                 'status': settings.API_ERROR,
-                'message': str(e)
+                'message2': str(e)
             }
             
         return JsonResponse(data)

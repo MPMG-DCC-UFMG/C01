@@ -25,22 +25,22 @@ RUN mkdir $APP_HOME
 RUN mkdir $APP_HOME/staticfiles
 WORKDIR $APP_HOME
 
-COPY requirements.txt .
 COPY *.py ./
+COPY requirements.txt .
 COPY src src
-COPY main main
-COPY interface interface
-COPY crawler_manager crawler_manager
-
-RUN mkdir logs
 
 RUN python3 web_install.py
+# Install gunicorn for integration with Nginx
+RUN pip install gunicorn
 
 RUN mkdir /data
 RUN chown django:django /data
 
-# Install gunicorn for integration with Nginx
-RUN pip install gunicorn
+RUN mkdir logs
+
+COPY interface interface
+COPY crawler_manager crawler_manager
+COPY main main
 
 # Copy the gunicorn configuration file
 COPY docker/config/gunicorn.conf.py ./gunicorn.conf.py

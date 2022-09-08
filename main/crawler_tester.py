@@ -43,6 +43,10 @@ class CrawlerTester:
         stop_crawler_url = self.__stop_crawler_url_template.format(crawler_id=self.crawler_id)
         response = requests.get(stop_crawler_url)
 
+        print('<->' * 30)
+        print(response.json())
+        print('<->' * 30)
+
         if response.status_code == 200:
             print(f'[{datetime.now()}] CrawlerTester: Request to stop {self.crawler_id} sent successfully!')
         

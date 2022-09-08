@@ -53,8 +53,3 @@ def stop_crawler(crawler_id):
 
     """
     message_sender.send_stop_crawl(str(crawler_id))
-
-
-def update_instances_info(data_path: str, instance_id: str, instance: dict):
-    """Updates the file with information about instances when they are created, initialized or terminated."""
-    pass
