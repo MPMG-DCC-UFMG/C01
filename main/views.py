@@ -34,10 +34,12 @@ from .serializers import (CrawlerInstanceSerializer, CrawlerQueueSerializer,
                           CrawlRequestSerializer, TaskSerializer)
 from .task_filter import task_filter_by_date_interval
 
-from .crawler_tester import CrawlerTester
+from .crawling_timer import CrawlingTimer
 
 # Log the information to the file logger
 logger = logging.getLogger('file')
+
+NO_INSTANCE_RUNNING_ERROR_MSG = 'No instance running'
 
 # Helper methods
 
@@ -78,7 +80,7 @@ def process_run_crawl(crawler_id, test_mode = False):
 
     crawler_manager.start_crawler(data)
 
-    crawler.functional_status = 'testing'
+    crawler.functional_status = 'testing' if test_mode else 'testing_by_crawling'
     crawler.save()
 
     return instance
@@ -191,7 +193,7 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
 
     # No instance running
     if instance is None:
-        raise ValueError("No instance running")
+        raise ValueError(NO_INSTANCE_RUNNING_ERROR_MSG)
 
     if from_sm_listener and not instance.download_files_finished():
         instance.page_crawling_finished = True
@@ -375,7 +377,6 @@ def list_crawlers(request):
     }
     return render(request, "main/list_crawlers.html", context)
 
-
 def create_crawler(request):
     context = {}
 
@@ -403,6 +404,45 @@ def create_crawler(request):
     context['templated_parameter_formset'] = templated_parameter_formset
     return render(request, "main/create_crawler.html", context)
 
+def process_start_test_crawler(crawler_id: int, runtime: float):
+    instance = None
+    try:
+        instance = process_run_crawl(crawler_id, True)
+
+    except Exception as e:
+        data = {
+            'status': settings.API_ERROR,
+            'message': str(e)
+        }
+        return data
+
+    try:
+
+        test_instance_id = CrawlerInstanceSerializer(instance).data['instance_id']
+        
+        crawler = CrawlRequest.objects.get(pk=crawler_id)
+        
+        data_path = crawler.data_path
+
+        crawling_timer = CrawlingTimer(crawler_id, test_instance_id, data_path, runtime)
+        crawling_timer.start()
+
+        data = {
+            'status': settings.API_SUCCESS,
+            'message': f'Testing {crawler_id} for {runtime}s'
+        }
+
+    except Exception as e:
+        data = {
+            'status': settings.API_ERROR,
+            'message': str(e)
+        }
+        
+    return data
+
+def test_crawler(request, crawler_id):
+    process_start_test_crawler(crawler_id, settings.RUNTIME_OF_CRAWLER_TEST)
+    return redirect(detail_crawler, crawler_id=crawler_id)
 
 def edit_crawler(request, crawler_id):
     crawler = get_object_or_404(CrawlRequest, pk=crawler_id)
@@ -797,7 +837,7 @@ class CrawlerViewSet(viewsets.ModelViewSet):
                 'instance': CrawlerInstanceSerializer(instance).data
             }
 
-            return JsonResponse(data)
+            return Response(data)
 
         elif action == 'wait_on_first_queue_position':
             wait_on = 'first_position'
@@ -818,7 +858,7 @@ class CrawlerViewSet(viewsets.ModelViewSet):
                 'status': settings.API_ERROR,
                 'message': str(e)
             }
-            return JsonResponse(data)
+            return Response(data)
 
         if wait_on == 'first_position':
             message = f'Crawler added to crawler queue in first position'
@@ -831,18 +871,19 @@ class CrawlerViewSet(viewsets.ModelViewSet):
             'message': message
         }
 
-        return JsonResponse(data)
+        return Response(data)
 
     def __stop(self, request, pk) -> JsonResponse:
-        # try:
-        process_stop_crawl(pk)
+        try:
+            process_stop_crawl(pk)
 
-        # except Exception as e:
-        #     data = {
-        #         'status': settings.API_ERROR,
-        #         'message': str(e)
-        #     }
-        #     return JsonResponse(data)
+        except Exception as e:
+            data = {
+                'status': settings.API_ERROR,
+                'message': str(e)
+            }
+            status = status.HTTP_400_BAD_REQUEST if str(e) == NO_INSTANCE_RUNNING_ERROR_MSG else status.HTTP_500_INTERNAL_SERVER_ERROR
+            return Response(data, status=status)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -856,43 +897,10 @@ class CrawlerViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def start_test(self, request, pk):
-        instance = None
-        try:
-            instance = process_run_crawl(pk, True)
-
-        except Exception as e:
-            data = {
-                'status': settings.API_ERROR,
-                'message1': str(e)
-            }
-            return JsonResponse(data)
-
-        try:
-
-            test_instance_id = CrawlerInstanceSerializer(instance).data['instance_id']
-            
-            crawler = CrawlRequest.objects.get(pk=pk)
-            
-            data_path = crawler.data_path
-
-            query_params = self.request.query_params.dict()
-            runtime = float(query_params.get('runtime', '30'))
-            
-            crawler_tester = CrawlerTester(pk, test_instance_id, data_path, runtime)
-            crawler_tester.evaluate()
-
-            data = {
-                'status': settings.API_SUCCESS,
-                'message2': f'Testing {pk} for {runtime}s'
-            }
-
-        except Exception as e:
-            data = {
-                'status': settings.API_ERROR,
-                'message2': str(e)
-            }
-            
-        return JsonResponse(data)
+        query_params = self.request.query_params.dict()
+        runtime = float(query_params.get('runtime', settings.RUNTIME_OF_CRAWLER_TEST))
+        result = process_start_test_crawler(pk, runtime)
+        return JsonResponse(result)
 
 class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     """

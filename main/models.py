@@ -61,12 +61,13 @@ class CrawlRequest(TimeStamped):
 
     FUNCTIONAL_STATUS_CHOICES = [
         ('testing', 'Testando'),
+        ('testing_by_crawling', 'Testando via coleta'),
         ('non_functional', 'Não funcional'),
         ('functional', 'Funcional'),
         ('not_tested', 'Não testado')
     ]
 
-    functional_status = models.CharField(max_length=16, default='not_tested', choices=FUNCTIONAL_STATUS_CHOICES)
+    functional_status = models.CharField(max_length=32, default='not_tested', choices=FUNCTIONAL_STATUS_CHOICES)
     date_last_functional_test = models.DateTimeField(blank=True, null=True)
 
     # SCRAPY CLUSTER ##########################################################
