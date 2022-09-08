@@ -26,25 +26,25 @@ class CrawlingTimer:
         self.__stop_crawler_url_template = server_address + stop_crawler_endpoint
     
     def _start(self):
-        print(f'[{datetime.now()}] CrawlerTester: Waiting {self.crawler_id} crawling for {self.runtime}s using the instance {self.test_instance_id}...')
+        print(f'[{datetime.now()}] CrawlingTimer: Waiting {self.crawler_id} crawling for {self.runtime}s using the instance {self.test_instance_id}...')
 
         sleep(self.runtime)
 
-        print(f'[{datetime.now()}] CrawlerTester: Sending stop signal to {self.crawler_id}...')
+        print(f'[{datetime.now()}] CrawlingTimer: Sending stop signal to {self.crawler_id}...')
 
         stop_crawler_url = self.__stop_crawler_url_template.format(crawler_id=self.crawler_id)
         response = requests.get(stop_crawler_url)
 
         if response.status_code == status.HTTP_204_NO_CONTENT:
-            print(f'[{datetime.now()}] CrawlerTester: Request to stop {self.crawler_id} sent successfully!')
+            print(f'[{datetime.now()}] CrawlingTimer: Request to stop {self.crawler_id} sent successfully!')
 
         else:
-            print(f'[{datetime.now()}] CrawlerTester: Error trying to send stop signal to {self.crawler_id}: [{response.status_code}] {response.text}')
+            print(f'[{datetime.now()}] CrawlingTimer: Error trying to send stop signal to {self.crawler_id}: [{response.status_code}] {response.text}')
         
     def start(self):
-        print(f'[{datetime.now()}] CrawlerTester: Creating thread to test {self.crawler_id} for {self.runtime} seconds!')
+        print(f'[{datetime.now()}] CrawlingTimer: Creating thread to test {self.crawler_id} for {self.runtime} seconds!')
 
         thread = threading.Thread(target=self._start, daemon=True)
         thread.start()
 
-        print(f'[{datetime.now()}] CrawlerTester: Thread test {self.crawler_id} started!')
+        print(f'[{datetime.now()}] CrawlingTimer: Thread test {self.crawler_id} started!')
