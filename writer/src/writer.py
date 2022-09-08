@@ -3,6 +3,7 @@ import threading
 import ujson
 import hashlib
 import os
+import shutil
 
 from kafka import KafkaConsumer
 from coolname import generate_slug
@@ -157,6 +158,11 @@ class Writer:
             self.__crawled_data_consumer_threads.append(thread)
             thread.start()
 
+    def __delete_folder(self, data_path: str, instance_id: str):
+        instance_path = os.path.join(settings.OUTPUT_FOLDER, data_path, instance_id)
+        if os.path.exists:
+            shutil.rmtree(instance_path)
+
     def __process_command(self, command):
         if 'register' in command:
             crawler_config = command['register']
@@ -165,6 +171,11 @@ class Writer:
         elif 'stop' in command:
             crawler_id = str(command['stop'])
             self.__stop_crawl(crawler_id)
+
+        elif 'delete_folder' in command:
+            data_path = command['delete_folder']['data_path'] 
+            instance_id = command['delete_folder']['instance_id']
+            self.__delete_folder(data_path, instance_id) 
 
     def run(self):
         self.__create_crawled_data_poll()

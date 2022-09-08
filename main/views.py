@@ -1,5 +1,4 @@
 import base64
-from distutils import log
 import json
 import logging
 import multiprocessing as mp
@@ -9,7 +8,8 @@ from datetime import datetime
 from typing_extensions import Literal
 
 import crawler_manager.crawler_manager as crawler_manager
-from crawler_manager.settings import TASK_TOPIC
+from crawler_manager.crawler_manager import LOG_WRITER
+from crawler_manager.settings import TASK_TOPIC, WRITER_TOPIC
 from crawler_manager.constants import *
 
 from django.conf import settings
@@ -57,6 +57,10 @@ def process_run_crawl(crawler_id, test_mode = False):
     crawler = CrawlRequest.objects.get(pk=crawler_id)
     data = CrawlRequestSerializer(crawler).data
 
+    # delete unnecessary data
+    if 'instances' in data:
+        del data['instances']
+
     # Instance already running
     if crawler.running:
         instance_id = crawler.running_instance.instance_id
@@ -66,11 +70,12 @@ def process_run_crawl(crawler_id, test_mode = False):
 
     data = CrawlRequest.process_config_data(crawler, data)
 
-
     instance_id = crawler_manager.gen_key()
     instance = create_instance(crawler_id, instance_id, test_mode)
 
     data['instance_id'] = instance_id
+    data['execution_context'] = instance.execution_context
+
     crawler_manager.start_crawler(data)
 
     crawler.functional_status = 'testing'
@@ -157,6 +162,27 @@ def unqueue_crawl_requests(queue_type: str):
     response = {'crawlers_added_to_run': crawlers_runnings}
     return response
 
+def delete_instance_and_logs(instance_id: int):
+    # Ignore logs associated with the instance being deleted
+    LOG_WRITER.add_instance_to_ignore(instance_id)
+
+    # Remove the logs and the test instance
+    logs = Log.objects.filter(instance_id=instance_id)
+    logs.delete()
+    CrawlerInstance.objects.get(instance_id=instance_id).delete()
+
+    # Free memory         
+    LOG_WRITER.remove_instance_to_ignore(instance_id)
+
+def delete_instance_crawled_folder(data_path: str, instance_id: int):
+    message = {
+        'delete_folder': {
+            'data_path': data_path,
+            'instance_id': str(instance_id)
+        }
+    }
+
+    crawler_manager.MESSAGE_SENDER.send(WRITER_TOPIC, message)
 
 def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
     instance = CrawlRequest.objects.filter(
@@ -182,19 +208,8 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
     crawler.update_functional_status_after_run(instance_id)
 
     if running_crawler_test:
-        print(f'Deletando {instance_id}')
-        # print('Logs')
-        # logs = Log.objects.filter(instance_id=instance_id)
-        # print('<<', len(logs))
-        # logs.delete()
-        # logs = Log.objects.filter(instance_id=instance_id)
-        # print('>>', len(logs))
-        # print('End log')
-        print('Instance deeltion')
-        time.sleep(10)
-        CrawlerInstance.objects.get(instance_id=instance_id).delete()
-        
-        print(f'Removendo para de {instance_id}')
+        delete_instance_and_logs(instance_id)
+        delete_instance_crawled_folder(crawler.data_path, instance_id)
 
     else:
         # FIXME: Colocar esse trecho de código no módulo writer
@@ -1002,7 +1017,7 @@ class TaskViewSet(viewsets.ModelViewSet):
                 'action': 'create',
                 'data': response.data
             }
-            crawler_manager.message_sender.send(TASK_TOPIC, message)
+            crawler_manager.MESSAGE_SENDER.send(TASK_TOPIC, message)
         return response
 
     def update(self, request, pk=None):
@@ -1012,7 +1027,7 @@ class TaskViewSet(viewsets.ModelViewSet):
                 'action': 'update',
                 'data': response.data
             }
-            crawler_manager.message_sender.send(TASK_TOPIC, message)
+            crawler_manager.MESSAGE_SENDER.send(TASK_TOPIC, message)
         return response
 
     def partial_update(self, request, pk=None):
@@ -1022,7 +1037,7 @@ class TaskViewSet(viewsets.ModelViewSet):
                 'action': 'update',
                 'data': response.data
             }
-            crawler_manager.message_sender.send(TASK_TOPIC, message)
+            crawler_manager.MESSAGE_SENDER.send(TASK_TOPIC, message)
         return response
 
     def destroy(self, request, pk=None):
@@ -1034,7 +1049,7 @@ class TaskViewSet(viewsets.ModelViewSet):
                     'id': pk
                 }
             }
-        crawler_manager.message_sender.send(TASK_TOPIC, message)
+        crawler_manager.MESSAGE_SENDER.send(TASK_TOPIC, message)
         return response
 
     def __str2date(self, s: str) -> datetime:

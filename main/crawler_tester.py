@@ -6,6 +6,7 @@ from time import sleep
 from random import randint
 
 import requests
+from rest_framework import status
 
 class CrawlerTester:
     def __init__(self,
@@ -43,15 +44,11 @@ class CrawlerTester:
         stop_crawler_url = self.__stop_crawler_url_template.format(crawler_id=self.crawler_id)
         response = requests.get(stop_crawler_url)
 
-        print('<->' * 30)
-        print(response.json())
-        print('<->' * 30)
-
-        if response.status_code == 200:
+        if response.status_code == status.HTTP_204_NO_CONTENT:
             print(f'[{datetime.now()}] CrawlerTester: Request to stop {self.crawler_id} sent successfully!')
         
         else:
-            print(f'[{datetime.now()}] CrawlerTester: Error trying to send stop signal to {self.crawler_id}: [{response.status_code}] {response.text}!')
+            print(f'[{datetime.now()}] CrawlerTester: Error trying to send stop signal to {self.crawler_id}: [{response.status_code}] {response.text}')
         
         crawler_worked = self._check_if_crawler_worked()
         self.clean_up()
