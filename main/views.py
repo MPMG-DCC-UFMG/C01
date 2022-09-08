@@ -516,9 +516,12 @@ def create_steps(request):
 
 def stop_crawl(request, crawler_id):
     from_sm_listener = request.GET.get('from', '') == 'sm_listener'
-    process_stop_crawl(crawler_id, from_sm_listener)
-    return redirect(detail_crawler, crawler_id=crawler_id)
-
+    try:
+        process_stop_crawl(crawler_id, from_sm_listener)
+    except Exception as e:
+        if str(e) == NO_INSTANCE_RUNNING_ERROR_MSG:
+            return redirect(detail_crawler, crawler_id=crawler_id)
+        raise
 
 def run_crawl(request, crawler_id):
     add_crawl_request(crawler_id)

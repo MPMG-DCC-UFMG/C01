@@ -1,9 +1,6 @@
-from typing import Any, Dict
 from datetime import datetime
 import threading
 from time import sleep
-
-from random import randint
 
 import requests
 from rest_framework import status
