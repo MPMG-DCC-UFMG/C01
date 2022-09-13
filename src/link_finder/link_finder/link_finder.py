@@ -29,6 +29,7 @@ class LinkFinder:
                             body=playwright_response.body())
 
     def valid_page(self, page_body: str) -> bool:
+        return True
         # TODO: Implementar lógica de validação de página
         for text in self.page_must_have_text:
             if text in page_body:
@@ -45,12 +46,13 @@ class LinkFinder:
         if not self.valid_page(page_body):
             return
 
-        self.urls_found.add(seed_url)
+        # self.urls_found.add(seed_url)
         scrapy_response = self.__playwright_response_to_scrapy_response(playwright_response)
 
         for url in self.__extract_urls(scrapy_response):
             try:
-                self.__get_urls(url, curr_depth + 1)
+                self.urls_found.add(url)
+                # self.__get_urls(url, curr_depth + 1)
             
             except:
                 continue
@@ -59,15 +61,24 @@ class LinkFinder:
                         page_must_have_text: List[str] = [''], browser_headless_mode: bool = True) -> Set[str]:
         with sync_playwright() as playwright:
             self.browser = playwright.chromium.launch(headless=browser_headless_mode)
-            self.page = self.browser.new_page()
+            # self.page = self.browser.new_page()
+            self.context = self.browser.new_context(user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36')
+            self.page = self.context.new_page()
+
+            allowed_domains = seed_url
+            allowed_domains = allowed_domains.replace('https://', '')
+            allowed_domains = allowed_domains.replace('http://', '')
+            allowed_domains = allowed_domains.replace('www.', '')
+            allowed_domains = allowed_domains.split('/')[0]
 
             self.urls_found = set()
-            self.allowed_domains = allowed_domains
+            self.allowed_domains = [allowed_domains]
             self.page_must_have_text = page_must_have_text
             self.max_depth = max_depth
 
             self.__get_urls(seed_url, 1)
             
+            self.context.close()
             self.browser.close()
             self.page.close()
 

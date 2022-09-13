@@ -20,71 +20,34 @@ Home
     <h1 class="mt-5">Resultado da Sondagem de URLs</h1>
     <hr class="mb-5" />
     
-    <div class="row">
-        <div class="col">
-            <div class="form-group">
-                <div class="row">
-                    <div id="tags-container">
-                        <table class="table table-striped table-bordered">
-                            <thead>
-                                <tr>
-                                    <th rowspan="2">Item de Interesse</th>
-                                    <th colspan="26">URLs</th>
-                                </tr>
-                                <tr>
-                                    {% for seed_url in seed_urls %}
-                                    <th>{{ forloop.counter }}</th>
-                                    {% endfor %}
-                                </tr>
-                            </thead>
-                        {% for row in coverage_matrix %}
+    <div class="row"><div class="col">
+    <form method="get" action="new_group">
+        <div class="row">
+            <div class="col">
+                <table class="table table-striped table-bordered">
+                    <thead>
                         <tr>
-                            {% for cell in row %}
-                            <td>
-                                {% if forloop.first %}
-                                    {{ cell }}
-                                {% else %}
-                                    {% if cell == 1 %}
-                                    <i class="fa fa-check"></i>
-                                    {% else %}
-                                    <i class="fa fa-times"></i>
-                                    {% endif %}
-                                {% endif %}
-                            </td>
+                            <th><input type="checkbox" /></th>
+                            <th>Item de Interesse</th>
+                            <th>URL Candidata</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for seed_url, candidate_urls in links_found.items %}
+                            {% for url in candidate_urls %}
+                                <tr>
+                                    <td><input type="checkbox" name="candidate_url" value="" /></td>
+                                    <td>
+                                        <select name="template-crawler_type_desc" value="" class="select textInput form-control">
+                                            <option value=""></option>
+                                            {% for tag in tags %}
+                                            <option value="{{ tag }}" {% if url_tag == tag %}selected="selected"{% endif %}>{{ tag }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td><a href="{{ url }}" target="_blank">{{ url }}</a></td>
+                                </tr>
                             {% endfor %}
-                        </tr>
-                        
-                        {% endfor %}
-                        </table>
-                    </div>
-                </div>
-                
-            </div>
-        </div>
-    </div>
-    
-    
-    <div class="row"><div class="col">
-    <form method="get" action="new_group">
-        <div class="row">
-            <div class="col">
-                <table class="table table-striped table-bordered">
-                    <thead>
-                        <tr>
-                            <th><input type="checkbox" /></th>
-                            <th>URL Semente</th>
-                            <th>Item de Interesse</th>
-                            <th>URL Candidata</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for _ in range %}
-                            <tr>
-                                <td><input type="checkbox" /></td>
-                                <td>http://www.semente.com/</td>
-                                <td>Nome do Item</td>
-                                <td>http://www.site.com/candidato/</td>
-                            </tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -94,64 +57,6 @@ Home
     </form>
     </div></div>
     
-    <div class="row"><div class="col">
-    <form method="get" action="new_group">
-        <div class="row">
-            <div class="col">
-                <table class="table table-striped table-bordered">
-                    <thead>
-                        <tr>
-                            <th><input type="checkbox" /></th>
-                            <th>URL Semente</th>
-                            <th>Item de Interesse</th>
-                            <th>URL Candidata</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for _ in range %}
-                            <tr>
-                                <td><input type="checkbox" /></td>
-                                <td>http://www.semente.com/</td>
-                                <td>Nome do Item</td>
-                                <td>http://www.site.com/candidato/</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="float-right"><button type="submit" class="btn btn-primary">Cadastrar Coletores</button></div>
-    </form>
-    </div></div>
-    <div class="row"><div class="col">
-    <form method="get" action="new_group">
-        <div class="row">
-            <div class="col">
-                <table class="table table-striped table-bordered">
-                    <thead>
-                        <tr>
-                            <th><input type="checkbox" /></th>
-                            <th>URL Semente</th>
-                            <th>Item de Interesse</th>
-                            <th>URL Candidata</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for _ in range %}
-                            <tr>
-                                <td><input type="checkbox" /></td>
-                                <td>http://www.semente.com/</td>
-                                <td>Nome do Item</td>
-                                <td>http://www.site.com/candidato/</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="float-right"><button type="submit" class="btn btn-primary">Cadastrar Coletores</button></div>
-    </form>
-    </div></div>
 </div>
 
 {% endblock %}
