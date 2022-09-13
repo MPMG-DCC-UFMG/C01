@@ -155,6 +155,34 @@ class TestExtractInfo(unittest.TestCase):
         expected_result += "        imprime(texto = \"teste\")\n"
         self.assertEqual(expected_result, result)
 
+    def test_generate_executar_em_iframe(self):
+        with open("tests/test_step_by_step/examples/recipe_examples.json") as file:
+            recipe_examples = json.load(file)
+
+        # Getting in and out of an iframe
+        result = cg.generate_body(atom.extend(
+            recipe_examples['iframe_exec']['recipe'])[0], ff, False)
+
+        expected_result = "\n"
+        expected_result += "    ### Início: Passando o contexto de execução para iframe ###\n"
+        expected_result += '    el_locator_xpath = "teste"\n'
+        expected_result += '    el_locator = missing_arguments["pagina"].locator(f"xpath={el_locator_xpath}")\n'
+        expected_result += '    await el_locator.wait_for()\n'
+        expected_result += '    el_handler = await el_locator.first.element_handle()\n'
+        expected_result += '    iframe_stack.append(await el_handler.content_frame())\n'
+        expected_result += '    missing_arguments["pagina"] = iframe_stack[-1]\n'
+        expected_result += "    ### Fim: Passando o contexto de execução para iframe ###\n"
+        expected_result += "\n"
+        expected_result += "    ### Início: Saindo do contexto de iframe ###\n"
+        expected_result += '    iframe_stack.pop()\n'
+        expected_result += '    if not iframe_stack:\n'
+        expected_result += '        missing_arguments["pagina"] = page\n'
+        expected_result += '    else:\n'
+        expected_result += '        missing_arguments["pagina"] = iframe_stack[-1]\n'
+        expected_result += "    ### Fim: Saindo do contexto de iframe ###\n\n"
+
+        self.assertEqual(expected_result, result)
+
     # def test_generate_code(self):
     #     with open("tests/test_step_by_step/examples/recipe_examples.json") as file:
     #         recipe_examples = json.load(file)

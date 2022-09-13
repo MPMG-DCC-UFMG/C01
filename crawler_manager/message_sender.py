@@ -53,3 +53,7 @@ class MessageSender:
         self.__producer.send(settings.COMMANDS_TOPIC, {'stop': crawler_id})
 
         self.__producer.flush()
+
+    def send(self, topic: str, message: dict):
+        self.__producer.send(topic, message)
+        self.__producer.flush()

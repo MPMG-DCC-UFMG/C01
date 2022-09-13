@@ -411,5 +411,25 @@
                 }
             ]
         }
+    },
+    "iframe_exec": {
+        "description": "Getting in and out of an iframe element",
+        "recipe": {
+            "step": "root",
+            "depth": 0,
+            "children": [
+                {
+                    "step": "executar_em_iframe",
+                    "xpath": "\"teste\"",
+                    "depth": 1,
+                    "children": []
+                },
+                {
+                    "step": "sair_de_iframe",
+                    "depth": 1,
+                    "children": []
+                }
+            ]
+        }
     }
 }

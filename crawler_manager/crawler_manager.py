@@ -1,6 +1,5 @@
 import random
 import time
-import sys
 
 # Project libs
 from crawler_manager.log_writer import LogWriter

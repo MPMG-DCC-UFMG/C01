@@ -62,6 +62,8 @@ function init_block(step_list, depth){
     block.turn_to_attribution_step = turn_to_attribution_step
     block.turn_to_new_tab_step = turn_to_new_tab_step
     block.turn_to_close_tab_step = turn_to_close_tab_step
+    block.turn_to_run_in_iframe_step = turn_to_run_in_iframe_step
+    block.turn_to_exit_iframe_step = turn_to_exit_iframe_step
     block.turn_to_if_step = turn_to_if_step
 
 
@@ -534,7 +536,7 @@ function refresh_steps_option_below_index(index) {
         return;
 
     for (let i=start_index;i<step_blocks.length;i++) {
-        let context = get_insertion_index_context(index, 'down')
+        let context = get_insertion_index_context(i, 'up')
         refresh_step_options(step_blocks[i], context)
     }
 }
@@ -562,7 +564,7 @@ function add_open_iframe_button(block) {
     open_iframe_img.style.height = "1.25em"
 
     block.open_iframe_button.onclick = function () {
-        let xpath = load_param_dict(block).xpath;
+        let xpath = block.xpath_input.value;
 
         if (xpath.length == 0) {
             alert('É necessário especificar o XPATH do iframe antes!')
@@ -576,7 +578,11 @@ function add_open_iframe_button(block) {
         }
 
         let host = location.protocol + '//' + location.host;
-        let url_of_iframe_loader = `${host}/iframe/load?url="${base_url}"&xpath="${xpath}"`
+
+        let enc_base_url = encodeURIComponent(base_url)
+        let enc_xpath = encodeURIComponent(xpath)
+
+        let url_of_iframe_loader = `${host}/iframe/load?url=${enc_base_url}&xpath=${enc_xpath}`
 
         window.open(url_of_iframe_loader, '_blank').focus();
     }
@@ -603,57 +609,53 @@ function refresh_step(){
     block.classList.remove("iframe-context-start")
     block.classList.remove("iframe-context-end")
 
-    if(this.value=="Para cada"){
+    if(this.value=="Para cada") {
         block.turn_to_for_step()
-    }else if(this.value=="Enquanto"){
+    } else if(this.value=="Enquanto") {
         block.turn_to_while_step()
-    }else if(this.value=="Se"){
+    } else if(this.value=="Se") {
         block.turn_to_if_step()
-    }else if(this.value=="Atribuição"){
+    } else if(this.value=="Atribuição") {
         block.turn_to_attribution_step()
-    }else if(this.value=="Abrir em nova aba"){
+    } else if(this.value=="Abrir em nova aba") {
         block.turn_to_new_tab_step()
         block.className += " new-tab-context-start"
         execution_context_changed = true
-    }else if(this.value=="Fechar aba"){
+    } else if(this.value=="Fechar aba") {
         block.turn_to_close_tab_step()
         block.className += " new-tab-context-end"
         execution_context_changed = true
-    }
-    else{        
+    } else if (this.value == "Executar em iframe") {
+        block.turn_to_run_in_iframe_step()
+        block.className += " iframe-context-start"
+        execution_context_changed = true;
+    } else if (this.value == "Sair de iframe") {
+        block.turn_to_exit_iframe_step()
+        block.className += " iframe-context-end"
+        execution_context_changed = true;
+    } else {
         block.delete_lines(block.lines.length)
         block.add_line()
-        
+
         for(param of block.step.mandatory_params){
             field_options = block.step.field_options[param]
             block.add_param(param, field_options)
         }
-        
+
         optional_params = Object.keys(block.step.optional_params)
         if(optional_params.length!=0){
             block.init_optional_params_button(block.step)
-        }
-    
-        if (this.value == "Executar em iframe") {
-            block.className += " iframe-context-start"
-            execution_context_changed = true;            
-            add_open_iframe_button(block);
-        }
-
-        else if (this.value == "Sair de iframe") {
-            block.className += " iframe-context-end"
-            execution_context_changed = true;
         }
     }
 
     //add block tooltip depending on type selection
     block.add_block_tooltip();
-    
+
     if (execution_context_changed) {
         let index = get_index_in_parent(block)
         refresh_steps_option_below_index(index)
     }
-    
+
     colorize_contexts()
 }
 
@@ -845,6 +847,37 @@ function turn_to_new_tab_step(){
 }
 
 function turn_to_close_tab_step(){
+    block = find_parent_with_attr_worth(this, "block")
+    block.delete_lines(block.lines.length)
+    block.add_line()
+    block.lines[0].row.full = true
+}
+
+/**
+ * Sets the block to the run in iframe step.
+ * This function is a method of the block.
+ */
+function turn_to_run_in_iframe_step(){
+    block = find_parent_with_attr_worth(this, "block")
+    block.delete_lines(block.lines.length)
+    block.add_line()
+
+    // defines iframe xpath
+    xpath_input_box = document.createElement("DIV")
+    xpath_input_box.className = "col-sm"
+    xpath_input = document.createElement("INPUT")
+    xpath_input.placeholder = "xpath do iframe"
+    xpath_input.className = "form-control row"
+    xpath_input_box.appendChild(xpath_input)
+    block.xpath_input = xpath_input
+
+    block.lines[0].row.appendChild(xpath_input_box)
+    block.lines[0].row.full = true
+
+    add_open_iframe_button(block);
+}
+
+function turn_to_exit_iframe_step(){
     block = find_parent_with_attr_worth(this, "block")
     block.delete_lines(block.lines.length)
     block.add_line()
