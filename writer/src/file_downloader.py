@@ -98,8 +98,10 @@ class FileDownloader:
         for description_file in description_files:
             with open(description_file) as file:
                 for line in file.readlines():
-                    hash = ujson.loads(line)['content_hash']
-                    hashes.add(hash)
+                    description = ujson.loads(line) 
+                    content_hash = description.get('content_hash')
+                    if content_hash:
+                        hashes.add(content_hash)
 
         return hashes
 
