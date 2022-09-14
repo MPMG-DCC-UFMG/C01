@@ -35,7 +35,7 @@ class CrawlRequest(TimeStamped):
     base_url = models.TextField()
     obey_robots = models.BooleanField(blank=True, null=True)
 
-    ignore_data_crawled_in_previous_instances = models.BooleanField(blank=True, null=True, default=True)
+    ignore_data_crawled_in_previous_instances = models.BooleanField(blank=True, null=True, default=False)
 
     crawler_description = models.TextField(default='')
 
