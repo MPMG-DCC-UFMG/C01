@@ -102,7 +102,8 @@ function checkBasicInfo() {
     var valid =
       validateTextInputsByName("source_name") &&
       validateTextInputsByName("base_url") &&
-      validateTextInputsByName("data_path");
+      validateTextInputsByName("data_path") && 
+      validateTextInputsByName("crawler_description");
     defineIcon("basic-info", valid);
 }
 
@@ -302,6 +303,7 @@ function checkRelatedFields() {
         case 'source_name':
         case 'base_url':
         case 'data_path':
+        case 'crawler_description':
             checkBasicInfo();
             break;
         case 'has_webdriver':

@@ -5,11 +5,11 @@
         <div class="col-12">
             <div class="row bg-secondary text-light">
                 <div class="col-1"><input type="checkbox" name="check_all_crawlers" id="check_all_crawlers" checked /> ID</div>
-                <div class="col-2">Nome do Coletor</div>
-                <div class="col-2">URL Base</div>
-                <div class="col-2">Caminho arquivos</div>
-                <div class="col-2">Categoria</div>
-                <div class="col-2">Descrição</div>
+                <div class="col-2">Nome do Coletor*</div>
+                <div class="col-2">URL Base*</div>
+                <div class="col-2">Caminho arquivos*</div>
+                <div class="col-2">Tipo do coletor</div>
+                <div class="col-2">Descrição do coletor*</div>
                 <div class="col-1">Issue</div>
             </div>
             <div id="crawler-line-template" class="d-none">
@@ -39,7 +39,7 @@
                     </div>
                     <div class="col-1">
                         <div class="input-group">
-                            <input type="text" name="template-crawler_issue" value="" class="textinput textInput form-control p-0" autocomplete="off">
+                            <input type="number" name="template-crawler_issue" value="0" class="textinput textInput form-control p-0" autocomplete="off">
                             <div class="input-group-append">
                                 <button type="button" class="btn btn-danger ml-2 btn-remove-crawler"><i class="fa fa-minus"></i></button>
                             </div>
@@ -55,13 +55,13 @@
                         Novo
                     </div>
                     <div class="col-2">
-                        <input type="text" name="source_name" value="" class="textinput textInput form-control" autocomplete="off">
+                        <input type="text" name="source_name" value="" class="textinput textInput form-control" required autocomplete="off">
                     </div>
                     <div class="col-2">
-                        <input type="text" name="base_url" value="" class="textinput textInput form-control" autocomplete="off">
+                        <input type="text" name="base_url" value="" class="textinput textInput form-control" required autocomplete="off">
                     </div>
                     <div class="col-2">
-                        <input type="text" name="data_path" value="" class="textinput textInput form-control" autocomplete="off">
+                        <input type="text" name="data_path" value="" class="textinput textInput form-control" required autocomplete="off">
                     </div>
                     <div class="col-2">
                         <select name="crawler_type_desc" value="" class="select textInput form-control">
@@ -71,10 +71,10 @@
                         </select>
                     </div>
                     <div class="col-2">
-                        <input type="text" name="crawler_description" value="" class="textinput textInput form-control" autocomplete="off">
+                        <input type="text" name="crawler_description" value="" class="textinput textInput form-control" required autocomplete="off">
                     </div>
                     <div class="col-1">
-                        <input type="text" name="crawler_issue" value="" class="textinput textInput form-control" autocomplete="off">
+                        <input type="number" name="crawler_issue" value="0" class="textinput textInput form-control" autocomplete="off">
                     </div>
                 </div>
                 {% endif %}
@@ -85,13 +85,13 @@
                         {{ crawler.id }}
                     </div>
                     <div class="col-2">
-                        <input type="text" name="source_name" value="{{ crawler.source_name }}" class="textinput textInput form-control" autocomplete="off">
+                        <input type="text" name="source_name" value="{{ crawler.source_name }}" class="textinput textInput form-control" required autocomplete="off">
                     </div>
                     <div class="col-2">
-                        <input type="text" name="base_url" value="{{ crawler.base_url }}" class="textinput textInput form-control" autocomplete="off">
+                        <input type="text" name="base_url" value="{{ crawler.base_url }}" class="textinput textInput form-control" required autocomplete="off">
                     </div>
                     <div class="col-2">
-                        <input type="text" name="data_path" value="{{ crawler.data_path }}" class="textinput textInput form-control" autocomplete="off">
+                        <input type="text" name="data_path" value="{{ crawler.data_path }}" class="textinput textInput form-control" required autocomplete="off">
                     </div>
                     <div class="col-2">
                         <select name="crawler_type_desc" value="" class="select textInput form-control">
@@ -101,10 +101,10 @@
                         </select>
                     </div>
                     <div class="col-2">
-                        <input type="text" name="crawler_description" value="{{ crawler.crawler_description }}" class="textinput textInput form-control" autocomplete="off">
+                        <input type="text" name="crawler_description" value="{{ crawler.crawler_description }}" class="textinput textInput form-control" required autocomplete="off">
                     </div>
                     <div class="col-1">
-                        <input type="text" name="crawler_issue" value="{{ crawler.crawler_issue }}" class="textinput textInput form-control" autocomplete="off">
+                        <input type="number" name="crawler_issue" value="{{ crawler.crawler_issue }}" class="textinput textInput form-control" autocomplete="off">
                     </div>
                 </div>
                 {% endfor %}
