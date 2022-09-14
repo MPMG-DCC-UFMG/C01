@@ -8,7 +8,9 @@ from datetime import datetime
 from kafka import KafkaConsumer, KafkaProducer
 from coolname import generate_slug
 
-from crawling_utils import hash, notify_files_found
+from crawling_utils import (hash, notify_files_found, 
+                            notify_file_previously_crawled, 
+                            notify_file_downloaded_successfully)
 
 from download_request import DownloadRequest
 import settings
@@ -76,9 +78,11 @@ class FileDownloader:
                         print(
                             f'\t[{datetime.now()}] [FILE-DOWNLOADER] {worker_name} Worker: File already crawled in a previous instance. Ignoring...')
                         download_request.cancel()
+                        notify_file_previously_crawled(download_request.instance_id)
 
                     else:
                         download_request.save()
+                        notify_file_downloaded_successfully(download_request.instance_id)
                         description = download_request.get_description()
                         self.__feed_download_description(description)
 

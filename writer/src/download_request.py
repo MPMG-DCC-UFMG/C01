@@ -8,7 +8,7 @@ import string
 import time
 
 import settings
-from crawling_utils import notify_file_downloaded_successfully, notify_file_downloaded_with_error
+from crawling_utils import notify_file_downloaded_with_error
 
 PUNCTUATIONS = "[{}]".format(string.punctuation)
 
@@ -125,12 +125,9 @@ class DownloadRequest:
             return True
 
     def cancel(self):
-        # TODO: notify server that the downloaded file is duplicated
-        notify_file_downloaded_successfully(self.instance_id)
         os.remove(self.temp_path_to_save)
 
     def save(self):
-        notify_file_downloaded_successfully(self.instance_id)
         os.replace(self.temp_path_to_save, self.path_to_save)
 
     def get_description(self) -> dict:
