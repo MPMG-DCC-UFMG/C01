@@ -349,6 +349,10 @@ Crawler "{{ crawler.source_name }}"
 
     // the queue always has id = 1 as it is unique and designed that way
     var CRAWLER_QUEUE_API_ADDRESS = SERVER_ADDRESS + '/api/crawler_queue/1/';
+
+    var RUNNING_TEST_MODE = {% if running_test_mode %} true {% else %} false {% endif %};
+    var TEST_STARTED_AT = {{ test_started_at }};
+    var TEST_RUNTIME = {{ test_runtime }}; 
         
 </script>
 <script  type="text/javascript" src="https://cdn.jsdelivr.net/npm/nanogallery2@3/dist/jquery.nanogallery2.min.js"></script>

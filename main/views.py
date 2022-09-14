@@ -496,10 +496,22 @@ def detail_crawler(request, crawler_id):
         queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
         queue_item_id = queue_item.id
 
+    last_instance = None 
+    running_test_mode = False 
+    test_started_at = None 
+
+    if len(instances):
+        last_instance = instances[0]
+        running_test_mode = last_instance.execution_context == 'testing' and last_instance.running
+        test_started_at = round(datetime.timestamp(last_instance.creation_date) * 1000) # JS is based is ms
+
     context = {
         'crawler': crawler,
         'instances': instances,
         'last_instance': instances[0] if len(instances) else None,
+        'running_test_mode': running_test_mode,
+        'test_started_at': test_started_at,
+        'test_runtime': settings.RUNTIME_OF_CRAWLER_TEST * 1000, #JS is based is ms
         'queue_item_id': queue_item_id
     }
 
@@ -522,6 +534,7 @@ def stop_crawl(request, crawler_id):
         if str(e) == NO_INSTANCE_RUNNING_ERROR_MSG:
             return redirect(detail_crawler, crawler_id=crawler_id)
         raise
+    return redirect(detail_crawler, crawler_id=crawler_id)
 
 def run_crawl(request, crawler_id):
     add_crawl_request(crawler_id)
@@ -885,8 +898,8 @@ class CrawlerViewSet(viewsets.ModelViewSet):
                 'status': settings.API_ERROR,
                 'message': str(e)
             }
-            status = status.HTTP_400_BAD_REQUEST if str(e) == NO_INSTANCE_RUNNING_ERROR_MSG else status.HTTP_500_INTERNAL_SERVER_ERROR
-            return Response(data, status=status)
+            _status = status.HTTP_400_BAD_REQUEST if str(e) == NO_INSTANCE_RUNNING_ERROR_MSG else status.HTTP_500_INTERNAL_SERVER_ERROR
+            return Response(data, status=_status)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
