@@ -139,7 +139,6 @@ class Writer:
 
         if content_hash in self.__hashes_of_already_crawled_pages[crawler_id]:
             print(f'\t[{datetime.now()}] [FILE-DOWNLOADER] Writer: Page already crawled in a previous instance. Ignoring...')
-            # TODO: Notify server that page is duplicated
             notify_page_previously_crawled(crawled_data['instance_id'])
             return
 
