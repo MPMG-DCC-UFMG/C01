@@ -1,0 +1,33 @@
+#accordion-header{
+    display: flex;
+    flex-wrap: wrap;
+    background-color: #1c3c40;
+    color: white;
+    padding: .75rem 1.25rem;
+    border-radius: .25rem;
+}
+
+#crawlers-grouped-accordion .card-body{
+    max-height: 400px;
+    overflow-y: scroll;
+}
+
+#crawlers-grouped-accordion .card{
+    border-color: #639fa6;
+}
+
+#crawlers-grouped-accordion .card-header{
+    cursor: pointer;
+    border-color: #639fa6;
+    background-color: #8fbfbf;
+    
+}
+
+#crawlers-grouped-accordion .card-header .btn-primary{
+    background-color: #386d73;
+    border-color: #386d73;
+}
+
+#crawlers-grouped-accordion .card-body table thead{
+    background-color: #f2d4c2;
+}
