@@ -1,0 +1,23 @@
+{% load crispy_forms_tags %}
+
+<div id="captcha-item-block" class="block" hidden>
+    <div class="row" style="padding:20px;">
+        <div class="col md-6">
+            {{ form.captcha | as_crispy_field}}
+            <div id="captchaDiv">
+                <div class="captcha-content-div" id="image" hidden>
+                    {{ form.img_xpath | as_crispy_field}}
+                </div>
+                <div class="captcha-content-div" id="sound" hidden>
+                    {{ form.sound_xpath | as_crispy_field}}
+                </div>
+                <div class="webdriver-div" id="webdriver" hidden>
+                    {{ form.has_webdriver | as_crispy_field}}
+                    <div id="webdriver_path_div" hidden>
+                        {{ form.webdriver_path | as_crispy_field}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -8,6 +8,31 @@
 New Crawler
 {% endblock %}
 
+{% block style %}
+<style>
+    .grouped_crawlers_container{
+        height: 400px;
+        overflow-y: scroll;
+        margin-right: -15px;
+        margin-left: -15px;
+        padding-right: 15px;
+        padding-left: 15px;
+        border: 1px solid #ddd;
+    }
+
+    /* Esconde as setinhas no campo numérico - Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Esconde as setinhas no campo numérico - Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 
@@ -22,13 +47,11 @@ New Crawler
         <!-- sidebar-container END -->
         <div class="col py-3">
             <div class="row justify-content-center">
-                <div class="col-8">
+                <div class="col-12">
                     <hr class="mt-0 mb-4">
-                    {% include "main/_create_01_import.html" %}
-
                     {% include "main/_create_02_scheduler.html" %}
 
-                    {% include "main/_create_03_basic.html" %}
+                    {% include "main/_create_03_basic_group.html" %}
 
                     {% include "main/_create_04_antiblock.html" %}
 
@@ -69,7 +92,6 @@ New Crawler
         added: () => checkTemplatedURL(),
         removed: () => checkTemplatedURL(),
     });
-
     $(function () {$('[data-toggle="popover"]').popover({
         trigger: 'hover',
         html: true,
@@ -81,4 +103,5 @@ New Crawler
 <script>detailDynamicProcessing();</script>
 <script src="{% static 'js/steps.js' %}"></script>
 <script src="{% static 'js/step_block.js' %}"></script>
+<script src="{% static 'js/create_crawler_grouped.js' %}"></script>
 {% endblock %}

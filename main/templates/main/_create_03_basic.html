@@ -1,0 +1,19 @@
+{% load crispy_forms_tags %}
+
+<div id="basic-info-item-block" class="block">
+    <div class="row" style="padding:20px;">
+        <div class="col md-6">
+            {{ form.source_name | as_crispy_field}}
+            {{ form.base_url | as_crispy_field}}
+            <p>A URL pode conter espaços para parâmetros, representados como um conjunto de chaves vazias</p>
+            <hr>
+            {{ form.expected_runtime_category | as_crispy_field }}
+            <hr>
+            {{ form.crawler_type_desc | as_crispy_field}}
+            {{ form.crawler_description | as_crispy_field}}
+            {{ form.crawler_issue | as_crispy_field}}
+            {{ form.obey_robots | as_crispy_field}}
+            {{ form.data_path | as_crispy_field}}
+        </div>
+    </div>
+</div>
