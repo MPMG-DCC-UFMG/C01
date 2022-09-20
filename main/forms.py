@@ -110,7 +110,6 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     ignore_data_crawled_in_previous_instances = forms.BooleanField(
         required=False,
-        initial=True,
         help_text='Ao habilitar essa opção, o sistema ignorará dados (arquivos e páginas html) cujo hash de seu conteúdo é igual ao hash de outros dados coletados em ' \
             'execuções anteriores. Ou seja, o sistema não salvará dados que já foram coletados em execuções anteriores.',
         label="Ignorar dados já coletados em instâncias anteriores")
