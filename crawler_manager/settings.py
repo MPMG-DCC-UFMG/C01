@@ -1,13 +1,12 @@
 import os 
-import errno
 
 # Zookeeper host information
 ZOOKEEPER_ASSIGN_PATH = os.getenv('ZOOKEEPER_ASSIGN_PATH', '/scrapy-cluster/crawler/')
 ZOOKEEPER_ID = os.getenv('ZOOKEEPER_ID', 'all')
-ZOOKEEPER_HOSTS = [x.strip() for x in os.getenv('ZOOKEEPER_HOSTS', 'zookeeper:2181').split(',')]
+ZOOKEEPER_HOSTS = [x.strip() for x in os.getenv('ZOOKEEPER_HOSTS', 'localhost:2181').split(',')]
 
 # ------------------------------- Kafka host info.
-KAFKA_HOSTS = [x.strip() for x in os.getenv('KAFKA_HOSTS', 'kafka:9092').split(',')]
+KAFKA_HOSTS = [x.strip() for x in os.getenv('KAFKA_HOSTS', 'localhost:9092').split(',')]
 KAFKA_TOPIC_PREFIX = os.getenv('KAFKA_TOPIC_PREFIX', 'crawler_ufmg')
 
 KAFKA_CONSUMER_AUTO_OFFSET_RESET = 'earliest'
@@ -79,10 +78,10 @@ OUTPUT_FOLDER = os.getenv('OUTPUT_FOLDER', '/data')
 # -------------------------------------- Server notification crawled data endpoint
 
 STOPPED_SPIDER_NOTIFICATION_ADDRESS = os.getenv(
-    'STOPPED_SPIDER_NOTIFICATION_ADDRESS', 'http://web:8000/detail/stop_crawl/{crawler_id}')
+    'STOPPED_SPIDER_NOTIFICATION_ADDRESS', 'http://localhost:8000/detail/stop_crawl/{crawler_id}')
 
 SERVER_NEW_PAGE_FOUND_URL = os.getenv('SERVER_NEW_PAGE_FOUND_URL',
-                                      'http://web:8000/download/pages/found/{instance_id}/{num_pages}')
+                                      'http://localhost:8000/download/pages/found/{instance_id}/{num_pages}')
 
 # -------------------------------------- HTTP request headers
 

@@ -3,6 +3,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 
 from rest_framework import status
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -16,9 +17,9 @@ from main.serializers import CrawlerQueueSerializer
 
 import crawler_manager.crawler_manager as crawler_manager
 
-CRAWLER_QUEUE = CrawlerQueue.object()
-
 try:
+    CRAWLER_QUEUE = CrawlerQueue.object()
+
     # clears all items from the queue when starting the system
     CrawlerQueueItem.objects.all().delete()
 

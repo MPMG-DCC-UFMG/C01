@@ -68,7 +68,7 @@ class CrawlerQueue(models.Model):
         candidates = self.items.filter(queue_type=queue_type, running=False).order_by('position').values()
         limit = max(0, max_crawlers_running - num_crawlers_running)
 
-        return [(e['id'], e['crawl_request_id']) for e in candidates[:limit]]
+        return [(candidate['id'], candidate['crawl_request_id']) for candidate in candidates[:limit]]
 
     def get_next(self, queue_type: str):
         next_crawlers = list()

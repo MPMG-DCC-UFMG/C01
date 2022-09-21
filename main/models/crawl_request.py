@@ -1,11 +1,11 @@
+from __future__ import annotations 
+
 from django.db import models
 from django.core.validators import MinValueValidator, RegexValidator
 
 from crawling_utils.constants import (AUTO_ENCODE_DETECTION,
                                       HEADER_ENCODE_DETECTION)
-
-from main.models import (TimeStamped, CrawlerQueueItem)
-
+from main.models import TimeStamped
 
 class CrawlRequest(TimeStamped):
 
@@ -309,9 +309,10 @@ class CrawlRequest(TimeStamped):
 
     @property
     def waiting_on_queue(self):
-        on_queue = CrawlerQueueItem.objects.filter(crawl_request_id=self.pk).exists()
+        on_queue = self.queue_items.all().exists()
         if on_queue:
-            return not CrawlerQueueItem.objects.get(crawl_request_id=self.pk).running
+            crawler_queue_item = self.queue_items.first()
+            return not crawler_queue_item.running
         return False
 
     @property

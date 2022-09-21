@@ -15,6 +15,7 @@ class ResponseHandler(models.Model):
         ('http_status', 'Código de status HTTP'),
         ('binary', 'Arquivo de tipo binário'),
     ]
+    
     handler_type = models.CharField(max_length=15, choices=HANDLER_TYPES)
     text_match_value = models.CharField(max_length=1000, blank=True)
     http_status = models.PositiveIntegerField(null=True, blank=True)
