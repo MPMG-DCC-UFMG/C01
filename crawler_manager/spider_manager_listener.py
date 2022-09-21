@@ -11,7 +11,7 @@ from crawler_manager import settings
 
 class SpiderManagerListener:
     def __init__(self) -> None:
-        self.__consumer = KafkaConsumer(settings.NOTIFICATIONS_TOPIC,
+        self.__consumer = KafkaConsumer(settings.SPIDER_MANAGER_TOPIC,
                                         bootstrap_servers=settings.KAFKA_HOSTS,            
                                         auto_offset_reset=settings.KAFKA_CONSUMER_AUTO_OFFSET_RESET,
                                         connections_max_idle_ms=settings.KAFKA_CONNECTIONS_MAX_IDLE_MS,

@@ -1,6 +1,5 @@
-import datetime
 import json
-
+from datetime import datetime
 
 from rest_framework import status
 from rest_framework import viewsets
@@ -86,6 +85,7 @@ class SchedulerTaskViewSet(viewsets.ModelViewSet):
             start_date = None
             if 'start_date' in query_params:
                 start_date = self.__str2date(query_params['start_date'])
+
         if end_date is None or start_date is None:
             msg = {'message': 'You must send the params start_date and end_date, both in the format day-month-year' +
                    ' in the query params of the url. Eg.: <api_address>?start_date=23-04-2023&end_date=01-01-2020, etc.'}

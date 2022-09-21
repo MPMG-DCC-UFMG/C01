@@ -112,7 +112,14 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def update(self, request, pk=None):
+        print('------------------------')
+
+        print(request.data)
+        print('*' * 100)
+
         response = super().update(request, pk=CRAWLER_QUEUE_DB_ID)
+
+        print('*' * 10)
 
         # updade crawler queue instance with new configs
         global CRAWLER_QUEUE
@@ -132,7 +139,7 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
         # more crawlers
         if 'max_slow_runtime_crawlers_running' in request.data:
             unqueue_crawl_requests('slow')
-
+        
         return response
 
 def add_crawl_request(crawler_id, wait_on: Literal['last_position', 'first_position', 'no_wait'] = 'last_position'):

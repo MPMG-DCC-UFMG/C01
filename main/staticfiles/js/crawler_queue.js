@@ -375,12 +375,12 @@ function updateMaxCrawlers() {
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         async: false,
-        data: data,
+        data: JSON.stringify(data),
         success: function (data) {
             UPDATING_SCHEDULER_CONFIG = false;
         },
         error: function (data) {
-            alert('Houve um erro ao editar o campo!');
+            console.error(data);
         }
     });
 }
