@@ -1,4 +1,5 @@
 import datetime
+import os
 from typing import List, Union
 
 from crawler_manager.constants import *
@@ -360,9 +361,10 @@ class CrawlRequest(TimeStamped):
             return None
 
     def __check_if_crawler_worked(self, instance_id) -> bool:
-        from random import randint
-
-        return bool(randint(0, 1)) 
+        files_path = f"/data/{self.data_path}/{instance_id}/data/"
+        if not os.listdir(files_path + "raw_pages/") and not os.listdir(files_path + "files/"):
+            return False
+        return True
 
     def update_functional_status_after_run(self, instance_id):
         crawler_worked = self.__check_if_crawler_worked(instance_id)
@@ -371,7 +373,7 @@ class CrawlRequest(TimeStamped):
         self.date_last_functional_test = timezone.now() 
 
         self.save()
-        
+
     def __str__(self):
         return self.source_name
 
