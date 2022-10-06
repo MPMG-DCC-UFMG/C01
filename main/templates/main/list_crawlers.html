@@ -139,7 +139,9 @@ Home
                                 {% endif %}
                             </td>
                         {% else  %}
-                            {% if crawler.running == True %}
+                            {% if crawler.functional_status == 'testing' %}
+                                <td><span class="badge badge-warning">Testando</span></td>
+                            {% elif crawler.running == True %}
                                 <td><span class="badge badge-success">Rodando</span></td>
                             {% else %}
                                 <td><span class="badge badge-danger">Parado</span></td>

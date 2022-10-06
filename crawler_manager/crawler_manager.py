@@ -1,3 +1,5 @@
+from cmath import log
+from glob import glob
 import random
 import time
 
@@ -8,23 +10,22 @@ from crawler_manager.spider_manager_listener import SpiderManagerListener
 
 from crawling_utils import system_is_deploying
 
-message_sender = None
+MESSAGE_SENDER = None
+LOG_WRITER = None 
+
 if not system_is_deploying():
-    message_sender = MessageSender()
+    MESSAGE_SENDER = MessageSender()
 
-
-def log_writer_executor():
-    '''Redirects log_writer output and starts descriptor consumer loop.'''
-    if not system_is_deploying():
-        LogWriter.log_consumer()
-
-
-def run_spider_manager_listener():
+def run_kafka_listeners():
     '''Start spider_manager message consumer loop'''
+    global LOG_WRITER
+    
     if not system_is_deploying():
         sm_listener = SpiderManagerListener()
         sm_listener.run()
-
+        
+        LOG_WRITER = LogWriter()
+        LOG_WRITER.run()
 
 def gen_key():
     """Generates a unique key based on time and a random seed."""
@@ -42,7 +43,7 @@ def start_crawler(config: dict):
     config["crawler_id"] = config["id"]
     del config["id"]
 
-    message_sender.send_start_crawl(config)
+    MESSAGE_SENDER.send_start_crawl(config)
 
 
 def stop_crawler(crawler_id):
@@ -52,9 +53,4 @@ def stop_crawler(crawler_id):
         - crawler_id: Uniquer crawler identifier
 
     """
-    message_sender.send_stop_crawl(str(crawler_id))
-
-
-def update_instances_info(data_path: str, instance_id: str, instance: dict):
-    """Updates the file with information about instances when they are created, initialized or terminated."""
-    pass
+    MESSAGE_SENDER.send_stop_crawl(str(crawler_id))

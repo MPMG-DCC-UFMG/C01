@@ -163,11 +163,12 @@ class Executor:
 
         crawler_id = str(config['crawler_id'])
         instance_id = str(config['instance_id'])
+        execution_context = config['execution_context']
 
         logger_name = f'Worker: {self.__container_id}-{crawler_id}'
 
-        sys.stdout = KafkaLogger(instance_id, logger_name, 'out')
-        sys.stderr = KafkaLogger(instance_id, logger_name, 'err')
+        sys.stdout = KafkaLogger(instance_id, execution_context, logger_name, 'out')
+        sys.stderr = KafkaLogger(instance_id, execution_context, logger_name, 'err')
 
         base_settings = self.__get_spider_base_settings(config)
         self.__parse_config(base_settings)
@@ -177,6 +178,7 @@ class Executor:
 
         process.crawl(StaticPageSpider,
                       name=crawler_id,
+                      execution_context = config['execution_context'],
                       spider_manager_id=self.__container_id,
                       config=ujson.dumps(config))
 
@@ -218,6 +220,7 @@ class Executor:
             'spider_manager_id': spider.spider_manager_id,
             'crawler_id': spider.name,
             'code': 'closed',
+            'spider_execution_context': spider.execution_context,
             'reason': reason
         }
 

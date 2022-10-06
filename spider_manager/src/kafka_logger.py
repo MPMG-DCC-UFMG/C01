@@ -7,8 +7,10 @@ import settings
 
 
 class KafkaLogger:
-    def __init__(self, instance_id: str, name: str, log_level: str):
+    def __init__(self, instance_id: str, execution_context: str, name: str, log_level: str):
         self.__instance_id = instance_id
+        self.__execution_context = execution_context
+
         self.__name = name
         self.__log_level = log_level
 
@@ -33,6 +35,7 @@ class KafkaLogger:
             'name': self.__name,
             'levelname': self.__log_level,
             'instance_id': self.__instance_id,
+            'execution_context': self.__execution_context,
             'message': message
         })
         self.__producer.flush()

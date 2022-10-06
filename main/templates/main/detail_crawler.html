@@ -21,6 +21,23 @@ Crawler "{{ crawler.source_name }}"
                 <li>Data de criação: <strong>{{ crawler.creation_date }}</strong></li>
                 <li>Tipo de coleta: <strong>{{crawler.crawler_type_desc}}</strong></li>
                 <li>Descrição: <strong>{{crawler.crawler_description}}</strong></li>
+                <li>Status de funcionamento: 
+                    {% if crawler.functional_status == 'not_tested' %}
+                    <span class="badge badge-info">Não testado</span>
+                    {% elif crawler.functional_status == 'testing' %}
+                    <span class="badge badge-warning">Testando</span>
+                    {% elif crawler.functional_status == 'functional' %}
+                    <span class="badge badge-success">Funcional</span>
+                    <small></small>
+                    {% else %}
+                    <span class="badge badge-danger">Não funcional</span>
+                    {% endif %}
+                </li>
+
+                {% if crawler.functional_status == 'functional' or crawler.functional_status == 'non_functional'%}
+                <li>Data último teste de funcionamento: <strong>{{ crawler.date_last_functional_test }}</strong></li>
+                {% endif %}
+
                 <li>Issue: <a href="https://github.com/MPMG-DCC-UFMG/C01/issues/{{crawler.crawler_issue}}" target="_blank"><strong>{{crawler.crawler_issue}}</strong></a></li>
                 <li title="Informa em qual fila o coletor irá aguardar">Fila de coletas: 
                 {% if crawler.expected_runtime_category == 'fast' %} 
@@ -31,7 +48,7 @@ Crawler "{{ crawler.source_name }}"
                     <span class="badge badge-danger">Lenta</span>
                 {% endif %}
                 </li>
-                <li id="crawler_ status">
+                <li id="crawler_status">
                 {% if crawler.waiting_on_queue%}
                     <div class="d-flex">
                         <span class="badge badge-info mr-1">Aguardando na fila de coletas</span>
@@ -132,20 +149,28 @@ Crawler "{{ crawler.source_name }}"
             <a class="btn btn-info" href="{% url 'edit_crawler' crawler.id %}" class="btn btn-primary">Editar</a>
             <button onclick="exit_crawler_queue({{ queue_item_id }})" class="btn border font-weight-bold ml-2"> <i class="fa fa-times fa-lg mr-1"></i> Sair da fila de coletas</button>
         </div>
+        {% elif crawler.functional_status == 'testing' %}
+        <div class="col">
+            <span class="btn btn-warning font-weight-bold" id="testing-crawler-info">Testando coletor (finaliza em 1min. 23 secs)</span>
+            <a id="stopBtn" class="btn btn-danger font-weight-bold" href="{% url 'stop_crawl' crawler.id %}">Parar</a>
+        </div>
         {% else %}
-
         <div class="col">
             {% if crawler.running == True %}
 
             <a id="runBtn" class="btn btn-success disabled"
                 dataref="{% url 'run_crawl' crawler.id %}" >Começar</a>
+            <a id="testBtn" class="btn btn-warning disabled"
+                href="{% url 'test_crawler' crawler.id %}">Testar</a>
             <a id="stopBtn" class="btn btn-danger"
                 href="{% url 'stop_crawl' crawler.id %}">Parar</a>
             {% elif crawler.running == False %}
             <a id="runBtn" class="btn btn-success"
                 href="{% url 'run_crawl' crawler.id %}">Começar</a>
+            <a id="testBtn" class="btn btn-warning" 
+                href="{% url 'test_crawler' crawler.id %}">Testar</a>
             <a id="stopBtn" class="btn btn-danger disabled"
-                dataref="{% url 'stop_crawl' crawler.id %}">Parar</a>
+                href="{% url 'stop_crawl' crawler.id %}">Parar</a>
 
             {% endif %}
             <!-- <a class="btn btn-success" id="run_button">
@@ -324,6 +349,10 @@ Crawler "{{ crawler.source_name }}"
 
     // the queue always has id = 1 as it is unique and designed that way
     var CRAWLER_QUEUE_API_ADDRESS = SERVER_ADDRESS + '/api/crawler_queue/1/';
+
+    var RUNNING_TEST_MODE = {% if running_test_mode %} true {% else %} false {% endif %};
+    var TEST_STARTED_AT = {{ test_started_at }};
+    var TEST_RUNTIME = {{ test_runtime }}; 
         
 </script>
 <script  type="text/javascript" src="https://cdn.jsdelivr.net/npm/nanogallery2@3/dist/jquery.nanogallery2.min.js"></script>

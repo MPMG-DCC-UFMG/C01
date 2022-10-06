@@ -59,6 +59,17 @@ class CrawlRequest(TimeStamped):
                                'Esse não é um caminho relativo válido.')
     data_path = models.CharField(max_length=2000, validators=[pathValid])
 
+    FUNCTIONAL_STATUS_CHOICES = [
+        ('testing', 'Testando'),
+        ('testing_by_crawling', 'Testando via coleta'),
+        ('non_functional', 'Não funcional'),
+        ('functional', 'Funcional'),
+        ('not_tested', 'Não testado')
+    ]
+
+    functional_status = models.CharField(max_length=32, default='not_tested', choices=FUNCTIONAL_STATUS_CHOICES)
+    date_last_functional_test = models.DateTimeField(blank=True, null=True)
+
     # SCRAPY CLUSTER ##########################################################
 
     # Don't cleanup redis queues, allows to pause/resume crawls.
@@ -339,6 +350,7 @@ class CrawlRequest(TimeStamped):
             return inst_query.get()
         return None
 
+
     @property
     def last_instance(self):
         last_instance = self.instances.order_by('-creation_date')[:1]
@@ -347,6 +359,19 @@ class CrawlRequest(TimeStamped):
         except:
             return None
 
+    def __check_if_crawler_worked(self, instance_id) -> bool:
+        from random import randint
+
+        return bool(randint(0, 1)) 
+
+    def update_functional_status_after_run(self, instance_id):
+        crawler_worked = self.__check_if_crawler_worked(instance_id)
+
+        self.functional_status = 'functional' if crawler_worked else 'non_functional'
+        self.date_last_functional_test = timezone.now() 
+
+        self.save()
+        
     def __str__(self):
         return self.source_name
 
@@ -443,7 +468,15 @@ class ResponseHandler(models.Model):
 class CrawlerInstance(TimeStamped):
     crawler = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE,
                                 related_name='instances')
+
     instance_id = models.BigIntegerField(primary_key=True)
+    
+    EXECUTION_CONTEXT_CHOICES = [
+        ('crawling', 'Coleta'),
+        ('testing', 'Teste')
+    ]
+
+    execution_context = models.CharField(max_length=8, default='crawling', choices=EXECUTION_CONTEXT_CHOICES)
 
     number_files_found = models.PositiveIntegerField(default=0, null=True, blank=True)
     number_files_success_download = models.PositiveIntegerField(default=0, null=True, blank=True)
