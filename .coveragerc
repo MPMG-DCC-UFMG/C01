@@ -14,7 +14,6 @@ source_pkgs =
     formparser
     param_injector
     range_inference
-    scrapy_puppeteer
     step_crawler
 
 [report]
