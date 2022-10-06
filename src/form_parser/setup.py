@@ -17,5 +17,5 @@ setup(
 
     # TODO add entry_probing as a requirement in a reliable manner
     install_requires=['lxml', 'requests', 'asyncio',
-                      'pyppeteer==0.2.6', 'syncer']
+                      'playwright', 'syncer']
 )

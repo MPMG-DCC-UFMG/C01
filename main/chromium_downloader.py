@@ -1,19 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""Chromium download module."""
-
-""""
-
-Light adaptation from https://github.com/pyppeteer/pyppeteer/blob/dev/pyppeteer/chromium_downloader.py
-This was necessary because it is necessary to change the chromium version, which in pyppeter is via OS environment variable. 
-However, it is not possible to do this automatically in python.
-
-Pyppeteer uses chromium version incompatible 
 """
-
-
-
+Chromium download module. Light adaptation from https://github.com/pyppeteer/pyppeteer/blob/dev/pyppeteer/chromium_downloader.py
+"""
 
 from io import BytesIO
 import logging
@@ -22,10 +12,8 @@ from pathlib import Path
 import stat
 import sys
 from zipfile import ZipFile
-from pyppeteer.launcher import executablePath
 import urllib3
 from tqdm import tqdm
-from pyppeteer import __chromium_revision__, __pyppeteer_home__
 logger = logging.getLogger(__name__)
 
 DOWNLOADS_FOLDER = os.path.join(os.getcwd(), 'local-chromium')
