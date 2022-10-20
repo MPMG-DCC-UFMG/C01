@@ -4,7 +4,7 @@ website using different request methods and response handling mechanisms.
 """
 from entry_probing.entry_probing import EntryProbing
 from entry_probing.entry_probing_request import HTTPProbingRequest,\
-                                                PlaywrightProbingRequest
+                                                PyppeteerProbingRequest
 from entry_probing.entry_probing_response import ResponseData,\
                                                  HTTPStatusProbingResponse,\
                                                  TextMatchProbingResponse,\
