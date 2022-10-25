@@ -7,7 +7,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get upgrade -y && apt-get autoremove \
     && apt-get install libffi-dev tzdata ffmpeg libsm6 libnss3 libxss1 \
     libasound2 libatk-bridge2.0-0 libgtk-3-0 libxext6 python3.7 python3-pip \
-    libxml2-dev libxslt-dev -y && apt-get autoclean && pip install -U pip
+    libxml2-dev libxslt-dev libssl-dev -y && apt-get autoclean && pip install \
+    -U pip
 
 # # Install dependencies
 # RUN apt-get update && apt-get install -y \

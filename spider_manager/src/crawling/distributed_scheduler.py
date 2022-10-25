@@ -487,26 +487,61 @@ class DistributedScheduler(object):
                 if not request_seen:
                     notify_new_page_found(req_dict['meta']['attrs']['instance_id'])
 
+                # Remove Playwright keys from request
+                if "meta" in req_dict:
+                    if "playwright" in req_dict["meta"]:
+                        del req_dict["meta"]["playwright"]
+                    if "playwright_include_page" in req_dict["meta"]:
+                        del req_dict["meta"]["playwright_include_page"]
+                    if "playwright_context" in req_dict["meta"]:
+                        del req_dict["meta"]["playwright_context"]
+                    if "playwright_page" in req_dict["meta"]:
+                        del req_dict["meta"]["playwright_page"]
+                    if "playwright_security_details" in req_dict["meta"]:
+                        del req_dict["meta"]["playwright_security_details"]
+
+                def decode_entry(data):
+                    if type(data) == list:
+                        return list(map(decode_entry, data))
+                    elif type(data) == dict:
+                        result = {}
+
+                        for entry_key in data:
+                            decoded_key = entry_key
+
+                            if type(entry_key) == bytes:
+                                decoded_key = entry_key.decode('utf-8')
+
+                            result[decoded_key] = decode_entry(data[entry_key])
+
+                        return result
+                    elif type(data) == bytes:
+                        return data.decode('utf-8')
+                    else:
+                        return data
+
+                clean_dict = decode_entry(req_dict.copy())
+
                 # we may already have the queue in memory
                 if key in self.queue_keys:
-                    self.queue_dict[key][0].push(req_dict,
-                                              req_dict['meta']['priority'])
+                    self.queue_dict[key][0].push(clean_dict,
+                                              clean_dict['meta']['priority'])
                 else:
                     # shoving into a new redis queue, negative b/c of sorted sets
                     # this will populate ourself and other schedulers when
                     # they call create_queues
-                    self.redis_conn.zadd(key, {ujson.dumps(req_dict): -req_dict['meta']['priority']})
+                    self.redis_conn.zadd(key, {ujson.dumps(clean_dict): -clean_dict['meta']['priority']})
                 self.logger.debug("Crawlid: '{id}' Appid: '{appid}' added to queue"
-                    .format(appid=req_dict['meta']['appid'],
-                            id=req_dict['meta']['crawlid']))
+                    .format(appid=clean_dict['meta']['appid'],
+                            id=clean_dict['meta']['crawlid']))
             else:
                 self.logger.debug("Crawlid: '{id}' Appid: '{appid}' expired"
-                                  .format(appid=req_dict['meta']['appid'],
-                                          id=req_dict['meta']['crawlid']))
+                                  .format(appid=clean_dict['meta']['appid'],
+                                          id=clean_dict['meta']['crawlid']))
         else:
             self.logger.debug("Crawlid: '{id}' Appid: '{appid}' blacklisted"
-                              .format(appid=req_dict['meta']['appid'],
-                                      id=req_dict['meta']['crawlid']))
+                              .format(appid=clean_dict['meta']['appid'],
+                                      id=clean_dict['meta']['crawlid']))
 
     def find_item(self):
         '''

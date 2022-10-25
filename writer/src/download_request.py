@@ -26,7 +26,8 @@ class DownloadRequest:
                 filename: str = '',
                 filetype: str = '',
                 crawled_at_date: str = '',
-                attrs: dict = {}) -> None:
+                attrs: dict = {},
+                cookies: dict = {}) -> None:
 
         self.attrs = attrs,
         self.url = url
@@ -39,6 +40,7 @@ class DownloadRequest:
             str(instance_id), 'data', 'files', self.filename)
         self.data_path = data_path
         self.crawled_at_date = crawled_at_date
+        self.cookies = cookies
 
 
     def __generate_filename(self) -> str:
@@ -96,7 +98,8 @@ class DownloadRequest:
 
         attempt = 0
         while attempt < MAX_ATTEMPTS:
-            with requests.get(self.url, stream=True, allow_redirects=True, headers=settings.REQUEST_HEADERS) as req:
+            with requests.get(self.url, stream=True, allow_redirects=True,
+                headers=settings.REQUEST_HEADERS, cookies=self.cookies) as req:
                 if req.status_code != 200:
                     attempt += 1
                     time.sleep(attempt * INTERVAL_BETWEEN_ATTEMPTS)
@@ -128,6 +131,7 @@ class DownloadRequest:
             'type': self.filetype,
             'attrs': self.attrs,
             'crawled_at_date': self.crawled_at_date,
+            'cookies': self.cookies,
             'extracted_files': [
 
             ]

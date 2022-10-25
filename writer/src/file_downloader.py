@@ -114,6 +114,7 @@ class FileDownloader:
                 'referer': referer,
                 'filetype': '',
                 'filename': '',
+                'cookies': crawled_data['cookies'],
                 "attrs": crawled_data['attrs'],
                 'data_path': data_path,
                 'crawled_at_date': ''
