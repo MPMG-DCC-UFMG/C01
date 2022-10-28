@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from crawling_utils import notify_new_page_found, notify_page_duplicated_found
 from crawling.redis_global_page_per_domain_filter import \
     RFGlobalPagePerDomainFilter
+from crawling.decoding_utils import decode_binary_entry
 from crawling.redis_dupefilter import RFPDupeFilter
 from crawling.redis_domain_max_page_filter import RFDomainMaxPageFilter
 from six import string_types
@@ -500,27 +501,7 @@ class DistributedScheduler(object):
                     if "playwright_security_details" in req_dict["meta"]:
                         del req_dict["meta"]["playwright_security_details"]
 
-                def decode_entry(data):
-                    if type(data) == list:
-                        return list(map(decode_entry, data))
-                    elif type(data) == dict:
-                        result = {}
-
-                        for entry_key in data:
-                            decoded_key = entry_key
-
-                            if type(entry_key) == bytes:
-                                decoded_key = entry_key.decode('utf-8')
-
-                            result[decoded_key] = decode_entry(data[entry_key])
-
-                        return result
-                    elif type(data) == bytes:
-                        return data.decode('utf-8')
-                    else:
-                        return data
-
-                clean_dict = decode_entry(req_dict.copy())
+                clean_dict = decode_binary_entry(req_dict.copy())
 
                 # we may already have the queue in memory
                 if key in self.queue_keys:
