@@ -16,7 +16,7 @@ services:
         ports:
             - "2181:2181"
         env_file:
-            - ./docker/config/.env
+            - ./docker/config/main.env
         healthcheck:
             test: ["CMD", "nc", "-vz", "zookeeper", "2181"]
             interval: 1s
@@ -28,7 +28,7 @@ services:
         ports:
             - "9092:9092"
         env_file:
-            - ./docker/config/.env
+            - ./docker/config/main.env
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
         depends_on:
@@ -52,7 +52,7 @@ services:
         expose:
             - 8000
         env_file:
-            - ./docker/config/.env
+            - ./docker/config/${ENVFILENAME}.env
         depends_on:
             kafka:
                 condition: service_healthy
@@ -75,7 +75,7 @@ services:
         volumes:
           - postgres_data:/var/lib/postgresql/data/
         env_file:
-          - ./docker/config/.env
+          - ./docker/config/main.env
         ports:
           - "5432:5432"
         healthcheck:
@@ -88,7 +88,7 @@ services:
             context: .
             dockerfile: ./docker/link_generator/Dockerfile
         env_file:
-            - ./docker/config/.env
+            - ./docker/config/main.env
         depends_on:
             redis:
                 condition: service_healthy
@@ -100,7 +100,7 @@ services:
             context: .
             dockerfile: ./docker/spider_manager/Dockerfile
         env_file:
-            - ./docker/config/.env
+            - ./docker/config/main.env
         volumes:
             - data:/data
         depends_on:
@@ -116,7 +116,7 @@ services:
         volumes:
             - data:/data
         env_file:
-            - ./docker/config/.env
+            - ./docker/config/main.env
         depends_on:
             kafka:
                 condition: service_healthy
@@ -128,7 +128,7 @@ services:
         volumes:
             - data:/data
         env_file:
-            - ./docker/config/.env
+            - ./docker/config/main.env
         depends_on:
             kafka:
                 condition: service_healthy

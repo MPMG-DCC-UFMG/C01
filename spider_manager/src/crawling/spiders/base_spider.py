@@ -66,6 +66,9 @@ class BaseSpider(RedisSpider):
 
     def filetypes_from_mimetype(self, mimetype: str) -> str:
         """Detects the file type using its mimetype"""
+        if mimetype is None:
+            return [""]
+
         extensions = mimetypes.guess_all_extensions(mimetype) 
         if len(extensions) > 0:
             return [ext.replace(".", "") for ext in extensions]

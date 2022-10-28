@@ -122,7 +122,7 @@ class StaticPageSpider(BaseSpider):
         )
 
         urls_found = set(link.url for link in links_extractor.extract_links(response))
-        exclude_html_and_php_regex_pattern = r"(.*\.[a-z]{3,4}$)(.*(?<!\.html)$)(.*(?<!\.php)$)"
+        exclude_html_and_php_regex_pattern = r"(.*(?<!\.html)$)(.*(?<!\.php)$)"
         urls_found = self.filter_urls_by_regex(urls_found, exclude_html_and_php_regex_pattern)
 
         broken_urls = urls_found
@@ -213,8 +213,15 @@ class StaticPageSpider(BaseSpider):
             item["instance_id"] = self.config["instance_id"]
             item["crawled_at_date"] = str(datetime.datetime.today())
 
-            item["files_found"] = files_found
-            item["images_found"] = images_found
+            cookies = response.headers.getlist('Set-Cookie')[0].decode('utf-8')\
+                .split(";")
+            item["cookies"] = {
+                c.split("=")[0]: c.split("=")[1]
+                for c in cookies if "=" in c
+            }
+
+            item["files_found"] = list(files_found)
+            item["images_found"] = list(images_found)
             item["attrs"] = response.meta["attrs"]
             item["attrs"]["steps"] = self.config["steps"]
             item["attrs"]["steps_req_num"] = idx

@@ -15,13 +15,15 @@ import os
 
 from django.core.management.utils import get_random_secret_key
 
+
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Initialize Django-environ to read settings from environment variables
 env = environ.Env(
     # set casting, default value
-    DEBUG=(bool, True),
+    DEBUG=(bool, False),
     DJANGO_ALLOWED_HOSTS=(list, ['*']),
     LOG_TO_FILE=(bool, False),
     SQL_ENGINE=(str, "django.db.backends.sqlite3"),
@@ -165,6 +167,13 @@ REST_FRAMEWORK = {
 }
 """
 
+if (DEBUG):
+    level_mode = 'DEBUG'
+    file_mode = 'file_debug'
+else:
+    level_mode = 'INFO'
+    file_mode = 'file_info'
+
 # File logging configurations
 if env('LOG_TO_FILE'):
     LOGGING = {
@@ -177,17 +186,23 @@ if env('LOG_TO_FILE'):
             },
         },
         'handlers': {
-            'file': {
+            'file_debug': {
                 'level': 'DEBUG',
                 'class': 'logging.FileHandler',
                 'filename': os.path.join(BASE_DIR, 'logs', 'debug.log'),
                 'formatter': 'standard',
             },
+            'file_info': {
+                'level': 'INFO',
+                'class': 'logging.FileHandler',
+                'filename': os.path.join(BASE_DIR, 'logs', 'info.log'),
+                'formatter': 'standard',
+            },
         },
         'loggers': {
             'django': {
-                'handlers': ['file'],
-                'level': 'DEBUG',
+                'handlers': [file_mode],
+                'level': level_mode,
                 'propagate': True,
             },
         },

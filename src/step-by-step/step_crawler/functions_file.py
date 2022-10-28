@@ -129,15 +129,11 @@ async def extrai_texto(pagina, xpath):
 async def opcoes(pagina, xpath, exceto=None):
     if exceto is None:
         exceto = []
-    options = []
-
 
     el_locator = pagina.locator(f'xpath={xpath}')
     await el_locator.wait_for()
 
-    for option in (await pagina.locator(f'xpath={xpath + "/option"}').element_handles()):
-        value = await option.get_attribute("text")
-        options.append(value.toString().split(":")[-1])
+    options = await pagina.locator(f'xpath={xpath + "/option"}').all_text_contents()
     return [value for value in options if value not in exceto]
 
 
