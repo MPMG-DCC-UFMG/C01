@@ -7,6 +7,8 @@
             {{ form.base_url | as_crispy_field}}
             <p>A URL pode conter espaços para parâmetros, representados como um conjunto de chaves vazias</p>
             <hr>
+            {{ form.ignore_data_crawled_in_previous_instances | as_crispy_field }}
+            <hr>
             {{ form.expected_runtime_category | as_crispy_field }}
             <hr>
             {{ form.crawler_type_desc | as_crispy_field}}
