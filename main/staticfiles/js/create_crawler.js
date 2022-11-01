@@ -413,6 +413,9 @@ function detailDynamicProcessing() {
     dynamic_processing_skip_errors = document.getElementById("dynamic-processing-skip-errors")
     dynamic_processing_resolution = document.getElementById("dynamic-processing-resolution")
     dynamic_processing_browser_type = document.getElementById("dynamic-processing-browser-type")
+    dynamic_processing_trace_enabled = document.getElementById("dynamic-processing-trace-enabled")
+    dynamic_processing_headful_enabled = document.getElementById("dynamic-processing-headful-enabled")
+    dynamic_processing_video_recording_enabled = document.getElementById("dynamic-processing-video-recording-enabled")
 
     if(getCheckboxState("id_dynamic_processing")){
         dynamic_processing_check.classList.remove("disabled")
@@ -420,13 +423,19 @@ function detailDynamicProcessing() {
         dynamic_processing_skip_errors.classList.remove("disabled")
         dynamic_processing_resolution.classList.remove("disabled")
         dynamic_processing_browser_type.classList.remove("disabled")
+        dynamic_processing_trace_enabled.classList.remove("disabled")
+        dynamic_processing_headful_enabled.classList.remove("disabled")
+        dynamic_processing_video_recording_enabled.classList.remove("disabled")
+
     }else{
         dynamic_processing_check.classList.add("disabled")
         dynamic_processing_block.classList.add("disabled")
         dynamic_processing_skip_errors.classList.add("disabled")
         dynamic_processing_resolution.classList.add("disabled")
         dynamic_processing_browser_type.classList.add("disabled")
-    }
+        dynamic_processing_trace_enabled.classList.add("disabled")
+        dynamic_processing_headful_enabled.classList.add("disabled")
+        dynamic_processing_video_recording_enabled.classList.add("disabled")    }
 }
 
 function detailCaptcha() {
@@ -682,3 +691,4 @@ function parseSettings(e) {
 
     reader.readAsText(file);
 }
+

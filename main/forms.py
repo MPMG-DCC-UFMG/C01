@@ -1,3 +1,4 @@
+from email.policy import default
 from cv2 import FarnebackOpticalFlow
 from django import forms
 from .models import CrawlRequest, ParameterHandler, ResponseHandler
@@ -59,6 +60,11 @@ class CrawlRequestForm(forms.ModelForm):
             'img_xpath',
             'sound_xpath',
             'dynamic_processing',
+
+            'create_trace_enabled',
+            'headful_enabled',
+            'video_recording_enabled',
+
             'browser_type',
             'skip_iter_errors',
             'browser_resolution_width',
@@ -431,6 +437,22 @@ class RawCrawlRequestForm(CrawlRequestForm):
 
     skip_iter_errors = forms.BooleanField(
         required=False, label="Pular iterações com erro"
+    )
+    
+    create_trace_enabled = forms.BooleanField(
+        required=False,
+        label="Criar arquivo trace.zip",
+        help_text="Gera o arquivo 'trace.zip' para depuração do coletor com a ferramenta Trace Viewer"
+    )
+    headful_enabled = forms.BooleanField(
+        required=False,
+        label="Ativar modo Headful",
+        help_text="Executa o browser em modo Headful."
+    )
+    video_recording_enabled = forms.BooleanField(
+        required=False,
+        label="Gravar vídeo do coletor",
+        help_text="Gera um vídeo da execução do coletor."
     )
 
     explore_links = forms.BooleanField(required=False, label="Explorar links")

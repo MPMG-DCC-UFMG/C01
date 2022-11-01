@@ -1,4 +1,5 @@
 import datetime
+from email.policy import default
 from typing import List, Union
 
 from crawler_manager.constants import *
@@ -178,6 +179,10 @@ class CrawlRequest(TimeStamped):
     browser_resolution_width = models.IntegerField(blank=True, null=True)
     browser_resolution_height = models.IntegerField(blank=True, null=True)
 
+    # Debug Mode
+    create_trace_enabled = models.BooleanField(default=False)
+    headful_enabled = models.BooleanField(default=False)
+    video_recording_enabled = models.BooleanField(default=False)
 
     # DETAILS #################################################################
     explore_links = models.BooleanField(blank=True, null=True)
