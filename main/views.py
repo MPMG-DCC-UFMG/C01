@@ -28,7 +28,8 @@ from scrapy_puppeteer import iframe_loader
 from .forms import (CrawlRequestForm, ParameterHandlerFormSet,
                     RawCrawlRequestForm, ResponseHandlerFormSet)
 from .models import (CRAWLER_QUEUE_DB_ID, CrawlerInstance, CrawlerQueue,
-                     CrawlerQueueItem, CrawlRequest, Log, Task)
+                     CrawlerQueueItem, CrawlRequest, Log, Task, ParameterHandler,
+                     ResponseHandler)
 from .serializers import (CrawlerInstanceSerializer, CrawlerQueueSerializer,
                           CrawlRequestSerializer, TaskSerializer)
 from .task_filter import task_filter_by_date_interval
@@ -927,6 +928,43 @@ class CrawlerViewSet(viewsets.ModelViewSet):
     queryset = CrawlRequest.objects.all().order_by('-creation_date')
     serializer_class = CrawlRequestSerializer
 
+    def _create_templated_url_parameter_handlers(self, parameter_handlers, crawler_id):
+        for handler in parameter_handlers:
+            handler['crawler_id'] = crawler_id
+            handler['injection_type'] = 'templated_url'
+            ParameterHandler.objects.create(**handler)
+
+    def _create_templated_url_response_handlers(self, response_handlers, crawler_id):
+        for handler in response_handlers:
+            handler['crawler_id'] = crawler_id
+            handler['injection_type'] = 'templated_url'
+            ResponseHandler.objects.create(**handler)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create a new crawler.
+        """
+        data = request.data
+
+        if type(data) is not dict:
+            data = data.dict()
+
+        templated_url_parameter_handlers = data.pop('templated_url_parameter_handlers', [])
+        templated_url_response_handlers = data.pop('templated_url_response_handlers', [])
+
+        serializer = CrawlRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            with transaction.atomic():
+                serializer.save()
+
+                crawler_id = serializer.data['id']
+                
+                self._create_templated_url_parameter_handlers(templated_url_parameter_handlers, crawler_id)
+                self._create_templated_url_response_handlers(templated_url_response_handlers, crawler_id)
+
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=True, methods=['get'])
     def run(self, request, pk):
         query_params = self.request.query_params.dict()
@@ -996,7 +1034,6 @@ class CrawlerViewSet(viewsets.ModelViewSet):
             'instance': CrawlerInstanceSerializer(instance).data
         }
         return JsonResponse(data)
-
 
 class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     """
