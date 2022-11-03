@@ -34,19 +34,20 @@
     </div>
     <div id="dynamic-processing-item-wrap" style="padding:20px;" class="hidden">
         {{ form.steps | as_crispy_field }}
+        <div id="dynamic-processing-debug-mode" style="padding: 20px; border-top: 1px">
+            Modo Debug
+            <p class="small">Ferramentas de depuração de coletores que utilizam processamento dinâmico</p>
+            <div id="dynamic-processing-trace-enabled" class="">
+                {{ form.create_trace_enabled | as_crispy_field}}
+            </div>
+            <div id="dynamic-processing-headful-enabled" class="">
+                {{ form.headful_enabled | as_crispy_field}}
+            </div>
+            <div id="dynamic-processing-video-recording_enabled" class="">
+                {{ form.video_recording_enabled | as_crispy_field}}
+            </div>
+        </div>
     </div>
-    <div id="dynamic-processing-debug-mode" style="padding: 20px; border-top: 1px">
-        Modo Debug
-        <p class="small">Ferramentas de depuração de coletores que utilizam processamento dinâmico</p>
-        <div id="dynamic-processing-trace-enabled" class="">
-            {{ form.create_trace_enabled | as_crispy_field}}
-        </div>
-        <div id="dynamic-processing-headful-enabled" class="">
-            {{ form.headful_enabled | as_crispy_field}}
-        </div>
-        <div id="dynamic-processing-video-recording_enabled" class="">
-            {{ form.video_recording_enabled | as_crispy_field}}
-        </div>
-    </div>
+
 
 </div>
