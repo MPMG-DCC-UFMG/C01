@@ -73,6 +73,10 @@ def notify_page_crawled_successfully(instance_id: str):
         message='success', instance_id=instance_id)
     notify_server(server_notification_url)
 
+def notify_page_previously_crawled(instance_id: str):
+    server_notification_url = SERVER_PAGE_CRAWLED_API.format(
+        message='previously_crawled', instance_id=instance_id)
+    notify_server(server_notification_url)
 
 def notify_page_crawled_with_error(instance_id: str):
     server_notification_url = SERVER_PAGE_CRAWLED_API.format(
@@ -97,6 +101,10 @@ def notify_file_downloaded_successfully(instance_id: str):
         message='success', instance_id=instance_id)
     notify_server(server_notification_url)
 
+def notify_file_previously_crawled(instance_id: str):
+    server_notification_url = SERVER_FILE_DOWNLOADED_API.format(
+        message='previously_crawled', instance_id=instance_id)
+    notify_server(server_notification_url)
 
 def notify_file_downloaded_with_error(instance_id: str):
     server_notification_url = SERVER_FILE_DOWNLOADED_API.format(

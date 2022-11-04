@@ -34,7 +34,11 @@ class CrawlRequest(TimeStamped):
     source_name = models.CharField(max_length=200)
     base_url = models.TextField()
     obey_robots = models.BooleanField(blank=True, null=True)
+
+    ignore_data_crawled_in_previous_instances = models.BooleanField(blank=True, null=True, default=False)
+
     crawler_description = models.TextField(default='')
+
     CRAWLERS_TYPES = [
         ('Contratos', 'Contratos'),
         ('Despesas', 'Despesas'),
@@ -448,11 +452,13 @@ class CrawlerInstance(TimeStamped):
     number_files_found = models.PositiveIntegerField(default=0, null=True, blank=True)
     number_files_success_download = models.PositiveIntegerField(default=0, null=True, blank=True)
     number_files_error_download = models.PositiveIntegerField(default=0, null=True, blank=True)
+    number_files_previously_crawled = models.PositiveIntegerField(default=0, null=True, blank=True)
 
     number_pages_found = models.PositiveIntegerField(default=0, null=True, blank=True)
     number_pages_success_download = models.PositiveIntegerField(default=0, null=True, blank=True)
     number_pages_error_download = models.PositiveIntegerField(default=0, null=True, blank=True)
     number_pages_duplicated_download = models.PositiveIntegerField(default=0, null=True, blank=True)
+    number_pages_previously_crawled = models.PositiveIntegerField(default=0, null=True, blank=True)
 
     page_crawling_finished = models.BooleanField(default=False, null=True, blank=True)
 
