@@ -308,6 +308,8 @@ def getAllDataFiltered(filter_crawler_id, filter_name, filter_base_url, filter_d
 
 def create_instance(crawler_id, instance_id, test_mode):
     mother = CrawlRequest.objects.filter(id=crawler_id)
+    if test_mode:
+        mother[0].ignore_data_crawled_in_previous_instances = False
     obj = CrawlerInstance.objects.create(
         crawler=mother[0], 
         instance_id=instance_id, 
