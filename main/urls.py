@@ -27,13 +27,18 @@ urlpatterns = [
     path("detail/stop_crawl/<int:crawler_id>", views.stop_crawl, name="stop_crawl"),
     path("tail_log_file/<str:instance_id>", views.tail_log_file, name="tail_log_file"),
     path("raw_log/<str:instance_id>", views.raw_log, name="raw_log"),
+    
     path("download/files/found/<str:instance_id>/<int:num_files>", views.files_found, name="files_found"),
     path("download/file/success/<str:instance_id>", views.success_download_file, name="success_download_file"),
+    path("download/file/previously_crawled/<str:instance_id>", views.previously_crawled_file, name="previously_crawled_file"),
     path("download/file/error/<str:instance_id>", views.error_download_file, name="error_download_file"),
+    
     path("download/pages/found/<str:instance_id>/<int:num_pages>", views.pages_found, name="pages_found"),
     path("download/page/success/<str:instance_id>", views.success_download_page, name="success_download_page"),
+    path("download/page/previously_crawled/<str:instance_id>", views.previously_crawled_page, name="previously_crawled_page"),
     path("download/page/error/<str:instance_id>", views.error_download_page, name="error_download_page"),
     path("download/page/duplicated/<str:instance_id>", views.duplicated_download_page, name="duplicated_download_page"),
+    
     path("export_config/<str:instance_id>", views.export_config, name="export_config"),
 
 

@@ -222,6 +222,9 @@ Crawler "{{ crawler.source_name }}"
                             title="Porcentagem de páginas duplicadas"
                             role="progressbar" style="width:0%; cursor: pointer;">
                         </div>
+                        <div id="progress-page-previously-crawled" class="progress-bar bg-info" title="Porcentagem de páginas coletadas em coletas anteriores"
+                            role="progressbar" style="width:0%; cursor: pointer;">
+                        </div>
                     </div>
                     <div class="d-flex justify-content-end mt-2"
                         title="Total de páginas encontradas e coletadas">
@@ -245,6 +248,9 @@ Crawler "{{ crawler.source_name }}"
                             title="Porcentagem de arquivos baixados com erro"
                             role="progressbar"
                             style="width:0%; cursor: pointer;">
+                        </div>
+                        <div id="progress-file-previously-crawled" class="progress-bar bg-info" title="Porcentagem de arquivos baixados em coletas anteriores"
+                            role="progressbar" style="width:0%; cursor: pointer;">
                         </div>
                     </div>
                     <div class="d-flex justify-content-end mt-2" 

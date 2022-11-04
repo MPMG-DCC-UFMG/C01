@@ -8,7 +8,7 @@ import string
 import time
 
 import settings
-from crawling_utils import notify_file_downloaded_successfully, notify_file_downloaded_with_error
+from crawling_utils import notify_file_downloaded_with_error
 
 PUNCTUATIONS = "[{}]".format(string.punctuation)
 
@@ -26,7 +26,8 @@ class DownloadRequest:
                 filename: str = '',
                 filetype: str = '',
                 crawled_at_date: str = '',
-                attrs: dict = {}) -> None:
+                attrs: dict = {},
+                cookies: dict = {}) -> None:
 
         self.attrs = attrs,
         self.url = url
@@ -35,10 +36,17 @@ class DownloadRequest:
         self.referer = referer
         self.filetype = filetype if bool(filetype) else self.__detect_filetype()
         self.filename = filename if bool(filename) else self.__generate_filename()
+
+        self.temp_path_to_save = os.path.join(settings.OUTPUT_FOLDER, data_path,
+            str(instance_id), 'data', 'files', 'temp', self.filename)
+
         self.path_to_save = os.path.join(settings.OUTPUT_FOLDER, data_path,
             str(instance_id), 'data', 'files', self.filename)
+
         self.data_path = data_path
+        self.content_hash = None
         self.crawled_at_date = crawled_at_date
+        self.cookies = cookies
 
 
     def __generate_filename(self) -> str:
@@ -96,15 +104,19 @@ class DownloadRequest:
 
         attempt = 0
         while attempt < MAX_ATTEMPTS:
-            with requests.get(self.url, stream=True, allow_redirects=True, headers=settings.REQUEST_HEADERS) as req:
+            self.content_hash = hashlib.md5()
+            with requests.get(self.url, stream=True, allow_redirects=True,
+                headers=settings.REQUEST_HEADERS, cookies=self.cookies) as req:
                 if req.status_code != 200:
                     attempt += 1
                     time.sleep(attempt * INTERVAL_BETWEEN_ATTEMPTS)
                     continue
 
-                with open(self.path_to_save, "wb") as f:
+                with open(self.temp_path_to_save, 'wb') as f:
                     for chunk in req.iter_content(chunk_size=8192):
                         f.write(chunk)
+                        self.content_hash.update(chunk)
+                    self.content_hash = self.content_hash.hexdigest()
                     break
 
         if attempt == MAX_ATTEMPTS:
@@ -113,8 +125,13 @@ class DownloadRequest:
 
         else:
             self.crawled_at_date = str(datetime.today())
-            notify_file_downloaded_successfully(self.instance_id)
             return True
+
+    def cancel(self):
+        os.remove(self.temp_path_to_save)
+
+    def save(self):
+        os.replace(self.temp_path_to_save, self.path_to_save)
 
     def get_description(self) -> dict:
         return {
@@ -127,7 +144,9 @@ class DownloadRequest:
             'file_name': self.filename,
             'type': self.filetype,
             'attrs': self.attrs,
+            'content_hash': self.content_hash,
             'crawled_at_date': self.crawled_at_date,
+            'cookies': self.cookies,
             'extracted_files': [
 
             ]

@@ -22,6 +22,7 @@ class RawResponseItem(Item):
     crawler_id = Field()
     instance_id = Field()
     crawled_at_date = Field()
+    cookies = Field()
     files_found = Field()
     images_found = Field()
     attrs = Field()
