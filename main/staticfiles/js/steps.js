@@ -223,6 +223,10 @@ function load_steps(json_steps, step_list){
         block.xpath_input.value = json_steps.link_xpath
         args = {}
 
+    }else if(json_steps.step == "executar_em_iframe"){
+        block.xpath_input.value = json_steps.xpath
+        args = {}
+
     }else if(json_steps.step == "elemento_existe_na_pagina"){
       args = json_steps.arguments
       for(let child of json_steps.children){
@@ -352,6 +356,9 @@ function get_step_json_format(block){
         }
     }else if(param_name == "abrir_em_nova_aba"){
         step_dict.link_xpath = block.xpath_input.value
+        step_dict.children = []
+    }else if(param_name == "executar_em_iframe"){
+        step_dict.xpath = block.xpath_input.value
         step_dict.children = []
     }else{
         step_dict.arguments = load_param_dict(block)

@@ -37,6 +37,12 @@ $(function(){
         let $template = $($("#crawler-line-template").html());
         $template.find("input, select").each(function(i){
             $(this).attr("name", $(this).attr("name").replace("template-", ""));
+            if($(this).attr("name") == "source_name" || 
+               $(this).attr("name") == "base_url" || 
+               $(this).attr("name") == "data_path" ||
+               $(this).attr("name") == "crawler_description"){
+                $(this).prop('required',true);
+            }
         });
         let $container = $(".grouped_crawlers_container");
         $container.append($template);

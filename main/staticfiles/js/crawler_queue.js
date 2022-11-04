@@ -372,7 +372,8 @@ function updateMaxCrawlers() {
     $.ajax({
         url: CRAWLER_QUEUE_API_ADDRESS,
         type: 'put',
-        dataType: 'json',
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
         async: false,
         data: data,
         success: function (data) {

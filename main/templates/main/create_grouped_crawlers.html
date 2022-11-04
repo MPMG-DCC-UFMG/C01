@@ -19,6 +19,18 @@ New Crawler
         padding-left: 15px;
         border: 1px solid #ddd;
     }
+
+    /* Esconde as setinhas no campo numérico - Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Esconde as setinhas no campo numérico - Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
 </style>
 {% endblock %}
 

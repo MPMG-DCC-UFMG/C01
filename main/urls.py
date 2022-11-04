@@ -8,6 +8,7 @@ api_router = routers.DefaultRouter()
 api_router.register(r'crawlers', views.CrawlerViewSet)
 api_router.register(r'instances', views.CrawlerInstanceViewSet)
 api_router.register(r'crawler_queue', views.CrawlerQueueViewSet)
+api_router.register(r'tasks', views.TaskViewSet)
 
 urlpatterns = [
     path("", views.list_crawlers, name="list_crawlers"),
@@ -45,6 +46,8 @@ urlpatterns = [
 
     path("crawler_queue/", views.crawler_queue, name="crawler_queue"),
     path("crawler_queue/remove/<int:crawler_id>", views.remove_crawl_request_view, name="remove_crawl_request"),
+
+    path("scheduler/", views.scheduler, name="scheduler"),
 
     # Includes the API endpoints in the URLs
     url(r'^api/', include(api_router.urls)),

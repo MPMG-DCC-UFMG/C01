@@ -5,7 +5,7 @@
  * @param {Number} depth The depth is the level of indentention of this step.
  * @return {Node} The block initalized.
  */
-function init_block(step_list, depth){
+function init_block(step_list, depth) {
     // // Filter the steps so that only those compatible with iframe are available
     // if (curr_execution_context == 'iframe') 
     //     step_list = step_list.filter(function (step) { return step.executable_in_iframe })
@@ -17,7 +17,7 @@ function init_block(step_list, depth){
     block.type = "block"
     block.step_list = step_list
     block.depth = depth
-    block.style.left = (block.depth*2-2) +"em"
+    block.style.left = (block.depth * 2 - 2) + "em"
 
     //setting the select step
     block.select_box = document.createElement("div")
@@ -51,8 +51,8 @@ function init_block(step_list, depth){
     block.show_params_button.style.margin = "auto";
     block.appendChild(block.show_params_button_box)
     block.show_params_button_box.appendChild(block.show_params_button)
-    block.show_params_button_box.onmouseover = function(){this.style.backgroundColor = "rgba(0,0,0,0.05)"}
-    block.show_params_button_box.onmouseout = function(){this.style.backgroundColor = ""}
+    block.show_params_button_box.onmouseover = function () { this.style.backgroundColor = "rgba(0,0,0,0.05)" }
+    block.show_params_button_box.onmouseout = function () { this.style.backgroundColor = "" }
     block.hide_show_params = hide_show_params
     block.hide_show_params()
 
@@ -62,17 +62,19 @@ function init_block(step_list, depth){
     block.turn_to_attribution_step = turn_to_attribution_step
     block.turn_to_new_tab_step = turn_to_new_tab_step
     block.turn_to_close_tab_step = turn_to_close_tab_step
+    block.turn_to_run_in_iframe_step = turn_to_run_in_iframe_step
+    block.turn_to_exit_iframe_step = turn_to_exit_iframe_step
     block.turn_to_if_step = turn_to_if_step
 
 
     //Setting the border functions
-    block.onmouseout = function(){
+    block.onmouseout = function () {
         hide(this.controler_box);
         this.style.borderColor = "";
         this.show_params_button_box.style.height = "0em";
         this.show_params_button.hidden = true
     }
-    block.onmouseover = function(){
+    block.onmouseover = function () {
         show(this.controler_box);
         this.style.borderColor = "rgba(0,143,255,.5)";
         this.show_params_button_box.style.height = "2em";
@@ -81,12 +83,12 @@ function init_block(step_list, depth){
     block.onmouseout()
 
     //seting other block methods
-    block.delete_lines =  delete_lines
+    block.delete_lines = delete_lines
 
 
     //setting new parameter button
     block.init_optional_params_button = init_optional_params_button
-    block.add_param = add_param    
+    block.add_param = add_param
 
     //--
 
@@ -126,14 +128,14 @@ function init_block(step_list, depth){
  * This function is a method of the blocks.
  * @param {Dict} step A step in the json steps format
  */
-function init_optional_params_button(step){
+function init_optional_params_button(step) {
 
     block = find_parent_with_attr_worth(this, "block")
 
     block.new_parameter_button_box = document.createElement("DIV")
     block.new_parameter_button = document.createElement("BUTTON")
     new_parameter_button_image = document.createElement("IMG")
-    dropdown_menu =  document.createElement("DIV")
+    dropdown_menu = document.createElement("DIV")
 
     block.new_parameter_button_box.appendChild(block.new_parameter_button)
     block.new_parameter_button_box.appendChild(dropdown_menu)
@@ -141,10 +143,10 @@ function init_optional_params_button(step){
 
     block.new_parameter_button_box.style.borderRadius = "1em"
 
-    block.new_parameter_button.type="button"
-    block.new_parameter_button.className="btn btn-primary"
-    block.new_parameter_button.setAttribute("data-toggle", "dropdown" )
-    block.new_parameter_button.setAttribute("aria-haspopup", "true" )
+    block.new_parameter_button.type = "button"
+    block.new_parameter_button.className = "btn btn-primary"
+    block.new_parameter_button.setAttribute("data-toggle", "dropdown")
+    block.new_parameter_button.setAttribute("aria-haspopup", "true")
     block.new_parameter_button.setAttribute("aria-expanded", "false")
 
     new_parameter_button_image.src = "/static/icons/white-plus-icon.svg"
@@ -153,19 +155,19 @@ function init_optional_params_button(step){
 
     dropdown_menu.className = "dropdown-menu"
 
-    if(!step){
+    if (!step) {
         step = block.step
     }
 
     optional_params = Object.keys(step.optional_params)
     dropdown_menu.innerHTML = optional_params.map(
-        function(param){
+        function (param) {
             text = param_to_placeholder(param)
             return `<a class="dropdown-item" style="cursor:pointer" data-param="${param}">${text}<\a>`
         }
     ).join('\n')
-    for(child of dropdown_menu.children){
-        child.onclick = function(){
+    for (child of dropdown_menu.children) {
+        child.onclick = function () {
             block = find_parent_with_attr_worth(this, "block")
             param = this.dataset.param
             field_options = step.field_options[param]
@@ -178,18 +180,18 @@ function init_optional_params_button(step){
     block.lines[last_line].appendChild(block.new_parameter_button_box)
 }
 
-function generate_input_html(param_name, param_display, field_options){
-    if (field_options == undefined){
+function generate_input_html(param_name, param_display, field_options) {
+    if (field_options == undefined) {
         return `<input type="text" placeholder="${param_display}" class="row form-control" data-param="${param_name}" data-type="text" />`
     }
 
     field_type = field_options['field_type']
     innerHTML = ''
 
-    switch(field_type){
+    switch (field_type) {
         case 'text':
         case 'number':
-            placeholder = field_options['input_placeholder'] == undefined ?  param_display : field_options['input_placeholder']
+            placeholder = field_options['input_placeholder'] == undefined ? param_display : field_options['input_placeholder']
             innerHTML = `<input type="${field_type}" placeholder="${placeholder}" class="row form-control" data-param="${param_name}" data-type="text" />`
             break;
         case 'checkbox':
@@ -201,7 +203,7 @@ function generate_input_html(param_name, param_display, field_options){
             options = field_options['select_options']
             innerHTML += `<select class="row form-control" id="${param_name}" data-param="${param_name}" data-type="text">`
             innerHTML += `<option value="" disabled selected>${param_display}</option>`
-            for(option of options){
+            for (option of options) {
                 innerHTML += `<option value="${option}">${option}</option>`
             }
             innerHTML += `</select>`
@@ -221,13 +223,13 @@ function generate_input_html(param_name, param_display, field_options){
  * @param {Bool} optional_param A boolean that says whether or
  *               not the parameter is optional
  */
-function add_param(param_name, field_options, optional_param = false){
+function add_param(param_name, field_options, optional_param = false) {
     block = find_parent_with_attr_worth(this, "block")
-    last_line = block.lines.length-1
-    if(block.lines[last_line].row.full){
+    last_line = block.lines.length - 1
+    if (block.lines[last_line].row.full) {
         block.add_line()
         last_line++
-        if(optional_param){
+        if (optional_param) {
             block.new_parameter_button_box.remove()
             block.lines[last_line].appendChild(block.new_parameter_button_box)
         }
@@ -239,7 +241,7 @@ function add_param(param_name, field_options, optional_param = false){
 
     param_element.innerHTML = generate_input_html(param_name, param_display, field_options)
 
-    if(optional_param){
+    if (optional_param) {
         remove_button = document.createElement("A")
         remove_img = document.createElement("IMG")
         remove_img.src = "/static/icons/black-x.svg"
@@ -249,40 +251,54 @@ function add_param(param_name, field_options, optional_param = false){
         remove_button.style.right = "1.2em"
         remove_button.style.cursor = "pointer"
         hide(remove_button)
-        remove_button.onclick = function(){
+
+        remove_button.onclick = function () {
+
             block = find_parent_with_attr_worth(this, "block")
             line = find_parent_with_attr_worth(this, "line")
             line.row.full = false
-            for(param of block.new_parameter_button.dropdown_menu.children){
-                if(param.innerText == this.parentElement.children[0].placeholder){
+
+            // find the parameter to be removed
+            param_input = $(block).find("input[data-param=" + param_name + "],select[data-param=" + param_name + "]");
+            // the parameter's block line:
+            block_line = param_input.parents()[0];
+            // delete the block line (that deletes the parameter on the JSON file as well)
+            block.params.pop(param_element);
+
+
+            // put the deleted parameter back to the dropdown list, i guess
+            for (param of block.new_parameter_button.dropdown_menu.children) {
+                if (param.innerText == this.parentElement.children[0].placeholder) {
                     show(param)
                 }
             }
-            line = find_parent_with_attr_worth(this, "line")
 
+            line = find_parent_with_attr_worth(this, "line")
             this.parentElement.remove()
 
-            if(block.lines[block.lines.length-1].row.children.length == 0){
+            // recreate space for adding optional parameters, i guess
+            if (block.lines[block.lines.length - 1].row.children.length == 0) {
                 block.new_parameter_button_box.remove()
-                block.lines[block.lines.length-2].append(block.new_parameter_button_box)
+                block.lines[block.lines.length - 2].append(block.new_parameter_button_box)
             }
-            if(line.row.children.length==0){
+            if (line.row.children.length == 0) {
                 line.remove()
             }
         }
+
         param_element.remove_button = remove_button
         param_element.appendChild(remove_button)
-        param_element.onmouseover = function(){show(this.remove_button)}
-        param_element.onmouseout = function(){hide(this.remove_button)}
+        param_element.onmouseover = function () { show(this.remove_button) }
+        param_element.onmouseout = function () { hide(this.remove_button) }
     }
     block.lines[last_line].row.appendChild(param_element)
     block.params.push(param_element)
 
-    number_max_of_params=1
-    if(last_line == 0){
-        number_max_of_params=1
+    number_max_of_params = 1
+    if (last_line == 0) {
+        number_max_of_params = 1
     }
-    if(block.lines[last_line].row.children.length == number_max_of_params){
+    if (block.lines[last_line].row.children.length == number_max_of_params) {
         block.lines[last_line].row.full = true
     }
 }
@@ -297,7 +313,7 @@ function add_param(param_name, field_options, optional_param = false){
  * @param {Bool} optional_param A boolean that says whether or
  *               not the parameter is optional
  */
-function add_line(){
+function add_line() {
     block = find_parent_with_attr_worth(this, "block")
     new_line = document.createElement("DIV")
     new_line.className = "card-body row step-config"
@@ -308,9 +324,9 @@ function add_line(){
     new_line.appendChild(new_line.col)
     new_line.col.appendChild(new_line.row)
     new_line.type = "line"
-    if(block.lines.length==0){
-        new_line.insertBefore(block.select_box ,new_line.children[0])
-    }else{
+    if (block.lines.length == 0) {
+        new_line.insertBefore(block.select_box, new_line.children[0])
+    } else {
         new_line.style.paddingLeft = "2.25em";
     }
     block.lines_box.appendChild(new_line)
@@ -324,12 +340,12 @@ function add_line(){
  * @param {Number} n The superior limit of the range.
  *
  */
-function delete_lines(m, n=null){
-    if(n===null){
-        n=m
-        m=0
+function delete_lines(m, n = null) {
+    if (n === null) {
+        n = m
+        m = 0
     }
-    for(var i=m; i<n; i++){
+    for (var i = m; i < n; i++) {
         block.lines[m].remove()
     }
 }
@@ -340,21 +356,21 @@ function delete_lines(m, n=null){
  * Refreshes the parameter inputs of an iterable when it is changed.
  * This function is a method of the iterable select element.
  */
-function refresh_iterable(){
+function refresh_iterable() {
     block = find_parent_with_attr_worth(this, "block")
     block.iterable_step = get_step_info(this.value)
     block.params = []
-    
+
     block.delete_lines(1, block.lines.length)
     block.add_line()
 
-    for(param of block.iterable_step.mandatory_params){
+    for (param of block.iterable_step.mandatory_params) {
         field_options = block.iterable_step.field_options[param]
         block.add_param(param, field_options)
     }
 
     optional_params = Object.keys(block.iterable_step.optional_params)
-    if(optional_params.length!=0){
+    if (optional_params.length != 0) {
         block.init_optional_params_button(block.iterable_step)
     }
 }
@@ -363,7 +379,7 @@ function refresh_iterable(){
  * Refreshes the parameter inputs of an condition when it is changed.
  * This function is a method of the condition select element.
  */
- function refresh_condition(){
+function refresh_condition() {
     block = find_parent_with_attr_worth(this, "block")
     block.condition_step = get_step_info(this.value)
     block.params = []
@@ -371,13 +387,13 @@ function refresh_iterable(){
     block.delete_lines(1, block.lines.length)
     block.add_line()
 
-    for(param of block.condition_step.mandatory_params){
+    for (param of block.condition_step.mandatory_params) {
         field_options = block.condition_step.field_options[param]
         block.add_param(param, field_options)
     }
 
     optional_params = Object.keys(block.condition_step.optional_params)
-    if(optional_params.length!=0){
+    if (optional_params.length != 0) {
         block.init_optional_params_button(block.condition_step)
     }
 }
@@ -386,7 +402,7 @@ function refresh_iterable(){
  * Refreshes the parameter inputs of an source when it is changed.
  * This function is a method of the atributtion step.
  */
-function refresh_source(){
+function refresh_source() {
 
     block = find_parent_with_attr_worth(this, "block")
     block.source_step = get_step_info(this.value)
@@ -395,13 +411,13 @@ function refresh_source(){
     block.delete_lines(1, block.lines.length)
     block.add_line()
 
-    for(param of block.source_step.mandatory_params){
+    for (param of block.source_step.mandatory_params) {
         field_options = block.source_step.field_options[param]
         block.add_param(param, field_options)
     }
 
     optional_params = Object.keys(block.source_step.optional_params)
-    if(optional_params.length!=0){
+    if (optional_params.length != 0) {
         block.init_optional_params_button(block.source_step)
     }
 }
@@ -413,12 +429,12 @@ function refresh_source(){
 function colorize_contexts() {
     let contexts = [];
     let curr_context = 'page';
-    
+
     let step_blocks = $('.step-block');
 
-    for (let i=0; i < step_blocks.length;i++) {
+    for (let i = 0; i < step_blocks.length; i++) {
         curr_step = step_blocks[i];
-        
+
         // reseta cores
         curr_step.classList.remove("bg-tab-execution-context");
         curr_step.classList.remove("bg-iframe-execution-context");
@@ -442,7 +458,7 @@ function colorize_contexts() {
         } else {
             if (curr_context == 'iframe')
                 curr_step.classList.add('bg-iframe-execution-context');
-    
+
             else if (curr_context == 'tab')
                 curr_step.classList.add("bg-tab-execution-context");
         }
@@ -460,11 +476,11 @@ function colorize_contexts() {
 
 function get_insertion_index_context(index, direction) {
     let curr_context = 'page';
-    
+
     let step_blocks = $('.step-block');
     if (index < 0)
         index = step_blocks.length
-    
+
     let contexts = [];
 
     for (let i = 0; i < step_blocks.length; i++) {
@@ -499,7 +515,7 @@ function get_insertion_index_context(index, direction) {
                 return contexts.pop();
             }
 
-            curr_context = contexts.pop(); 
+            curr_context = contexts.pop();
         } else {
             if (i == index)
                 return curr_context
@@ -533,8 +549,8 @@ function refresh_steps_option_below_index(index) {
     if (start_index >= step_blocks.length)
         return;
 
-    for (let i=start_index;i<step_blocks.length;i++) {
-        let context = get_insertion_index_context(index, 'down')
+    for (let i = start_index; i < step_blocks.length; i++) {
+        let context = get_insertion_index_context(i, 'up')
         refresh_step_options(step_blocks[i], context)
     }
 }
@@ -562,7 +578,7 @@ function add_open_iframe_button(block) {
     open_iframe_img.style.height = "1.25em"
 
     block.open_iframe_button.onclick = function () {
-        let xpath = load_param_dict(block).xpath;
+        let xpath = block.xpath_input.value;
 
         if (xpath.length == 0) {
             alert('É necessário especificar o XPATH do iframe antes!')
@@ -576,7 +592,11 @@ function add_open_iframe_button(block) {
         }
 
         let host = location.protocol + '//' + location.host;
-        let url_of_iframe_loader = `${host}/iframe/load?url="${base_url}"&xpath="${xpath}"`
+
+        let enc_base_url = encodeURIComponent(base_url)
+        let enc_xpath = encodeURIComponent(xpath)
+
+        let url_of_iframe_loader = `${host}/iframe/load?url=${enc_base_url}&xpath=${enc_xpath}`
 
         window.open(url_of_iframe_loader, '_blank').focus();
     }
@@ -588,11 +608,11 @@ function add_open_iframe_button(block) {
  * Refreshes the parameter inputs of an iterable when it is changed.
  * This function is a method of the select element of the block.
  */
-function refresh_step(){
+function refresh_step() {
     let execution_context_changed = false;
-    
-    
-    
+
+
+
     block = find_parent_with_attr_worth(this, "block")
     block.step = get_step_info(this.value)
     block.params = []
@@ -603,57 +623,53 @@ function refresh_step(){
     block.classList.remove("iframe-context-start")
     block.classList.remove("iframe-context-end")
 
-    if(this.value=="Para cada"){
+    if (this.value == "Para cada") {
         block.turn_to_for_step()
-    }else if(this.value=="Enquanto"){
+    } else if (this.value == "Enquanto") {
         block.turn_to_while_step()
-    }else if(this.value=="Se"){
+    } else if (this.value == "Se") {
         block.turn_to_if_step()
-    }else if(this.value=="Atribuição"){
+    } else if (this.value == "Atribuição") {
         block.turn_to_attribution_step()
-    }else if(this.value=="Abrir em nova aba"){
+    } else if (this.value == "Abrir em nova aba") {
         block.turn_to_new_tab_step()
         block.className += " new-tab-context-start"
         execution_context_changed = true
-    }else if(this.value=="Fechar aba"){
+    } else if (this.value == "Fechar aba") {
         block.turn_to_close_tab_step()
         block.className += " new-tab-context-end"
         execution_context_changed = true
-    }
-    else{        
+    } else if (this.value == "Executar em iframe") {
+        block.turn_to_run_in_iframe_step()
+        block.className += " iframe-context-start"
+        execution_context_changed = true;
+    } else if (this.value == "Sair de iframe") {
+        block.turn_to_exit_iframe_step()
+        block.className += " iframe-context-end"
+        execution_context_changed = true;
+    } else {
         block.delete_lines(block.lines.length)
         block.add_line()
-        
-        for(param of block.step.mandatory_params){
+
+        for (param of block.step.mandatory_params) {
             field_options = block.step.field_options[param]
             block.add_param(param, field_options)
         }
-        
-        optional_params = Object.keys(block.step.optional_params)
-        if(optional_params.length!=0){
-            block.init_optional_params_button(block.step)
-        }
-    
-        if (this.value == "Executar em iframe") {
-            block.className += " iframe-context-start"
-            execution_context_changed = true;            
-            add_open_iframe_button(block);
-        }
 
-        else if (this.value == "Sair de iframe") {
-            block.className += " iframe-context-end"
-            execution_context_changed = true;
+        optional_params = Object.keys(block.step.optional_params)
+        if (optional_params.length != 0) {
+            block.init_optional_params_button(block.step)
         }
     }
 
     //add block tooltip depending on type selection
     block.add_block_tooltip();
-    
+
     if (execution_context_changed) {
         let index = get_index_in_parent(block)
         refresh_steps_option_below_index(index)
     }
-    
+
     colorize_contexts()
 }
 
@@ -664,7 +680,7 @@ function refresh_step(){
  * Sets the block to the for each step.
  * This function is a method of the block.
  */
-function turn_to_for_step(){
+function turn_to_for_step() {
     block = find_parent_with_attr_worth(this, "block")
     block.delete_lines(block.lines.length)
     block.add_line()
@@ -708,7 +724,7 @@ function turn_to_for_step(){
  * Sets the block to the while step.
  * This function is a method of the block.
  */
- function turn_to_while_step(){
+function turn_to_while_step() {
     block = find_parent_with_attr_worth(this, "block")
     block.delete_lines(block.lines.length)
     block.add_line()
@@ -745,7 +761,7 @@ function turn_to_for_step(){
  * Sets the block to the if step.
  * This function is a method of the block.
  */
- function turn_to_if_step(){
+function turn_to_if_step() {
     block = find_parent_with_attr_worth(this, "block")
     block.delete_lines(block.lines.length)
     block.add_line()
@@ -782,7 +798,7 @@ function turn_to_for_step(){
  * Sets the block to the attribution step.
  * This function is a method of the attribution step.
  */
- function turn_to_attribution_step(){
+function turn_to_attribution_step() {
     block = find_parent_with_attr_worth(this, "block")
     block.delete_lines(block.lines.length)
     block.add_line()
@@ -826,7 +842,7 @@ function turn_to_for_step(){
  * Sets the block to the open in new page step.
  * This function is a method of the block.
  */
-function turn_to_new_tab_step(){
+function turn_to_new_tab_step() {
     block = find_parent_with_attr_worth(this, "block")
     block.delete_lines(block.lines.length)
     block.add_line()
@@ -844,7 +860,38 @@ function turn_to_new_tab_step(){
     block.lines[0].row.full = true
 }
 
-function turn_to_close_tab_step(){
+function turn_to_close_tab_step() {
+    block = find_parent_with_attr_worth(this, "block")
+    block.delete_lines(block.lines.length)
+    block.add_line()
+    block.lines[0].row.full = true
+}
+
+/**
+ * Sets the block to the run in iframe step.
+ * This function is a method of the block.
+ */
+function turn_to_run_in_iframe_step() {
+    block = find_parent_with_attr_worth(this, "block")
+    block.delete_lines(block.lines.length)
+    block.add_line()
+
+    // defines iframe xpath
+    xpath_input_box = document.createElement("DIV")
+    xpath_input_box.className = "col-sm"
+    xpath_input = document.createElement("INPUT")
+    xpath_input.placeholder = "xpath do iframe"
+    xpath_input.className = "form-control row"
+    xpath_input_box.appendChild(xpath_input)
+    block.xpath_input = xpath_input
+
+    block.lines[0].row.appendChild(xpath_input_box)
+    block.lines[0].row.full = true
+
+    add_open_iframe_button(block);
+}
+
+function turn_to_exit_iframe_step() {
     block = find_parent_with_attr_worth(this, "block")
     block.delete_lines(block.lines.length)
     block.add_line()
@@ -858,17 +905,17 @@ function turn_to_close_tab_step(){
  * Hides the parameters inputs of a block.
  * This function is a method of the block
  */
-function hide_show_params(){
+function hide_show_params() {
     block = find_parent_with_attr_worth(this, "block")
-    if (block.params_visibility){
+    if (block.params_visibility) {
         block.params_visibility = false
-        for(var i = 1; i < block.lines.length; i++){
+        for (var i = 1; i < block.lines.length; i++) {
             block.lines[i].hidden = false
         }
         block.show_params_button.style.transform = 'rotate(180deg)';
-    }else{
+    } else {
         block.params_visibility = true
-        for(var i = 1; i < block.lines.length; i++){
+        for (var i = 1; i < block.lines.length; i++) {
             block.lines[i].hidden = true
         }
         block.show_params_button.style.transform = 'rotate(0deg)';
@@ -879,36 +926,36 @@ function hide_show_params(){
  * Adds a block bellow the block that called this method.
  * This function is a method of the block
  */
-function add_block_bellow(){
+function add_block_bellow() {
     step_board = find_parent_with_attr_worth(this, "step_board")
     block = find_parent_with_attr_worth(this, "block")
-    i=0
-    while(block != step_board.children[i]){i++}
-    step_board.add_block(step_list, i+1)
+    i = 0
+    while (block != step_board.children[i]) { i++ }
+    step_board.add_block(step_list, i + 1)
 }
 
 /**
  * Decrease the indent of the block that called this method.
  * This function is a method of the block
  */
-function unindent_step(){
+function unindent_step() {
     block = find_parent_with_attr_worth(this, "block")
-    if(block.depth > 1){
-        block.depth-=1
+    if (block.depth > 1) {
+        block.depth -= 1
         block.parentElement.current_depth -= 1
     }
-    block.style.left = (block.depth*2-2) +"em"
+    block.style.left = (block.depth * 2 - 2) + "em"
 }
 
 /**
  * Increase the indent of the block that called this method.
  * This function is a method of the block
  */
-function indent_step(){
+function indent_step() {
     block = find_parent_with_attr_worth(this, "block")
-    block.depth+=1
+    block.depth += 1
     block.parentElement.current_depth += 1
-    block.style.left = (block.depth*2-2) +"em"
+    block.style.left = (block.depth * 2 - 2) + "em"
 }
 
 function step_executable_in_context(step, context) {
@@ -919,21 +966,21 @@ function step_executable_in_context(step, context) {
  * Moves the block that called this method up.
  * This function is a method of the block
  */
-function move_up(){
+function move_up() {
     block = find_parent_with_attr_worth(this, "block")
 
-    
+
     index = get_index_in_parent(block)
     parent = block.parentElement
-    if(index>0){ 
-        if (get_insertion_index_context(index-1, 'up') == 'iframe') {
+    if (index > 0) {
+        if (get_insertion_index_context(index - 1, 'up') == 'iframe') {
             let step = get_step_info(block.select.value);
             if (!step_executable_in_context(step, 'iframe')) {
                 alert(`⚠️ Não é possível mover o passo "${step.name_display}" para o contexto de execução de iframe, pois ele não é compatível!`)
                 return;
             }
-        } 
-        
+        }
+
         if (get_block_value_by_index(index) == 'Executar em iframe') {
             let previous_step_value = get_block_value_by_index(index - 1)
             let step = get_step_info(previous_step_value)
@@ -942,12 +989,12 @@ function move_up(){
                 return;
             }
         }
-        
+
         let last_block_context = get_insertion_index_context(index, 'up');
-        parent.insertBefore(parent.children[index], parent.children[index-1]);
-        let curr_block_context = get_insertion_index_context(index-1,'up');
-        
-        
+        parent.insertBefore(parent.children[index], parent.children[index - 1]);
+        let curr_block_context = get_insertion_index_context(index - 1, 'up');
+
+
         // o contexto do bloco mudou
         if (last_block_context != curr_block_context) {
             refresh_step_options(block, curr_block_context)
@@ -960,12 +1007,12 @@ function move_up(){
  * Moves the block that called this method down.
  * This function is a method of the block
  */
-function move_down(){
+function move_down() {
     block = find_parent_with_attr_worth(this, "block")
     index = get_index_in_parent(block)
     parent = block.parentElement
-    
-    if(index<parent.children.length-1){
+
+    if (index < parent.children.length - 1) {
         if (get_insertion_index_context(index + 1, 'down') == 'iframe') {
             let step = get_step_info(block.select.value);
             if (!step_executable_in_context(step, 'iframe')) {
@@ -984,7 +1031,7 @@ function move_down(){
         }
 
         let last_block_context = get_insertion_index_context(index, 'up');
-        parent.insertBefore(parent.children[index+1], parent.children[index]);
+        parent.insertBefore(parent.children[index + 1], parent.children[index]);
         let curr_block_context = get_insertion_index_context(index + 1, 'up');
 
         // o contexto do bloco mudou
@@ -999,47 +1046,47 @@ function move_down(){
  * Duplicates the block that called this method and its children.
  * This function is a method of the block
  */
- function duplicate_blocks(){
+function duplicate_blocks() {
     block = find_parent_with_attr_worth(this, "block") //var block is the triggered one
     trigged_depth = block.depth
-    i=0
+    i = 0
     //finds block to duplicate
-    while(block != step_board.children[i]){i++} 
+    while (block != step_board.children[i]) { i++ }
     trigged_index = i
     //finds how many children blocks
-    while(step_board.children[i+1] && trigged_depth < step_board.children[i+1].depth){i++} 
+    while (step_board.children[i + 1] && trigged_depth < step_board.children[i + 1].depth) { i++ }
     last_child_index = i
     //creates the new blocks
     copy = 0
-    while(copy != (last_child_index-trigged_index+1)) {        
-        step_board.add_block(step_list, last_child_index+copy+1) //var block is now the added block
+    while (copy != (last_child_index - trigged_index + 1)) {
+        step_board.add_block(step_list, last_child_index + copy + 1) //var block is now the added block
         //fix the depth of the new block
-        block.depth = step_board.children[trigged_index+copy].depth
+        block.depth = step_board.children[trigged_index + copy].depth
         block.parentElement.current_depth = block.depth
-        block.style.left = (block.depth*2-2) +"em"
+        block.style.left = (block.depth * 2 - 2) + "em"
         //copies the block type
-        block.select.value = step_board.children[trigged_index+copy].select.value
+        block.select.value = step_board.children[trigged_index + copy].select.value
         block.select.onchange()
         //gets all selects
         let new_selects = Array.prototype.slice.apply(block.querySelectorAll("select"))
-        let old_selects = Array.prototype.slice.apply(step_board.children[trigged_index+copy].querySelectorAll("select"))
+        let old_selects = Array.prototype.slice.apply(step_board.children[trigged_index + copy].querySelectorAll("select"))
         //copies all select values
-        new_selects.forEach((select,index) => {
+        new_selects.forEach((select, index) => {
             if (index !== 0) {
                 select.value = old_selects[index].value
                 select.onchange()
             }
         })
         //checks if it has extra field
-        extra_option =  step_board.children[trigged_index+copy].querySelector('.dropdown-menu')
-        if (extra_option && (step_board.children[trigged_index+copy].querySelector('input[data-param="numero_xpaths"]') || step_board.children[trigged_index+copy].querySelector('input[data-param="xpath_do_campo_a_preencher"]'))) {
+        extra_option = step_board.children[trigged_index + copy].querySelector('.dropdown-menu')
+        if (extra_option && (step_board.children[trigged_index + copy].querySelector('input[data-param="numero_xpaths"]') || step_board.children[trigged_index + copy].querySelector('input[data-param="xpath_do_campo_a_preencher"]'))) {
             block.querySelector('.dropdown-menu a').click()
         }
         //get all inputs
         let new_inputs = Array.prototype.slice.apply(block.querySelectorAll("input"))
-        let old_inputs = Array.prototype.slice.apply(step_board.children[trigged_index+copy].querySelectorAll("input"))
+        let old_inputs = Array.prototype.slice.apply(step_board.children[trigged_index + copy].querySelectorAll("input"))
         //copies all input values
-        new_inputs.forEach((input,index) => {
+        new_inputs.forEach((input, index) => {
             input.value = old_inputs[index].value
         })
         copy++
@@ -1050,16 +1097,15 @@ function move_down(){
  * Delete the block that called this method.
  * This function is a method of the block
  */
-function delete_step(){
+function delete_step() {
     block = find_parent_with_attr_worth(this, "block")
     let index = get_index_in_parent(block)
 
     block.remove()
 
-    refresh_steps_option_below_index(index-1)
+    refresh_steps_option_below_index(index - 1)
     colorize_contexts();
 }
-
 
 //------------------ others ------------------------
 
@@ -1069,7 +1115,7 @@ function delete_step(){
  * @param  {List} step_list A list with the steps information.
  * @return {Node} The block initalized.
  */
-function init_block_element(step_list){
+function init_block_element(step_list) {
     var block_html_base = `<div class="col-sm">
                     </div>
                     <div class="conteiner block-controler">
@@ -1111,8 +1157,8 @@ function init_block_element(step_list){
  */
 function add_block_tooltip() {
     block = find_parent_with_attr_worth(this, "block")
-    
-    switch(block.step.name){
+
+    switch (block.step.name) {
         case "clique":
             tooltip = "Recebe um XPath, entre aspas, ou uma váriavel (por exemplo, dentro de um Para cada) para identificar o elemento correspondente na página e clicar sobre ele."
             break;
@@ -1204,9 +1250,9 @@ function add_block_tooltip() {
     if (tooltip != "") {
         tooltip_element = document.createElement("DIV")
         tooltip_element.className = "block_tooltip"
-        tooltip_element.innerHTML = '<button type="button" class="popover-icon btn btn-link start_tooltip" data-toggle="popover" data-trigger="hover" data-content="'+tooltip+'"><i class="fa fa-info-circle" aria-hidden="true"></i></button>';
+        tooltip_element.innerHTML = '<button type="button" class="popover-icon btn btn-link start_tooltip" data-toggle="popover" data-trigger="hover" data-content="' + tooltip + '"><i class="fa fa-info-circle" aria-hidden="true"></i></button>';
         block.firstChild.childNodes[1].appendChild(tooltip_element);
-        setTimeout(() => {$('.start_tooltip').popover();$('.start_tooltip').removeClass('start_tooltip');}, 800);
-        
-    } 
+        setTimeout(() => { $('.start_tooltip').popover(); $('.start_tooltip').removeClass('start_tooltip'); }, 800);
+
+    }
 }
