@@ -656,11 +656,13 @@ def tail_log_file(request, instance_id):
     files_found = instance.number_files_found
     download_file_success = instance.number_files_success_download
     download_file_error = instance.number_files_error_download
+    number_files_previously_crawled = instance.number_files_previously_crawled
 
     pages_found = instance.number_pages_found
     download_page_success = instance.number_pages_success_download
     download_page_error = instance.number_pages_error_download
     number_pages_duplicated_download = instance.number_pages_duplicated_download
+    number_pages_previously_crawled = instance.number_pages_previously_crawled
 
     logs = Log.objects.filter(instance_id=instance_id).order_by('-creation_date')
 
@@ -676,10 +678,14 @@ def tail_log_file(request, instance_id):
         "files_found": files_found,
         "files_success": download_file_success,
         "files_error": download_file_error,
+        "files_previously_crawled": number_files_previously_crawled,
+
         "pages_found": pages_found,
         "pages_success": download_page_success,
         "pages_error": download_page_error,
         "pages_duplicated": number_pages_duplicated_download,
+        "pages_previously_crawled": number_pages_previously_crawled,
+
         "out": log_text,
         "err": err_text,
         "time": str(datetime.fromtimestamp(time.time())),
@@ -719,6 +725,21 @@ def success_download_file(request, instance_id):
         instance = CrawlerInstance.objects.get(instance_id=instance_id)
 
         instance.number_files_success_download += 1
+        instance.save()
+
+        if instance.page_crawling_finished and instance.download_files_finished():
+            process_stop_crawl(instance.crawler.id)
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+def previously_crawled_file(request, instance_id):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id=instance_id)
+
+        instance.number_files_previously_crawled += 1
         instance.save()
 
         if instance.page_crawling_finished and instance.download_files_finished():
@@ -771,6 +792,17 @@ def success_download_page(request, instance_id):
     except:
         return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
 
+def previously_crawled_page(request, instance_id):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id=instance_id)
+
+        instance.number_pages_previously_crawled += 1
+        instance.save()
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
 
 def error_download_page(request, instance_id):
     try:

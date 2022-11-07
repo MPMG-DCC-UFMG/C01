@@ -1,7 +1,7 @@
-import cgi
 import datetime
 import json
 import magic
+import hashlib
 import mimetypes
 import os
 import pathlib
@@ -15,12 +15,13 @@ from playwright.async_api import async_playwright
 from scrapy.linkextractors import LinkExtractor
 from scrapy.http import Request, HtmlResponse, Response
 import cchardet as chardet
+import ujson
 
 # Checks if an url is valid
 import validators
 
 import crawling_utils
-from crawling_utils.constants import HEADER_ENCODE_DETECTION, AUTO_ENCODE_DETECTION,AUTO_ENCODE_DETECTION_CONFIDENCE_THRESHOLD
+from crawling_utils.constants import HEADER_ENCODE_DETECTION, AUTO_ENCODE_DETECTION, AUTO_ENCODE_DETECTION_CONFIDENCE_THRESHOLD
 
 from crawling.items import RawResponseItem
 from crawling.spiders.base_spider import BaseSpider
@@ -35,6 +36,7 @@ HTTP_HEADERS = {
 # System waits for up to DOWNLOAD_START_TIMEOUT seconds for a download to
 # begin. The value below is arbitrary
 DOWNLOAD_START_TIMEOUT = 7
+
 
 class StaticPageSpider(BaseSpider):
     # nome temporário, que será alterado no __init__
@@ -230,11 +232,26 @@ class StaticPageSpider(BaseSpider):
 
         return item
 
-    def block_until_downloads_complete(self, download_path):
+    def get_hashes_of_already_crawled(self, data_path: str) -> set:
+        data_path = data_path if data_path[-1] == '/' else f'{data_path}/'
+        root_path_rgx = f'{data_path}*/data/files/file_description.jsonl'
+        description_files = glob(root_path_rgx)
+
+        hashes = set()
+        for description_file in description_files:
+            with open(description_file) as file:
+                for line in file.readlines():
+                    hash = ujson.loads(line)['content_hash']
+                    hashes.add(hash)
+
+        return hashes
+
+    def block_until_downloads_complete(self, data_path, instance_id, ignore_data_crawled_in_previous_instances):
         """
         Blocks the flow of execution until all files are downloaded, and then
         moves files from the temporary folder to the final one.
         """
+        download_path = os.path.join(data_path, str(instance_id), 'data', 'files')
 
         temp_download_path = os.path.join(download_path, 'temp')
         if not os.path.exists(temp_download_path):
@@ -244,7 +261,7 @@ class StaticPageSpider(BaseSpider):
             # Pending downloads in chrome have the .crdownload extension.
             # So, if any of these files exist, we know that a download is
             # running.
-            pending_downloads = glob(f'{temp_download_path}*.crdownload')
+            pending_downloads = glob(f'{temp_download_path}*.crdownload*')
             return len(pending_downloads) > 0
 
         for _ in range(DOWNLOAD_START_TIMEOUT):
@@ -255,12 +272,30 @@ class StaticPageSpider(BaseSpider):
         while pending_downloads_exist():
             time.sleep(1)
 
+        hashes_of_already_crawled_files = set()
+        if ignore_data_crawled_in_previous_instances:
+            hashes_of_already_crawled_files = self.get_hashes_of_already_crawled(data_path)
+
         # Copy files to proper location
         allfiles = os.listdir(temp_download_path)
         for f in allfiles:
-            os.rename(os.path.join(temp_download_path, f), os.path.join(download_path, f))
+            temp_downloaded_file_path = os.path.join(temp_download_path, f)
+            if self.get_file_hash(temp_downloaded_file_path) in hashes_of_already_crawled_files:
+                os.remove(temp_downloaded_file_path)
+
+            else:
+                os.rename(os.path.join(temp_download_path, f), os.path.join(download_path, f))
 
         shutil.rmtree(temp_download_path)
+
+    def get_file_hash(self, filepath: str) -> str:
+        content_hash = hashlib.md5()
+        with open(filepath, 'rb') as downloaded_file:
+            chunk = downloaded_file.read(1024)
+            while chunk != b'':
+                content_hash.update(chunk)
+                chunk = downloaded_file.read(1024)
+        return content_hash.hexdigest()
 
     def generate_file_descriptions(self, download_path):
         """Generates descriptions for downloaded files."""
@@ -286,12 +321,14 @@ class StaticPageSpider(BaseSpider):
                 # So, we get only the filename.ext in the next line
                 file_name = file_with_extension.split('/')[-1]
 
+
                 description = {
                     'url': '<triggered by dynamic page click>',
                     'file_name': file_name,
                     'crawler_id': self.config['crawler_id'],
                     'instance_id': self.config['instance_id'],
                     'crawled_at_date': str(creation_time),
+                    'content_hash': self.get_file_hash(file_with_extension),
                     'referer': '<from unique dynamic crawl>',
                     'type': ext.replace('.', '') if ext != '' else '<unknown>',
                 }
@@ -366,7 +403,11 @@ class StaticPageSpider(BaseSpider):
             page_dict = await steps.execute_steps(pagina=page)
 
             # Should wait for file downloads before closing the page
-            self.block_until_downloads_complete(download_path)
+            ignore_data_crawled_in_previous_instances = \
+                self.config['ignore_data_crawled_in_previous_instances']
+            self.block_until_downloads_complete(
+                os.path.join(output_folder, data_path), instance_id,
+                ignore_data_crawled_in_previous_instances)
             self.generate_file_descriptions(download_path)
 
             await page.close()
@@ -421,7 +462,7 @@ class StaticPageSpider(BaseSpider):
                                             'referer': response.url,
                                             'instance_id': self.config["instance_id"],
                                             'curdepth': response.meta['curdepth'] + 1
-                                            #adicionar informações da req inicial
+                                            # adicionar informações da req inicial
                                         },
                                         'curdepth': response.meta['curdepth'] + 1
                                     },
