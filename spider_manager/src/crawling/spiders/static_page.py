@@ -404,7 +404,7 @@ class StaticPageSpider(BaseSpider):
 
             if self.config['video_recording_enabled']:
                 context_kwargs['record_video_dir'] = os.path.join(instance_path, 'debug', 'video')
-                context_kwargs['record_video_size']= {"width": self.config["browser_resolution_width"], "height": self.config["browser_resolution_height"]}
+                context_kwargs['record_video_size'] = {"width": self.config["browser_resolution_width"], "height": self.config["browser_resolution_height"]}
           
             context = await browser.new_context(**context_kwargs)
 
@@ -429,7 +429,7 @@ class StaticPageSpider(BaseSpider):
             self.generate_file_descriptions(download_path)
 
             if self.config['create_trace_enabled']:
-                await context.tracing.stop(path = os.path.join(instance_path, 'debug', 'trace', 'trace.zip'))
+                await context.tracing.stop(path = os.path.join(instance_path, 'debug', 'trace', f"{instance_id}.zip"))
 
             await page.close()
             await browser.close()

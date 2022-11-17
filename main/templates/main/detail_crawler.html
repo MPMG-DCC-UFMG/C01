@@ -91,6 +91,9 @@ Crawler "{{ crawler.source_name }}"
                         <th scope="col">Screenshots</th>
                         {% endif %}
                         <th scope="col">Arquivo de configurações</th>
+                        {% if crawler.dynamic_processing and crawler.running == False %}
+                        <th scope="col">Trace</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -106,6 +109,7 @@ Crawler "{{ crawler.source_name }}"
                         <td><button type="button" class="btn btn-primary" onclick="displayScreenshotModal({{instance.instance_id}})">Visualizar</button></td>
                         {% endif %}
                         <td><a class="btn btn-primary" href="{% url 'export_config' instance.instance_id%}">Baixar</a></td>
+                        <td><a class="btn btn-primary" href="{% url 'export_trace' instance.instance_id%}">Baixar</a></td>
                     </tr>
                     
                     {% if forloop.last and forloop.counter > 3 %}

@@ -853,6 +853,24 @@ def export_config(request, instance_id):
 
     return response
 
+def export_trace(request, instance_id):
+    instance = get_object_or_404(CrawlerInstance, pk=instance_id)
+    data_path = instance.crawler.data_path
+
+    file_name = f"{instance_id}.zip"
+    rel_path = os.path.join(data_path, str(instance_id), "debug", file_name)
+    path = os.path.join(settings.OUTPUT_FOLDER, rel_path)
+
+    try:
+        response = FileResponse(open(path, 'rb'), content_type='zip')
+    except FileNotFoundError:
+        print(f"Arquivo Trace Não Encontrado: {file_name}. Verifique se a opção de gerar arquivo trace foi habilitada na configuração do coletor.")
+        return HttpResponseNotFound("<h1>Página Não Encontrada</h1>")
+    else:
+        response['Content-Length'] = os.path.getsize(path)
+        response['Content-Disposition'] = "attachment; filename=%s" % file_name
+
+    return response
 
 def view_screenshots(request, instance_id, page):
     IMGS_PER_PAGE = 20
