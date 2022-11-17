@@ -99,6 +99,7 @@ services:
         build:
             context: .
             dockerfile: ./docker/spider_manager/Dockerfile
+        init: true
         env_file:
             - ./docker/config/main.env
         volumes:
