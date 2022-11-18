@@ -15,7 +15,6 @@ import ujson
 from kafka import KafkaProducer
 from scrapy.crawler import CrawlerProcess
 from scrapy.spiders import Spider
-from scrapy.utils.reactor import install_reactor
 
 from crawling.spiders.static_page import StaticPageSpider
 from kafka_logger import KafkaLogger
@@ -85,12 +84,6 @@ class Executor:
 
         if config.get("dynamic_processing", False):
             base_config["TWISTED_REACTOR"] = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
-
-            base_config["DOWNLOAD_HANDLERS"] = {
-                "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
-                "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
-            }
-
             base_config["DATA_PATH"] = config["data_path"]
             base_config["OUTPUT_FOLDER"] = settings.OUTPUT_FOLDER
             base_config["CRAWLER_ID"] = config["crawler_id"]
@@ -98,24 +91,6 @@ class Executor:
 
             base_config["DYNAMIC_PROCESSING"] = True
             base_config["DYNAMIC_PROCESSING_STEPS"] = ujson.loads(config["steps"])
-
-            instance_path = os.path.join(settings.OUTPUT_FOLDER, config["data_path"], str(config["instance_id"]))
-            download_path = os.path.join(instance_path, 'data', 'files', 'temp')
-            base_config["PLAYWRIGHT_LAUNCH_OPTIONS"] = {
-                'downloads_path': download_path,
-                # uncommenting the following line causes some collector
-                # instances to fail
-                # 'args': ['--no-sandbox']
-            }
-            base_config["PLAYWRIGHT_CONTEXTS"] = {
-                'default': {
-                    'viewport': {
-                        'width': config["browser_resolution_width"],
-                        'height': config["browser_resolution_height"]
-                    }
-                }
-            }
-            base_config["PLAYWRIGHT_BROWSER_TYPE"] = config["browser_type"]
 
         # Antiblock middlewares
         if config.get("antiblock_ip_rotation_type", "") == "tor":
@@ -173,7 +148,6 @@ class Executor:
         base_settings = self.__get_spider_base_settings(config)
         self.__parse_config(base_settings)
 
-        install_reactor('twisted.internet.asyncioreactor.AsyncioSelectorReactor')
         process = CrawlerProcess(settings=base_settings)
 
         process.crawl(StaticPageSpider,

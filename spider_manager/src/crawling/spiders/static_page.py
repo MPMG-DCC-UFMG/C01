@@ -11,6 +11,7 @@ import time
 
 from glob import glob
 
+from playwright.async_api import async_playwright
 from scrapy.linkextractors import LinkExtractor
 from scrapy.http import Request, HtmlResponse, Response
 import cchardet as chardet
@@ -214,8 +215,11 @@ class StaticPageSpider(BaseSpider):
             item["instance_id"] = self.config["instance_id"]
             item["crawled_at_date"] = str(datetime.datetime.today())
 
-            cookies = response.headers.getlist('Set-Cookie')[0].decode('utf-8')\
-                .split(";")
+            cookies = []
+            if len(response.headers.getlist('Set-Cookie')):
+                cookies = response.headers.getlist('Set-Cookie')[0]\
+                    .decode('utf-8').split(";")
+
             item["cookies"] = {
                 c.split("=")[0]: c.split("=")[1]
                 for c in cookies if "=" in c
@@ -359,18 +363,59 @@ class StaticPageSpider(BaseSpider):
         skip_iter_errors = self.config['skip_iter_errors']
 
         output_folder = self.settings['OUTPUT_FOLDER']
-        instance_path = os.path.join(output_folder, data_path, str(instance_id))
+        instance_path = os.path.join(output_folder, data_path,
+            str(instance_id))
 
         download_path = os.path.join(instance_path, 'data', 'files')
+        temp_download_path = os.path.join(download_path, 'temp')
         scrshot_path = os.path.join(instance_path, "data", "screenshots")
 
-        page = response.meta["playwright_page"]
         request = response.request
 
-        if request.meta['steps']:
-            steps = request.meta['steps']
-            steps = code_g.generate_code(steps, functions_file, scrshot_path, skip_iter_errors)
+        steps = request.meta['steps']
+        steps = code_g.generate_code(steps, functions_file, scrshot_path,
+            skip_iter_errors)
+
+        async with async_playwright() as p:
+            browser = None
+
+            if self.config["browser_type"] == 'chromium':
+                browser = await p.chromium.launch(headless=True,
+                    downloads_path=temp_download_path)
+            elif self.config["browser_type"] == 'webkit':
+                browser = await p.webkit.launch(headless=True,
+                    downloads_path=temp_download_path)
+            elif self.config["browser_type"] == 'firefox':
+                browser = await p.firefox.launch(headless=True,
+                    downloads_path=temp_download_path)
+
+            normalized_headers = request.headers.to_unicode_dict()
+            new_page_kwargs = {}
+
+            # Set the user agent according to what was sent by Scrapy
+            if 'user-agent' in normalized_headers:
+                new_page_kwargs['user_agent'] = \
+                    normalized_headers['user-agent']
+
+            page = await browser.new_page(**new_page_kwargs)
+            await page.set_viewport_size({
+                'width': self.config["browser_resolution_width"],
+                'height': self.config["browser_resolution_height"]
+            })
+            await page.goto(response.url)
+
             page_dict = await steps.execute_steps(pagina=page)
+
+            # Should wait for file downloads before closing the page
+            ignore_data_crawled_in_previous_instances = \
+                self.config['ignore_data_crawled_in_previous_instances']
+            self.block_until_downloads_complete(
+                os.path.join(output_folder, data_path), instance_id,
+                ignore_data_crawled_in_previous_instances)
+            self.generate_file_descriptions(download_path)
+
+            await page.close()
+            await browser.close()
 
         # Necessary to bypass the compression middleware (?)
         response.headers.pop('content-encoding', None)
@@ -380,25 +425,6 @@ class StaticPageSpider(BaseSpider):
 
         for entry in list(page_dict.values()):
             results.append(self.page_to_response(entry, response))
-
-        ignore_data_crawled_in_previous_instances = self.config['ignore_data_crawled_in_previous_instances']
-
-        # Maybe move this to the end of the whole parsing method
-        self.block_until_downloads_complete(os.path.join(output_folder, data_path), instance_id,
-                                            ignore_data_crawled_in_previous_instances)
-
-        self.generate_file_descriptions(download_path)
-
-        # TODO ideally the page would be closed here or at the end of the parse
-        # method, but then we get the following error:
-        #
-        # playwright._impl._api_types.Error: Target page, context or browser has been closed
-        #
-        # In any case I suppose the browser will be killed at the end of the
-        # spider execution so this shouldn't be a critical issue. Still, we
-        # should investigate in the future.
-
-        # await page.close()
 
         return results
 
@@ -417,7 +443,7 @@ class StaticPageSpider(BaseSpider):
             cur_depth = response.meta['curdepth']
 
         responses = [response]
-        if "playwright_page" in response.meta:
+        if self.config.get("dynamic_processing", False):
             responses = await self.dynamic_processing(response)
 
         files_found = set()
