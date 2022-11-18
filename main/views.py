@@ -77,11 +77,12 @@ def process_run_crawl(crawler_id, test_mode = False):
 
     data['instance_id'] = instance_id
     data['execution_context'] = instance.execution_context
-
-    crawler_manager.start_crawler(data)
+    data['running_in_test_mode'] = test_mode
 
     crawler.functional_status = 'testing' if test_mode else 'testing_by_crawling'
     crawler.save()
+
+    crawler_manager.start_crawler(data)
 
     return instance
 

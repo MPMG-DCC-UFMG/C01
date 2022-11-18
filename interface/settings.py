@@ -212,4 +212,4 @@ if env('LOG_TO_FILE'):
 OUTPUT_FOLDER = env('OUTPUT_FOLDER')
 
 # tests crawler for up 5 minutes
-RUNTIME_OF_CRAWLER_TEST = 300
+RUNTIME_OF_CRAWLER_TEST = 120

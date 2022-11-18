@@ -92,6 +92,7 @@ class Writer:
         crawler_id = str(config['crawler_id'])
         crawler_source_name = config['source_name']
         ignore_data_crawled_in_previous_instances = config['ignore_data_crawled_in_previous_instances']
+        crawler_executing_test_mode = config['running_in_test_mode']
 
         print(f'[{datetime.now()}] Writer: Registering crawler "{crawler_source_name}" with ID {crawler_id}')
 
@@ -99,11 +100,12 @@ class Writer:
         self.__create_folder_structure(config)
 
         self.__file_downloader.add_crawler_source(crawler_id, config['data_path'],
-                                                  ignore_data_crawled_in_previous_instances)
+                                                ignore_data_crawled_in_previous_instances,
+                                                crawler_executing_test_mode)
 
         self.__hashes_of_already_crawled_pages[crawler_id] = set()
 
-        if ignore_data_crawled_in_previous_instances:
+        if ignore_data_crawled_in_previous_instances and not crawler_executing_test_mode:
             self.__hashes_of_already_crawled_pages[crawler_id] = self.__get_hashes_of_already_crawled(
                 config['data_path'])
 
