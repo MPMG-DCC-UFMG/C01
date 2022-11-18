@@ -365,9 +365,21 @@ class CrawlRequest(TimeStamped):
             return None
 
     def __check_if_crawler_worked(self, instance_id) -> bool:
-        files_path = f"/data/{self.data_path}/{instance_id}/data/"
-        if not os.listdir(files_path + "raw_pages/") and not os.listdir(files_path + "files/"):
+        files_path = f'/data/{self.data_path}/{instance_id}/data/'
+        
+        raw_pages_crawled = os.listdir(files_path + 'raw_pages/')
+        files_crawled = os.listdir(files_path + 'files/')
+
+        for ignore_file in ['file_description.jsonl', 'temp']:
+            if ignore_file in raw_pages_crawled:
+                raw_pages_crawled.remove(ignore_file)
+            
+            if ignore_file in files_crawled:
+                files_crawled.remove(ignore_file)
+
+        if not raw_pages_crawled and not files_crawled:
             return False
+
         return True
 
     def update_functional_status_after_run(self, instance_id):
