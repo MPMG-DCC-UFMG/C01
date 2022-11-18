@@ -21,6 +21,8 @@ Crawler "{{ crawler.source_name }}"
                 <li>Data de criação: <strong>{{ crawler.creation_date }}</strong></li>
                 <li>Tipo de coleta: <strong>{{crawler.crawler_type_desc}}</strong></li>
                 <li>Descrição: <strong>{{crawler.crawler_description}}</strong></li>
+
+                {% if crawler.functional_status != 'testing_by_crawling' %}
                 <li>Status de funcionamento: 
                     {% if crawler.functional_status == 'not_tested' %}
                     <span class="badge badge-info">Não testado</span>
@@ -33,6 +35,7 @@ Crawler "{{ crawler.source_name }}"
                     <span class="badge badge-danger">Não funcional</span>
                     {% endif %}
                 </li>
+                {% endif %}
 
                 {% if crawler.functional_status == 'functional' or crawler.functional_status == 'non_functional'%}
                 <li>Data último teste de funcionamento: <strong>{{ crawler.date_last_functional_test }}</strong></li>

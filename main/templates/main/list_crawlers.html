@@ -141,10 +141,27 @@ Home
                         {% else  %}
                             {% if crawler.functional_status == 'testing' %}
                                 <td><span class="badge badge-warning">Testando</span></td>
+                            {% elif crawler.functional_status == 'functional' %}
+                                <td>
+                                    <span class="badge badge-dark">Parado</span>
+                                    <span class="badge badge-success">Funcional</span>
+                                </td>
+                            {% elif crawler.functional_status == 'non_functional' %}
+                                <td>
+                                    <span class="badge badge-dark">Parado</span>
+                                    <span class="badge badge-danger">Não funcional</span>
+                                </td>
+
+                            {% elif crawler.functional_status == 'not_tested' %}
+                                <td>
+                                    <span class="badge badge-warning">Não testado</span>
+                                </td>
                             {% elif crawler.running == True %}
                                 <td><span class="badge badge-success">Rodando</span></td>
                             {% else %}
-                                <td><span class="badge badge-danger">Parado</span></td>
+                                <td>
+                                    <span class="badge badge-dark">Parado</span>
+                                </td>
                             {% endif %}
                         {% endif %}
                     </tr>
