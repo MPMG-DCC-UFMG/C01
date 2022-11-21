@@ -427,6 +427,12 @@ class StaticPageSpider(BaseSpider):
         for entry in list(page_dict.values()):
             results.append(self.page_to_response(entry, response))
 
+        # Maybe move this to the end of the whole parsing method
+        self.block_until_downloads_complete(download_path)
+        self.generate_file_descriptions(download_path)
+
+        await page.close()
+
         return results
 
     async def parse(self, response):
