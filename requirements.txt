@@ -49,7 +49,7 @@ opencv-python==4.5.5.64
 outcome==1.1.0
 packaging==21.3
 parsel==1.6.0
-Pillow==9.0.1
+Pillow==9.3.0
 pluggy==1.0.0
 priority==1.3.0
 promise==2.3
