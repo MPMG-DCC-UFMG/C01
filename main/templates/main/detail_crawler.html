@@ -93,6 +93,7 @@ Crawler "{{ crawler.source_name }}"
                         <th scope="col">Arquivo de configurações</th>
                         {% if crawler.dynamic_processing and crawler.running == False %}
                         <th scope="col">Trace</th>
+                        <th scope="col">Vídeo</th>
                         {% endif %}
                     </tr>
                 </thead>
@@ -110,6 +111,7 @@ Crawler "{{ crawler.source_name }}"
                         {% endif %}
                         <td><a class="btn btn-primary" href="{% url 'export_config' instance.instance_id%}">Baixar</a></td>
                         <td><a class="btn btn-primary" href="{% url 'export_trace' instance.instance_id%}">Baixar</a></td>
+                        <td><a class="btn btn-primary" href="{% url 'show_video' instance.instance_id%}">Mostrar</a></td>
                     </tr>
                     
                     {% if forloop.last and forloop.counter > 3 %}
