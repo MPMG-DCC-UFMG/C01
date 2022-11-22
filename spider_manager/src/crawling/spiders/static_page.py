@@ -214,8 +214,11 @@ class StaticPageSpider(BaseSpider):
             item["instance_id"] = self.config["instance_id"]
             item["crawled_at_date"] = str(datetime.datetime.today())
 
-            cookies = response.headers.getlist('Set-Cookie')[0].decode('utf-8')\
-                .split(";")
+            cookies = []
+            if len(response.headers.getlist('Set-Cookie')):
+                cookies = response.headers.getlist('Set-Cookie')[0]\
+                    .decode('utf-8').split(";")
+
             item["cookies"] = {
                 c.split("=")[0]: c.split("=")[1]
                 for c in cookies if "=" in c
