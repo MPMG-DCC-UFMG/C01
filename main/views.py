@@ -24,6 +24,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from scrapy_puppeteer import iframe_loader
+from wsgiref.util import FileWrapper
 
 from .forms import (CrawlRequestForm, ParameterHandlerFormSet,
                     RawCrawlRequestForm, ResponseHandlerFormSet)
@@ -32,6 +33,7 @@ from .models import (CRAWLER_QUEUE_DB_ID, CrawlerInstance, CrawlerQueue,
 from .serializers import (CrawlerInstanceSerializer, CrawlerQueueSerializer,
                           CrawlRequestSerializer, TaskSerializer)
 from .task_filter import task_filter_by_date_interval
+
 
 # Log the information to the file logger
 logger = logging.getLogger('file')
@@ -877,12 +879,13 @@ def show_video(request, instance_id):
     data_path = instance.crawler.data_path
 
     rel_path = os.path.join(data_path, str(instance_id), "debug", "video")
-    file_name = os.listdir('rel_path')[0]
+    file_name = os.listdir(rel_path)[0]
     
     path = os.path.join(settings.OUTPUT_FOLDER, rel_path, file_name)
 
     try:
-        response = FileResponse(open(path, 'rb'), content_type='webm')
+        file_wrapper = FileWrapper(open(path, 'rb'))
+        response = FileResponse(file_wrapper, content_type='video/webm')
     except FileNotFoundError:
         print(f"Vídeo Não Encontrado. Verifique se a opção de gravação de vídeo foi habilitada na configuração do coletor.")
         return HttpResponseNotFound("<h1>Página Não Encontrada</h1><p>Verifique se a opção de gravação de vídeo foi habilitada na configuração do coletor.</p>")
