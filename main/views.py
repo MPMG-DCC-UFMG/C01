@@ -874,27 +874,6 @@ def export_trace(request, instance_id):
 
     return response
 
-def show_video(request, instance_id):
-    instance = get_object_or_404(CrawlerInstance, pk=instance_id)
-    data_path = instance.crawler.data_path
-
-    rel_path = os.path.join(data_path, str(instance_id), "debug", "video")
-    file_name = os.listdir(rel_path)[0]
-    
-    path = os.path.join(settings.OUTPUT_FOLDER, rel_path, file_name)
-
-    try:
-        file_wrapper = FileWrapper(open(path, 'rb'))
-        response = FileResponse(file_wrapper, content_type='video/webm')
-    except FileNotFoundError:
-        print(f"Vídeo Não Encontrado. Verifique se a opção de gravação de vídeo foi habilitada na configuração do coletor.")
-        return HttpResponseNotFound("<h1>Página Não Encontrada</h1><p>Verifique se a opção de gravação de vídeo foi habilitada na configuração do coletor.</p>")
-    else:
-        response['Content-Length'] = os.path.getsize(path)
-        response['Content-Disposition'] = "attachment; filename=%s" % file_name
-
-    return response
-
 def view_screenshots(request, instance_id, page):
     IMGS_PER_PAGE = 20
 

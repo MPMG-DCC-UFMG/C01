@@ -110,7 +110,6 @@ Crawler "{{ crawler.source_name }}"
                         <td><button type="button" class="btn btn-primary" onclick="displayScreenshotModal({{instance.instance_id}})">Visualizar</button></td>
                         <td><a class="btn btn-primary" href="{% url 'export_config' instance.instance_id%}">Baixar</a></td>
                         <td><a class="btn btn-primary" href="{% url 'export_trace' instance.instance_id%}">Baixar</a></td>
-                        <td><a class="btn btn-primary" href="{% url 'show_video' instance.instance_id%}">Visualizar</a></td>
                         {% endif %}
                     </tr>
                     
