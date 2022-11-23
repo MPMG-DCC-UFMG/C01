@@ -91,7 +91,7 @@ Crawler "{{ crawler.source_name }}"
                         <th scope="col">Screenshots</th>
                         {% endif %}
                         <th scope="col">Arquivo de configurações</th>
-                        {% if crawler.dynamic_processing and crawler.running == False %}
+                        {% if crawler.dynamic_processing%}
                         <th scope="col">Trace</th>
                         <th scope="col">Vídeo</th>
                         {% endif %}
