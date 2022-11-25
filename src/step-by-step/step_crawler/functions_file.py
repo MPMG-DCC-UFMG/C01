@@ -197,9 +197,7 @@ async def retorna_pagina(pagina):
 @step("Digitar em")
 async def digite(pagina, xpath, texto):
     el_locator = pagina.locator(f'xpath={xpath}')
-    await el_locator.evaluate('el => el.value = ""')
-    await el_locator.type(texto)
-
+    await el_locator.evaluate(f'el => el.value = "{texto.strip()}"')
 
 @step("Objeto")
 async def objeto(pagina, objeto):
