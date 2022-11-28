@@ -184,3 +184,8 @@ function exit_crawler_queue(queue_item_id) {
         }
     });
 }
+
+// Initiates all popovers on the page
+$(function () {
+    $('[data-toggle="popover"]').popover()
+})

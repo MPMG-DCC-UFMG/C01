@@ -92,7 +92,17 @@ Crawler "{{ crawler.source_name }}"
                         {% endif %}
                         <th scope="col">Arquivo de configurações</th>
                         {% if crawler.dynamic_processing%}
-                        <th scope="col">Trace</th>
+                        <th scope="col">
+                            Trace
+                            <button type="button" class="popover-icon btn btn-link" data-toggle="popover" data-trigger="click" data-content=
+                                    "<p>Clique neste link para acessar a interface de execução do trace no seu navegador:</p>
+                                     <p>
+                                        <a href='https://trace.playwright.dev/' target='_blank'>https://playwright.dev/docs/trace-viewer</a>
+                                    </p>"
+                                    data-html="true">
+                                <i class="fa fa-info-circle" aria-hidden="true"></i>
+                            </button>
+                        </th>
                         {% endif %}
                     </tr>
                 </thead>
