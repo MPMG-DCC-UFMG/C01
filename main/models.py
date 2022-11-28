@@ -181,7 +181,6 @@ class CrawlRequest(TimeStamped):
 
     # Debug Mode
     create_trace_enabled = models.BooleanField(default=False)
-    headful_enabled = models.BooleanField(default=False)
     video_recording_enabled = models.BooleanField(default=False)
 
     # DETAILS #################################################################

@@ -62,7 +62,6 @@ class CrawlRequestForm(forms.ModelForm):
             'dynamic_processing',
 
             'create_trace_enabled',
-            'headful_enabled',
             'video_recording_enabled',
 
             'browser_type',
@@ -444,11 +443,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
         label="Criar arquivo trace.zip",
         help_text="Gera o arquivo 'trace.zip' para depuração do coletor com a ferramenta Trace Viewer"
     )
-    headful_enabled = forms.BooleanField(
-        required=False,
-        label="Ativar modo Headful",
-        help_text="Executa o browser em modo Headful."
-    )
+
     video_recording_enabled = forms.BooleanField(
         required=False,
         label="Gravar vídeo do coletor",

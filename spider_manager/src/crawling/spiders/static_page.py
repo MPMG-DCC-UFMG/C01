@@ -362,7 +362,6 @@ class StaticPageSpider(BaseSpider):
 
         data_path = self.config['data_path']
         skip_iter_errors = self.config['skip_iter_errors']
-        headless = not self.config['headful_enabled']
 
         output_folder = self.settings['OUTPUT_FOLDER']
         instance_path = os.path.join(output_folder, data_path,
@@ -382,13 +381,13 @@ class StaticPageSpider(BaseSpider):
             browser = None
 
             if self.config["browser_type"] == 'chromium':
-                browser = await p.chromium.launch(headless=headless,
+                browser = await p.chromium.launch(headless=True,
                     downloads_path=temp_download_path)
             elif self.config["browser_type"] == 'webkit':
-                browser = await p.webkit.launch(headless=headless,
+                browser = await p.webkit.launch(headless=True,
                     downloads_path=temp_download_path)
             elif self.config["browser_type"] == 'firefox':
-                browser = await p.firefox.launch(headless=headless,
+                browser = await p.firefox.launch(headless=True,
                     downloads_path=temp_download_path)
 
             normalized_headers = request.headers.to_unicode_dict()
