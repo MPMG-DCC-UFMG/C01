@@ -24,7 +24,6 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from scrapy_puppeteer import iframe_loader
-from wsgiref.util import FileWrapper
 
 from .forms import (CrawlRequestForm, ParameterHandlerFormSet,
                     RawCrawlRequestForm, ResponseHandlerFormSet)
