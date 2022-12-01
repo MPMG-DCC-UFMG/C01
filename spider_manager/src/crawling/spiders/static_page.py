@@ -489,6 +489,5 @@ class StaticPageSpider(BaseSpider):
                 continue
 
             item = self.response_to_item(response, files_found, images_found, idx)
-            item["dynamic_finished"] = True
 
             yield item
