@@ -26,3 +26,4 @@ class RawResponseItem(Item):
     files_found = Field()
     images_found = Field()
     attrs = Field()
+    dynamic_finished = Field()

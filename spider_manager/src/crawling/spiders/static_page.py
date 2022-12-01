@@ -256,7 +256,7 @@ class StaticPageSpider(BaseSpider):
         """
         download_path = os.path.join(data_path, str(instance_id), 'data', 'files')
 
-        temp_download_path = os.path.join(download_path, 'temp')
+        temp_download_path = os.path.join(download_path, 'browser_downloads')
         if not os.path.exists(temp_download_path):
             os.makedirs(temp_download_path)
 
@@ -308,35 +308,37 @@ class StaticPageSpider(BaseSpider):
 
         with open(os.path.join(download_path, 'file_description.jsonl'), 'w') as f:
             for file in files:
-                # Get timestamp from file download
                 fname = pathlib.Path(file)
-                creation_time = datetime.datetime.fromtimestamp(fname.stat().st_ctime)
 
-                mimetype = magic.from_file(file, mime=True)
-                guessed_extension = mimetypes.guess_extension(mimetype)
+                if fname.is_file():
+                    # Get timestamp from file download
+                    creation_time = datetime.datetime.fromtimestamp(fname.stat().st_ctime)
 
-                ext = '' if guessed_extension is None else guessed_extension
+                    mimetype = magic.from_file(file, mime=True)
+                    guessed_extension = mimetypes.guess_extension(mimetype)
 
-                file_with_extension = file + ext
-                os.rename(file, file_with_extension)
+                    ext = '' if guessed_extension is None else guessed_extension
 
-                # A typical file will be: /home/user/folder/filename.ext
-                # So, we get only the filename.ext in the next line
-                file_name = file_with_extension.split('/')[-1]
+                    file_with_extension = file + ext
+                    os.rename(file, file_with_extension)
+
+                    # A typical file will be: /home/user/folder/filename.ext
+                    # So, we get only the filename.ext in the next line
+                    file_name = file_with_extension.split('/')[-1]
 
 
-                description = {
-                    'url': '<triggered by dynamic page click>',
-                    'file_name': file_name,
-                    'crawler_id': self.config['crawler_id'],
-                    'instance_id': self.config['instance_id'],
-                    'crawled_at_date': str(creation_time),
-                    'content_hash': self.get_file_hash(file_with_extension),
-                    'referer': '<from unique dynamic crawl>',
-                    'type': ext.replace('.', '') if ext != '' else '<unknown>',
-                }
+                    description = {
+                        'url': '<triggered by dynamic page click>',
+                        'file_name': file_name,
+                        'crawler_id': self.config['crawler_id'],
+                        'instance_id': self.config['instance_id'],
+                        'crawled_at_date': str(creation_time),
+                        'content_hash': self.get_file_hash(file_with_extension),
+                        'referer': '<from unique dynamic crawl>',
+                        'type': ext.replace('.', '') if ext != '' else '<unknown>',
+                    }
 
-                f.write(json.dumps(description) + '\n')
+                    f.write(json.dumps(description) + '\n')
 
     def page_to_response(self, page, response) -> HtmlResponse:
         return HtmlResponse(
@@ -366,7 +368,7 @@ class StaticPageSpider(BaseSpider):
             str(instance_id))
 
         download_path = os.path.join(instance_path, 'data', 'files')
-        temp_download_path = os.path.join(download_path, 'temp')
+        temp_download_path = os.path.join(download_path, 'browser_downloads')
         scrshot_path = os.path.join(instance_path, "data", "screenshots")
 
         request = response.request
@@ -442,7 +444,8 @@ class StaticPageSpider(BaseSpider):
             cur_depth = response.meta['curdepth']
 
         responses = [response]
-        if self.config.get("dynamic_processing", False):
+        if self.config.get("dynamic_processing", False) and \
+            not response.meta.get("dynamic_finished", False):
             responses = await self.dynamic_processing(response)
 
         files_found = set()
@@ -467,7 +470,8 @@ class StaticPageSpider(BaseSpider):
                                             'curdepth': response.meta['curdepth'] + 1
                                             # adicionar informações da req inicial
                                         },
-                                        'curdepth': response.meta['curdepth'] + 1
+                                        'curdepth': response.meta['curdepth'] + 1,
+                                        'dynamic_finished': True,
                                     },
                             errback=self.errback_httpbin)
 
@@ -485,5 +489,6 @@ class StaticPageSpider(BaseSpider):
                 continue
 
             item = self.response_to_item(response, files_found, images_found, idx)
+            item["dynamic_finished"] = True
 
             yield item
