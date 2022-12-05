@@ -58,7 +58,7 @@ def generate_se(child, module, skip_iter_errors):
     code = ''
     code += child['depth'] * '    ' + 'if '
 
-    if child['invert']:
+    if child.get('invert', False):
         code += 'not '
 
     if 'call' in child['condition']:
@@ -78,7 +78,7 @@ def generate_enquanto(child, module, skip_iter_errors):
     code = ''
     code += child['depth'] * '    ' + 'while '
 
-    if child['invert']:
+    if child.get('invert', False):
         code += 'not '
 
     if 'call' in child['condition']:

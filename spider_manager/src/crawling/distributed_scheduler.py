@@ -488,19 +488,6 @@ class DistributedScheduler(object):
                 if not request_seen:
                     notify_new_page_found(req_dict['meta']['attrs']['instance_id'])
 
-                # Remove Playwright keys from request
-                if "meta" in req_dict:
-                    if "playwright" in req_dict["meta"]:
-                        del req_dict["meta"]["playwright"]
-                    if "playwright_include_page" in req_dict["meta"]:
-                        del req_dict["meta"]["playwright_include_page"]
-                    if "playwright_context" in req_dict["meta"]:
-                        del req_dict["meta"]["playwright_context"]
-                    if "playwright_page" in req_dict["meta"]:
-                        del req_dict["meta"]["playwright_page"]
-                    if "playwright_security_details" in req_dict["meta"]:
-                        del req_dict["meta"]["playwright_security_details"]
-
                 clean_dict = decode_binary_entry(req_dict.copy())
 
                 # we may already have the queue in memory
@@ -604,10 +591,8 @@ class DistributedScheduler(object):
                 method=req_method,
                 dont_filter=True,
                 meta={
-                    "playwright": True,
-                    "playwright_include_page": True,
                     "steps": steps
-            }
+                }
             )
         else:
             try:

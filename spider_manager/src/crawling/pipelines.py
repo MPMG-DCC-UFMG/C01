@@ -192,9 +192,11 @@ class KafkaPipeline(object):
                     datum['body'] = base64.b64encode(datum['body'])
 
                 elif 'utf-8' != encoding:
-                    datum['body'] = datum['body'].decode(datum['encoding'])
+                    datum['body'] = datum['body'].decode(datum['encoding'],
+                        errors="replace")
                 elif isinstance(datum['body'], bytes):
-                    datum['body'] = datum['body'].decode(datum['encoding'])
+                    datum['body'] = datum['body'].decode(datum['encoding'],
+                        errors="replace")
 
                 message = ujson.dumps(datum, sort_keys=True)
             except:
