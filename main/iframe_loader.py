@@ -6,6 +6,9 @@ import time
 from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
 
+from .chromium_downloader import chromium_executable
+
+
 def content_empty(content: str) -> bool:
     """Check if iframe content is empty
 
