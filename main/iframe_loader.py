@@ -42,7 +42,6 @@ async def async_iframe_loader(url: str, xpath: str, max_attempts: int = 5) -> st
                                     handle_sighup=False,
                                     handle_sigint=False,
                                     handle_sigterm=False,
-                                    executable_path=chromium_executable(),
                                     )
 
         page = await browser.new_page()
