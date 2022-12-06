@@ -431,8 +431,8 @@ class StaticPageSpider(BaseSpider):
                 await context.tracing.stop(path = os.path.join(instance_path, 'debug', 'trace', f"{instance_id}.zip"))
 
             await page.close()
-            await browser.close()
             await context.close()
+            await browser.close()
 
         # Necessary to bypass the compression middleware (?)
         response.headers.pop('content-encoding', None)

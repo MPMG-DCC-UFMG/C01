@@ -1,5 +1,3 @@
-from email.policy import default
-from cv2 import FarnebackOpticalFlow
 from django import forms
 from .models import CrawlRequest, ParameterHandler, ResponseHandler
 from django.core.exceptions import ValidationError
