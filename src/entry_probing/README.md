@@ -71,26 +71,26 @@ req = HTTPProbingRequest("http://test.com/", "GET")
 req.set_request_function("GET", antiblock.get)
 ```
 
-#### PlaywrightProbingRequest
-Implements a Playwright request handler. Receives an instance of
-`Playwright.page.Page`, which is the page where the desired URL will be loaded.
+#### PyppeteerProbingRequest
+Implements a Pyppeteer request handler. Receives an instance of
+`pyppeteer.page.Page`, which is the page where the desired URL will be loaded.
 In its constructor, it adds a `response` event to the supplied page so that we
 can capture the response when we access the URL. The request must be done
 manually outside of this class, and before the call to `process` is made. The
 `process` method gets the response and returns it as a `ResponseData` instance,
 overwriting the `text` property with the text of the currently open page. **The
 HTTP headers and status code are captured from the first response received by
-the Playwright page after the constructor is called, but the text is collected
+the Pyppeteer page after the constructor is called, but the text is collected
 from the page contents when the process() method is called. This may cause
 synchronization issues if multiple pages are requested in sequence between
 these calls (e.g.: it will analyse the response to the first page request, and
 the text contents of the last page).** All methods are implemented as
-coroutines, since Playwright works asynchronously.
+coroutines, since Pyppeteer works asynchronously.
 
 ```
 browser = await launch()
 page = await browser.newPage()
-req = PlaywrightProbingRequest()
+req = PyppeteerProbingRequest()
 await page.goto("http://test.com")
 req.process()
 # creates a request handler which will capture the response received when the
@@ -110,7 +110,7 @@ main `ProbingResponse` class, and returns the validation result using the
 A general wrapper for responses from any source. Contains the headers, HTTP
 status code and text content of a response. Has class methods to create an
 instance out of a `requests.models.Response` instance as well as a
-`Playwright.network_manager.Response` instance. **Normally this class should be
+`pyppeteer.network_manager.Response` instance. **Normally this class should be
 instantiated using one of these methods, and not the constructor**. If a
 response is detected to have a binary type, the text content is set to an empty
 string.
@@ -166,7 +166,7 @@ and determine if an entry has been hit or not. The `check_entry` method takes
 in the entry identifier to be sent to the request handler. The
 `async_check_entry` coroutine does the same as `check_entry`, except that it
 works asynchronously by awaiting the result of calling the `process` method in
-the `ProbingRequest` instance. This is used for working with Playwright.
+the `ProbingRequest` instance. This is used for working with Pyppeteer.
 
 
 #### EntryProbing
@@ -187,13 +187,13 @@ probe.check_entry(100)
 probe.response # Returns the obtained response
 ```
 
-Another example, using Playwright
+Another example, using Pyppeteer
 
 ```
 browser = await launch()
 page = await browser.newPage()
 
-probe = EntryProbing(PlaywrightProbingRequest(page))
+probe = EntryProbing(PyppeteerProbingRequest(page))
 probe.add_response_handler(HTTPStatusProbingResponse(200))\
      .add_response_handler(BinaryFormatProbingResponse(opposite=True))\
      .add_response_handler(TextMatchProbingResponse('entry found'))
