@@ -471,6 +471,7 @@ class StaticPageSpider(BaseSpider):
                                             # adicionar informações da req inicial
                                         },
                                         'curdepth': response.meta['curdepth'] + 1,
+                                        'crawlid': self.config["instance_id"],
                                         'dynamic_finished': True,
                                     },
                             errback=self.errback_httpbin)

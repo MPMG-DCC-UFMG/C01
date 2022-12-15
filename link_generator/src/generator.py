@@ -40,7 +40,7 @@ def format_request(url: str, crawler_id: str, instance_id: str,
     return {
         "url": url,
         "appid": instance_id,
-        "crawlid": crawler_id,
+        "crawlid": instance_id,
         "spiderid": crawler_id,
         "attrs": {
             "referer": "start_requests",
