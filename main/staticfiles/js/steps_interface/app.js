@@ -63,6 +63,7 @@ load_step_list(function(step_list) {
             }
         },
         data() {
+            // TODO actually return JSON-encoded steps
             return {
                 steps: [{
                     "step": "screenshot",

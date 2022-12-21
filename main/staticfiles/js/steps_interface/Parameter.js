@@ -7,7 +7,6 @@ export default {
     },
     computed: {
         fieldType() {
-            console.log(this.fieldOptions)
             if (!this.fieldOptions || !('field_type' in this.fieldOptions))
                 return 'text'
             return this.fieldOptions['field_type']
