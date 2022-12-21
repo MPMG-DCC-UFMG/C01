@@ -19,6 +19,28 @@ function load_steps_interface(interface_root_element_id, output_element_id, json
             return value
         })
 
+        // This section "translates" the step list in the older format into the
+        // new one, so we can switch between versions and check the differences
+        for (let key in step_list) {
+            let opt_obj = {}
+            if ('optional_params' in step_list[key]) {
+                for (let option of step_list[key]['optional_params']) {
+                    if ('field_options' in step_list[key] && option in step_list[key]['field_options'] && 'default_value' in step_list[key]['field_options'][option])
+                        if (!step_list[key]['field_options'][option]['default_value']) opt_obj[option] = ''
+                        else
+                            opt_obj[option] = step_list[key]['field_options'][option]['default_value']
+
+                        delete step_list[key]['field_options'][option]['default_value']
+                        if (Object.keys(step_list[key]['field_options'][option]).length === 0)
+                            delete step_list[key]['field_options'][option]
+                    else
+                        opt_obj[option] = ''
+                }
+            }
+            step_list[key]['optional_params'] = opt_obj
+        }
+        console.log(step_list)
+
         step_list = step_list.concat(JSON.parse('{"name": "para_cada", "name_display" : "Para cada", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name": "atribuicao", "name_display" : "Atribuição", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name": "abrir_em_nova_aba", "name_display" : "Abrir em nova aba", "executable_contexts": ["page", "tab"], "mandatory_params":["link_xpath"], "optional_params":{}}'))

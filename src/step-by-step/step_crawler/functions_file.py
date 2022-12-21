@@ -1,5 +1,6 @@
 import io
 import asyncio
+import copy
 import datetime
 import time
 import operator
@@ -23,7 +24,7 @@ def step(display, field_options={}, executable_contexts=['page', 'tab', 'iframe'
         f.is_step = True
         f.display = display
         f.executable_contexts = executable_contexts
-        f.field_options = field_options
+        f.field_options = copy.deepcopy(field_options)
         return f
 
     return function

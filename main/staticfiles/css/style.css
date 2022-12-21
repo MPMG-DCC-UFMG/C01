@@ -197,11 +197,11 @@ div.step-config-select{
     width: 12em;
 }
 
-#step_controler {
+#step_controller {
     margin-bottom: 1em;
 }
 
-.step-controler-buttons {
+.step-controller-buttons {
     margin-left: .5em;
     margin-right: .5em;
 }
@@ -210,15 +210,13 @@ card .step{
   color: red;
 }
 
-.block-controler {
+.block-controller-interface {
     z-index: 10;
-}
-.block-controler-interface {
     position: absolute;
     right:2.5%;
     top: -12.5px;
 }
-.block-controler-button {
+.block-controller-button {
     cursor: pointer;
     margin: 0em;
 }

@@ -540,9 +540,12 @@ class RawCrawlRequestForm(CrawlRequestForm):
     steps = forms.CharField(required=False, label="JSON dos passos",
                             max_length=9999999,
                             widget=forms.TextInput(
-                                attrs={'placeholder': '{' + '}'})
-
-                            )
+                                attrs={
+                                    'placeholder': '{}',
+                                    ':value': 'JSON.stringify(steps)',
+                                    '@input': 'event => steps = JSON.parse(event.target.value)',
+                                }
+                            ))
 
     # Crawler Type - Single file
     # Crawler Type - Bundle file

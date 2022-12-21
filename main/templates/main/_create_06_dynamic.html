@@ -32,7 +32,5 @@
     <div id="dynamic-processing-skip-errors" class="hidden">
         {{ form.skip_iter_errors | as_crispy_field}}
     </div>
-    <div id="dynamic-processing-item-wrap" style="padding:20px;" class="hidden">
-        {{ form.steps | as_crispy_field }}
-    </div>
+    {% include "main/steps_interface.html" with form=form %}
 </div>

@@ -1,0 +1,33 @@
+{% load crispy_forms_tags %}
+
+<div id="dynamic-processing-steps">
+    <div @click="addToEnd">
+        <a class="btn btn-primary" style="color: white; margin-bottom: 20px;" type="button">
+        Adicionar Passo
+        </a>
+    </div>
+    <Step
+        v-for="(step, index) in steps"
+        :step="step.step"
+        :depth="step.depth"
+        :arguments="step.arguments"
+        :index="index"
+        :key="index"
+        @step-update="stepUpdate"
+        @add-step="addStep"
+        @unindent-step="unindentStep"
+        @indent-step="indentStep"
+        @move-step-up="moveStepUp"
+        @move-step-down="moveStepDown"
+        @duplicate-step="duplicateStep"
+        @remove-step="removeStep"
+        @step-parameter-change="stepParameterChange"
+        @step-parameter-add="stepParameterAdd"
+        @step-parameter-delete="stepParameterDelete"
+    ></Step>
+
+    <div id="dynamic-processing-item-wrap" style="padding:20px;"
+        class="hidden">
+        {{ form.steps | as_crispy_field }}
+    </div>
+</div>

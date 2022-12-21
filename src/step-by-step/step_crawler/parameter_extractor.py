@@ -20,13 +20,17 @@ def extract_info(func, ignore_params=None):
     name_display = name.capitalize().replace('_', '') if not func.display else func.display
     executable_contexts = func.executable_contexts
 
-    optional_params = dict()
+    optional_params = list()
     mandatory_params = list()
     field_options = func.field_options
     signature = inspect.signature(func)
     for k, v in signature.parameters.items():
         if v.default is not inspect.Parameter.empty:
-            optional_params[k] = v.default
+            optional_params.append(k)
+            if k in field_options:
+                field_options[k]['default_value'] = v.default
+            else:
+                field_options[k] = { 'default_value': v.default }
         else:
             if k not in ignore_params:
                 mandatory_params.append(k)
