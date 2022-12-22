@@ -1,0 +1,106 @@
+diff --git a/crawler_manager/log_writer.py b/crawler_manager/log_writer.py
+index d23206d5..ba563263 100644
+--- a/crawler_manager/log_writer.py
++++ b/crawler_manager/log_writer.py
+@@ -32,6 +32,9 @@ class LogWriter():
+         This is a kafka consumer and parser for each message.
+ 
+         """
++        while True:
++            import time
++            time.sleep(1)
+         consumer = KafkaConsumer(settings.LOGGING_TOPIC, **params)
+         for message in consumer:
+             try:
+diff --git a/crawler_manager/message_sender.py b/crawler_manager/message_sender.py
+index 4c7e8dd1..b6e343ea 100644
+--- a/crawler_manager/message_sender.py
++++ b/crawler_manager/message_sender.py
+@@ -8,6 +8,7 @@ from crawler_manager import settings
+ 
+ class MessageSender:
+     def __init__(self):
++        return
+         self.__producer = KafkaProducer(bootstrap_servers=settings.KAFKA_HOSTS,
+             value_serializer=lambda m: ujson.dumps(m).encode('utf-8'))
+ 
+@@ -17,6 +18,7 @@ class MessageSender:
+         Args:
+             - config: Scraper configuration to be processed
+         """
++        return
+         lite_config = {
+             'base_url': config['base_url'],
+             'crawler_id': config['crawler_id'],
+@@ -42,6 +44,7 @@ class MessageSender:
+         Args:
+             - crawler_id: Unique crawler identifier
+         """
++        return
+ 
+         # writer module
+         self.__producer.send(settings.WRITER_TOPIC, {'stop': crawler_id})
+@@ -55,5 +58,6 @@ class MessageSender:
+         self.__producer.flush()
+ 
+     def send(self, topic: str, message: dict):
++        return
+         self.__producer.send(topic, message)
+         self.__producer.flush()
+diff --git a/crawler_manager/spider_manager_listener.py b/crawler_manager/spider_manager_listener.py
+index 38603644..25009661 100644
+--- a/crawler_manager/spider_manager_listener.py
++++ b/crawler_manager/spider_manager_listener.py
+@@ -11,6 +11,7 @@ from crawler_manager import settings
+ 
+ class SpiderManagerListener:
+     def __init__(self) -> None:
++        return
+         self.__consumer = KafkaConsumer(settings.NOTIFICATIONS_TOPIC,
+                                         bootstrap_servers=settings.KAFKA_HOSTS,            
+                                         auto_offset_reset=settings.KAFKA_CONSUMER_AUTO_OFFSET_RESET,
+@@ -24,6 +25,7 @@ class SpiderManagerListener:
+         self.__spiders_running = dict()
+ 
+     def __parse_notification(self, notification: dict):
++        return
+         """Processes notifications for creating and closing spiders and notifies the django application that the scraping has ended."""
+ 
+         spider_manager_id = notification['spider_manager_id']
+@@ -47,6 +49,7 @@ class SpiderManagerListener:
+             print(f'"{notification["code"]}" is not a command valid.')
+ 
+     def __listener(self):
++        return
+         """Kafka consumer of notifications of creation and termination of spiders."""
+ 
+         for message in self.__consumer:
+@@ -57,6 +60,7 @@ class SpiderManagerListener:
+                 print('Error processing message...')
+                 
+     def __notify_stopped_spiders(self, crawler_id: str):
++        return
+         """Notifies Django that there are no more spiders running, with the scraping process finished.
+ 
+         Args:
+@@ -68,6 +72,7 @@ class SpiderManagerListener:
+             crawler_id=crawler_id), params=payload)
+ 
+     def run(self):
++        return
+         """Executes the thread with the kafka consumer responsible for receiving notifications of creation/termination of spiders.
+         """
+ 
+diff --git a/main/views.py b/main/views.py
+index 18450e8a..9b668d90 100644
+--- a/main/views.py
++++ b/main/views.py
+@@ -23,7 +23,7 @@ from django.utils import timezone
+ from rest_framework import status, viewsets
+ from rest_framework.decorators import action
+ from rest_framework.response import Response
+-from scrapy_puppeteer import iframe_loader
++# from scrapy_puppeteer import iframe_loader
+ 
+ from .forms import (CrawlRequestForm, ParameterHandlerFormSet,
+                     RawCrawlRequestForm, ResponseHandlerFormSet)
