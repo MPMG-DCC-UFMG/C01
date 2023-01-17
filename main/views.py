@@ -922,7 +922,7 @@ def scheduler(request):
     context = {
         'crawl_requests': crawl_requests
     }
-    return render(request, 'main/scheduler.html', context)
+    return render(request, 'main/scheduler/index.html', context)
 
 # API
 ########

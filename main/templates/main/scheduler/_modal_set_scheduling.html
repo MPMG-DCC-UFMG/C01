@@ -1,0 +1,61 @@
+<div class="modal fade" id="setSchedulingModal" tabindex="-1" aria-labelledby="setSchedulingModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title font-weight-bold">Agendar coleta</h5>
+            </div>
+            <div class="modal-body">
+                <div id="crawler-selector-wrapper" class="border rounded p-3 bg-light">
+                    <label for="crawl-selector" class="font-weight-bold">Coletor: </label>
+                    <select class="form-select bg-white" id="crawl-selector">
+                        <option value="no_selected" disabled selected>Selecionar coletor...</option>
+                        {% for crawl_request in crawl_requests%}
+                        <option value="{{ crawl_request.id }}">{{ crawl_request.source_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="border rounded p-3 mt-3 bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="mr-2" style="flex: 1;">
+                            <label for="" class="font-weight-bold">Horário</label>
+                            <input type="datetime-local" name="" id="scheduling-time" class="border rounded px-2 py-1">
+                        </div>
+                        <div class="ml-1" style="flex: 1;">
+                            <label for="repeat-crawling-select" class="font-weight-bold">Repetir</label>
+                            <select name="" id="repeat-crawling-select" class="border rounded px-2 bg-white w-100"
+                                style="padding-top: 7px; padding-bottom: 7px;">
+                                <option value="no_repeat" id="no-repeat-sel-opt">Não se repete</option>
+                                <option value="daily">Diariamente</option>
+                                <option value="weekly">Semanalmente</option>
+                                <option title="Available soon!" value="monthly">Mensalmente</option>
+                                <option title="Available soon!" value="yearly">Anualmente</option>
+                                <option title="Available soon!" value="personalized"
+                                    onclick="open_personalized_crawler_repetition()">Personalizado</option>
+                            </select>
+                        </div>
+                    </div>
+                    <span id="scheduling-personalized-repetition-info" style="display: none;" class="mt-2 small"></span>
+                </div>
+
+                <div id="crawler-queue-wrapper" class="mt-3 rounded border bg-light p-3">
+                    <label for="" class="font-weight-bold">Fila de coletas</label>
+                    <select name="" id="crawler_queue_behavior" class="form-control">
+                        <option value="wait_on_last_queue_position" id="wait-last-sel-opt">Aguardar na última posição da
+                            fila</option>
+                        <option value="wait_on_first_queue_position">Aguardar na primeira posição da fila</option>
+                        <option value="run_immediately">Executar imediatamente</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-footer d-flex justify-content-end">
+                <div class="">
+                    <button type="button" onclick="hide_set_scheduling()" class="btn">Cancelar</button>
+                    <button type="button" onclick="valid_new_scheduling()" class="btn btn-success">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
