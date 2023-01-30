@@ -26,15 +26,20 @@ RUN mkdir $APP_HOME/staticfiles
 WORKDIR $APP_HOME
 
 COPY requirements.txt .
+RUN pip install -U pip
+RUN pip install -r requirements.txt
+
 COPY *.py ./
 COPY src src
+RUN python3 web_install.py
+RUN pip install pyee==9
+
 COPY main main
 COPY interface interface
 COPY crawler_manager crawler_manager
 
 RUN mkdir logs
 
-RUN python3 web_install.py
 
 RUN mkdir /data
 RUN chown django:django /data
