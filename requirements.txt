@@ -18,7 +18,7 @@ cssselect==1.1.0
 cycler==0.11.0
 decorator==5.1.1
 Deprecated==1.2.13
-Django==3.2.12
+Django==3.2.17
 django-crispy-forms==1.14.0
 django-mathfilters==1.0.0
 djangorestframework==3.13.1
