@@ -460,14 +460,12 @@ function show_task_detail(task_id) {
                         <i class="far fa-eye text-muted"></i>
                     </a>
                     <button 
-                        disabled 
                         title="Available soon!" 
                         onclick="edit_scheduling_task(${task.id})"
                         class="rounded-circle bg-white border mx-3 scheduling-detail-options">
                         <i class="fas fa-pen text-muted"></i>
                     </button>
-                    <button 
-                        disabled 
+                    <button  
                         title="Available soon!" 
                         onclick="delete_schedule_task(${task.id})"
                         class="rounded-circle border bg-white scheduling-detail-options">
