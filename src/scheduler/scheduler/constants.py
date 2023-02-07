@@ -16,11 +16,14 @@ REPEAT_FINISH_NEVER = 'never'
 REPEAT_FINISH_BY_OCCURRENCES = 'occurrence'
 REPEAT_FINISH_BY_DATE = 'date'
 
-VALID_DATETIME_FORMATS = [
+VALID_DATETIME_FORMATS = (
                             '%Y-%m-%d %H:%M:%S',
                             '%d-%m-%Y %H:%M:%S',
                             '%Y-%m-%d %H:%M',
                             '%d-%m-%Y %H:%M',
                             '%Y-%m-%d',
                             '%d-%m-%Y',
-                        ]
+                        )
+
+REQUIRED_FIELDS = ('start_date', 'timezone', 'repeat_mode')
+PERSONALIZED_REQUIRED_FIELDS = ('mode', 'interval', 'data', 'finish')

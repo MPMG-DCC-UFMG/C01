@@ -37,32 +37,142 @@ class CancelJob(object):
 class Job:
     def __init__(self, scheduler: 'Scheduler', scheduler_config: SchedulerConfig) -> None:
         self.config: SchedulerConfig = scheduler_config
-        self.at_time_zone = None
+        
+        self._valid_config()
 
-        # datetime of the last run
-        self.last_run: Optional[datetime.datetime] = None
+        # Serão inicializadas pelo método _parse
+        self.start_date: datetime.datetime = self._decode_datetimestr(self.config['start_date'])
+        self.timezone: str = self.config['timezone']
 
-        self.num_repeats: int = 0
+        # List of weekdays with values between 0 (sunday) and 6 (saturday)
+        self.weekdays_to_run: List[int] = None
 
-        # datetime of the next run
-        self.next_run: Optional[datetime.datetime] = None
+        # Can be `first-weekday`, `last-weekday` or `day-x`
+        self.monthly_repeat_mode: str = None
+        self.monthly_repeat_day: int = None 
 
         self.cancel_after_datetime: Optional[datetime.datetime] = None
         self.cancel_after_max_repeats: Optional[int] = None
+        
+        self.repeat_mode: str = scheduler_config['repeat_mode']
+        self.repeat_interval: int = 1
+
+        if scheduler_config['repeat_mode'] == PERSONALIZED_REPEAT_MODE:
+            personalized_config = scheduler_config['personalized_repeate_mode']
+
+            self.repeat_mode: str = personalized_config['mode']
+            self.repeat_interval: int = personalized_config['interval']
+
+            if self.repeat_mode == WEEKLY_REPEAT_MODE:
+                self.weekdays_to_run = personalized_config['data']
+
+            if self.repeat_mode == MONTHLY_REPEAT_MODE:
+                self.monthly_repeat_mode = personalized_config['data']['mode']
+                self.monthly_repeat_day = personalized_config['data']['value']
+
+            finish_repeat = personalized_config['finish']
+
+            if finish_repeat['mode'] == REPEAT_FINISH_BY_OCCURRENCES:
+                self.cancel_after_max_repeats = personalized_config['finish']['value']
+
+            elif finish_repeat['mode'] == REPEAT_FINISH_BY_DATE:
+                self.cancel_after_datetime = self._decode_datetimestr(personalized_config['finish']['value'])
+
+        self.last_run: Optional[datetime.datetime] = None
+        self.next_run: Optional[datetime.datetime] = None
+
+        self.num_repeats: int = 0
 
         self.scheduler: Scheduler = scheduler  # scheduler to register with
 
-        self.__parse_config()
+    def _valid_config(self) -> None:
+        config_fields = self.config.keys()
 
-    def __parse_config(self) -> None:
-        # Data a partir da qual o primeiro agendamento deve ocorrer
-        self.start_date = self._decode_datetimestr(self.config["start_date"])
+        for req_field in REQUIRED_FIELDS:
+            if req_field not in config_fields:
+                raise ScheduleError(f'O campo "{req_field}" é necessário!') 
 
-        # Pode ser: no_repeat, daily, weekly, monthly, yearly, personalized
-        self.repetition_mode = self.config["repeat_mode"]
+        start_date = self._decode_datetimestr(self.config['start_date'])
 
-        if self.repetition_mode == NO_REPEAT_MODE:
-            self.cancel_after_max_repeats = 1
+        if start_date is None:
+            valid_formats = '\n\t- '.join(VALID_DATETIME_FORMATS)
+            raise ScheduleValueError(f'O campo "start_date" deve ser uma string formatada em uma das seguintes formas: \n\t- {valid_formats}')
+
+        if start_date < datetime.datetime.now():
+            raise IntervalError(f'A data de início {start_date} já passou!')
+
+        repeate_mode = self.config['repeat_mode']
+
+        if repeate_mode not in (NO_REPEAT_MODE, 
+                                        DAILY_REPEAT_MODE, 
+                                        WEEKLY_REPEAT_MODE, 
+                                        MONTHLY_REPEAT_MODE, 
+                                        YEARLY_REPEAT_MODE, 
+                                        PERSONALIZED_REPEAT_MODE):
+            raise ScheduleValueError('Intervalo de repetição inválido!')
+
+        if repeate_mode == PERSONALIZED_REPEAT_MODE:
+            if type(self.config['personalized_repeate_mode']) is not dict:
+                raise ScheduleValueError('O agendamento personalizado deve ser um dicionário!')
+
+            personalized_fields = self.config["personalized_repeate_mode"].keys()
+
+            for req_field in PERSONALIZED_REQUIRED_FIELDS:
+                if req_field not in personalized_fields:
+                    raise ScheduleError(f'O campo "{req_field}" é necessário!') 
+
+            personalized_repeate_mode = self.config["personalized_repeate_mode"]["mode"]
+
+            if personalized_repeate_mode not in (NO_REPEAT_MODE, 
+                                                    DAILY_REPEAT_MODE, 
+                                                    WEEKLY_REPEAT_MODE, 
+                                                    MONTHLY_REPEAT_MODE, 
+                                                    YEARLY_REPEAT_MODE):
+                raise ScheduleValueError('Intervalo de repetição personalizada inválida!')
+
+            personalized_interval = self.config["personalized_repeate_mode"]["interval"]
+            if type(personalized_interval) is not int:
+                raise ScheduleValueError('O intervalo de repetição deve ser um número inteiro!')
+            
+            personalized_addional_data = self.config["personalized_repeate_mode"]["data"]
+            if type(personalized_addional_data) not in (type(None), list, dict):
+                raise ScheduleValueError(f'O tipo `{type(personalized_addional_data)}` é inválido! Os tipos válidos são: None, list e dict!')
+            
+            if type(personalized_addional_data) is list:
+                types_in_list = {type(val) for val in personalized_addional_data}
+
+                if len(types_in_list) != 1 and int not in types_in_list:
+                    raise ScheduleValueError('A lista de dias da semana para execução deve ser inteiros de 0 a 6.')
+
+                if min(personalized_addional_data) < 0 or max(personalized_addional_data) > 6:
+                    raise ScheduleValueError('A lista de dias da semana para execução deve ser inteiros de 0 a 6.')
+            
+            if type(personalized_addional_data) is dict:
+                personalized_repetion_monthly_mode = personalized_addional_data['mode']
+
+                if personalized_repetion_monthly_mode not in (MONTHLY_DAY_X_OCCURRENCE_TYPE, 
+                                                            MONTHLY_FIRST_WEEKDAY_OCCURRENCE_TYPE, 
+                                                            MONTHLY_LAST_WEEKDAY_OCCURRENCE_TYPE):
+
+                    raise ScheduleValueError('A repetição mensal personalizada deve ser: first-weekday, last-weekday ou day-x')
+
+                personalized_repetion_monthly_value = personalized_addional_data['value']
+                if type(personalized_repetion_monthly_value) is not int:
+                    raise ScheduleValueError('O campo value deve ser inteiro!')
+
+                if personalized_repetion_monthly_value < 1 or personalized_repetion_monthly_value > 31:
+                    raise ScheduleValueError('O valor deve ser entre 1 e 31!')
+
+            finish_repeat = self.config['personalized_repeate_mode']['finish']
+            if type(finish_repeat) not in (type(None), dict):
+                raise ScheduleValueError('O campo `finish` deve ser None ou dict!')
+
+            if type(finish_repeat) is dict:
+                fields_available = finish_repeat.keys()
+
+                for req_field in ('mode', 'value'):
+                    if req_field not in fields_available:
+                        raise ScheduleValueError(f'O campo `finish`, se for um dicionário, deve ter o campo `{req_field}`')
 
     def do(self, job_func: Callable, *args, **kwargs):
         """
@@ -173,21 +283,6 @@ class Job:
 
         if self.repetition_mode == DAILY_REPEAT_MODE:
             self._process_daily_repeat_mode() 
-
-        # elif repetition_mode == WEEKLY_REPEAT_MODE:
-        #     pass 
-
-        # elif repetition_mode == MONTHLY_REPEAT_MODE:
-        #     pass 
-
-        # elif repetition_mode == YEARLY_REPEAT_MODE:
-        #     pass 
-
-        # elif repetition_mode == PERSONALIZED_REPEAT_MODE:
-        #     pass 
-
-        # else:
-        #     ValueError(f'Intervalo de repetição `{repetition_mode}` é inválido!')
 
         print(f'Next run: {self.next_run}')
 
