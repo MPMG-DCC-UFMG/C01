@@ -1,9 +1,9 @@
 import datetime
 import calendar
 from datetime import MAXYEAR
-from typing import Union
+from typing import Union, Optional
 
-from scheduler.constants import *
+from constants import *
 
 def get_date(year: int, month: int, day: int, hour: int = 0, minute: int = 0, second: int = 0) -> datetime:
     try:
@@ -67,3 +67,12 @@ def year_next_execution_date(base_date: datetime.datetime, interval: int = 1):
                     base_date.month, base_date.day, 
                     base_date.hour, base_date.minute, 
                     base_date.second) 
+
+def decode_datetimestr(
+        datetime_str: str) -> Optional[datetime.datetime]:
+        for f in VALID_DATETIME_FORMATS:
+            try:
+                return datetime.datetime.strptime(datetime_str, f)
+            except ValueError:
+                pass
+        return None

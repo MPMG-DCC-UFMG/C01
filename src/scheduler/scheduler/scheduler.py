@@ -292,15 +292,6 @@ class Job:
     def _achieved_max_repeats(self) -> bool:
         return self.cancel_after_max_repeats is not None and self.num_repeats >= self.cancel_after_max_repeats 
 
-    def _decode_datetimestr(
-            self, datetime_str: str) -> Optional[datetime.datetime]:
-            for f in VALID_DATETIME_FORMATS:
-                try:
-                    return datetime.datetime.strptime(datetime_str, f)
-                except ValueError:
-                    pass
-            return None
-
 class Scheduler:
     def __init__(self) -> None:
         self.jobs: List[Job] = list()
