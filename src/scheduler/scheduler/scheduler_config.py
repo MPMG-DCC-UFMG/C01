@@ -15,7 +15,7 @@ class Finish(TypedDict):
     value: Union[None, int, str]
 
 
-class MonthlyRepetitionConf(TypedDict):
+class MonthlyRepeatConf(TypedDict):
     ''' Caso a repetição personalizado seja por mês, o usuário pode escolher 3 tipos de agendamento mensal:
         - first-weekday: A coleta ocorre no primeiro dia <first-weekday> (domingo, segunda, etc) da semana do mês, contado a partir de 0 - domingo.
         - last-weekday: A coleta ocorre no último dia <last-weekday> (domingo, segunda, etc) da semana do mês, contado a partir de 0 - domingo.
@@ -28,7 +28,7 @@ class MonthlyRepetitionConf(TypedDict):
     value: int
 
 
-class PersonalizedRepeateMode(TypedDict):
+class PersonalizedRepeat(TypedDict):
     # Uma repetição personalizada pode ser por dia, semana, mês ou ano.
     mode: Literal['daily', 'weekly', 'monthly', 'yearly']
 
@@ -42,7 +42,7 @@ class PersonalizedRepeateMode(TypedDict):
         - monthly: Ver classe MonthlyRepetitionConf.
         - yearly: additional_data receberá null
     '''
-    data: Union[None, List, MonthlyRepetitionConf]
+    data: Union[None, List, MonthlyRepeatConf]
 
     # Define até quando o coletor deve ser reagendado. Ver classe Finish.
     finish: Finish
@@ -53,7 +53,7 @@ class SchedulerConfigDict(TypedDict):
     
     repeat_mode: Literal['no_repeat', 'daily', 'weekly', 'monthly', 'yearly', 'personalized']
 
-    personalized_repeate_mode: Union[None, PersonalizedRepeateMode]
+    personalized_repeat: Union[None, PersonalizedRepeat]
 
 class SchedulerConfigError(Exception):
     pass 
@@ -68,11 +68,11 @@ class SchedulerConfigInvalidRepeatModeError(SchedulerConfigError):
     pass 
 
 class SchedulerConfig:
-    def __init__(self, config_dict: SchedulerConfigDict) -> None:
-        self.start_date: datetime.datetime = decode_datetimestr(config_dict['start_date'])
-        self.timezone: str = config_dict['timezone']
+    def __init__(self) -> None:
+        self.start_date: datetime.datetime = None
+        self.timezone: str = None
 
-        self.repeat_mode: str = config_dict['repeat_mode']
+        self.repeat_mode: str = NO_REPEAT_MODE
         self.repeat_interval: int = 1
         
         self.max_repeats: Optional[int] = None 
@@ -89,10 +89,18 @@ class SchedulerConfig:
         # variable is the first or last weekday of month scheduled, respectivelly. 
         self.monthly_repeat_value: Optional[int] = None
 
-        if config_dict['repeat_mode'] == PERSONALIZED_REPEAT_MODE:
-            self._parse_personalized_config(config_dict['personalized_repeate_mode'])
+    def load_config(self, config_dict: SchedulerConfigDict) -> None:
+        self.valid_config(config_dict)
 
-    def _parse_personalized_config(self, config_dict: PersonalizedRepeateMode) -> None:
+        self.start_date: datetime.datetime = decode_datetimestr(config_dict['start_date'])
+        self.timezone: str = config_dict['timezone']
+
+        self.repeat_mode: str = config_dict['repeat_mode']
+
+        if config_dict['repeat_mode'] == PERSONALIZED_REPEAT_MODE:
+            self._parse_personalized_config(config_dict['personalized_repeat'])
+
+    def _parse_personalized_config(self, config_dict: PersonalizedRepeat) -> None:
         self.repeat_mode = config_dict['mode']
         self.repeat_interval = config_dict['interval']
 
@@ -118,6 +126,10 @@ class SchedulerConfig:
             if req_field not in config_fields:
                 raise SchedulerConfigMissingFieldError(f'The field "{req_field}" if the config of schedule is missing!') 
 
+        if config['start_date'] is None:
+            valid_formats = '\n\t- '.join(VALID_DATETIME_FORMATS)
+            raise SchedulerConfigValueError(f'The field `start_date` must be in one of the following formats: \n\t- {valid_formats}')
+
         start_date = decode_datetimestr(config['start_date'])
 
         if start_date is None:
@@ -127,89 +139,92 @@ class SchedulerConfig:
         now = datetime.datetime.now()
         if start_date < now:
             raise SchedulerConfigValueError('The start date for scheduling has passed.' \
-                                        f'Now is {now} and start date has been set to {start_date}!')
+                                        f' Now is {now} and start date has been set to {start_date}!')
 
         repeat_mode = config['repeat_mode']
 
-        if repeat_mode not in (NO_REPEAT_MODE, 
-                                DAILY_REPEAT_MODE, 
-                                WEEKLY_REPEAT_MODE, 
-                                MONTHLY_REPEAT_MODE, 
-                                YEARLY_REPEAT_MODE, 
-                                PERSONALIZED_REPEAT_MODE):
-
+        if repeat_mode not in VALID_REPEAT_MODES:
             valid_repeat_modes = ', '.join(VALID_REPEAT_MODES)
-
             raise SchedulerConfigInvalidRepeatModeError(f'The valid repeats modes are: {valid_repeat_modes}. `{repeat_mode}` is not included!')
 
         if repeat_mode == PERSONALIZED_REPEAT_MODE:
-            if type(config['personalized_repeate_mode']) is not dict:
+            if type(config['personalized_repeat']) is not dict:
                 personalized_required_fields = ', '.join(PERSONALIZED_REQUIRED_FIELDS)
-                raise SchedulerConfigValueError('If repeat mode is personalized, the field `personalized_repeate_mode`' /
+                raise SchedulerConfigValueError('If repeat mode is personalized, the field `personalized_repeat`' \
                                             f' must be a dict with the following fields: {personalized_required_fields}.')
 
-            personalized_available_fields = config["personalized_repeate_mode"].keys()
+            personalized_available_fields = config['personalized_repeat'].keys()
 
             for req_field in PERSONALIZED_REQUIRED_FIELDS:
                 if req_field not in personalized_available_fields:
-                    raise SchedulerConfigMissingFieldError(f'The field `{req_field}` of `personalized_repeate_mode` is missing!') 
+                    raise SchedulerConfigMissingFieldError(f'The field `{req_field}` of `personalized_repeat` is missing!') 
 
-            personalized_repeate_mode = config["personalized_repeate_mode"]["mode"]
+            personalized_repeat = config['personalized_repeat']['mode']
 
-            if personalized_repeate_mode not in (NO_REPEAT_MODE, 
-                                                    DAILY_REPEAT_MODE, 
-                                                    WEEKLY_REPEAT_MODE, 
-                                                    MONTHLY_REPEAT_MODE, 
-                                                    YEARLY_REPEAT_MODE):
+            if personalized_repeat not in VALID_PERSONALIZED_REPEAT_MODES:
                 valid_repeat_modes = ', '.join(VALID_PERSONALIZED_REPEAT_MODES)
-                raise SchedulerConfigInvalidRepeatModeError(f'The valid repeats modes for `personalized_repeate_mode` are: {valid_repeat_modes}. `{repeat_mode}` is not included!')
+                raise SchedulerConfigInvalidRepeatModeError(f'The valid repeats modes for `personalized_repeat` are: {valid_repeat_modes}. `{repeat_mode}` is not included!')
 
-            personalized_interval = config["personalized_repeate_mode"]["interval"]
+            personalized_interval = config['personalized_repeat']['interval']
             if type(personalized_interval) is not int:
-                raise SchedulerConfigValueError(f'The repeat interval for `personalized_repeate_mode` must be `int`, not `{type(personalized_interval)}`!')
+                raise SchedulerConfigValueError(f'The repeat interval for `personalized_repeat` must be `int`, not `{type(personalized_interval)}`!')
             
             if personalized_interval <= 0:
-                raise SchedulerConfigValueError(f'The repeat interval for `personalized_repeate_mode` must be a integer greater than 0!')
+                raise SchedulerConfigValueError(f'The repeat interval for `personalized_repeat` must be a integer greater than 0!')
                 
-            personalized_data = config["personalized_repeate_mode"]["data"]
+            personalized_data = config['personalized_repeat']['data']
             if type(personalized_data) not in (type(None), list, dict):
-                raise SchedulerConfigValueError(f'The field `data` of `personalized_repeate_mode` must be: None, a list or a dict.')
+                raise SchedulerConfigValueError(f'The field `data` of `personalized_repeat` must be: None, a list or a dict.')
             
-            if type(personalized_data) is list:
+            personalized_repeat_mode = config['personalized_repeat']['mode']
+
+            if personalized_repeat_mode == WEEKLY_REPEAT_MODE:
+                if type(personalized_data) is not list:
+                    raise SchedulerConfigValueError(f'If the personalized repeat mode is {WEEKLY_REPEAT_MODE}, the field' \
+                                                    ' `data` of `personalized_repeat` must be a list of integers.')
+
                 types_in_list = {type(val) for val in personalized_data}
 
                 if len(types_in_list) != 1 and int not in types_in_list:
-                    raise SchedulerConfigValueError('The list of days for run in `personalized_repeate_mode` must be integers from 0 (sunday) to 6 (saturday).')
+                    raise SchedulerConfigValueError('The list of days for run in `personalized_repeat` must be integers from 0 (sunday) to 6 (saturday).')
 
                 if min(personalized_data) < 0 or max(personalized_data) > 6:
-                    raise SchedulerConfigValueError('The list of days for run in `personalized_repeate_mode` must be integers from 0 (sunday) to 6 (saturday).')
+                    raise SchedulerConfigValueError('The list of days for run in `personalized_repeat` must be integers from 0 (sunday) to 6 (saturday).')
             
-            if type(personalized_data) is dict:
+            if personalized_repeat_mode == MONTHLY_REPEAT_MODE:
+                if type(personalized_data) is not dict:
+                    raise SchedulerConfigValueError(f'If the personalized repeat mode is {MONTHLY_REPEAT_MODE}, the field' \
+                                                    ' `data` of `personalized_repeat` must be a dict with fields `mode` and `value`.')
+
+                fields_available = personalized_data.keys()
+                for req_field in ('mode', 'value'):
+                    if req_field not in fields_available:
+                        raise SchedulerConfigMissingFieldError(f'If the personalized repeat mode is {MONTHLY_REPEAT_MODE}, the field' \
+                                                    ' `data` of `personalized_repeat` must be a dict with fields `mode` and `value`.' \
+                                                    f' `req_field` is missing!' )
+
                 personalized_repetion_monthly_mode = personalized_data['mode']
 
-                if personalized_repetion_monthly_mode not in (MONTHLY_DAY_X_OCCURRENCE_TYPE, 
-                                                            MONTHLY_FIRST_WEEKDAY_OCCURRENCE_TYPE, 
-                                                            MONTHLY_LAST_WEEKDAY_OCCURRENCE_TYPE):
-
-                    raise SchedulerConfigValueError('The monthly personalized repeat mode must be:' /
-                                    f' {MONTHLY_DAY_X_OCCURRENCE_TYPE}, {MONTHLY_FIRST_WEEKDAY_OCCURRENCE_TYPE} or {MONTHLY_LAST_WEEKDAY_OCCURRENCE_TYPE}')
+                if personalized_repetion_monthly_mode not in VALID_MONTHLY_REPEAT_MODES:
+                    valid_monthly_modes = ', '.join(VALID_MONTHLY_REPEAT_MODES)
+                    raise SchedulerConfigValueError(f'The monthly personalized repeat mode must be: {valid_monthly_modes}.')
 
                 personalized_repetion_monthly_value = personalized_data['value']
                 if type(personalized_repetion_monthly_value) is not int:
-                    raise SchedulerConfigValueError('The field `value` of `data` in `personalized_repeate_mode` must be a integer, for monthly personalized repeat!')
+                    raise SchedulerConfigValueError('The field `value` of `data` in `personalized_repeat` must be a integer, for monthly personalized repeat!')
 
                 if personalized_repetion_monthly_mode == MONTHLY_DAY_X_OCCURRENCE_TYPE:
                     if personalized_repetion_monthly_value < 1 or personalized_repetion_monthly_value > 31:
-                        raise SchedulerConfigValueError('The field `value` of `data` in `personalized_repeate_mode` must be a integer' /
+                        raise SchedulerConfigValueError('The field `value` of `data` in `personalized_repeat` must be a integer' \
                                                 ' between 1 and 31, for monthly personalized repeat `day-x`!')
 
                 else:
                     if personalized_repetion_monthly_value < 0 or personalized_repetion_monthly_value > 6:
-                        raise SchedulerConfigValueError('The field `value` of `data` in `personalized_repeate_mode` must be a integer' /
+                        raise SchedulerConfigValueError('The field `value` of `data` in `personalized_repeat` must be a integer' \
                                                 f' between 0 and 6, for monthly personalized repeat `{personalized_repetion_monthly_mode}`!')
                     
 
-            finish_repeat = config['personalized_repeate_mode']['finish']
+            finish_repeat = config['personalized_repeat']['finish']
             if type(finish_repeat) not in (type(None), dict):
                 raise SchedulerConfigValueError('O campo `finish` deve ser None ou dict!')
 
@@ -220,3 +235,28 @@ class SchedulerConfig:
                     if req_field not in fields_available:
                         raise SchedulerConfigMissingFieldError('If the field `finish` of `personalized_repeat_mode` is not of '\
                                 f'type NoneType, it must be a dict with fields `mode` and `value`. The field `{req_field}` is missing!')
+
+            finish_mode = finish_repeat['mode']
+            if finish_mode not in VALID_REPEAT_FINISH:
+                valid_finish_modes = ', '.join(VALID_REPEAT_FINISH)
+                raise SchedulerConfigInvalidRepeatModeError(f'The valid finish modes for `personalized_repeat` are: {valid_finish_modes}! `{finish_mode} is invalid!`')
+
+            finish_value = finish_repeat['value']
+
+            if finish_mode == REPEAT_FINISH_BY_OCCURRENCES:
+                if type(finish_value) is not int:
+                    raise SchedulerConfigValueError(f'When the field ``mode` of `finish` of `personalized_repeat` is `{REPEAT_FINISH_BY_OCCURRENCES}`, ' \
+                                                    'the value of field `value` must be a integer.')
+
+                if finish_value <= 0:
+                    raise SchedulerConfigValueError(f'When the field `mode` of `finish` of `personalized_repeat` is `{REPEAT_FINISH_BY_OCCURRENCES}`, ' \
+                                                                        'the value of field `value` must be a integer greater than 0.')
+            elif finish_mode == REPEAT_FINISH_BY_DATE:
+                if type(finish_value) is not datetime.datetime:
+                    raise SchedulerConfigValueError(f'When the field `mode` of `finish` of `personalized_repeat` is `{REPEAT_FINISH_BY_DATE}`, ' \
+                                                    f'the value of field `value` must be a string representing a datetime.')
+
+                finish_date = decode_datetimestr(finish_value)
+
+
+                now = datetime.datetime.now()
