@@ -110,10 +110,13 @@ class Job:
         return ret
 
     def _schedule_first_run(self) -> None:
+        start_date = self.sched_config.start_date
+        repeat_interval = self.sched_config.repeat_interval
+
         now = datetime.datetime.now()
 
         if self.sched_config.repeat_mode == DAILY_REPEAT_MODE:
-            self.next_run = self.start_date if now < self.start_date else self.start_date + datetime.timedelta(days=self.sched_config.repeat_interval)
+            self.next_run = start_date if now < start_date else start_date + datetime.timedelta(days=repeat_interval)
 
         elif self.sched_config.repeat_mode == WEEKLY_REPEAT_MODE:
             # checks if the first weekday to run is in the past. weekdays_to_run is sorted between 0 and 6 (0 = Sunday, 6 = Saturday)
@@ -122,7 +125,7 @@ class Job:
                 self.next_run = self.start_date
             
             else:
-                self.next_run = weeks_next_execution_date(self.start_date, self.sched_config.weekdays_to_run, self.sched_config.repeat_interval)
+                self.next_run = weeks_next_execution_date(start_date, self.sched_config.weekdays_to_run, repeat_interval)
 
         elif self.sched_config.repeat_mode == MONTHLY_REPEAT_MODE:
             if self.sched_config.occurrence_type == MONTHLY_DAY_X_OCCURRENCE_TYPE:
@@ -130,52 +133,36 @@ class Job:
                     self.next_run = self.start_date.replace(day=self.sched_config.monthly_day_x_ocurrence)
 
                 else:
-                    self.next_run = month_next_execution_date(self.start_date, self.sched_config.monthly_day_x_ocurrence)
+                    self.next_run = month_next_execution_date(start_date, self.sched_config.monthly_day_x_ocurrence)
 
             elif self.sched_config.occurrence_type == MONTHLY_FIRST_WEEKDAY_OCCURRENCE_TYPE:
-                year, month, hour, minute, second = (self.start_date.year, self.start_date.month, 
-                                                    self.start_date.hour, self.start_date.minute, 
-                                                    self.start_date.second)
+                first_weekday_start_date = get_first_weekday_date_of_month(self.sched_config.monthly_first_weekday, start_date.year, 
+                                                                        start_date.month, start_date.hour, start_date.minute, start_date.second)
 
-                first_weekday_start_date = get_first_weekday_date_of_month(self.sched_config.monthly_first_weekday, year, 
-                                                                        month, hour, minute, second)
-
-                self.next_run = first_weekday_start_date if first_weekday_start_date >= self.start_date \
-                                                        else month_next_execution_date(self.start_date, 
-                                                                                        self.sched_config.monthly_first_weekday, 
-                                                                                        first_weekday_to_run=self.sched_config.monthly_first_weekday, 
-                                                                                        interval=self.sched_config.repeat_interval)
+                self.next_run = first_weekday_start_date if first_weekday_start_date >= start_date else month_next_execution_date(start_date, 
+                                                                                                            self.sched_config.monthly_first_weekday, 
+                                                                                                            first_weekday_to_run=self.sched_config.monthly_first_weekday, 
+                                                                                                            interval=repeat_interval)
 
             elif self.sched_config.occurrence_type == MONTHLY_LAST_WEEKDAY_OCCURRENCE_TYPE:
-                year, month, hour, minute, second = (self.start_date.year, self.start_date.month, 
-                                                    self.start_date.hour, self.start_date.minute, 
-                                                    self.start_date.second)
+                last_weekday_start_date = get_last_weekday_date_of_month(self.sched_config.monthly_last_weekday, start_date.year, start_date.month, start_date.hour, 
+                                                                        start_date.minute, start_date.second)
 
-                last_weekday_start_date = get_last_weekday_date_of_month(self.sched_config.monthly_last_weekday, year, 
-                                                                        month, hour, minute, second)
-
-                self.next_run = last_weekday_start_date if last_weekday_start_date >= self.start_date \
-                                                        else month_next_execution_date(self.start_date, 
-                                                                                        self.sched_config.monthly_last_weekday, 
-                                                                                        last_weekday_to_run=self.sched_config.monthly_last_weekday, 
-                                                                                        interval=self.sched_config.repeat_interval)
+                self.next_run = last_weekday_start_date if last_weekday_start_date >= self.start_date else month_next_execution_date(start_date, 
+                                                                                                            self.sched_config.monthly_last_weekday, 
+                                                                                                            last_weekday_to_run=self.sched_config.monthly_last_weekday, 
+                                                                                                            interval=repeat_interval)
 
             else:  
                 raise ScheduleValueError(f"Invalid occurrence type: {self.sched_config.occurrence_type}")
 
         elif self.sched_config.repeat_mode == YEARLY_REPEAT_MODE:
-            if now <= self.start_date:
-                self.next_run = self.start_date
-            
-            else:
-                self.next_run = year_next_execution_date(self.start_date, self.sched_config.repeat_interval)                
+            self.next_run = start_date if now <= start_date else year_next_execution_date(start_date, repeat_interval)                
 
         else:
             raise ScheduleValueError(f"Invalid repeat mode: {self.sched_config.repeat_mode}")
     
     def _schedule_next_run(self) -> None:    
-        self.last_run = self.next_run
-
         if self.sched_config.repeat_mode == DAILY_REPEAT_MODE:
             self.next_run = self.next_run + datetime.timedelta(days=self.sched_config.interval)
 
@@ -205,9 +192,6 @@ class Job:
 class Scheduler:
     def __init__(self) -> None:
         self.jobs: List[Job] = list()
-    
-    def add_job(self, job: Job) -> None:
-        pass 
     
     def run_pending(self) -> None:
         """
