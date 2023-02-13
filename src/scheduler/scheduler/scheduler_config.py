@@ -108,8 +108,8 @@ class SchedulerConfig:
             self._parse_personalized_config(config_dict['personalized_repeat'])
 
     def now(self) -> datetime.datetime:
-        return datetime.datetime.now(self.timezone)
-        
+        return apply_timezone(datetime.datetime.now(), self.timezone)
+
     def _parse_personalized_config(self, config_dict: PersonalizedRepeat) -> None:
         self.repeat_mode = config_dict['mode']
         self.repeat_interval = config_dict['interval']
