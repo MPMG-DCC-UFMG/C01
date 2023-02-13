@@ -80,3 +80,9 @@ def decode_datetimestr(
             except ValueError:
                 pass
         return None
+
+def apply_timezone(datetime_obj: datetime.datetime, timezone = None) -> datetime.datetime:
+    if timezone is None:
+        return datetime_obj
+    
+    return timezone.localize(datetime_obj).astimezone(timezone).replace(tzinfo=None)

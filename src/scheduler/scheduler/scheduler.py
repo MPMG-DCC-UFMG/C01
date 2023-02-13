@@ -76,8 +76,7 @@ class Job:
         :return: ``True`` if the job should be run now.
         """
         assert self.next_run is not None, "must run _schedule_next_run before"
-        print('should_run: ', self.next_run, datetime.datetime.now())
-        return datetime.datetime.now() >= self.next_run
+        return self.sched_config.now() >= self.next_run
 
     def run(self):
         """
@@ -91,7 +90,7 @@ class Job:
                  deadline is reached.
 
         """
-        if self._is_overdue(datetime.datetime.now()):
+        if self._is_overdue(self.sched_config.now()):
             logger.debug(f"Cancelling job {self}.\n\tReason: The job is overdue.")
             return CancelJob
 
@@ -103,7 +102,7 @@ class Job:
             logger.debug(f"Cancelling job {self}.\n\tReason: Max repeats achieved ({self.cancel_after_max_repeats})")
             return CancelJob
         
-        self.last_run = datetime.datetime.now()
+        self.last_run = self.sched_config.now()
         self._schedule_next_run()
 
         if self._is_overdue(self.next_run):
@@ -116,7 +115,7 @@ class Job:
         start_date = self.sched_config.start_date
         repeat_interval = self.sched_config.repeat_interval
 
-        now = datetime.datetime.now()
+        now = self.sched_config.now()
 
         if self.sched_config.repeat_mode == DAILY_REPEAT_MODE:
             self.next_run = start_date if now < start_date else start_date + datetime.timedelta(days=repeat_interval)

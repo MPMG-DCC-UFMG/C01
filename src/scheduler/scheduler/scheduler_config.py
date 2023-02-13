@@ -1,9 +1,10 @@
 import datetime
+import pytz
 
 from typing import Union, List, Optional
 from typing_extensions import TypedDict, Literal
 from constants import *
-from date_utils import decode_datetimestr
+from date_utils import decode_datetimestr, apply_timezone
 
 class Finish(TypedDict):
     '''Define qual parâmetro para parar de reagendar uma coleta, a saber:
@@ -70,7 +71,7 @@ class SchedulerConfigInvalidRepeatModeError(SchedulerConfigError):
 class SchedulerConfig:
     def __init__(self) -> None:
         self.start_date: datetime.datetime = None
-        self.timezone: str = None
+        self.timezone = None
 
         self.repeat_mode: str = NO_REPEAT_MODE
         self.repeat_interval: int = 1
@@ -97,14 +98,18 @@ class SchedulerConfig:
     def load_config(self, config_dict: SchedulerConfigDict) -> None:
         SchedulerConfig.valid_config(config_dict)
 
-        self.start_date: datetime.datetime = decode_datetimestr(config_dict['start_date'])
-        self.timezone: str = config_dict['timezone']
+        self.timezone = pytz.timezone(config_dict['timezone'])
 
-        self.repeat_mode: str = config_dict['repeat_mode']
+        self.start_date = apply_timezone(decode_datetimestr(config_dict['start_date']), self.timezone)
+
+        self.repeat_mode = config_dict['repeat_mode']
 
         if config_dict['repeat_mode'] == PERSONALIZED_REPEAT_MODE:
             self._parse_personalized_config(config_dict['personalized_repeat'])
 
+    def now(self) -> datetime.datetime:
+        return datetime.datetime.now(self.timezone)
+        
     def _parse_personalized_config(self, config_dict: PersonalizedRepeat) -> None:
         self.repeat_mode = config_dict['mode']
         self.repeat_interval = config_dict['interval']
@@ -129,12 +134,12 @@ class SchedulerConfig:
 
         if 'finish' in config_dict and config_dict['finish'] is not None:
             finish_repeat_mode = config_dict['finish']['mode']
-            
+
             if finish_repeat_mode == REPEAT_FINISH_BY_OCCURRENCES:
                 self.max_repeats = config_dict['finish']['value']
 
             elif finish_repeat_mode == REPEAT_FINISH_BY_DATE:
-                self.max_datetime = decode_datetimestr(config_dict['finish']['value'])
+                self.max_datetime = apply_timezone(decode_datetimestr(config_dict['finish']['value']), self.timezone)
 
     @staticmethod
     def valid_config(config: SchedulerConfigDict) -> None:
@@ -158,6 +163,9 @@ class SchedulerConfig:
         if start_date < now:
             raise SchedulerConfigValueError('The start date for scheduling has passed.' \
                                         f' Now is {now} and start date has been set to {start_date}!')
+
+        if config['timezone'] not in pytz.all_timezones:
+            raise SchedulerConfigValueError(f'The timezone "{config["timezone"]}" is not valid!')
 
         repeat_mode = config['repeat_mode']
 
