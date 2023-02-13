@@ -103,7 +103,6 @@ class TestSchedulerConfig(unittest.TestCase):
         with self.assertRaises(SchedulerConfigValueError):
             SchedulerConfig.valid_config(self.config_dict)
 
-
         self.config_dict['personalized_repeat']['data'] = [7]
 
         with self.assertRaises(SchedulerConfigValueError):

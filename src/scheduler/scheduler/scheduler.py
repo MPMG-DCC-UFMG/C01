@@ -58,7 +58,9 @@ class Job:
         """
         self.job_func = functools.partial(job_func, *args, **kwargs)
         functools.update_wrapper(self.job_func, job_func)
-        self._schedule_next_run()
+        
+        self._schedule_first_run()
+
         if self.scheduler is None:
             raise ScheduleError(
                 "Unable to a add job to schedule. "
@@ -74,6 +76,7 @@ class Job:
         :return: ``True`` if the job should be run now.
         """
         assert self.next_run is not None, "must run _schedule_next_run before"
+        print('should_run: ', self.next_run, datetime.datetime.now())
         return datetime.datetime.now() >= self.next_run
 
     def run(self):
@@ -164,10 +167,10 @@ class Job:
     
     def _schedule_next_run(self) -> None:    
         if self.sched_config.repeat_mode == DAILY_REPEAT_MODE:
-            self.next_run = self.next_run + datetime.timedelta(days=self.sched_config.interval)
+            self.next_run = self.next_run + datetime.timedelta(days=self.sched_config.repeat_interval)
 
         elif self.sched_config.repeat_mode == WEEKLY_REPEAT_MODE:
-            self.next_run = weeks_next_execution_date(self.start_date, self.sched_config.weekdays_to_run, self.sched_config.interval)
+            self.next_run = weeks_next_execution_date(self.start_date, self.sched_config.weekdays_to_run, self.sched_config.repeat_interval)
                 
         elif self.sched_config.repeat_mode == MONTHLY_REPEAT_MODE:
             self.next_run = month_next_execution_date(self.start_date, 
@@ -178,7 +181,7 @@ class Job:
                                                     self.sched_config.repeat_interval)
 
         elif self.sched_config.repeat_mode == YEARLY_REPEAT_MODE:
-            self._process_yearly_repeat_mode(self.sched_config.interval)
+            self._process_yearly_repeat_mode(self.sched_config.repeat_interval)
         
         else:
             raise ScheduleValueError(f"Invalid repeat mode: {self.sched_config.repeat_mode}")

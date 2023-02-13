@@ -127,13 +127,14 @@ class SchedulerConfig:
             else:
                 raise SchedulerConfigInvalidRepeatModeError(f'The mode "{self.monthly_repeat_mode}" is invalid for monthly repeat mode!')
 
-        finish_repeat_mode = config_dict['finish']['mode']
+        if 'finish' in config_dict and config_dict['finish'] is not None:
+            finish_repeat_mode = config_dict['finish']['mode']
+            
+            if finish_repeat_mode == REPEAT_FINISH_BY_OCCURRENCES:
+                self.max_repeats = config_dict['finish']['value']
 
-        if finish_repeat_mode == REPEAT_FINISH_BY_OCCURRENCES:
-            self.max_repeats = config_dict['finish']['value']
-
-        elif finish_repeat_mode == REPEAT_FINISH_BY_DATE:
-            self.max_datetime = decode_datetimestr(config_dict['finish']['value'])
+            elif finish_repeat_mode == REPEAT_FINISH_BY_DATE:
+                self.max_datetime = decode_datetimestr(config_dict['finish']['value'])
 
     @staticmethod
     def valid_config(config: SchedulerConfigDict) -> None:
@@ -243,7 +244,7 @@ class SchedulerConfig:
 
             finish_repeat = config['personalized_repeat']['finish']
             if type(finish_repeat) not in (type(None), dict):
-                raise SchedulerConfigValueError('O campo `finish` deve ser None ou dict!')
+                raise SchedulerConfigValueError('The field `finish` of `personalized_repeat` must be None or dict!')
 
             if type(finish_repeat) is dict:
                 fields_available = finish_repeat.keys()
@@ -253,27 +254,30 @@ class SchedulerConfig:
                         raise SchedulerConfigMissingFieldError('If the field `finish` of `personalized_repeat_mode` is not of '\
                                 f'type NoneType, it must be a dict with fields `mode` and `value`. The field `{req_field}` is missing!')
 
-            finish_mode = finish_repeat['mode']
-            if finish_mode not in VALID_REPEAT_FINISH:
-                valid_finish_modes = ', '.join(VALID_REPEAT_FINISH)
-                raise SchedulerConfigInvalidRepeatModeError(f'The valid finish modes for `personalized_repeat` are: {valid_finish_modes}! `{finish_mode} is invalid!`')
+                finish_mode = finish_repeat['mode']
 
-            finish_value = finish_repeat['value']
+                if finish_mode not in VALID_REPEAT_FINISH:
+                    valid_finish_modes = ', '.join(VALID_REPEAT_FINISH)
+                    raise SchedulerConfigInvalidRepeatModeError(f'The valid finish modes for `personalized_repeat` are: {valid_finish_modes}! `{finish_mode} is invalid!`')
 
-            if finish_mode == REPEAT_FINISH_BY_OCCURRENCES:
-                if type(finish_value) is not int:
-                    raise SchedulerConfigValueError(f'When the field ``mode` of `finish` of `personalized_repeat` is `{REPEAT_FINISH_BY_OCCURRENCES}`, ' \
-                                                    'the value of field `value` must be a integer.')
+                finish_value = finish_repeat['value']
 
-                if finish_value <= 0:
-                    raise SchedulerConfigValueError(f'When the field `mode` of `finish` of `personalized_repeat` is `{REPEAT_FINISH_BY_OCCURRENCES}`, ' \
-                                                                        'the value of field `value` must be a integer greater than 0.')
-            elif finish_mode == REPEAT_FINISH_BY_DATE:
-                if type(finish_value) is not datetime.datetime:
-                    raise SchedulerConfigValueError(f'When the field `mode` of `finish` of `personalized_repeat` is `{REPEAT_FINISH_BY_DATE}`, ' \
-                                                    f'the value of field `value` must be a string representing a datetime.')
+                if finish_mode == REPEAT_FINISH_BY_OCCURRENCES:
+                    if type(finish_value) is not int:
+                        raise SchedulerConfigValueError(f'When the field ``mode` of `finish` of `personalized_repeat` is `{REPEAT_FINISH_BY_OCCURRENCES}`, ' \
+                                                        'the value of field `value` must be a integer.')
 
-                finish_date = decode_datetimestr(finish_value)
+                    if finish_value <= 0:
+                        raise SchedulerConfigValueError(f'When the field `mode` of `finish` of `personalized_repeat` is `{REPEAT_FINISH_BY_OCCURRENCES}`, ' \
+                                                                            'the value of field `value` must be a integer greater than 0.')
+                elif finish_mode == REPEAT_FINISH_BY_DATE:
+                    if type(finish_value) is not datetime.datetime:
+                        raise SchedulerConfigValueError(f'When the field `mode` of `finish` of `personalized_repeat` is `{REPEAT_FINISH_BY_DATE}`, ' \
+                                                        f'the value of field `value` must be a string representing a datetime.')
 
+                    finish_date = decode_datetimestr(finish_value)
+                    now = datetime.datetime.now()
 
-                now = datetime.datetime.now()
+                    if finish_date < now:
+                        raise SchedulerConfigValueError(f'When the field `mode` of `finish` of `personalized_repeat` is `{REPEAT_FINISH_BY_DATE}`, ' \
+                                                        f'the value of field `value` must be a datetime greater than now.')
