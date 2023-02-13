@@ -3,7 +3,7 @@ import datetime
 from typing import Union, List, Optional
 from typing_extensions import TypedDict, Literal
 from constants import *
-from utils import decode_datetimestr
+from date_utils import decode_datetimestr
 
 class Finish(TypedDict):
     '''Define qual parâmetro para parar de reagendar uma coleta, a saber:
@@ -87,10 +87,15 @@ class SchedulerConfig:
         # If monthly_repeat_mode is day-x, the variable represents the day of month scheduled.
         # However, if monthly_repeat_mode is first-weekday or last-weekday, the value in the 
         # variable is the first or last weekday of month scheduled, respectivelly. 
-        self.monthly_repeat_value: Optional[int] = None
+        self.monthly_day_x_ocurrence: Optional[int] = None
+
+        self.monthly_day_x_ocurrence: Optional[int] = None
+        self.monthly_first_weekday: Optional[int] = None
+        self.monthly_last_weekday: Optional[int] = None
+
 
     def load_config(self, config_dict: SchedulerConfigDict) -> None:
-        self.valid_config(config_dict)
+        SchedulerConfig.valid_config(config_dict)
 
         self.start_date: datetime.datetime = decode_datetimestr(config_dict['start_date'])
         self.timezone: str = config_dict['timezone']
@@ -105,11 +110,22 @@ class SchedulerConfig:
         self.repeat_interval = config_dict['interval']
 
         if self.repeat_mode == WEEKLY_REPEAT_MODE:
-            self.weekdays_to_run = config_dict['data']
+            self.weekdays_to_run = config_dict['data'].sort()
 
         elif self.repeat_mode == MONTHLY_REPEAT_MODE:
             self.monthly_repeat_mode = config_dict['data']['mode']
-            self.monthly_repeat_value = config_dict['data']['value']
+
+            if self.monthly_repeat_mode == MONTHLY_DAY_X_OCCURRENCE_TYPE:
+                self.monthly_day_x_ocurrence = config_dict['data']['value']
+
+            elif self.monthly_repeat_mode in MONTHLY_FIRST_WEEKDAY_OCCURRENCE_TYPE:
+                self.monthly_first_weekday = config_dict['data']['value']
+            
+            elif self.monthly_repeat_mode in MONTHLY_LAST_WEEKDAY_OCCURRENCE_TYPE:
+                self.monthly_last_weekday = config_dict['data']['value']
+            
+            else:
+                raise SchedulerConfigInvalidRepeatModeError(f'The mode "{self.monthly_repeat_mode}" is invalid for monthly repeat mode!')
 
         finish_repeat_mode = config_dict['finish']['mode']
 
@@ -119,7 +135,8 @@ class SchedulerConfig:
         elif finish_repeat_mode == REPEAT_FINISH_BY_DATE:
             self.max_datetime = decode_datetimestr(config_dict['finish']['value'])
 
-    def valid_config(self, config: SchedulerConfigDict) -> None:
+    @staticmethod
+    def valid_config(config: SchedulerConfigDict) -> None:
         config_fields = config.keys()
 
         for req_field in REQUIRED_FIELDS:

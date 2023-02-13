@@ -1,7 +1,6 @@
 import datetime
 import calendar
-from datetime import MAXYEAR
-from typing import Union, Optional
+from typing import Optional
 
 from constants import *
 
@@ -46,21 +45,26 @@ def weeks_next_execution_date(base_date, days_of_week, interval_weeks=1):
 
     return day_week_start + datetime.timedelta(weeks=interval_weeks, days=min(days_of_week))
 
-def month_next_execution_date(base_date: datetime.datetime, ocurrency_type: str, day_x: int = 1, weekday_to_run: int = 0, interval: int = 1):
+def month_next_execution_date(base_date: datetime.datetime, 
+                            ocurrency_type: str, 
+                            day_x: int = 1, 
+                            first_weekday_to_run: int = 0, 
+                            last_weekday_to_run: int = 0, 
+                            interval: int = 1):
     year = base_date.year + (base_date.month + interval - 1) // NUM_MONTHS_IN_YEAR
     month = (base_date.month + interval - 1) % NUM_MONTHS_IN_YEAR + 1
 
-    if ocurrency_type == 'day-x':
+    if ocurrency_type == MONTHLY_DAY_X_OCCURRENCE_TYPE:
         return get_date(year, month, day_x, base_date.hour, base_date.minute, base_date.second)
 
-    elif ocurrency_type == 'first-day':
-        return get_first_weekday_date_of_month(weekday_to_run, year, month, base_date.hour, base_date.minute, base_date.second) 
+    elif ocurrency_type == MONTHLY_FIRST_WEEKDAY_OCCURRENCE_TYPE:
+        return get_first_weekday_date_of_month(first_weekday_to_run, year, month, base_date.hour, base_date.minute, base_date.second) 
 
-    elif ocurrency_type == 'last-day':
-        return get_last_weekday_date_of_month(weekday_to_run, year, month, base_date.hour, base_date.minute, base_date.second) 
+    elif ocurrency_type == MONTHLY_LAST_WEEKDAY_OCCURRENCE_TYPE:
+        return get_last_weekday_date_of_month(last_weekday_to_run, year, month, base_date.hour, base_date.minute, base_date.second) 
 
     else:
-        raise ValueError('Bla')
+        raise ValueError(f'Invalid ocurrency_type: {ocurrency_type}')
 
 def year_next_execution_date(base_date: datetime.datetime, interval: int = 1):
     return get_date(base_date.year + interval, 
