@@ -19,8 +19,8 @@ jobs:
           python web_install.py
       - name: Test with pytest
         run: |
-          coverage run -m pytest
-          coverage xml
+          python -m coverage run -m pytest
+          python -m coverage xml
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
