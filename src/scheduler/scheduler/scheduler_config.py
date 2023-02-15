@@ -1,10 +1,12 @@
 import datetime
-import pytz
+from typing import List, Optional, Union
 
-from typing import Union, List, Optional
-from typing_extensions import TypedDict, Literal
-from constants import *
-from date_utils import decode_datetimestr, apply_timezone
+import pytz
+from typing_extensions import Literal, TypedDict
+
+from scheduler.constants import *
+from scheduler.date_utils import apply_timezone, decode_datetimestr
+
 
 class Finish(TypedDict):
     '''Define qual parâmetro para parar de reagendar uma coleta, a saber:

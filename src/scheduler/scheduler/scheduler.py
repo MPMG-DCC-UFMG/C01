@@ -1,14 +1,11 @@
-import logging
-import time
 import datetime
 import functools
-from typing import Set, List, Dict, Optional, Callable, Union
-from typing_extensions import Literal
-from collections.abc import Hashable
+import logging
+from typing import Callable, List, Optional
 
-from scheduler_config import SchedulerConfig
-from constants import *
-from date_utils import *
+from scheduler.constants import *
+from scheduler.date_utils import *
+from scheduler.scheduler_config import SchedulerConfig
 
 logger = logging.getLogger('scheduler')
 logger.setLevel(logging.DEBUG)
@@ -229,15 +226,3 @@ class Scheduler:
 
         except ValueError:
             logger.debug('Cancelling not-scheduled job "%s"', job)
-
-
-default_scheduler = Scheduler()
-
-def schedule_from_config(config: SchedulerConfig) -> Job:
-    return default_scheduler.schedule_from_config(config)
-
-def run_pending() -> None:
-    """Calls :meth:`run_pending <Scheduler.run_pending>` on the
-    :data:`default scheduler instance <default_scheduler>`.
-    """
-    default_scheduler.run_pending()
