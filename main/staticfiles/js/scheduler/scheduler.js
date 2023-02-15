@@ -104,7 +104,7 @@ function toggle_weekday_select(el) {
         if (days_selected_to_repeat[i])
             repeat.data.push(parseInt(i));
     
-    update_repetition_info();
+    update_repeat_info();
 }
 
 function init_default_options() {
@@ -156,7 +156,7 @@ function init_default_options() {
     };
 }
 
-function repetition_to_text(repeat) {
+function repeat_to_text(repeat) {
     let s = '';
 
     switch (repeat.mode) {
@@ -254,7 +254,7 @@ function repetition_to_text(repeat) {
     return s;    
 }
 
-function update_repetition_info() {
+function update_repeat_info() {
     if (task_being_edited) {
         scheduling_task = task_being_edited;
         raw_repeat = scheduling_task.personalized_repeat;
@@ -266,7 +266,7 @@ function update_repetition_info() {
     if (scheduling_task.repeat_mode != 'personalized') 
         return;
 
-    let parsed_repeat = repetition_to_text(raw_repeat);
+    let parsed_repeat = repeat_to_text(raw_repeat);
     $('#repetition-info').text(parsed_repeat);
 
     let personalized_repetition_info = $('#scheduling-personalized-repetition-info');
@@ -276,7 +276,7 @@ function update_repetition_info() {
     scheduling_task.personalized_repeat = repeat;
 }
 
-function close_personalized_repetition_modal() {
+function close_personalized_repeat_modal() {
     $('#personalizedCrawlerRepetion').modal('hide');
     $('#setSchedulingModal').modal('show');
 }
@@ -563,10 +563,10 @@ $(document).ready(function () {
         scheduling_task.repeat_mode = repeat_mode;
 
         if (repeat_mode == 'personalized') {
-            update_repetition_info();
+            update_repeat_info();
             open_personalized_crawler_repetition();
         } else {
-            scheduling_task.personalized_repetition_mode = null;
+            scheduling_task.personalized_repeat = null;
             $('#scheduling-personalized-repetition-info').css('display', 'none');
         }
         
@@ -614,12 +614,12 @@ $(document).ready(function () {
         repeat_option_selected = repeat_mode;
         repeat.mode = repeat_mode;
 
-        update_repetition_info();
+        update_repeat_info();
     });
 
     $('#interval-in').change(function () {
         repeat.interval = parseInt($(this).val());
-        update_repetition_info();
+        update_repeat_info();
     });
 
     $("input[name=finish-type]").change(function() {
@@ -645,21 +645,21 @@ $(document).ready(function () {
                 break;
         }
 
-        update_repetition_info();
+        update_repeat_info();
     });
 
     $('#finish-occurrence-in').on('click', function(){
         repeat_finish_occurrences = parseInt($(this).val());
         $('#finish-ocurrence').click();
         repeat.finish.data = repeat_finish_occurrences;   
-        update_repetition_info();             
+        update_repeat_info();             
     });
 
     $('#finish-date-in').change(function () {
         repeat_finish_date = $(this).val(); 
         $('#finish-date').click();
         repeat.finish.data = repeat_finish_date;
-        update_repetition_info();
+        update_repeat_info();
     });
 
     $('input[name=montly-repeat]').change(function() {
@@ -670,7 +670,7 @@ $(document).ready(function () {
 
         repeat.data.mode = montly_repeat_mode;
         repeat.data.value = montly_repeat_value;
-        update_repetition_info();
+        update_repeat_info();
     });
 
     $('#montly-day-x-sel').on('change',function() {
@@ -681,7 +681,7 @@ $(document).ready(function () {
         
         repeat.data.mode = montly_repeat_mode;
         repeat.data.value = montly_repeat_value;
-        update_repetition_info();
+        update_repeat_info();
     });
 
     $('#montly-first-weekday-sel').on('change', function () {
@@ -692,7 +692,7 @@ $(document).ready(function () {
 
         repeat.data.mode = montly_repeat_mode;
         repeat.data.value = montly_repeat_value;
-        update_repetition_info();
+        update_repeat_info();
     });
 
     $('#montly-last-weekday-sel').on('change', function () {
@@ -703,7 +703,7 @@ $(document).ready(function () {
 
         repeat.data.mode = montly_repeat_mode;
         repeat.data.value = montly_repeat_value;
-        update_repetition_info();
+        update_repeat_info();
     });
 
     init_default_options();
