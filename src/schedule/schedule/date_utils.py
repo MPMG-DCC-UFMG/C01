@@ -2,7 +2,7 @@ import calendar
 import datetime
 from typing import Optional
 
-from scheduler.constants import *
+from schedule.constants import *
 
 
 def get_date(year: int, month: int, day: int, hour: int = 0, minute: int = 0, second: int = 0) -> datetime:

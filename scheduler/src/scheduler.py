@@ -2,7 +2,7 @@ from datetime import datetime
 from time import sleep
 import threading
 import ujson
-import schedule
+from schedule import Scheduler as Schedule
 import requests
 
 from kafka import KafkaConsumer
@@ -19,11 +19,12 @@ def run_crawler(crawler_id, action):
 def run_crawler_once(crawler_id, action):
     SERVER_SESSION.get(settings.RUN_CRAWLER_URL + "/api/crawlers/{}/run?action={}".format(crawler_id, action))
     print(f'[{datetime.now()}] [TC] Crawler {crawler_id} processed by schedule...')
-    return schedule.CancelJob
+    return scheduler.CancelJob
 
 class Scheduler:
     def __init__(self, jobs):
         self.jobs = jobs
+        self.scheduler = Schedule()
 
     def __run_task_consumer(self):
         # Generates a random name for the consumer
@@ -56,40 +57,8 @@ class Scheduler:
             #     print(f'[{datetime.now()}] [TC] {worker_name} Worker: Error processing task data: "{e}"')
 
     def _set_schedule_call_for_task(self, task_data):
-        # converte ação em sintaxe schedule
-        # executa metodo run_crawler
-        # incluir personalizado
-        # começar a partir da data
-        runtime = task_data["data"]["runtime"][-9:-1]
-
-        if task_data["data"]["repeat_mode"] == "no_repeat":
-            params = [run_crawler_once, task_data["data"]["crawl_request"], task_data["data"]["crawler_queue_behavior"]]
-            schedule.every().day.at(runtime).do(*params)
-            return 
-
         params = [run_crawler, task_data["data"]["crawl_request"], task_data["data"]["crawler_queue_behavior"]]
-
-        if task_data["data"]["repeat_mode"] == "daily":
-            job = schedule.every().day.at(runtime).do(*params)
-        
-        if task_data["data"]["repeat_mode"] == "weekly":
-            # Checks if it is possible to put the collection to run today (if the time it should run has passed), if not, it runs next week
-            now = datetime.now()
-
-            str_runtime = task_data["data"]["runtime"]
-            runtime_datetime = datetime.fromisoformat(str_runtime.replace('Z', ''))
-
-            # runs once to include today's day
-            if now <= runtime_datetime:
-                params = [run_crawler_once, task_data["data"]["crawl_request"], task_data["data"]["crawler_queue_behavior"]]
-                schedule.every().day.at(runtime).do(*params)
-                
-            # Weekly repetition (which does not consider the current day)
-            job = schedule.every(7).days.at(runtime).do(*params)
-            
-        else:
-            job = None
-        
+        job = self.scheduler.schedule_from_config(task_data["data"]).do(*params)
         self.jobs[task_data["data"]["id"]] = job
 
     def __process_task_data(self, task_data):

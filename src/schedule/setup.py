@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name='scheduler',
+    name='schedule',
     version='1.0',
     description='',
     long_description=long_description,

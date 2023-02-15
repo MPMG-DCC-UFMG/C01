@@ -25,19 +25,20 @@ var day_number_to_weekday = {
 
 var new_scheduling_config = {
     crawl_request: null,
-    runtime: null,
+    start_date: null,
+    timezone: 'America/Sao_Paulo',
     crawler_queue_behavior: 'wait_on_last_queue_position',
     repeat_mode: 'no_repeat',
-    personalized_repetition_mode: null
+    personalized_repeat: null
 }
 
-var repetion = {};
+var repeat = {};
 
 var date = new Date();
 
 var repeat_finish_occurrences = 1;
 var montly_repeat_value = date.getDate();
-var montly_repeat_type = 'day-x';
+var montly_repeat_mode = 'day-x';
 var repeat_finish_date; 
 
 // calendar
@@ -81,7 +82,6 @@ function show_monthly_repeat_options() {
     el_montly_repeat_option.removeClass('d-none');
 }
 
-
 function hide_monthly_repeat_options() {
     el_montly_repeat_option.addClass('d-none');
 }
@@ -99,10 +99,10 @@ function toggle_weekday_select(el) {
         el.classList.add('text-muted', 'bg-white');
     }
 
-    repetion.additional_data = [];
+    repeat.data = [];
     for (let i in days_selected_to_repeat)
         if (days_selected_to_repeat[i])
-            repetion.additional_data.push(parseInt(i));
+            repeat.data.push(parseInt(i));
     
     update_repetition_info();
 }
@@ -138,50 +138,51 @@ function init_default_options() {
 
     new_scheduling_config = {
         crawl_request: null,
-        runtime: null,
+        start_date: null,
+        timezone: 'America/Sao_Paulo',
         crawler_queue_behavior: 'wait_on_last_queue_position',
         repeat_mode: 'no_repeat',
-        personalized_repetition_mode: null
+        personalized_repeat: null
     };
 
-    repetion = {
-        type: 'daily',
+    repeat = {
+        mode: 'daily',
         interval: 1,
-        additional_data: null,
+        data: null,
         finish: {
-            type: 'never',
-            additional_data: null
+            mode: 'never',
+            data: null
         }
     };
 }
 
-function repetition_to_text(repetition) {
+function repetition_to_text(repeat) {
     let s = '';
 
-    switch (repetition.type) {
+    switch (repeat.mode) {
         case 'daily':
-            if (repetition.interval == 1)
+            if (repeat.interval == 1)
                 s = 'Repete diariamente.'
 
             else
-                s = `Repete a cada ${repetition.interval} dias.`
+                s = `Repete a cada ${repeat.interval} dias.`
 
             break;
 
         case 'weekly':
 
-            if (repetition.additional_data.length > 0) {
-                if (repetition.interval == 1)
+            if (repeat.data.length > 0) {
+                if (repeat.interval == 1)
                     s = 'Repete semanalmente aos/às ';
 
                 else
-                    s = `Repete a cada ${repetition.interval} semanas aos/às `
+                    s = `Repete a cada ${repeat.interval} semanas aos/às `
 
                 let days = [];
                 let day_number;
 
-                for (let i = 0; i < repetition.additional_data.length; i++) {
-                    day_number = repetition.additional_data[i];
+                for (let i = 0; i < repeat.data.length; i++) {
+                    day_number = repeat.data[i];
                     days.push(day_number_to_weekday[day_number]);
                 }
 
@@ -201,24 +202,24 @@ function repetition_to_text(repetition) {
             break
 
         case 'monthly':
-            if (repetition.interval == 1)
+            if (repeat.interval == 1)
                 s = 'Repete mensalmente ';
 
             else
-                s = `Repete a cada ${repetition.interval} meses `
+                s = `Repete a cada ${repeat.interval} meses `
 
-            switch (repetition.additional_data.type) {
+            switch (repeat.data.mode) {
                 case 'day-x':
-                    s += `no dia ${repetition.additional_data.value}.`;
+                    s += `no dia ${repeat.data.value}.`;
                     break;
 
                 case 'first-weekday':
 
-                    s += `no/na primeiro(a) ${day_number_to_weekday[repetition.additional_data.value]}.`
+                    s += `no/na primeiro(a) ${day_number_to_weekday[repeat.data.value]}.`
                     break
 
                 case 'last-weekday':
-                    s += `no/na último(a) ${day_number_to_weekday[repetition.additional_data.value]}.`
+                    s += `no/na último(a) ${day_number_to_weekday[repeat.data.value]}.`
                     break;
 
                 default:
@@ -228,22 +229,22 @@ function repetition_to_text(repetition) {
             break
 
         case 'yearly':
-            if (repetition.interval == 1)
+            if (repeat.interval == 1)
                 s = 'Repete anualmente.'
 
             else
-                s = `Repete a cada ${repetition.interval} anos.`
+                s = `Repete a cada ${repeat.interval} anos.`
 
             break
     }
 
-    switch (repetition.finish.type) {
+    switch (repeat.finish.mode) {
         case 'occurrence':
-            s += ` Ocorre ${repetition.finish.additional_data} vezes.`
+            s += ` Ocorre ${repeat.finish.data} vezes.`
             break;
 
         case 'date':
-            s += ` Ocorre até ${repetition.finish.additional_data}.`
+            s += ` Ocorre até ${repeat.finish.data}.`
             break;
 
         default:
@@ -256,23 +257,23 @@ function repetition_to_text(repetition) {
 function update_repetition_info() {
     if (task_being_edited) {
         scheduling_task = task_being_edited;
-        raw_repetition = scheduling_task.personalized_repetition_mode;
+        raw_repeat = scheduling_task.personalized_repeat;
     } else {
         scheduling_task = new_scheduling_config;
-        raw_repetition = repetion; 
+        raw_repeat = repeat; 
     }
     
     if (scheduling_task.repeat_mode != 'personalized') 
         return;
 
-    let parsed_repetition = repetition_to_text(raw_repetition);
-    $('#repetition-info').text(parsed_repetition);
+    let parsed_repeat = repetition_to_text(raw_repeat);
+    $('#repetition-info').text(parsed_repeat);
 
     let personalized_repetition_info = $('#scheduling-personalized-repetition-info');
     personalized_repetition_info.css('display', 'inline-block');
-    personalized_repetition_info.text(parsed_repetition);
+    personalized_repetition_info.text(parsed_repeat);
 
-    scheduling_task.personalized_repetition_mode = repetion;
+    scheduling_task.personalized_repeat = repeat;
 }
 
 function close_personalized_repetition_modal() {
@@ -346,14 +347,14 @@ function valid_new_scheduling() {
         return;
     }
 
-    if (scheduling_task.runtime == null) {
+    if (scheduling_task.start_date == null) {
         alert('Escolha um horário válido!');
         return;
     }
 
     if (scheduling_task.repeat_mode == 'personalized' 
-        && scheduling_task.personalized_repetition_mode.type == 'weekly'
-        && scheduling_task.personalized_repetition_mode.additional_data.length == 0) {
+        && scheduling_task.personalized_repeat.mode == 'weekly'
+        && scheduling_task.personalized_repeat.data.length == 0) {
         alert('Você configurou uma coleta personalizada semanal, porém não escolheu o(s) dia(s) que ela deve ocorrer!');
         return;
     }
@@ -365,11 +366,11 @@ function valid_new_scheduling() {
     }
     
     else
-    services.save_new_scheduling(scheduling_task);
+        services.save_new_scheduling(scheduling_task);
     
     hide_set_scheduling();
     
-    let year_month_day = scheduling_task.runtime.split('T')[0].split('-')
+    let year_month_day = scheduling_task.start_date.split('T')[0].split('-')
     calendar.daily.active_day = new Date(parseInt(year_month_day[0]), parseInt(year_month_day[1]) - 1, parseInt(year_month_day[2])); 
 
     calendar.daily.show();
@@ -396,27 +397,27 @@ function show_task_detail(task_id) {
 
     let cur_date = new Date()
  
-    let runtime = task_runtime_to_date(task.runtime);
+    let start_date = task_runtime_to_date(task.start_date);
 
-    let repetition_info = '';
+    let repeat_info = '';
     
     
-    let since = cur_date > runtime ? 'Desde de ' : 'A partir de ';
-    since += `${runtime.getDate()} de ${MONTHS[runtime.getMonth()]} de ${runtime.getFullYear()}.`;
+    let since = cur_date > start_date ? 'Desde de ' : 'A partir de ';
+    since += `${start_date.getDate()} de ${MONTHS[start_date.getMonth()]} de ${start_date.getFullYear()}.`;
 
     switch (task.repeat_mode) {
         case 'no_repeat':
-            repetition_info = `${runtime.getDate()} de ${MONTHS[runtime.getMonth()]} de ${runtime.getFullYear()} às ${runtime.getHours()}h${String(runtime.getMinutes()).padStart(2, '0')}.`;
+            repeat_info = `${start_date.getDate()} de ${MONTHS[start_date.getMonth()]} de ${start_date.getFullYear()} às ${start_date.getHours()}h${String(start_date.getMinutes()).padStart(2, '0')}.`;
             since = 'Não se repete.';    
             break;
         
         case 'daily':
-            repetition_info = `Repete diariamente às ${runtime.getHours()}h${String(runtime.getMinutes()).padStart(2, '0') }.`;
+            repeat_info = `Repete diariamente às ${start_date.getHours()}h${String(start_date.getMinutes()).padStart(2, '0') }.`;
             break;
 
         case 'weekly':
             let weedays = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
-            repetition_info = `Repete toda(o) ${weedays[runtime.getDay()]} às ${runtime.getHours()}h${String(runtime.getMinutes()).padStart(2, '0') }.`;
+            repeat_info = `Repete toda(o) ${weedays[start_date.getDay()]} às ${start_date.getHours()}h${String(start_date.getMinutes()).padStart(2, '0') }.`;
 
         default:
             break;
@@ -447,7 +448,7 @@ function show_task_detail(task_id) {
 
     let task_detail_html = `
                 <h3 class="h5 font-weight-bold">${task.crawler_name}</h3>
-                <p class="m-0 mt-3">${repetition_info}</p>
+                <p class="m-0 mt-3">${repeat_info}</p>
                 <small class="text-muted">${since}</small>
                 <br>
                 <p class="m-0 mt-3 ${bg_crawler_queue_info} border rounded-pill small text-white font-weight-bold px-2" style="display: inline-block;">${crawler_queue_info}</p>
@@ -491,10 +492,11 @@ function edit_scheduling_task(task_id) {
     task_being_edited = {
         id: tasks[task_id].id,
         crawl_request: tasks[task_id].crawl_request,
-        runtime: tasks[task_id].runtime,
+        start_date: tasks[task_id].start_date,
+        timezone: tasks[task_id].timezone,
         crawler_queue_behavior: tasks[task_id].crawler_queue_behavior,
         repeat_mode: tasks[task_id].repeat_mode,
-        personalized_repetition_mode: tasks[task_id].personalized_repetition_mode
+        personalized_repeat: tasks[task_id].personalized_repeat
     };
 
     fill_set_scheduling(task_id);
@@ -518,10 +520,10 @@ function fill_set_scheduling(task_id) {
     if (!task)
         return;
 
-    let runtime = task.runtime.substr(0, 16);
+    let start_date = task.start_date.substr(0, 16);
 
     $(`#crawl-selector option[value='${task.crawl_request}']`).attr('selected', 'selected');
-    $('#scheduling-time').val(runtime);
+    $('#scheduling-time').val(start_date);
     $(`#repeat-crawling-select option[value='${task.repeat_mode}']`).attr('selected', 'selected');
     $(`#crawler_queue_behavior option[value='${task.crawler_queue_behavior}']`).attr('selected', 'selected');
     
@@ -588,12 +590,12 @@ $(document).ready(function () {
         
         switch (repeat_mode) {
             case 'weekly':
-                repetion.additional_data = [];
+                repeat.data = [];
                 for (let i in days_selected_to_repeat)
                     if (days_selected_to_repeat[i])
-                        repetion.additional_data.push(parseInt(i));                    
+                        repeat.data.push(parseInt(i));                    
 
-                if (repetion.additional_data.length == 0)
+                if (repeat.additional_data.length == 0)
                     $(`#dwr-${date.getDay()}`).click();
 
                 show_days_of_week_repeat_options();
@@ -601,42 +603,42 @@ $(document).ready(function () {
         
             case 'monthly':
                 show_monthly_repeat_options();
-                repetion.additional_data = { type: montly_repeat_type, value: montly_repeat_value};
+                repeat.data = { mode: montly_repeat_mode, value: montly_repeat_value};
                 break;
                 
             default:
-                repetion.additional_data = null;
+                repeat.data = null;
                 break;
         }
 
         repeat_option_selected = repeat_mode;
-        repetion.type = repeat_mode;
+        repeat.mode = repeat_mode;
 
         update_repetition_info();
     });
 
     $('#interval-in').change(function () {
-        repetion.interval = parseInt($(this).val());
+        repeat.interval = parseInt($(this).val());
         update_repetition_info();
     });
 
     $("input[name=finish-type]").change(function() {
         let input = $(this);
 
-        let finish_type = input.attr('finish_type');
+        let finish_mode = input.attr('finish_type');
         
-        repetion.finish.type = finish_type;
-        switch (finish_type) {
+        repeat.finish.mode = finish_mode;
+        switch (finish_mode) {
             case 'never':
-                repetion.finish.additional_data = null;
+                repeat.finish.data = null;
                 break;
         
             case 'occurrence':
-                repetion.finish.additional_data = repeat_finish_occurrences;                
+                repeat.finish.data = repeat_finish_occurrences;                
                 break;
 
             case 'date':
-                repetion.finish.additional_data = repeat_finish_date;
+                repeat.finish.data = repeat_finish_date;
                 break;
 
             default:
@@ -649,58 +651,58 @@ $(document).ready(function () {
     $('#finish-occurrence-in').on('click', function(){
         repeat_finish_occurrences = parseInt($(this).val());
         $('#finish-ocurrence').click();
-        repetion.finish.additional_data = repeat_finish_occurrences;   
+        repeat.finish.data = repeat_finish_occurrences;   
         update_repetition_info();             
     });
 
     $('#finish-date-in').change(function () {
         repeat_finish_date = $(this).val(); 
         $('#finish-date').click();
-        repetion.finish.additional_data = repeat_finish_date;
+        repeat.finish.data = repeat_finish_date;
         update_repetition_info();
     });
 
     $('input[name=montly-repeat]').change(function() {
         let input = $(this);
 
-        montly_repeat_type = input.attr('montly_repeat');
-        montly_repeat_value = parseInt($(`#montly-${montly_repeat_type}-sel`).find(":selected").val());
+        montly_repeat_mode = input.attr('montly_repeat');
+        montly_repeat_value = parseInt($(`#montly-${montly_repeat_mode}-sel`).find(":selected").val());
 
-        repetion.additional_data.type = montly_repeat_type;
-        repetion.additional_data.value = montly_repeat_value;
+        repeat.data.mode = montly_repeat_mode;
+        repeat.data.value = montly_repeat_value;
         update_repetition_info();
     });
 
     $('#montly-day-x-sel').on('change',function() {
         montly_repeat_value = parseInt($(this).find(":selected").val());
-        montly_repeat_type = 'day-x';
+        montly_repeat_mode = 'day-x';
 
         $('#montly-every-day-x').click();
         
-        repetion.additional_data.type = montly_repeat_type;
-        repetion.additional_data.value = montly_repeat_value;
+        repeat.data.mode = montly_repeat_mode;
+        repeat.data.value = montly_repeat_value;
         update_repetition_info();
     });
 
     $('#montly-first-weekday-sel').on('change', function () {
         montly_repeat_value = parseInt($(this).find(":selected").val());
-        montly_repeat_type = 'first-weekday';
+        montly_repeat_mode = 'first-weekday';
 
         $('#montly-first-weekday').click();
 
-        repetion.additional_data.type = montly_repeat_type;
-        repetion.additional_data.value = montly_repeat_value;
+        repeat.data.mode = montly_repeat_mode;
+        repeat.data.value = montly_repeat_value;
         update_repetition_info();
     });
 
     $('#montly-last-weekday-sel').on('change', function () {
         montly_repeat_value = parseInt($(this).find(":selected").val());
-        montly_repeat_type = 'last-weekday';
+        montly_repeat_mode = 'last-weekday';
 
         $('#montly-last-weekday').click();
 
-        repetion.additional_data.type = montly_repeat_type;
-        repetion.additional_data.value = montly_repeat_value;
+        repeat.data.mode = montly_repeat_mode;
+        repeat.data.value = montly_repeat_value;
         update_repetition_info();
     });
 

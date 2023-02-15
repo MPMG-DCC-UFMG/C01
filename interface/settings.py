@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Initialize Django-environ to read settings from environment variables
 env = environ.Env(
     # set casting, default value
-    DEBUG=(bool, False),
+    DEBUG=(bool, True),
     DJANGO_ALLOWED_HOSTS=(list, ['*']),
     LOG_TO_FILE=(bool, False),
     SQL_ENGINE=(str, "django.db.backends.sqlite3"),

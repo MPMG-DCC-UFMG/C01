@@ -3,9 +3,9 @@ import functools
 import logging
 from typing import Callable, List, Optional
 
-from scheduler.constants import *
-from scheduler.date_utils import *
-from scheduler.scheduler_config import SchedulerConfig
+from schedule.constants import *
+from schedule.date_utils import *
+from schedule.scheduler_config import SchedulerConfig
 
 logger = logging.getLogger('scheduler')
 logger.setLevel(logging.DEBUG)

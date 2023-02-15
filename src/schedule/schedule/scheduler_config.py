@@ -4,8 +4,8 @@ from typing import List, Optional, Union
 import pytz
 from typing_extensions import Literal, TypedDict
 
-from scheduler.constants import *
-from scheduler.date_utils import apply_timezone, decode_datetimestr
+from schedule.constants import *
+from schedule.date_utils import apply_timezone, decode_datetimestr
 
 
 class Finish(TypedDict):
