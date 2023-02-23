@@ -673,7 +673,7 @@ class Task(TimeStamped):
     crawler_queue_behavior = models.CharField(
         max_length=32, choices=CRAWLER_QUEUE_BEHAVIOR_CHOICES, default='wait_on_last_queue_position')
 
-    REPETITION_MODE_CHOICES = [
+    REPEAT_MODE_CHOICES = [
         ('no_repeat', 'Não se repete'),
         ('daily', 'Diariamente'),
         ('weekly', 'Semanalmente'),
@@ -683,7 +683,7 @@ class Task(TimeStamped):
     ]
 
     # modo de repetição da coleta agendada.
-    repeat_mode = models.CharField(max_length=32, choices=REPETITION_MODE_CHOICES, default='no_repeat')
+    repeat_mode = models.CharField(max_length=32, choices=REPEAT_MODE_CHOICES, default='no_repeat')
 
     # json com a configuração personalizada de reexecução do coletor
     personalized_repeat = models.JSONField(null=True, blank=True)
