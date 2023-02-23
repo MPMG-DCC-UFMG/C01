@@ -1152,30 +1152,81 @@ class TaskViewSet(viewsets.ModelViewSet):
     def create(self, request):
         response = super().create(request)
         if response.status_code == status.HTTP_201_CREATED:
+            data = response.data
+
+            schedule_data = {
+                'start_date': data.get('start_date'),
+                'timezone': data.get('timezone'),
+                'repeat_mode': data.get('repeat_mode'),
+                'personalized_repeat': data.get('personalized_repeat')
+            }
+
+            task_data = {
+                'id': data.get('id'),
+                'crawl_request': data.get('crawl_request'),
+                'crawler_queue_behavior': data.get('crawler_queue_behavior'),
+            }
+
             message = {
                 'action': 'create',
-                'data': response.data
+                'schedule_data': schedule_data,
+                'task_data': task_data
             }
+
             crawler_manager.message_sender.send(TASK_TOPIC, message)
         return response
 
     def update(self, request, pk=None):
         response = super().update(request, pk=pk)
         if response.status_code == status.HTTP_200_OK:
+            data = response.data
+
+            schedule_data = {
+                'start_date': data.get('start_date'),
+                'timezone': data.get('timezone'),
+                'repeat_mode': data.get('repeat_mode'),
+                'personalized_repeat': data.get('personalized_repeat')
+            }
+
+            task_data = {
+                'id': data.get('id'),
+                'crawl_request': data.get('crawl_request'),
+                'crawler_queue_behavior': data.get('crawler_queue_behavior'),
+            }
+
             message = {
                 'action': 'update',
-                'data': response.data
+                'schedule_data': schedule_data,
+                'task_data': task_data
             }
+            
             crawler_manager.message_sender.send(TASK_TOPIC, message)
         return response
 
     def partial_update(self, request, pk=None):
         response = super().partial_update(request, pk=pk)
         if response.status_code == status.HTTP_200_OK:
+            data = response.data
+
+            schedule_data = {
+                'start_date': data.get('start_date'),
+                'timezone': data.get('timezone'),
+                'repeat_mode': data.get('repeat_mode'),
+                'personalized_repeat': data.get('personalized_repeat')
+            }
+
+            task_data = {
+                'id': data.get('id'),
+                'crawl_request': data.get('crawl_request'),
+                'crawler_queue_behavior': data.get('crawler_queue_behavior'),
+            }
+
             message = {
                 'action': 'update',
-                'data': response.data
+                'schedule_data': schedule_data,
+                'task_data': task_data
             }
+
             crawler_manager.message_sender.send(TASK_TOPIC, message)
         return response
 
@@ -1184,9 +1235,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         if response.status_code == status.HTTP_204_NO_CONTENT:
             message = {
                 'action': 'cancel',
-                'data': {
-                    'id': pk
-                }
+                'id': pk
             }
         crawler_manager.message_sender.send(TASK_TOPIC, message)
         return response
