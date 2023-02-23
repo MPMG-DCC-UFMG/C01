@@ -1,5 +1,5 @@
-../src/crawling_utils/
-../src/schedule/
+../crawling_utils/
+../schedule/
 certifi==2021.5.30
 chardet==4.0.0
 idna==2.10

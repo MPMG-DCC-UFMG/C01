@@ -666,7 +666,6 @@ class Task(TimeStamped):
         ('wait_on_last_queue_position', 'Esperar na última posição da fila'),
         ('wait_on_first_queue_position', 'Esperar na primeira posição da fila'),
         ('run_immediately', 'Executar imediatamente'),
-
     ]
 
     # O que o agendador deve fazer com o coletor ao inserí-lo na fila de coletas.
