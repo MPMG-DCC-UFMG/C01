@@ -9,6 +9,7 @@ from django.db import models
 from django.db.models.base import ModelBase
 from django.utils import timezone
 from typing_extensions import Literal, TypedDict
+from schedule import SchedulerConfigDict
 
 CRAWLER_QUEUE_DB_ID = 1
 
@@ -649,64 +650,10 @@ class CrawlerQueueItem(TimeStamped):
     running = models.BooleanField(default=False, blank=True)
     position = models.IntegerField(null=False, default=0)
 
-
-class Finish(TypedDict):
-    '''Define qual parâmetro para parar de reagendar uma coleta, a saber:
-        - never: o coletor é reagendado para sempre.
-        - occurrence: o coletor é colocado para executar novamente <occurrence> vezes.
-        - date: O coletor é colocado para executar até a data <date> 
-    '''
-    mode: Literal['never', 'occurrence', 'date']
-    data: Union[None, int]
-
-class MonthlyRepeatConf(TypedDict):
-    ''' Caso a repetição personalizado seja por mês, o usuário pode escolher 3 tipos de agendamento mensal:
-        - first-weekday: A coleta ocorre no primeiro dia <first-weekday> (domingo, segunda, etc) da semana do mês, contado a partir de 0 - domingo.
-        - last-weekday: A coleta ocorre no último dia <last-weekday> (domingo, segunda, etc) da semana do mês, contado a partir de 0 - domingo.
-        - day-x: A coleta ocorre no dia x do mês. Se o mês não tiver o dia x, ocorrerá no último dia do mês.
-    '''
-    mode: Literal['first-weekday', 'last-weekday', 'day-x']
-
-    # Se <type> [first,last]-weekday, indica qual dia semana a coleta deverá ocorrer, contado a partir de 0 - domingo.
-    # Se <type> day-x, o dia do mês que a coleta deverá ocorrer.
-    value: int
-
-class PersonalizedRepeatMode(TypedDict):
-    # Uma repetição personalizada pode ser por dia, semana, mês ou ano.
-    mode: Literal['daily', 'weekly', 'monthly', 'yearly']
-
-    # de quanto em quanto intervalo de tempo <type> a coleta irá ocorrer
-    interval: int
-
-    ''' Dados extras que dependem do tipo da repetição. A saber, se <type> é:
-        - daily: additional_data receberá null
-        - weekly: additional_data será uma lista com dias da semana (iniciados em 0 - domingo)
-                    para quais dias semana a coleta irá executar.
-        - monthly: Ver classe MonthlyRepetitionConf.
-        - yearly: additional_data receberá null
-    '''
-
-    ''' Dados extras que dependem do tipo da repetição. A saber, se <type> é:
-        - daily: additional_data receberá null
-        - weekly: additional_data será uma lista com dias da semana (iniciados em 0 - domingo)
-                    para quais dias semana a coleta irá executar.
-        - monthly: Ver classe MonthlyRepetitionConf.
-        - yearly: additional_data receberá null
-    '''
-    data: Union[None, List, MonthlyRepeatConf]
-
-    # Define até quando o coletor deve ser reagendado. Ver classe Finish.
-    finish: Finish
-
-
-class TaskType(TypedDict):
+class TaskType(SchedulerConfigDict):
     id: int
     crawl_request: int
-    runtime: str
     crawler_queue_behavior: Literal['wait_on_last_queue_position', 'wait_on_first_queue_position', 'run_immediately']
-    repeat_mode: Literal['no_repeat', 'daily', 'weekly', 'monthly', 'yearly', 'personalized']
-    personalized_repeat: Union[None, PersonalizedRepeatMode]
-
 
 class Task(TimeStamped):
     crawl_request = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE, related_name='scheduler_jobs')
@@ -739,4 +686,4 @@ class Task(TimeStamped):
     repeat_mode = models.CharField(max_length=32, choices=REPETITION_MODE_CHOICES, default='no_repeat')
 
     # json com a configuração personalizada de reexecução do coletor
-    personalized_repeat: PersonalizedRepeatMode = models.JSONField(null=True, blank=True)
+    personalized_repeat = models.JSONField(null=True, blank=True)
