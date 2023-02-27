@@ -21,6 +21,7 @@ jobs:
         run: |
           pip install coverage
           pip install pytest
+          pip install pyee
           python -m coverage run -m pytest
           python -m coverage xml
       - name: Upload coverage to Codecov
