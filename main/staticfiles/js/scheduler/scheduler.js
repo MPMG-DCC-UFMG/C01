@@ -121,6 +121,7 @@ function init_default_options() {
     $(`#mlws-${weekday}`).prop('selected', true);
     $(`#dwr-${weekday}`).click();
 
+
     $('#scheduling-personalized-repetition-info').css('display', 'none');
 
     let future_date = new Date()
@@ -134,7 +135,7 @@ function init_default_options() {
     repeat_finish_date = parsed_date;
     montly_repeat_value = curr_day;
 
-    $('#finish-date-in').val(parsed_date);
+    $('#finish-date-in').val(`${future_date.getFullYear()}-${month}-${day}`);
 
     new_scheduling_config = {
         crawl_request: null,
@@ -151,7 +152,7 @@ function init_default_options() {
         data: null,
         finish: {
             mode: 'never',
-            data: null
+            value: null
         }
     };
 }
@@ -240,11 +241,11 @@ function repeat_to_text(repeat) {
 
     switch (repeat.finish.mode) {
         case 'occurrence':
-            s += ` Ocorre ${repeat.finish.data} vezes.`
+            s += ` Ocorre ${repeat.finish.value} vezes.`
             break;
 
         case 'date':
-            s += ` Ocorre até ${repeat.finish.data}.`
+            s += ` Ocorre até ${repeat.finish.value}.`
             break;
 
         default:
@@ -595,7 +596,7 @@ $(document).ready(function () {
                     if (days_selected_to_repeat[i])
                         repeat.data.push(parseInt(i));                    
 
-                if (repeat.additional_data.length == 0)
+                if (repeat.data.length == 0)
                     $(`#dwr-${date.getDay()}`).click();
 
                 show_days_of_week_repeat_options();
@@ -630,15 +631,15 @@ $(document).ready(function () {
         repeat.finish.mode = finish_mode;
         switch (finish_mode) {
             case 'never':
-                repeat.finish.data = null;
+                repeat.finish.value = null;
                 break;
         
             case 'occurrence':
-                repeat.finish.data = repeat_finish_occurrences;                
+                repeat.finish.value = repeat_finish_occurrences;                
                 break;
 
             case 'date':
-                repeat.finish.data = repeat_finish_date;
+                repeat.finish.value = repeat_finish_date;
                 break;
 
             default:
@@ -651,14 +652,14 @@ $(document).ready(function () {
     $('#finish-occurrence-in').on('click', function(){
         repeat_finish_occurrences = parseInt($(this).val());
         $('#finish-ocurrence').click();
-        repeat.finish.data = repeat_finish_occurrences;   
+        repeat.finish.value = repeat_finish_occurrences;   
         update_repeat_info();             
     });
 
     $('#finish-date-in').change(function () {
         repeat_finish_date = $(this).val(); 
         $('#finish-date').click();
-        repeat.finish.data = repeat_finish_date;
+        repeat.finish.value = repeat_finish_date;
         update_repeat_info();
     });
 
@@ -799,7 +800,7 @@ $(document).ready(function () {
         else
             scheduling_task = new_scheduling_config; 
 
-        scheduling_task.runtime = $(this).val(); 
+        scheduling_task.start_date = $(this).val(); 
     });
 
     $('#crawl-selector').on('change', function() {
