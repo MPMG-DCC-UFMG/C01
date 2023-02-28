@@ -360,6 +360,14 @@ function valid_new_scheduling() {
         return;
     }
 
+    let now = new Date();
+    let start_date = new Date(scheduling_task.start_date);
+
+    if (start_date < now) {
+        alert('O horário de início da coleta deve ser maior que o horário atual!');
+        return;
+    }
+
     
     if (task_being_edited) {
         services.save_updated_scheduling(task_being_edited);
@@ -811,6 +819,16 @@ $(document).ready(function () {
             scheduling_task = new_scheduling_config; 
 
         scheduling_task.crawl_request = parseInt($(this).val());
+    });
+
+    $('#scheduling-timezone').on('change', function() {
+        if (task_being_edited)
+            scheduling_task = task_being_edited;
+
+        else
+            scheduling_task = new_scheduling_config; 
+
+        scheduling_task.timezone = $(this).val();
     });
 
     update_calendar_mode('daily');

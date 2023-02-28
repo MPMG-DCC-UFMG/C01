@@ -4,6 +4,7 @@ import logging
 import multiprocessing as mp
 import os
 import time
+import pytz
 from datetime import datetime
 from typing_extensions import Literal
 
@@ -920,7 +921,8 @@ def load_iframe(request):
 def scheduler(request):
     crawl_requests = CrawlRequest.objects.all()
     context = {
-        'crawl_requests': crawl_requests
+        'crawl_requests': crawl_requests,
+        'timezones': pytz.common_timezones,
     }
     return render(request, 'main/scheduler/index.html', context)
 
