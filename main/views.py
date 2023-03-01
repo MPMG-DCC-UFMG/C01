@@ -1277,6 +1277,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         # serializer.data is ordered_dict
         tasks = json.loads(json.dumps(serializer.data))
+    
         data = task_filter_by_date_interval(tasks, start_date, end_date)
 
         return Response(data, status=status.HTTP_200_OK)

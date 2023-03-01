@@ -63,7 +63,7 @@ function hide_set_scheduling() {
         task_being_edited = null;
 }
 
-function open_personalized_crawler_repetition() {
+function open_personalized_crawler_repeat() {
     $('#setSchedulingModal').modal('hide');
     $('#personalizedCrawlerRepetion').modal('show');
 }
@@ -159,6 +159,8 @@ function init_default_options() {
 
 function repeat_to_text(repeat) {
     let s = '';
+
+    console.warn(repeat);
 
     switch (repeat.mode) {
         case 'daily':
@@ -270,9 +272,9 @@ function update_repeat_info() {
     let parsed_repeat = repeat_to_text(raw_repeat);
     $('#repetition-info').text(parsed_repeat);
 
-    let personalized_repetition_info = $('#scheduling-personalized-repetition-info');
-    personalized_repetition_info.css('display', 'inline-block');
-    personalized_repetition_info.text(parsed_repeat);
+    let personalized_repeat_info = $('#scheduling-personalized-repetition-info');
+    personalized_repeat_info.css('display', 'inline-block');
+    personalized_repeat_info.text(parsed_repeat);
 
     scheduling_task.personalized_repeat = repeat;
 }
@@ -536,8 +538,11 @@ function fill_set_scheduling(task_id) {
     $(`#repeat-crawling-select option[value='${task.repeat_mode}']`).attr('selected', 'selected');
     $(`#crawler_queue_behavior option[value='${task.crawler_queue_behavior}']`).attr('selected', 'selected');
     
-
-    $('#scheduling-personalized-repetition-info').css('display', 'none');
+    if (task.repeat_mode == 'personalized') {
+        $('#scheduling-personalized-repetition-info').html(repeat_to_text(task.personalized_repeat));
+        $('#scheduling-personalized-repetition-info').css('display', 'block');
+    } else
+        $('#scheduling-personalized-repetition-info').css('display', 'none');
 
     $(`#crawl-selector`).multiselect('rebuild');
 }
@@ -573,7 +578,7 @@ $(document).ready(function () {
 
         if (repeat_mode == 'personalized') {
             update_repeat_info();
-            open_personalized_crawler_repetition();
+            open_personalized_crawler_repeat();
         } else {
             scheduling_task.personalized_repeat = null;
             $('#scheduling-personalized-repetition-info').css('display', 'none');
@@ -833,3 +838,7 @@ $(document).ready(function () {
 
     update_calendar_mode('daily');
 });
+
+function show_all_scheduling() {
+    $('#allScheduling').modal('show');
+}

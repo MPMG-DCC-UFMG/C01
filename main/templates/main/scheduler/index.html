@@ -18,9 +18,9 @@ Agendamento de coletas
 
     {% include "main/scheduler/_calendar_monthly.html" %}
 
-    {% include "main/scheduler/_calendar_weekly.html" %}>
+    {% include "main/scheduler/_calendar_weekly.html" %}
 
-    {% include "main/scheduler/_calendar_daily.html" %}>
+    {% include "main/scheduler/_calendar_daily.html" %}
 
     <button class="btn border rounded-pill float-btn bg-primary text-white shadow-sm" onclick="open_set_scheduling()">
         <i class="fa fa-plus mr-2 shadow-sm"></i>
@@ -28,11 +28,13 @@ Agendamento de coletas
     </button>
 </main>
 
-{% include "main/scheduler/_modal_set_scheduling.html" %}>
+{% include "main/scheduler/_modal_set_scheduling.html" %}
 
-{% include "main/scheduler/_modal_scheduling_detail.html" %}>
+{% include "main/scheduler/_modal_scheduling_detail.html" %}
 
-{% include "main/scheduler/_modal_personalized_repetition.html" %}>
+{% include "main/scheduler/_modal_personalized_repetition.html" %}
+
+{% include "main/scheduler/_modal_all_schedulings.html" %}
 
 {% endblock %}
 

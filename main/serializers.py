@@ -56,5 +56,6 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         read_only_fields = ['id', 'creation_date', 'last_modified']
 
-        fields = ['id', 'creation_date', 'last_modified', 'crawl_request', 'start_date', 
-                'timezone', 'crawler_queue_behavior', 'repeat_mode', 'personalized_repeat']
+        fields = ['id', 'creation_date', 'last_modified', 'crawl_request', 
+                  'crawler_name', 'start_date', 'timezone', 'crawler_queue_behavior', 
+                  'repeat_mode', 'personalized_repeat']

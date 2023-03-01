@@ -304,7 +304,7 @@ calendar.daily.get_daily_tasks = function () {
     
     let task_runtime;
     for (let task_id in tasks) {
-        task_runtime = tasks[task_id].runtime;
+        task_runtime = tasks[task_id].start_date;
         key = calendar.get_hour_from_str_datetime(task_runtime);
         this.tasks[key].push(tasks[task_id]);
     }
