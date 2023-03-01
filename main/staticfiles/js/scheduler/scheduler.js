@@ -839,6 +839,82 @@ $(document).ready(function () {
     update_calendar_mode('daily');
 });
 
+function create_task_item(task) {
+    return `<li class="rounded border p-2 mb-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="">
+                        <p class="font-weight-bold m-0 p-0">${task.crawler_name}</p>
+                    </div>
+                </div>
+                <div class="mt-2 d-flex justify-content-between">
+                    <div class="next-runtime d-flex align-items-center"
+                        title="Horário da próxima execução"
+                        style="cursor: pointer;">
+                        <i class="fa fa-calendar-alt mr-2 text-muted" aria-hidden="true"></i>
+                        <small class="">Seg., 23 de Jun., às 17h24</small>
+                    </div>
+                    <div class="d-flex">
+                        <!-- botão com icone de editar -->
+                        <button 
+                            title="Visualizar agendamento"
+                            style="width: 1.75rem; height: 1.75rem;"
+                            class="scheduling-item text-muted rounded-circle bg-white border-0 d-flex align-items-center justify-content-center mr-2"
+                            onclick="show_task_detail(${task.id})">
+                            
+                            <i class="far fa-eye" aria-hidden="true"></i>
+                        </button>
+                        <button 
+                            onclick="delete_schedule_task(${task.id})"
+                            title="Remover agendamento"
+                            style="width: 1.75rem; height: 1.75rem;"
+                            class="scheduling-item rounded-circle border-0 bg-white text-muted">
+                            <i class="far fa-trash-alt" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+            </li>`
+}
+
+function update_task_list(tasks) {
+    let task_list = $('#task-list');
+
+    let task_items = [];
+    for (let i = 0; i < TASKS.length; i++) 
+        task_items.push(create_task_item(TASKS[i]));
+    
+    task_list.html(task_items.join(''));
+}
+
 function show_all_scheduling() {
     $('#allScheduling').modal('show');
 }
+
+$(document).ready(function () {
+    update_task_list(TASKS);
+
+    // quando o usuário está digitando em search-task, filtra a lista de tarefas e atualiza a lista
+
+    $('#search-task').on('keyup', function () {
+        let search = $(this).val().toLowerCase();
+
+        let task_list = $('#task-list');
+
+        let task_items = [];
+        for (let i = 0; i < TASKS.length; i++) {
+            if (TASKS[i].crawler_name.toLowerCase().includes(search))
+                task_items.push(create_task_item(TASKS[i]));
+        }
+
+        if (task_items.length == 0)
+            task_items.push(`<li class="p-3">
+                                <div class="d-flex justify-content-center"
+                                    style="flex-direction: column;">
+                                    <span style="font-size: 1.5rem;">¯\\_(ツ)_/¯</span>
+                                    <p class="m-0 p-0 mt-3">Nenhum agendamento encontrado!</p>
+                                </div>
+                            </li>`);
+
+        task_list.html(task_items.join(''));
+    });
+
+});

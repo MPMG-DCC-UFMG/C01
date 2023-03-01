@@ -920,9 +920,12 @@ def load_iframe(request):
 
 def scheduler(request):
     crawl_requests = CrawlRequest.objects.all()
+    tasks_serialized = TaskSerializer(Task.objects.all(), many=True)
+    
     context = {
         'crawl_requests': crawl_requests,
         'timezones': pytz.common_timezones,
+        'tasks': json.dumps(tasks_serialized.data)
     }
     return render(request, 'main/scheduler/index.html', context)
 

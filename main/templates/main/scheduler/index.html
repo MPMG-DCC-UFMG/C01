@@ -10,6 +10,16 @@ Agendamento de coletas
 
 {% include "main/scheduler/_header.html" %}
 
+<style>
+    /* adiciona borda, background na cor do bg-light e text-white */
+    .scheduling-item:hover {
+        background-color: #6c757d !important;
+        border: 1px solid #6c757d !important;
+        color: #fff !important;
+    }
+
+</style>
+
 <main class="container-fluid">
     {% include "main/scheduler/_notification.html" %}
     
@@ -39,6 +49,10 @@ Agendamento de coletas
 {% endblock %}
 
 {% block js %}
+<script>
+    var TASKS = {{ tasks|safe }};
+</script>
+
 <script src="{% static 'js/scheduler/scheduler.js' %}"></script>
 <script src="{% static 'js/scheduler/calendar.js' %}"></script>
 <script src="{% static 'js/scheduler/services.js' %}"></script>
