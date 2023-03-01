@@ -404,14 +404,12 @@ function task_runtime_to_date(runtime) {
 }
 
 function show_task_detail(task_id) {
-    let task = tasks[task_id];
+    $('#allScheduling').modal('hide');
 
+    let task = TASKS[task_id];
     let cur_date = new Date()
- 
     let start_date = task_runtime_to_date(task.start_date);
-
     let repeat_info = '';
-    
     
     let since = cur_date > start_date ? 'Desde de ' : 'A partir de ';
     since += `${start_date.getDate()} de ${MONTHS[start_date.getMonth()]} de ${start_date.getFullYear()}.`;
