@@ -477,7 +477,7 @@ function show_task_detail(task_id, open_all_schedulings_after_close = false) {
     let task_detail_html = `
                 <h3 class="h5 font-weight-bold">${task.crawler_name}</h3>
                 
-                <div class="bg-light rounded py-3 border">
+                <div class="bg-light rounded p-3 border mt-3">
                     <div class="">
                         <i class="fa fa-calendar-alt mr-2 text-muted" aria-hidden="true"></i>
                         <small class="font-weight-bold">${next_run}</small> 

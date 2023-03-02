@@ -4,7 +4,7 @@ import logging
 from typing import Callable, List, Optional
 
 from schedule.constants import *
-from schedule.date_utils import *
+from schedule.utils import *
 from schedule.scheduler_config import SchedulerConfig
 
 logger = logging.getLogger('scheduler')

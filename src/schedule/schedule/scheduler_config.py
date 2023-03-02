@@ -5,8 +5,7 @@ import pytz
 from typing_extensions import Literal, TypedDict
 
 from schedule.constants import *
-from schedule.date_utils import apply_timezone, decode_datetimestr
-
+from schedule.utils import *
 
 class Finish(TypedDict):
     '''Define qual parâmetro para parar de reagendar uma coleta, a saber:
@@ -96,6 +95,72 @@ class SchedulerConfig:
         self.monthly_first_weekday: Optional[int] = None
         self.monthly_last_weekday: Optional[int] = None
 
+    def first_run_date(self) -> datetime.datetime:
+        start_date = self.start_date
+        repeat_interval = self.repeat_interval
+
+        now = self.now()
+
+        if start_date < now:
+            raise SchedulerConfigError('Start date must be greater than current date')
+
+        if self.repeat_mode == NO_REPEAT_MODE:
+            return start_date
+        
+        elif self.repeat_mode == DAILY_REPEAT_MODE:
+            return start_date if now < start_date else start_date + datetime.timedelta(days=repeat_interval)
+        
+        elif self.repeat_mode == WEEKLY_REPEAT_MODE:
+            start_date_weekday = (self.start_date.weekday() + 1) % 7
+
+            if start_date_weekday in self.weekdays_to_run:
+                return start_date
+            
+            return weeks_next_execution_date(start_date, self.weekdays_to_run, repeat_interval)
+
+        elif self.repeat_mode == MONTHLY_REPEAT_MODE:
+            if self.monthly_repeat_mode == MONTHLY_DAY_X_OCCURRENCE_TYPE:
+                if self.start_date.day <= self.monthly_day_x_ocurrence:
+                    return start_date.replace(day=self.monthly_day_x_ocurrence)
+                
+                return month_next_execution_date(start_date, 
+                                                MONTHLY_DAY_X_OCCURRENCE_TYPE,
+                                                day_x = self.monthly_day_x_ocurrence, 
+                                                interval=repeat_interval)
+            
+            elif self.monthly_repeat_mode == MONTHLY_FIRST_WEEKDAY_OCCURRENCE_TYPE:
+                first_weekday_start_date = get_first_weekday_date_of_month(self.monthly_first_weekday, 
+                                                                        start_date.year, 
+                                                                        start_date.month,
+                                                                        start_date.hour,
+                                                                        start_date.minute,
+                                                                        start_date.second)
+
+                return first_weekday_start_date if first_weekday_start_date >= start_date else month_next_execution_date(start_date,
+                                                                                                                    MONTHLY_FIRST_WEEKDAY_OCCURRENCE_TYPE,
+                                                                                                                    first_weekday_to_run=self.monthly_first_weekday,
+                                                                                                                    interval=repeat_interval)
+            
+            elif self.monthly_repeat_mode == MONTHLY_LAST_WEEKDAY_OCCURRENCE_TYPE:
+                last_weekday_start_date = get_last_weekday_date_of_month(self.monthly_last_weekday, 
+                                                                        start_date.year, 
+                                                                        start_date.month,
+                                                                        start_date.hour,
+                                                                        start_date.minute,
+                                                                        start_date.second)
+
+                return last_weekday_start_date if last_weekday_start_date >= start_date else month_next_execution_date(start_date,
+                                                                                                                    MONTHLY_LAST_WEEKDAY_OCCURRENCE_TYPE,
+                                                                                                                    last_weekday_to_run=self.monthly_last_weekday,
+                                                                                                                    interval=repeat_interval)
+            else:
+                raise SchedulerConfigError('Invalid monthly repeat mode')
+        
+        elif self.repeat_mode == YEARLY_REPEAT_MODE:
+            return start_date if now <= start_date else year_next_execution_date(start_date, repeat_interval)
+        
+        else:
+            raise SchedulerConfigError('Invalid repeat mode')
 
     def load_config(self, config_dict: SchedulerConfigDict) -> None:
         SchedulerConfig.valid_config(config_dict)
