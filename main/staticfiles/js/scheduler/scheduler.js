@@ -47,13 +47,18 @@ var calendar_mode = null; //daily, weekly, monthly or yearly
 var tasks;
 var task_being_edited = null;
 
+// the detail modal can be opened by the modal that lists all schedulings. 
+// This variable is used to know if the modal of all schedulings should be
+// opened when the detail modal is closed 
+var open_all_schedulings = false;
+
 function open_set_scheduling(creating_task = true) {
     
     if (creating_task) {
         init_default_options();
     }
 
-    $('#setSchedulingModal').modal('show');
+    $('#setSchedulingModal').modal({ backdrop: 'static', keyboard: false }, 'show');
 }
 
 function hide_set_scheduling() {
@@ -65,7 +70,7 @@ function hide_set_scheduling() {
 
 function open_personalized_crawler_repeat() {
     $('#setSchedulingModal').modal('hide');
-    $('#personalizedCrawlerRepetion').modal('show');
+    $('#personalizedCrawlerRepetion').modal({ backdrop: 'static', keyboard: false }, 'show');
 }
 
 function show_days_of_week_repeat_options() {
@@ -159,8 +164,6 @@ function init_default_options() {
 
 function repeat_to_text(repeat) {
     let s = '';
-
-    console.warn(repeat);
 
     switch (repeat.mode) {
         case 'daily':
@@ -281,7 +284,7 @@ function update_repeat_info() {
 
 function close_personalized_repeat_modal() {
     $('#personalizedCrawlerRepetion').modal('hide');
-    $('#setSchedulingModal').modal('show');
+    $('#setSchedulingModal').modal({ backdrop: 'static', keyboard: false }, 'show');
 }
 
 function update_calendar_mode(mode) {
@@ -403,10 +406,12 @@ function task_runtime_to_date(runtime) {
 
 }
 
-function show_task_detail(task_id) {
+function show_task_detail(task_id, open_all_schedulings_after_close = false) {
     $('#allScheduling').modal('hide');
-
+    
+    open_all_schedulings = open_all_schedulings_after_close;
     let task = TASKS[task_id];
+
     let cur_date = new Date()
     let start_date = task_runtime_to_date(task.start_date);
     let repeat_info = '';
@@ -486,26 +491,40 @@ function show_task_detail(task_id) {
 
     $('#detailSchedulingContent').html(task_detail_html);
 
-    $('#detailScheduling').modal('show');
+    $('#detailScheduling').modal({ backdrop: 'static', keyboard: false }, 'show');
 
 }
 
 function edit_scheduling_task(task_id) {
     $('#detailScheduling').modal('hide');
 
-    if (!tasks[task_id]) {
+    let task = TASKS[task_id];
+    if (!task) {
         console.error('Invalid task id!');
         return;
     }
 
+    let personalized_repeat = task.personalized_repeat;
+    if (!personalized_repeat) {
+        personalized_repeat = {
+            mode: 'daily',
+            interval: 1,
+            data: null,
+            finish: {
+                mode: 'never',
+                value: null
+            }
+        };
+    }
+
     task_being_edited = {
-        id: tasks[task_id].id,
-        crawl_request: tasks[task_id].crawl_request,
-        start_date: tasks[task_id].start_date,
-        timezone: tasks[task_id].timezone,
-        crawler_queue_behavior: tasks[task_id].crawler_queue_behavior,
-        repeat_mode: tasks[task_id].repeat_mode,
-        personalized_repeat: tasks[task_id].personalized_repeat
+        id: task.id,
+        crawl_request: task.crawl_request,
+        start_date: task.start_date,
+        timezone: task.timezone,
+        crawler_queue_behavior: task.crawler_queue_behavior,
+        repeat_mode: task.repeat_mode,
+        personalized_repeat: personalized_repeat
     };
 
     fill_set_scheduling(task_id);
@@ -524,10 +543,12 @@ function delete_schedule_task(task_id) {
 }
 
 function fill_set_scheduling(task_id) {
-    let task = tasks[task_id];
+    let task = TASKS[task_id];
 
     if (!task)
         return;
+
+    console.log('>>', task);
 
     let start_date = task.start_date.substr(0, 16);
 
@@ -857,7 +878,7 @@ function create_task_item(task) {
                             title="Visualizar agendamento"
                             style="width: 1.75rem; height: 1.75rem;"
                             class="scheduling-item text-muted rounded-circle bg-white border-0 d-flex align-items-center justify-content-center mr-2"
-                            onclick="show_task_detail(${task.id})">
+                            onclick="show_task_detail(${task.id}, true)">
                             
                             <i class="far fa-eye" aria-hidden="true"></i>
                         </button>
@@ -873,35 +894,55 @@ function create_task_item(task) {
             </li>`
 }
 
-function update_task_list(tasks) {
+function fill_task_list() {
     let task_list = $('#task-list');
 
     let task_items = [];
-    for (let i = 0; i < TASKS.length; i++) 
-        task_items.push(create_task_item(TASKS[i]));
+    for (let task_id in TASKS) 
+        task_items.push(create_task_item(TASKS[task_id]));
     
     task_list.html(task_items.join(''));
 }
 
 function show_all_scheduling() {
-    $('#allScheduling').modal('show');
+    $('#allScheduling').modal({ backdrop: 'static', keyboard: false }, 'show');
+}
+
+function close_detail_scheduling_modal() {
+    $('#detailScheduling').modal('hide');
+
+    if (open_all_schedulings) {
+        open_all_schedulings = false;
+        show_all_scheduling();
+    }
 }
 
 $(document).ready(function () {
-    update_task_list(TASKS);
+    // transforma a lista de tarefas em um objeto onde o campo id é a chave
+    TASKS = TASKS.reduce((obj, item) => {
+        obj[item.id] = item;
+        return obj;
+    }, {});
+    
+    fill_task_list();
 
     // quando o usuário está digitando em search-task, filtra a lista de tarefas e atualiza a lista
-
     $('#search-task').on('keyup', function () {
         let search = $(this).val().toLowerCase();
 
         let task_list = $('#task-list');
 
         let task_items = [];
-        for (let i = 0; i < TASKS.length; i++) {
-            if (TASKS[i].crawler_name.toLowerCase().includes(search))
-                task_items.push(create_task_item(TASKS[i]));
+
+        // itera por cada objeto no objeto TASKS
+        for (let task_id in TASKS) {
+            let task = TASKS[task_id];
+            
+            // se o nome do crawler contém a string de busca, adiciona o item na lista
+            if (task.crawler_name.toLowerCase().includes(search))
+                task_items.push(create_task_item(task));
         }
+
 
         if (task_items.length == 0)
             task_items.push(`<li class="p-3">

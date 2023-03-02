@@ -292,23 +292,28 @@ calendar.daily.get_daily_tasks = function () {
     let key = start_date = end_date = calendar.get_formated_date(day.getDate(), day.getMonth() + 1, day.getFullYear());
 
     let tasks_of_day = services.get_tasks_in_interval(start_date, end_date);
-
-    // global variable
-    tasks = {};
-    if (key in tasks_of_day)
-        services.update_tasks(tasks_of_day[key]);
-
+    // junta todos as listas de tasks do dia em uma única lista de tasks, garantindo que não haverá tasks repetidas
+    
+    let all_tasks_of_day = new Set();
+    for (let hour in tasks_of_day) {
+        for (let task of tasks_of_day[hour]) {
+            all_tasks_of_day.add(task);
+        }
+    }
+    
     this.tasks = {};
     for (let hour = 0;hour<24;hour++)
         this.tasks[String(hour).padStart(2, '0')] = [];
     
-    let task_runtime;
-    for (let task_id in tasks) {
-        task_runtime = tasks[task_id].start_date;
-        key = calendar.get_hour_from_str_datetime(task_runtime);
-        this.tasks[key].push(tasks[task_id]);
-    }
+    let task_runtime, task;
 
+    // iterates over all tasks of the day
+    for (let task_id of all_tasks_of_day) {
+        task = services.get_task(task_id);
+        task_runtime = task.start_date;
+        key = calendar.get_hour_from_str_datetime(task_runtime);
+        this.tasks[key].push(task);
+    }
 }
 
 calendar.daily.show = function () {

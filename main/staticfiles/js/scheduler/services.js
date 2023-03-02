@@ -99,7 +99,9 @@ services.save_updated_scheduling = function (task_being_edited) {
         success: function (data) {
             $('#toast-success-text').text('Agendamento alterado com sucesso!');
             $('#toast').toast('show');
-            // calendar.daily.today();
+
+            TASKS[task_id] = data;
+
         },
         error: function (data) {
             console.error(data.responseText);
