@@ -162,13 +162,48 @@ class SchedulerConfig:
         else:
             raise SchedulerConfigError('Invalid repeat mode')
 
+    def next_run_date(self, last_run_date: datetime.datetime) -> datetime.datetime:
+        if self.repeat_mode == NO_REPEAT_MODE:
+            raise SchedulerConfigError('No repeat mode does not have next run date')
+        
+        elif self.repeat_mode == DAILY_REPEAT_MODE:
+            return last_run_date + datetime.timedelta(days=self.repeat_interval)
+        
+        elif self.repeat_mode == WEEKLY_REPEAT_MODE:
+            return weeks_next_execution_date(last_run_date, self.weekdays_to_run, self.repeat_interval)
+
+        elif self.repeat_mode == MONTHLY_REPEAT_MODE:
+            if self.monthly_repeat_mode == MONTHLY_DAY_X_OCCURRENCE_TYPE:
+                return month_next_execution_date(last_run_date, 
+                                                MONTHLY_DAY_X_OCCURRENCE_TYPE,
+                                                day_x = self.monthly_day_x_ocurrence, 
+                                                interval=self.repeat_interval)
+            
+            elif self.monthly_repeat_mode == MONTHLY_FIRST_WEEKDAY_OCCURRENCE_TYPE:
+                return month_next_execution_date(last_run_date,
+                                                MONTHLY_FIRST_WEEKDAY_OCCURRENCE_TYPE,
+                                                first_weekday_to_run=self.monthly_first_weekday,
+                                                interval=self.repeat_interval)
+            
+            elif self.monthly_repeat_mode == MONTHLY_LAST_WEEKDAY_OCCURRENCE_TYPE:
+                return month_next_execution_date(last_run_date,
+                                                MONTHLY_LAST_WEEKDAY_OCCURRENCE_TYPE,
+                                                last_weekday_to_run=self.monthly_last_weekday,
+                                                interval=self.repeat_interval)
+            else:
+                raise SchedulerConfigError('Invalid monthly repeat mode')
+        
+        elif self.repeat_mode == YEARLY_REPEAT_MODE:
+            return year_next_execution_date(last_run_date, self.repeat_interval)
+        
+        else:
+            raise SchedulerConfigError('Invalid repeat mode')
+
     def load_config(self, config_dict: SchedulerConfigDict) -> None:
         SchedulerConfig.valid_config(config_dict)
 
         self.timezone = pytz.timezone(config_dict['timezone'])
-
         self.start_date = apply_timezone(decode_datetimestr(config_dict['start_date']), self.timezone)
-
         self.repeat_mode = config_dict['repeat_mode']
 
         if config_dict['repeat_mode'] == PERSONALIZED_REPEAT_MODE:
