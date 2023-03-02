@@ -44,7 +44,6 @@ var repeat_finish_date;
 // calendar
 var calendar_mode = null; //daily, weekly, monthly or yearly
 
-var tasks;
 var task_being_edited = null;
 
 // the detail modal can be opened by the modal that lists all schedulings. 
@@ -414,6 +413,8 @@ function show_task_detail(task_id, open_all_schedulings_after_close = false) {
 
     let cur_date = new Date()
     let start_date = task_runtime_to_date(task.start_date);
+
+    let next_run = 'TBA'
     let repeat_info = '';
     
     let since = cur_date > start_date ? 'Desde de ' : 'A partir de ';
@@ -421,8 +422,8 @@ function show_task_detail(task_id, open_all_schedulings_after_close = false) {
 
     switch (task.repeat_mode) {
         case 'no_repeat':
-            repeat_info = `${start_date.getDate()} de ${MONTHS[start_date.getMonth()]} de ${start_date.getFullYear()} às ${start_date.getHours()}h${String(start_date.getMinutes()).padStart(2, '0')}.`;
-            since = 'Não se repete.';    
+            next_run = `Ocorre em ${start_date.getDate()} de ${MONTHS[start_date.getMonth()]} de ${start_date.getFullYear()} às ${start_date.getHours()}h${String(start_date.getMinutes()).padStart(2, '0')}.`;
+            repeat_info = 'Não se repete.';    
             break;
         
         case 'daily':
@@ -432,6 +433,19 @@ function show_task_detail(task_id, open_all_schedulings_after_close = false) {
         case 'weekly':
             let weedays = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
             repeat_info = `Repete toda(o) ${weedays[start_date.getDay()]} às ${start_date.getHours()}h${String(start_date.getMinutes()).padStart(2, '0') }.`;
+            break;
+        
+        case 'monthly':
+            repeat_info = `Repete todo dia ${start_date.getDate()} do mês às ${start_date.getHours()}h${String(start_date.getMinutes()).padStart(2, '0') }.`;
+            break;
+        
+        case 'yearly':
+            repeat_info = `Repete todo dia ${start_date.getDate()} de ${MONTHS[start_date.getMonth()]} do ano às ${start_date.getHours()}h${String(start_date.getMinutes()).padStart(2, '0') }.`;
+            break;
+        
+        case 'personalized':
+            repeat_info = repeat_to_text(task.personalized_repeat);
+            break;
 
         default:
             break;
@@ -462,10 +476,26 @@ function show_task_detail(task_id, open_all_schedulings_after_close = false) {
 
     let task_detail_html = `
                 <h3 class="h5 font-weight-bold">${task.crawler_name}</h3>
-                <p class="m-0 mt-3">${repeat_info}</p>
-                <small class="text-muted">${since}</small>
+                
+                <div class="bg-light rounded py-3 border">
+                    <div class="">
+                        <i class="fa fa-calendar-alt mr-2 text-muted" aria-hidden="true"></i>
+                        <small class="font-weight-bold">${next_run}</small> 
+                    </div>
+
+                    <div class="my-2">
+                        <i class="fa fa-redo mr-1 text-muted fa-sm" aria-hidden="true"></i>
+                        <small class="text-muted">${repeat_info}</small>
+                    </div>
+
+                    <div class="">
+                        <i class="fa fa-clock mr-1 text-muted fa-sm" aria-hidden="true"></i>
+                        <small class="text-muted">${since}</small> 
+                    </div>
+                </div>
+
                 <br>
-                <p class="m-0 mt-3 ${bg_crawler_queue_info} border rounded-pill small text-white font-weight-bold px-2" style="display: inline-block;">${crawler_queue_info}</p>
+                <p class="m-0 ${bg_crawler_queue_info} border rounded-pill small text-white font-weight-bold px-2" style="display: inline-block;">${crawler_queue_info}</p>
                 <div class="d-flex justify-content-center mt-4 text-muted">
                     <a href="/detail/${task.crawl_request}/" 
                         target="_blank"
@@ -475,13 +505,11 @@ function show_task_detail(task_id, open_all_schedulings_after_close = false) {
                         <i class="far fa-eye text-muted"></i>
                     </a>
                     <button 
-                        title="Available soon!" 
                         onclick="edit_scheduling_task(${task.id})"
                         class="rounded-circle bg-white border mx-3 scheduling-detail-options">
                         <i class="fas fa-pen text-muted"></i>
                     </button>
                     <button  
-                        title="Available soon!" 
                         onclick="delete_schedule_task(${task.id})"
                         class="rounded-circle border bg-white scheduling-detail-options">
                         <i class="far fa-trash-alt text-muted"></i>
@@ -859,7 +887,7 @@ $(document).ready(function () {
 });
 
 function create_task_item(task) {
-    return `<li class="rounded border p-2 mb-2">
+    return `<li class="rounded border p-3 mb-2">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="">
                         <p class="font-weight-bold m-0 p-0">${task.crawler_name}</p>
