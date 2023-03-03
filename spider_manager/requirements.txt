@@ -39,7 +39,7 @@ service-identity==21.1.0 # 17.0.0
 six==1.11.0  # Updated from 1.10.0
 testfixtures==6.0.2  # Updated from 5.1.1
 tldextract==2.2.0  # Updated from 2.1.0
-Twisted==22.8.0 # 18.9.0  # Updated from 17.5.0
+Twisted==22.10.0 # 18.9.0  # Updated from 17.5.0
 ujson==5.5.0 # 1.35
 w3lib==1.19.0  # Updated from 1.18.0
 zope.interface==5.0.0  # Updated from 4.4.2
