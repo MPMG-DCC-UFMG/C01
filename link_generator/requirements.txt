@@ -1,0 +1,8 @@
+../entry_probing/
+../param_injector
+../range_inference/
+../crawling_utils/
+kafka-python==2.0.2
+redis==3.5.3
+tldextract==3.1.0
+ujson==1.35

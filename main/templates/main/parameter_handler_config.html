@@ -15,12 +15,6 @@
     </div>
     {% endif %}
 
-    {% if form.injection_type.value == "static_form" %}
-        <!-- Parameter key and label -->
-        {{ form.parameter_key | as_crispy_field }}
-        {{ form.parameter_label | as_crispy_field }}
-    {% endif %}
-
     <!-- Parameter type-->
     {{ form.parameter_type | as_crispy_field }}
     <!-- Parameter configuration -->
@@ -32,10 +26,6 @@
         <p class="small">Espaços em branco antes e depois de um elemento são ignorados. Ex: <code>teste 1, teste 2 , teste 3</code>
            vira <code>teste 1,teste 2,teste 3</code>.
         </p>
-    </div>
-    <div class="param-config indented-subblock"
-         data-option-type="const_value" hidden>
-        {{form.value_const_param | as_crispy_field }}
     </div>
     <div class="param-config indented-subblock"
          data-option-type="process_code" hidden>
@@ -69,10 +59,6 @@
         {{ form.start_date_date_param | as_crispy_field}}
         {{ form.end_date_date_param | as_crispy_field}}
     </div>
-    {% if form.injection_type.value == "static_form" %}
-        <!-- TODO Remove when filtering for forms is enabled -->
-        <div hidden>
-    {% endif %}
     <div class="filter-config indented-subblock"
          hidden>
         {{ form.filter_range | as_crispy_field }}
@@ -80,9 +66,5 @@
             {{ form.cons_misses | as_crispy_field }}
         </div>
     </div>
-    {% if form.injection_type.value == "static_form" %}
-        <!-- TODO Remove when filtering for forms is enabled -->
-        </div>
-    {% endif %}
     <br>
 </div>

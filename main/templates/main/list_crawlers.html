@@ -101,9 +101,9 @@ Home
                         <td>{{crawler.creation_date|date:"d/m/Y à\s H:i"}}</td>
                         <td>
                             <small>
-                            <nobr><i class="fa fa-clock-o" title="Duração da coleta"></i>&nbsp;{{crawler.last_instance.duration_readable}}</nobr><br>
-                            <nobr><i class="fa fa-file-o" title="Número de arquivos coletados"></i>&nbsp;{{crawler.last_instance.num_data_files}}&nbsp;arquivos</nobr><br>
-                            <nobr><i class="fa fa-database" title="Tamanho dos dados coletados"></i>&nbsp;{{crawler.last_instance.data_size_readable}}</nobr>
+                            <nobr><i class="far fa-clock" title="Duração da coleta"></i>&nbsp;{{crawler.last_instance.duration_readable}}</nobr><br>
+                            <nobr><i class="far fa-file" title="Número de arquivos coletados"></i>&nbsp;{{crawler.last_instance.num_data_files}}&nbsp;arquivos</nobr><br>
+                            <nobr><i class="fas fa-database" title="Tamanho dos dados coletados"></i>&nbsp;{{crawler.last_instance.data_size_readable}}</nobr>
                             </small>
                         </td>
                         <td>
@@ -123,7 +123,7 @@ Home
                                     {% endif %}
                                 {% endif %}
                                 
-                                <a title="Editar" class="btn btn-primary" href="{% url 'edit_crawler' crawler.id %}"><i class="fa fa-pencil" aria-hidden="true"></i>
+                                <a title="Editar" class="btn btn-primary" href="{% url 'edit_crawler' crawler.id %}"><i class="fas fa-pencil-alt" aria-hidden="true"></i>
                                 </a>
                             </div>
                         </td>

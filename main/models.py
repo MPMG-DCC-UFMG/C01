@@ -1,11 +1,14 @@
 import datetime
-from django.db import models
-from django.utils import timezone
-from django.core.validators import RegexValidator
-from django.db import transaction
-from django.db.models.base import ModelBase
+from typing import List, Union
 
-from crawlers.constants import *
+from crawler_manager.constants import *
+from crawling_utils.constants import (AUTO_ENCODE_DETECTION,
+                                      HEADER_ENCODE_DETECTION)
+from django.core.validators import MinValueValidator, RegexValidator
+from django.db import models
+from django.db.models.base import ModelBase
+from django.utils import timezone
+from typing_extensions import Literal, TypedDict
 
 CRAWLER_QUEUE_DB_ID = 1
 
@@ -31,22 +34,87 @@ class CrawlRequest(TimeStamped):
     source_name = models.CharField(max_length=200)
     base_url = models.TextField()
     obey_robots = models.BooleanField(blank=True, null=True)
-    pathValid = RegexValidator(r'^[0-9a-zA-Z\/\\-_]*$',
-                               'This is not a valid path.')
-    data_path = models.CharField(max_length=2000,
-                                 blank=True, null=True,
-                                 validators=[pathValid])
 
-    REQUEST_TYPES = [
-        ('GET', 'GET'),
-        ('POST', 'POST'),
+    ignore_data_crawled_in_previous_instances = models.BooleanField(blank=True, null=True, default=False)
+
+    crawler_description = models.TextField(default='')
+
+    CRAWLERS_TYPES = [
+        ('Contratos', 'Contratos'),
+        ('Despesas', 'Despesas'),
+        ('Diários', 'Diários'),
+        ('Licitação', 'Licitação'),
+        ('Não Informado', 'Não Informado'),
+        ('Processos', 'Processos'),
+        ('Servidores', 'Servidores'),
+        ('Transparência', 'Transparência'),
+        ('Outro', 'Outro'),
     ]
-    request_type = models.CharField(max_length=15,
-                                    choices=REQUEST_TYPES,
-                                    default='GET')
-    form_request_type = models.CharField(max_length=15,
-                                    choices=REQUEST_TYPES,
-                                    default='POST')
+    crawler_type_desc = models.CharField(max_length=15,
+                                    choices=CRAWLERS_TYPES,
+                                    default='Não Informado')
+
+    crawler_issue = models.PositiveIntegerField(default=0)
+    # This regex is a bit convolute, but in summary: it allows numbers,
+    # letters, dashes and underlines. It allows forward and backward slashes
+    # unless it occurs in the first character (since we don't allow absolute
+    # paths).
+    pathValid = RegexValidator(r'^[0-9a-zA-Z\-_][0-9a-zA-Z\/\\\-_]*$',
+                               'Esse não é um caminho relativo válido.')
+    data_path = models.CharField(max_length=2000, validators=[pathValid])
+
+    # SCRAPY CLUSTER ##########################################################
+
+    # Don't cleanup redis queues, allows to pause/resume crawls.
+    sc_scheduler_persist = models.BooleanField(default=True)
+
+    # seconds to wait between seeing new queues, cannot be faster than spider_idle time of 5
+    sc_scheduler_queue_refresh = models.PositiveIntegerField(default=10,
+        validators=[MinValueValidator(5)])
+
+    # throttled queue defaults per domain, x hits in a y second window
+    sc_queue_hits = models.PositiveIntegerField(default=10)
+    sc_queue_window = models.PositiveIntegerField(default=60)
+
+    # we want the queue to produce a consistent pop flow
+    sc_queue_moderated = models.BooleanField(default=True)
+
+    # how long we want the duplicate timeout queues to stick around in seconds
+    sc_dupefilter_timeout = models.PositiveIntegerField(default=600)
+
+    # how many pages to crawl for an individual domain. Cluster wide hard limit.
+    sc_global_page_per_domain_limit = models.PositiveIntegerField(null=True, blank=True)
+
+    # how long should the global page limit per domain stick around in seconds
+    sc_global_page_per_domain_limit_timeout = models.PositiveIntegerField(default=600)
+
+    # how long should the individual domain's max page limit stick around in seconds
+    sc_domain_max_page_timeout = models.PositiveIntegerField(default=600)
+
+    # how often to refresh the ip address of the scheduler
+    sc_scheduler_ip_refresh = models.PositiveIntegerField(default=60)
+
+    # whether to add depth >= 1 blacklisted domain requests back to the queue
+    sc_scheduler_backlog_blacklist = models.BooleanField(default=True)
+
+    # add Spider type to throttle mechanism
+    sc_scheduler_type_enabled = models.BooleanField(default=True)
+
+    # add ip address to throttle mechanism
+    sc_scheduler_ip_enabled = models.BooleanField(default=True)
+
+    # how many times to retry getting an item from the queue before the spider is considered idle
+    sc_scheduler_item_retries = models.PositiveIntegerField(default=3)
+
+    # how long to keep around stagnant domain queues
+    sc_scheduler_queue_timeout = models.PositiveIntegerField(default=3600)
+
+    # Allow all return codes
+    sc_httperror_allow_all = models.BooleanField(default=True)
+
+    sc_retry_times = models.PositiveIntegerField(default=3)
+
+    sc_download_timeout = models.PositiveIntegerField(default=10)
 
     # ANTIBLOCK ###############################################################
     # Options for Delay
@@ -95,9 +163,21 @@ class CrawlRequest(TimeStamped):
 
     # Steps activation
     dynamic_processing = models.BooleanField(blank=True, null=True)
+
+    # Browser options
+    BROWSER_TYPE = [
+        ('chromium', 'Chromium'),
+        ('webkit', 'Webkit'),
+        ('firefox', 'Mozilla Firefox'),
+    ]
+    browser_type = models.CharField(max_length=50, choices=BROWSER_TYPE, default='chromium')
+
     # If true, skips failing iterations with a warning, else, stops the crawler
     # if an iteration fails
     skip_iter_errors = models.BooleanField(default=False)
+    browser_resolution_width = models.IntegerField(blank=True, null=True)
+    browser_resolution_height = models.IntegerField(blank=True, null=True)
+
 
     # DETAILS #################################################################
     explore_links = models.BooleanField(blank=True, null=True)
@@ -143,10 +223,6 @@ class CrawlRequest(TimeStamped):
     steps = models.CharField(
         blank=True, null=True, max_length=9999999, default='{}')
 
-    # ENCODING DETECTION =======================================================
-    HEADER_ENCODE_DETECTION = 1
-    AUTO_ENCODE_DETECTION = 2
-
     ENCODE_DETECTION_CHOICES = [
         (HEADER_ENCODE_DETECTION, 'Via cabeçalho da resposta'),
         (AUTO_ENCODE_DETECTION, 'Automático'),
@@ -168,16 +244,14 @@ class CrawlRequest(TimeStamped):
     def process_parameter_data(param_list):
         """
         Processes the parameter data turning it into a format recognizable by
-        the spider, while also separating Templated URL and Static Form params
+        the spider
 
         :param param_list: list of parameters (as specified in the
                            ParameterHandler model)
 
-        :returns: tuple of parameter lists, for the Templated URLs and Static
-                  Forms, respectively
+        :returns: list of parameters for the Templated URL
         """
         url_parameter_handlers = []
-        form_parameter_handlers = []
         for param in param_list:
             if 'id' in param:
                 del param['id']
@@ -193,41 +267,32 @@ class CrawlRequest(TimeStamped):
                 iso_str = param['end_date_date_param'].isoformat()
                 param['end_date_date_param'] = iso_str
 
-            if param['injection_type'] == 'templated_url':
-                url_parameter_handlers.append(param)
-            elif param['injection_type'] == 'static_form':
-                form_parameter_handlers.append(param)
+            url_parameter_handlers.append(param)
 
-        return url_parameter_handlers, form_parameter_handlers
+        return url_parameter_handlers
 
 
     @staticmethod
     def process_response_data(resp_list):
         """
         Processes the response handler data turning it into a format
-        recognizable by the spider, while also separating Templated URL and
-        Static Form response handlers
+        recognizable by the spider
 
         :param resp_list: list of response handlers (as specified in the
                           ResponseHandler model)
 
-        :returns: tuple of response handler lists, for the Templated URLs and
-                  Static Forms, respectively
+        :returns: list of response handlers for the Templated URL
         """
         url_response_handlers = []
-        form_response_handlers = []
         for resp in resp_list:
             if 'id' in resp:
                 del resp['id']
             if 'crawler_id' in resp:
                 del resp['crawler_id']
 
-            if resp['injection_type'] == 'templated_url':
-                url_response_handlers.append(resp)
-            elif resp['injection_type'] == 'static_form':
-                form_response_handlers.append(resp)
+            url_response_handlers.append(resp)
 
-        return url_response_handlers, form_response_handlers
+        return url_response_handlers
 
 
     @staticmethod
@@ -245,25 +310,18 @@ class CrawlRequest(TimeStamped):
         del config['creation_date']
         del config['last_modified']
 
-        if config["data_path"] is None:
-            config["data_path"] = CURR_FOLDER_FROM_ROOT
-        else:
-            if config["data_path"][-1] == "/":
-                config["data_path"] = config["data_path"][:-1]
-            else:
-                config["data_path"] = config["data_path"]
+        if config["data_path"][-1] == "/":
+            config["data_path"] = config["data_path"][:-1]
 
         # Include information on parameter handling
         param_list = crawler.parameter_handlers.values()
         parameter_handlers = CrawlRequest.process_parameter_data(param_list)
-        config['templated_url_parameter_handlers'] = parameter_handlers[0]
-        config['static_form_parameter_handlers'] = parameter_handlers[1]
+        config['templated_url_parameter_handlers'] = parameter_handlers
 
         # Include information on response handling
         resp_list = crawler.response_handlers.values()
         response_handlers = CrawlRequest.process_response_data(resp_list)
-        config['templated_url_response_handlers'] = response_handlers[0]
-        config['static_form_response_handlers'] = response_handlers[1]
+        config['templated_url_response_handlers'] = response_handlers
 
         return config
 
@@ -310,19 +368,6 @@ class ParameterHandler(models.Model):
     crawler = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE,
                                 related_name="parameter_handlers")
 
-    # Specify if this is a URL or form parameter
-    INJECTION_TYPES = [
-        ('templated_url', 'Templated URL'),
-        ('static_form', 'Static Form'),
-    ]
-    injection_type = models.CharField(max_length=15,
-                                      choices=INJECTION_TYPES,
-                                      default='none')
-
-    # Parameter key and label for form parameters
-    parameter_key = models.CharField(max_length=1000, blank=True)
-    parameter_label = models.CharField(max_length=1000, blank=True)
-
     # Whether or not to filter the range for this parameter
     filter_range = models.BooleanField(default=False)
     # Number of consecutive entries to search during "binary search" if
@@ -336,7 +381,6 @@ class ParameterHandler(models.Model):
         ('alpha_seq', 'Sequência alfabética'),
         ('process_code', 'Código de processo'),
         ('value_list', 'Lista pré-definida'),
-        ('const_value', 'Valor constante'),
     ]
 
     parameter_type = models.CharField(max_length=15,
@@ -377,7 +421,6 @@ class ParameterHandler(models.Model):
                                  choices=DATE_FREQ,
                                  default='D')
 
-    value_const_param = models.CharField(max_length=5000, blank=True)
     value_list_param = models.CharField(max_length=50000, blank=True)
 
 
@@ -389,15 +432,6 @@ class ResponseHandler(models.Model):
     # Crawler to which this handler is associated
     crawler = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE,
                                 related_name="response_handlers")
-
-    # Specify if this is a URL or form validation
-    INJECTION_TYPES = [
-        ('templated_url', 'Templated URL'),
-        ('static_form', 'Static Form'),
-    ]
-    injection_type = models.CharField(max_length=15,
-                                      choices=INJECTION_TYPES,
-                                      default='none')
 
     HANDLER_TYPES = [
         ('text', 'Texto na página'),
@@ -411,9 +445,23 @@ class ResponseHandler(models.Model):
 
 
 class CrawlerInstance(TimeStamped):
-    crawler_id = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE,
-                                   related_name='instances')
+    crawler = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE,
+                                related_name='instances')
     instance_id = models.BigIntegerField(primary_key=True)
+
+    number_files_found = models.PositiveIntegerField(default=0, null=True, blank=True)
+    number_files_success_download = models.PositiveIntegerField(default=0, null=True, blank=True)
+    number_files_error_download = models.PositiveIntegerField(default=0, null=True, blank=True)
+    number_files_previously_crawled = models.PositiveIntegerField(default=0, null=True, blank=True)
+
+    number_pages_found = models.PositiveIntegerField(default=0, null=True, blank=True)
+    number_pages_success_download = models.PositiveIntegerField(default=0, null=True, blank=True)
+    number_pages_error_download = models.PositiveIntegerField(default=0, null=True, blank=True)
+    number_pages_duplicated_download = models.PositiveIntegerField(default=0, null=True, blank=True)
+    number_pages_previously_crawled = models.PositiveIntegerField(default=0, null=True, blank=True)
+
+    page_crawling_finished = models.BooleanField(default=False, null=True, blank=True)
+
     running = models.BooleanField()
     num_data_files = models.IntegerField(default=0)
     data_size_kbytes = models.BigIntegerField(default=0)
@@ -466,6 +514,18 @@ class CrawlerInstance(TimeStamped):
             size /= 1000.0
         return f"{size:.{2}f}{unit}"
 
+
+    def download_files_finished(self):
+        return self.number_files_success_download + self.number_files_error_download == self.number_files_found
+
+
+class Log(TimeStamped):
+    instance = models.ForeignKey(CrawlerInstance, on_delete=models.CASCADE,
+                                 related_name="log")
+    log_message = models.TextField(blank=True, null=True)
+    logger_name = models.CharField(max_length=50, blank=True, null=True)
+    log_level = models.CharField(max_length=10, blank=True, null=True)
+    raw_log = models.TextField(blank=True, null=True)
 
 
 class CrawlerQueue(models.Model):
@@ -580,9 +640,96 @@ class CrawlerQueue(models.Model):
 
 
 class CrawlerQueueItem(TimeStamped):
+    NO_WAIT_POSITION = -99999999
+
     queue = models.ForeignKey(CrawlerQueue, on_delete=models.CASCADE, default=1, related_name='items')
     queue_type = models.CharField(max_length=8, default="medium")
     crawl_request = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE, unique=True)
     forced_execution = models.BooleanField(default=False)
     running = models.BooleanField(default=False, blank=True)
-    position = models.PositiveIntegerField(null=False, default=1)
+    position = models.IntegerField(null=False, default=0)
+
+
+class Finish(TypedDict):
+    '''Define qual parâmetro para parar de reagendar uma coleta, a saber:
+        - never: o coletor é reagendado para sempre.
+        - occurrence: o coletor é colocado para executar novamente <occurrence> vezes.
+        - date: O coletor é colocado para executar até a data <date> 
+    '''
+    type: Literal['never', 'occurrence', 'date']
+    additional_data: Union[None, int]
+
+
+class MonthlyRepetitionConf(TypedDict):
+    ''' Caso a repetição personalizado seja por mês, o usuário pode escolher 3 tipos de agendamento mensal:
+        - first-weekday: A coleta ocorre no primeiro dia <first-weekday> (domingo, segunda, etc) da semana do mês, contado a partir de 0 - domingo.
+        - last-weekday: A coleta ocorre no último dia <last-weekday> (domingo, segunda, etc) da semana do mês, contado a partir de 0 - domingo.
+        - day-x: A coleta ocorre no dia x do mês. Se o mês não tiver o dia x, ocorrerá no último dia do mês.
+    '''
+    type: Literal['first-weekday', 'last-weekday', 'day-x']
+
+    # Se <type> [first,last]-weekday, indica qual dia semana a coleta deverá ocorrer, contado a partir de 0 - domingo.
+    # Se <type> day-x, o dia do mês que a coleta deverá ocorrer.
+    value: int
+
+
+class PersonalizedRepetionMode(TypedDict):
+    # Uma repetição personalizada pode ser por dia, semana, mês ou ano.
+    type: Literal['daily', 'weekly', 'monthly', 'yearly']
+
+    # de quanto em quanto intervalo de tempo <type> a coleta irá ocorrer
+    interval: int
+
+    ''' Dados extras que dependem do tipo da repetição. A saber, se <type> é:
+        - daily: additional_data receberá null
+        - weekly: additional_data será uma lista com dias da semana (iniciados em 0 - domingo)
+                    para quais dias semana a coleta irá executar.
+        - monthly: Ver classe MonthlyRepetitionConf.
+        - yearly: additional_data receberá null
+    '''
+    additional_data: Union[None, List, MonthlyRepetitionConf]
+
+    # Define até quando o coletor deve ser reagendado. Ver classe Finish.
+    finish: Finish
+
+
+class TaskType(TypedDict):
+    id: int
+    crawl_request: int
+    runtime: str
+    crawler_queue_behavior: Literal['wait_on_last_queue_position', 'wait_on_first_queue_position', 'run_immediately']
+    repeat_mode: Literal['no_repeat', 'daily', 'weekly', 'monthly', 'yearly', 'personalized']
+    personalized_repetition_mode: Union[None, PersonalizedRepetionMode]
+
+
+class Task(TimeStamped):
+    crawl_request = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE, related_name='scheduler_jobs')
+
+    # data e horário base para começar o agendamento de coletas
+    runtime = models.DateTimeField()
+
+    CRAWLER_QUEUE_BEHAVIOR_CHOICES = [
+        ('wait_on_last_queue_position', 'Esperar na última posição da fila'),
+        ('wait_on_first_queue_position', 'Esperar na primeira posição da fila'),
+        ('run_immediately', 'Executar imediatamente'),
+
+    ]
+
+    # O que o agendador deve fazer com o coletor ao inserí-lo na fila de coletas.
+    crawler_queue_behavior = models.CharField(
+        max_length=32, choices=CRAWLER_QUEUE_BEHAVIOR_CHOICES, default='wait_on_last_queue_position')
+
+    REPETITION_MODE_CHOICES = [
+        ('no_repeat', 'Não se repete'),
+        ('daily', 'Diariamente'),
+        ('weekly', 'Semanalmente'),
+        ('monthly', 'Mensalmente'),
+        ('yearly', 'Anual'),
+        ('personalized', 'Personalizado')
+    ]
+
+    # modo de repetição da coleta agendada.
+    repeat_mode = models.CharField(max_length=32, choices=REPETITION_MODE_CHOICES, default='no_repeat')
+
+    # json com a configuração personalizada de reexecução do coletor
+    personalized_repetition_mode: PersonalizedRepetionMode = models.JSONField(null=True, blank=True)

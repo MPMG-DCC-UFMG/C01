@@ -1,6 +1,5 @@
 """
-Specifica of the anti-blocking measures for the Requests library, using the
-antiblock_general module.
+Sub-class of the general anti-blocking module for requests made with the Python Requests library.
 """
 import requests
 

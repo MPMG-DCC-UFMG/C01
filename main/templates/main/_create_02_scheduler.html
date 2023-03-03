@@ -1,0 +1,26 @@
+{% load crispy_forms_tags %}
+
+<div id="spiders-item-block" class="block" hidden>
+    <div class="row" style="padding: 20px;">
+        <div class="col md-6">
+            {{ form.sc_scheduler_persist | as_crispy_field }}
+            {{ form.sc_scheduler_queue_refresh | as_crispy_field }}
+            {{ form.sc_queue_moderated | as_crispy_field }}
+            {{ form.sc_dupefilter_timeout | as_crispy_field }}
+            {{ form.sc_httperror_allow_all | as_crispy_field }}
+            {{ form.sc_retry_times | as_crispy_field }}
+            {{ form.sc_download_timeout | as_crispy_field }}
+            {{ form.sc_queue_hits | as_crispy_field }}
+            {{ form.sc_queue_window | as_crispy_field }}
+            {{ form.sc_scheduler_type_enabled | as_crispy_field }}
+            {{ form.sc_scheduler_ip_enabled | as_crispy_field }}
+            {{ form.sc_global_page_per_domain_limit | as_crispy_field }}
+            {{ form.sc_global_page_per_domain_limit_timeout | as_crispy_field }}
+            {{ form.sc_domain_max_page_timeout | as_crispy_field }}
+            {{ form.sc_scheduler_ip_refresh | as_crispy_field }}
+            {{ form.sc_scheduler_backlog_blacklist | as_crispy_field }}
+            {{ form.sc_scheduler_item_retries | as_crispy_field }}
+            {{ form.sc_scheduler_queue_timeout | as_crispy_field }}
+        </div>
+    </div>
+</div>

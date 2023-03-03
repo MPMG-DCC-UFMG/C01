@@ -19,7 +19,7 @@ var QUEUE_ITEM_TO_FORCE_EXEC;
 
 var RUNNING_EMPTY_HTML = `<li class="border rounded p-3 mt-3">
                             <p class="text-center m-0 font-weight-bold">
-                                <i class="fa fa-exclamation-triangle" aria-hidden="true" style="font-size: 2em;"></i>
+                                <i class="fas fa-exclamation-triangle" aria-hidden="true" style="font-size: 2em;"></i>
                                 <br>
                                 Sem coletores em execução.
                             </p>
@@ -27,7 +27,7 @@ var RUNNING_EMPTY_HTML = `<li class="border rounded p-3 mt-3">
 
 var WAITING_EMPTY_HTML = `<li class="border rounded p-3 mt-3">
                             <p class="text-center m-0 font-weight-bold">
-                                <i class="fa fa-exclamation-triangle" aria-hidden="true" style="font-size: 2em;"></i>
+                                <i class="fas fa-exclamation-triangle" aria-hidden="true" style="font-size: 2em;"></i>
                                 <br>
                                 Sem coletores aguardando execução.
                             </p>
@@ -94,7 +94,7 @@ function get_running_li_html(item) {
                 ${forced_execution_badge}
                 <a href="${SERVER_ADDRESS + '/detail/' + item.crawler_id}"> ${ item.crawler_name } </a>
             </div>
-            <small class="" title="Tempo gasto coletando"> <i class="fa fa-clock-o fa-lg" aria-hidden="true"></i> ${countdown(elapsed_time)}</small>
+            <small class="" title="Tempo gasto coletando"> <i class="far fa-clock fa-lg" aria-hidden="true"></i> ${countdown(elapsed_time)}</small>
         </div>
         <div class="d-flex justify-content-between align-items-center">
             <small>Coletando desde: ${timestamp_converter(item.last_modified)} </small>
@@ -103,7 +103,7 @@ function get_running_li_html(item) {
                     title="Interromper coleta"
                     onclick="stop_running_crawler('${item.crawler_id}')"
                     class="border py-0 rounded-circle bg-light crawler-queue-remove-item mr-2">
-                    <i class="fa fa-times" aria-hidden="true"></i>
+                    <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
             </div>
         </div>
@@ -122,7 +122,7 @@ function get_waiting_li_html(item, above_queue_item, bellow_queue_item) {
                 title="Trocar posição com o de baixo"
                 onclick="switch_position('${item.id}','${bellow_queue_item}')"
                 class="border-0 rounded-left bg-white crawler-queue-switch-position p-0 mx-1">
-                <i class="fa fa-chevron-down" aria-hidden="true"></i>
+                <i class="fas fa-chevron-down" aria-hidden="true"></i>
             </button>
         `;
     }
@@ -134,7 +134,7 @@ function get_waiting_li_html(item, above_queue_item, bellow_queue_item) {
                 title="Trocar posição com o de cima"
                 onclick="switch_position('${item.id}','${above_queue_item}')"
                 class="border-0 rounded-right bg-white crawler-queue-switch-position p-0 mx-1">
-                <i class="fa fa-chevron-up" aria-hidden="true"></i>
+                <i class="fas fa-chevron-up" aria-hidden="true"></i>
             </button>   
         `;
     }
@@ -152,7 +152,7 @@ function get_waiting_li_html(item, above_queue_item, bellow_queue_item) {
     return `<li class="border rounded p-3 mt-3">
                 <div class="d-flex justify-content-between p-0">
                     <a href="${SERVER_ADDRESS + '/detail/' + item.crawler_id}"> ${ item.crawler_name } </a>
-                    <small class="" title="Tempo de fila"> <i class="fa fa-clock-o fa-lg" aria-hidden="true"></i> ${countdown(elapsed_time)}</small>
+                    <small class="" title="Tempo de fila"> <i class="far fa-clock fa-lg" aria-hidden="true"></i> ${countdown(elapsed_time)}</small>
                 </div>
                 <div class="d-flex justify-content-between align-items-center">
                     <small>Aguardando desde: ${timestamp_converter(item.creation_date)} </small>
@@ -162,13 +162,13 @@ function get_waiting_li_html(item, above_queue_item, bellow_queue_item) {
                             title="Remover da fila"
                             onclick="remove_item_from_queue('${item.id}')"
                             class="border py-0 rounded-circle bg-light crawler-queue-remove-item mr-2">
-                            <i class="fa fa-times" aria-hidden="true"></i>
+                            <i class="fas fa-times" aria-hidden="true"></i>
                         </button>
                         <button
                             title="Forçar execução"
                             onclick="openForceExecutionConfirmModal('${item.id}')"
                             class="px-2 py-0 border rounded-circle bg-light crawler-queue-force-execution">
-                            <i class="fa fa-bolt" aria-hidden="true"></i>
+                            <i class="fas fa-bolt" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
@@ -372,7 +372,8 @@ function updateMaxCrawlers() {
     $.ajax({
         url: CRAWLER_QUEUE_API_ADDRESS,
         type: 'put',
-        dataType: 'json',
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
         async: false,
         data: data,
         success: function (data) {
