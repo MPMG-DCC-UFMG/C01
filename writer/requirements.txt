@@ -6,6 +6,6 @@ idna==2.10
 kafka-python==2.0.2
 lxml==4.6.3
 requests==2.25.1
-ujson==4.0.2
+ujson==5.4.0
 urllib3==1.26.5
 coolname==1.1.0
