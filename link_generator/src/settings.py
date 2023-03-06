@@ -23,7 +23,7 @@ REDIS_SOCKET_TIMEOUT = int(os.getenv('REDIS_SOCKET_TIMEOUT', 10))
 
 # django application port
 SERVER_NEW_PAGE_FOUND_URL = os.getenv('SERVER_NEW_PAGE_FOUND_URL',
-                                      'http://web_server:8000/download/pages/found/{instance_id}/{num_pages}')
+                                      os.getenv("SERVER_ADDRESS", 'http://web:8000') + '/download/pages/found/{instance_id}/{num_pages}')
 
 # Kafka topics
 LINK_GENERATOR_TOPIC = os.getenv('LINK_GENERATOR_TOPIC', KAFKA_TOPIC_PREFIX + '.link_generator')
