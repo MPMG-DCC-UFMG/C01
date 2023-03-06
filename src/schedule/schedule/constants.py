@@ -29,6 +29,8 @@ VALID_MONTHLY_REPEAT_MODES = (MONTHLY_DAY_X_OCCURRENCE_TYPE,
 VALID_REPEAT_FINISH = (REPEAT_FINISH_NEVER, REPEAT_FINISH_BY_OCCURRENCES, REPEAT_FINISH_BY_DATE) 
 
 VALID_DATETIME_FORMATS = (
+                            '%Y-%m-%dT%H:%M',
+                            '%Y-%m-%dT%H:%M:%S'
                             '%Y-%m-%d %H:%M:%S',
                             '%d-%m-%Y %H:%M:%S',
                             '%Y-%m-%d %H:%M',
