@@ -1155,6 +1155,8 @@ class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
 
     def create(self, request):
+        # TODO: validate request data
+        
         response = super().create(request)
         if response.status_code == status.HTTP_201_CREATED:
             data = response.data

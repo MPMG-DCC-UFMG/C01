@@ -9,7 +9,7 @@ services.save_new_scheduling = function (new_scheduling_config) {
     let parsed_data = JSON.stringify(new_scheduling_config);
 
     $.ajax({
-        url: '/api/tasks/',
+        url: '/api/scheduler/tasks/',
         type: 'post',
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -28,7 +28,7 @@ services.save_new_scheduling = function (new_scheduling_config) {
 
 services.get_tasks_in_interval = function (start_date, end_date) {
     $.ajax({
-        url: `/api/tasks/filter?start_date=${start_date}&end_date=${end_date}`,
+        url: `/api/scheduler/tasks/filter?start_date=${start_date}&end_date=${end_date}`,
         type: 'get',
         async: false,
         success: function (data) {
@@ -46,7 +46,7 @@ services.get_tasks_in_interval = function (start_date, end_date) {
 services.get_task = function (task_id) {
     let task;
     $.ajax({
-        url: `/api/tasks/${task_id}`,
+        url: `/api/scheduler/tasks/${task_id}`,
         type: 'get',
         async: false,
         success: function (data) {
@@ -72,7 +72,7 @@ services.update_tasks = function (tarks_ids) {
 
 services.delete_task = function(task_id) {
     $.ajax({
-        url: `/api/tasks/${task_id}`,
+        url: `/api/scheduler/tasks/${task_id}`,
         type: 'delete',
         async: false,
         success: function (data) {
@@ -90,7 +90,7 @@ services.save_updated_scheduling = function (task_being_edited) {
     let parsed_data = JSON.stringify(task_being_edited);
 
     $.ajax({
-        url: `/api/tasks/${task_id}/`,
+        url: `/api/scheduler/tasks/${task_id}/`,
         type: 'put',
         contentType: "application/json; charset=utf-8",
         dataType: "json",

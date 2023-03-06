@@ -270,7 +270,10 @@ def process_yearly_repeat_mode(filtered_tasks_ids: Dict[str, int],
 def task_filter_by_date_interval(tasks: List[TaskType], start_date: datetime, end_date: datetime) -> Dict[str, int]:
     filtered_tasks_ids: Dict[str, int] = dict()
 
-    for task in tasks:
+    for raw_task in tasks:
+        task = raw_task['scheduler_config']
+        task['id'] = raw_task['id']
+
         runtime = task['start_date']
         # runtime is like: 2022-08-06T23:29:00Z
         year, month, day = runtime.split('T')[0].split('-')

@@ -668,7 +668,7 @@ class Task(TimeStamped):
     crawler_queue_behavior = models.CharField(
         max_length=32, choices=CRAWLER_QUEUE_BEHAVIOR_CHOICES, default='wait_on_last_queue_position')
 
-    scheduler_config = models.JSONField(null=True, blank=True)
+    scheduler_config = models.JSONField()
 
     def __str__(self):
         return f'{self.crawl_request} - {self.start_date}'

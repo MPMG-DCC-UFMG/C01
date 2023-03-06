@@ -25,11 +25,13 @@ var day_number_to_weekday = {
 
 var new_scheduling_config = {
     crawl_request: null,
-    start_date: null,
-    timezone: 'America/Sao_Paulo',
     crawler_queue_behavior: 'wait_on_last_queue_position',
-    repeat_mode: 'no_repeat',
-    personalized_repeat: null
+    scheduler_config: {
+        start_date: null,
+        timezone: 'America/Sao_Paulo',
+        repeat_mode: 'no_repeat',
+        personalized_repeat: null
+    }
 }
 
 var repeat = {};
@@ -143,11 +145,13 @@ function init_default_options() {
 
     new_scheduling_config = {
         crawl_request: null,
-        start_date: null,
-        timezone: 'America/Sao_Paulo',
         crawler_queue_behavior: 'wait_on_last_queue_position',
-        repeat_mode: 'no_repeat',
-        personalized_repeat: null
+        scheduler_config: {
+            start_date: null,
+            timezone: 'America/Sao_Paulo',
+            repeat_mode: 'no_repeat',
+            personalized_repeat: null
+        }
     };
 
     repeat = {
@@ -262,13 +266,13 @@ function repeat_to_text(repeat) {
 function update_repeat_info() {
     if (task_being_edited) {
         scheduling_task = task_being_edited;
-        raw_repeat = scheduling_task.personalized_repeat;
+        raw_repeat = scheduling_task.scheduler_config.personalized_repeat;
     } else {
         scheduling_task = new_scheduling_config;
         raw_repeat = repeat; 
     }
     
-    if (scheduling_task.repeat_mode != 'personalized') 
+    if (scheduling_task.scheduler_config.repeat_mode != 'personalized') 
         return;
 
     let parsed_repeat = repeat_to_text(raw_repeat);
@@ -278,7 +282,7 @@ function update_repeat_info() {
     personalized_repeat_info.css('display', 'inline-block');
     personalized_repeat_info.text(parsed_repeat);
 
-    scheduling_task.personalized_repeat = repeat;
+    scheduling_task.scheduler_config.personalized_repeat = repeat;
 }
 
 function close_personalized_repeat_modal() {
@@ -352,20 +356,20 @@ function valid_new_scheduling() {
         return;
     }
 
-    if (scheduling_task.start_date == null) {
+    if (scheduling_task.scheduler_config.start_date == null) {
         alert('Escolha um horário válido!');
         return;
     }
 
-    if (scheduling_task.repeat_mode == 'personalized' 
-        && scheduling_task.personalized_repeat.mode == 'weekly'
-        && scheduling_task.personalized_repeat.data.length == 0) {
+    if (scheduling_task.scheduler_config.repeat_mode == 'personalized' 
+        && scheduling_task.scheduler_config.personalized_repeat.mode == 'weekly'
+        && scheduling_task.scheduler_config.personalized_repeat.data.length == 0) {
         alert('Você configurou uma coleta personalizada semanal, porém não escolheu o(s) dia(s) que ela deve ocorrer!');
         return;
     }
 
     let now = new Date();
-    let start_date = new Date(scheduling_task.start_date);
+    let start_date = new Date(scheduling_task.scheduler_config.start_date);
 
     if (start_date < now) {
         alert('O horário de início da coleta deve ser maior que o horário atual!');
@@ -383,7 +387,7 @@ function valid_new_scheduling() {
     
     hide_set_scheduling();
     
-    let year_month_day = scheduling_task.start_date.split('T')[0].split('-')
+    let year_month_day = scheduling_task.scheduler_config.start_date.split('T')[0].split('-')
     calendar.daily.active_day = new Date(parseInt(year_month_day[0]), parseInt(year_month_day[1]) - 1, parseInt(year_month_day[2])); 
 
     calendar.daily.show();
@@ -412,7 +416,7 @@ function show_task_detail(task_id, open_all_schedulings_after_close = false) {
     let task = TASKS[task_id];
 
     let cur_date = new Date()
-    let start_date = task_runtime_to_date(task.start_date);
+    let start_date = task_runtime_to_date(task.scheduler_config.start_date);
 
     let next_run = 'TBA'
     let repeat_info = '';
@@ -420,7 +424,7 @@ function show_task_detail(task_id, open_all_schedulings_after_close = false) {
     let since = cur_date > start_date ? 'Desde de ' : 'A partir de ';
     since += `${start_date.getDate()} de ${MONTHS[start_date.getMonth()]} de ${start_date.getFullYear()}.`;
 
-    switch (task.repeat_mode) {
+    switch (task.scheduler_config.repeat_mode) {
         case 'no_repeat':
             next_run = `Ocorre em ${start_date.getDate()} de ${MONTHS[start_date.getMonth()]} de ${start_date.getFullYear()} às ${start_date.getHours()}h${String(start_date.getMinutes()).padStart(2, '0')}.`;
             repeat_info = 'Não se repete.';    
@@ -444,7 +448,7 @@ function show_task_detail(task_id, open_all_schedulings_after_close = false) {
             break;
         
         case 'personalized':
-            repeat_info = repeat_to_text(task.personalized_repeat);
+            repeat_info = repeat_to_text(task.scheduler_config.personalized_repeat);
             break;
 
         default:
@@ -532,7 +536,7 @@ function edit_scheduling_task(task_id) {
         return;
     }
 
-    let personalized_repeat = task.personalized_repeat;
+    let personalized_repeat = task.scheduler_config.personalized_repeat;
     if (!personalized_repeat) {
         personalized_repeat = {
             mode: 'daily',
@@ -547,12 +551,14 @@ function edit_scheduling_task(task_id) {
 
     task_being_edited = {
         id: task.id,
-        crawl_request: task.crawl_request,
-        start_date: task.start_date,
-        timezone: task.timezone,
         crawler_queue_behavior: task.crawler_queue_behavior,
-        repeat_mode: task.repeat_mode,
-        personalized_repeat: personalized_repeat
+        crawl_request: task.crawl_request,
+        scheduler_config: {
+            start_date: task.scheduler_config.start_date,
+            timezone: task.scheduler_config.timezone,
+            repeat_mode: task.scheduler_config.repeat_mode,
+            personalized_repeat: personalized_repeat
+        }
     };
 
     fill_set_scheduling(task_id);
@@ -576,17 +582,15 @@ function fill_set_scheduling(task_id) {
     if (!task)
         return;
 
-    console.log('>>', task);
-
-    let start_date = task.start_date.substr(0, 16);
+    let start_date = task.scheduler_config.start_date.substr(0, 16);
 
     $(`#crawl-selector option[value='${task.crawl_request}']`).attr('selected', 'selected');
     $('#scheduling-time').val(start_date);
-    $(`#repeat-crawling-select option[value='${task.repeat_mode}']`).attr('selected', 'selected');
+    $(`#repeat-crawling-select option[value='${task.scheduler_config.repeat_mode}']`).attr('selected', 'selected');
     $(`#crawler_queue_behavior option[value='${task.crawler_queue_behavior}']`).attr('selected', 'selected');
     
-    if (task.repeat_mode == 'personalized') {
-        $('#scheduling-personalized-repetition-info').html(repeat_to_text(task.personalized_repeat));
+    if (task.scheduler_config.repeat_mode == 'personalized') {
+        $('#scheduling-personalized-repetition-info').html(repeat_to_text(task.scheduler_config.personalized_repeat));
         $('#scheduling-personalized-repetition-info').css('display', 'block');
     } else
         $('#scheduling-personalized-repetition-info').css('display', 'none');
@@ -621,13 +625,13 @@ $(document).ready(function () {
         else
             scheduling_task = new_scheduling_config; 
 
-        scheduling_task.repeat_mode = repeat_mode;
+        scheduling_task.scheduler_config.repeat_mode = repeat_mode;
 
         if (repeat_mode == 'personalized') {
             update_repeat_info();
             open_personalized_crawler_repeat();
         } else {
-            scheduling_task.personalized_repeat = null;
+            scheduling_task.scheduler_config.personalized_repeat = null;
             $('#scheduling-personalized-repetition-info').css('display', 'none');
         }
         
@@ -860,7 +864,7 @@ $(document).ready(function () {
         else
             scheduling_task = new_scheduling_config; 
 
-        scheduling_task.start_date = $(this).val(); 
+        scheduling_task.scheduler_config.start_date = $(this).val(); 
     });
 
     $('#crawl-selector').on('change', function() {
@@ -880,7 +884,7 @@ $(document).ready(function () {
         else
             scheduling_task = new_scheduling_config; 
 
-        scheduling_task.timezone = $(this).val();
+        scheduling_task.scheduler_config.timezone = $(this).val();
     });
 
     update_calendar_mode('daily');
