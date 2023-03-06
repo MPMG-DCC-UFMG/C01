@@ -34,6 +34,8 @@ from .serializers import (CrawlerInstanceSerializer, CrawlerQueueSerializer,
                           CrawlRequestSerializer, TaskSerializer)
 from .task_filter import task_filter_by_date_interval
 
+from schedule.scheduler_config import SchedulerConfig
+
 # Log the information to the file logger
 logger = logging.getLogger('file')
 
@@ -1155,32 +1157,37 @@ class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
 
     def create(self, request):
-        # TODO: validate request data
+        data = request.data
+        schedule_config = data.get('scheduler_config', {})
+
+        try:
+            SchedulerConfig.valid_config(schedule_config)
+        
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
         response = super().create(request)
+
         if response.status_code == status.HTTP_201_CREATED:
             data = response.data
 
-            schedule_data = {
-                'start_date': data.get('start_date'),
-                'timezone': data.get('timezone'),
-                'repeat_mode': data.get('repeat_mode'),
-                'personalized_repeat': data.get('personalized_repeat')
-            }
-
-            task_data = {
-                'id': data.get('id'),
-                'crawl_request': data.get('crawl_request'),
-                'crawler_queue_behavior': data.get('crawler_queue_behavior'),
-            }
-
             message = {
                 'action': 'create',
-                'schedule_data': schedule_data,
-                'task_data': task_data
+                'schedule_config': schedule_config,
+                'task_data': {
+                    'id': data['id'],
+                    'crawl_request': data['crawl_request'],
+                    'crawler_queue_behavior': data['crawler_queue_behavior'],
+                }
             }
 
-            crawler_manager.message_sender.send(TASK_TOPIC, message)
+            try:
+                crawler_manager.message_sender.send(TASK_TOPIC, message)
+            
+            except Exception as e:
+                return Response({'message': f'The schedule task instance was created, but it was not possible to schedule it. Reason: {str(e)}'}, 
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
         return response
 
     def update(self, request, pk=None):

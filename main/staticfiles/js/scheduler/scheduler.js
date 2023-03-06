@@ -393,7 +393,6 @@ function valid_new_scheduling() {
     calendar.daily.show();
 }
 
-
 function task_runtime_to_date(runtime) {
     // runtime follows the format <year>-<month>-<day>T<hour>:<minute>:<seconds>Z'
     let splited_runtime = runtime.split('T');
@@ -565,13 +564,18 @@ function edit_scheduling_task(task_id) {
     open_set_scheduling(false);    
 }
 
-function delete_schedule_task(task_id) {
-    $('#detailScheduling').modal('hide');
-
-    let delete_confirmed = confirm('Tem certeza que deseja deletar o agendamento?');
-
+function delete_schedule_task(task_id) {    
+    close_detail_scheduling_modal()
+    
+    let scheduling_name = TASKS[task_id].crawler_name;
+    let delete_confirmed = confirm(`Tem certeza que deseja excluir a coleta agendada "${scheduling_name}"?`);
+    
     if (!delete_confirmed)
         return;
+    
+    delete TASKS[task_id];
+
+    fill_task_list();
 
     services.delete_task(task_id);
 }
@@ -598,7 +602,7 @@ function fill_set_scheduling(task_id) {
     $(`#crawl-selector`).multiselect('rebuild');
 }
 
-$(document).ready(function () {
+function attach_event_listeners() {
     $('#crawl-selector').multiselect({
         includeSelectAllOption: true,
         enableFiltering: true,
@@ -612,9 +616,35 @@ $(document).ready(function () {
         enableCaseInsensitiveFiltering: true,
     });
 
-    // $('#personalizedCrawlerRepetion').modal('show');
+    // quando o usuário está digitando em search-task, filtra a lista de tarefas e atualiza a lista
+    $('#search-task').on('keyup', function () {
+        let search = $(this).val().toLowerCase();
 
-    // $('#setSchedulingModal').modal('show');
+        let task_list = $('#task-list');
+
+        let task_items = [];
+
+        // itera por cada objeto no objeto TASKS
+        for (let task_id in TASKS) {
+            let task = TASKS[task_id];
+
+            // se o nome do crawler contém a string de busca, adiciona o item na lista
+            if (task.crawler_name.toLowerCase().includes(search))
+                task_items.push(create_task_item(task));
+        }
+
+
+        if (task_items.length == 0)
+            task_items.push(`<li class="p-3">
+                                <div class="d-flex justify-content-center"
+                                    style="flex-direction: column;">
+                                    <span style="font-size: 1.5rem;">¯\\_(ツ)_/¯</span>
+                                    <p class="m-0 p-0 mt-3">Nenhum agendamento encontrado!</p>
+                                </div>
+                            </li>`);
+
+        task_list.html(task_items.join(''));
+    });
 
     $('#repeat-crawling-select').on('click', function () {
         let repeat_mode = $(this).val();
@@ -623,7 +653,7 @@ $(document).ready(function () {
             scheduling_task = task_being_edited;
 
         else
-            scheduling_task = new_scheduling_config; 
+            scheduling_task = new_scheduling_config;
 
         scheduling_task.scheduler_config.repeat_mode = repeat_mode;
 
@@ -634,7 +664,7 @@ $(document).ready(function () {
             scheduling_task.scheduler_config.personalized_repeat = null;
             $('#scheduling-personalized-repetition-info').css('display', 'none');
         }
-        
+
     });
 
     $('#repeat-mode-selector').change(function () {
@@ -645,32 +675,32 @@ $(document).ready(function () {
 
         switch (repeat_option_selected) {
             case 'weekly':
-                hide_days_of_week_repeat_options();                
+                hide_days_of_week_repeat_options();
                 break;
-        
+
             case 'monthly':
                 hide_monthly_repeat_options();
                 break;
         }
-        
+
         switch (repeat_mode) {
             case 'weekly':
                 repeat.data = [];
                 for (let i in days_selected_to_repeat)
                     if (days_selected_to_repeat[i])
-                        repeat.data.push(parseInt(i));                    
+                        repeat.data.push(parseInt(i));
 
                 if (repeat.data.length == 0)
                     $(`#dwr-${date.getDay()}`).click();
 
                 show_days_of_week_repeat_options();
                 break;
-        
+
             case 'monthly':
                 show_monthly_repeat_options();
-                repeat.data = { mode: montly_repeat_mode, value: montly_repeat_value};
+                repeat.data = { mode: montly_repeat_mode, value: montly_repeat_value };
                 break;
-                
+
             default:
                 repeat.data = null;
                 break;
@@ -687,19 +717,19 @@ $(document).ready(function () {
         update_repeat_info();
     });
 
-    $("input[name=finish-type]").change(function() {
+    $("input[name=finish-type]").change(function () {
         let input = $(this);
 
         let finish_mode = input.attr('finish_type');
-        
+
         repeat.finish.mode = finish_mode;
         switch (finish_mode) {
             case 'never':
                 repeat.finish.value = null;
                 break;
-        
+
             case 'occurrence':
-                repeat.finish.value = repeat_finish_occurrences;                
+                repeat.finish.value = repeat_finish_occurrences;
                 break;
 
             case 'date':
@@ -713,21 +743,21 @@ $(document).ready(function () {
         update_repeat_info();
     });
 
-    $('#finish-occurrence-in').on('click', function(){
+    $('#finish-occurrence-in').on('click', function () {
         repeat_finish_occurrences = parseInt($(this).val());
         $('#finish-ocurrence').click();
-        repeat.finish.value = repeat_finish_occurrences;   
-        update_repeat_info();             
+        repeat.finish.value = repeat_finish_occurrences;
+        update_repeat_info();
     });
 
     $('#finish-date-in').change(function () {
-        repeat_finish_date = $(this).val(); 
+        repeat_finish_date = $(this).val();
         $('#finish-date').click();
         repeat.finish.value = repeat_finish_date;
         update_repeat_info();
     });
 
-    $('input[name=montly-repeat]').change(function() {
+    $('input[name=montly-repeat]').change(function () {
         let input = $(this);
 
         montly_repeat_mode = input.attr('montly_repeat');
@@ -738,12 +768,12 @@ $(document).ready(function () {
         update_repeat_info();
     });
 
-    $('#montly-day-x-sel').on('change',function() {
+    $('#montly-day-x-sel').on('change', function () {
         montly_repeat_value = parseInt($(this).find(":selected").val());
         montly_repeat_mode = 'day-x';
 
         $('#montly-every-day-x').click();
-        
+
         repeat.data.mode = montly_repeat_mode;
         repeat.data.value = montly_repeat_value;
         update_repeat_info();
@@ -770,8 +800,6 @@ $(document).ready(function () {
         repeat.data.value = montly_repeat_value;
         update_repeat_info();
     });
-
-    init_default_options();
 
     $('#previous').on('click', function () {
         switch (calendar_mode) {
@@ -846,15 +874,15 @@ $(document).ready(function () {
     $('#calendar-mode').on('change', function () {
         update_calendar_mode($(this).val());
     });
-    
+
     $('#crawler_queue_behavior').on('change', function () {
         if (task_being_edited)
             scheduling_task = task_being_edited;
 
         else
-            scheduling_task = new_scheduling_config; 
+            scheduling_task = new_scheduling_config;
 
-        scheduling_task.crawler_queue_behavior = $(this).val();    
+        scheduling_task.crawler_queue_behavior = $(this).val();
     });
 
     $('#scheduling-time').on('change', function () {
@@ -862,33 +890,31 @@ $(document).ready(function () {
             scheduling_task = task_being_edited;
 
         else
-            scheduling_task = new_scheduling_config; 
+            scheduling_task = new_scheduling_config;
 
-        scheduling_task.scheduler_config.start_date = $(this).val(); 
+        scheduling_task.scheduler_config.start_date = $(this).val();
     });
 
-    $('#crawl-selector').on('change', function() {
+    $('#crawl-selector').on('change', function () {
         if (task_being_edited)
             scheduling_task = task_being_edited;
 
         else
-            scheduling_task = new_scheduling_config; 
+            scheduling_task = new_scheduling_config;
 
         scheduling_task.crawl_request = parseInt($(this).val());
     });
 
-    $('#scheduling-timezone').on('change', function() {
+    $('#scheduling-timezone').on('change', function () {
         if (task_being_edited)
             scheduling_task = task_being_edited;
 
         else
-            scheduling_task = new_scheduling_config; 
+            scheduling_task = new_scheduling_config;
 
         scheduling_task.scheduler_config.timezone = $(this).val();
-    });
-
-    update_calendar_mode('daily');
-});
+    });    
+}
 
 function create_task_item(task) {
     return `<li class="rounded border p-3 mb-2">
@@ -936,8 +962,12 @@ function fill_task_list() {
     task_list.html(task_items.join(''));
 }
 
-function show_all_scheduling() {
+function show_all_scheduling_modal() {
     $('#allScheduling').modal({ backdrop: 'static', keyboard: false }, 'show');
+}
+
+function close_all_scheduling_modal() {
+    $('#allScheduling').modal('hide');
 }
 
 function close_detail_scheduling_modal() {
@@ -945,7 +975,7 @@ function close_detail_scheduling_modal() {
 
     if (open_all_schedulings) {
         open_all_schedulings = false;
-        show_all_scheduling();
+        show_all_scheduling_modal();
     }
 }
 
@@ -955,37 +985,9 @@ $(document).ready(function () {
         obj[item.id] = item;
         return obj;
     }, {});
-    
+
+    attach_event_listeners();
     fill_task_list();
-
-    // quando o usuário está digitando em search-task, filtra a lista de tarefas e atualiza a lista
-    $('#search-task').on('keyup', function () {
-        let search = $(this).val().toLowerCase();
-
-        let task_list = $('#task-list');
-
-        let task_items = [];
-
-        // itera por cada objeto no objeto TASKS
-        for (let task_id in TASKS) {
-            let task = TASKS[task_id];
-            
-            // se o nome do crawler contém a string de busca, adiciona o item na lista
-            if (task.crawler_name.toLowerCase().includes(search))
-                task_items.push(create_task_item(task));
-        }
-
-
-        if (task_items.length == 0)
-            task_items.push(`<li class="p-3">
-                                <div class="d-flex justify-content-center"
-                                    style="flex-direction: column;">
-                                    <span style="font-size: 1.5rem;">¯\\_(ツ)_/¯</span>
-                                    <p class="m-0 p-0 mt-3">Nenhum agendamento encontrado!</p>
-                                </div>
-                            </li>`);
-
-        task_list.html(task_items.join(''));
-    });
-
+    init_default_options();
+    update_calendar_mode('daily');
 });

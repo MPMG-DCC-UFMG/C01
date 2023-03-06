@@ -18,6 +18,10 @@ services.save_new_scheduling = function (new_scheduling_config) {
         success: function (data) {
             $('#toast-success-text').text('Agendamento realizado com sucesso!');
             $('#toast').toast('show');
+            
+            TASKS[data.id] = data;
+            
+            fill_task_list();
         },
         error: function (data) {
             alert('Houve um erro no agendamento, tente novamente!');
