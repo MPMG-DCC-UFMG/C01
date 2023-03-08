@@ -384,13 +384,13 @@ calendar.daily.show = function () {
 
             let title = '';
             let opacity = 'opacity: 0.5;';
-            if (next_run_date < now) {
+            
+            if (next_run_date < now) 
                 title = 'Coleta executada em: ' + next_run_text + '. \n\nClique para opções.';
-            } else {
-                title = 'Coleta agendada para: ' + next_run_text + '. \n\nClique para opções.';
-                opacity = '';
-            }
-
+            
+            else 
+                title = 'Coleta agendada para: ' + next_run_text + '. \n\nClique para opções.', opacity = '';
+            
             tasks_in_hour.push(`
                 <div
                     style="cursor: pointer; ${opacity}" 
