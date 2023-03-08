@@ -393,7 +393,7 @@ function valid_new_scheduling() {
     calendar.daily.show();
 }
 
-function task_runtime_to_date(runtime) {
+function str_to_date(runtime) {
     // runtime follows the format <year>-<month>-<day>T<hour>:<minute>:<seconds>Z'
     let splited_runtime = runtime.split('T');
     
@@ -408,24 +408,29 @@ function task_runtime_to_date(runtime) {
 
 }
 
+function get_now(timezone) {
+    let now = new Date().toLocaleString({ timeZone: timezone }) ;
+    return new Date(now);
+}
+
 function show_task_detail(task_id, open_all_schedulings_after_close = false) {
     $('#allScheduling').modal('hide');
     
     open_all_schedulings = open_all_schedulings_after_close;
     let task = TASKS[task_id];
 
-    let cur_date = new Date()
-    let start_date = task_runtime_to_date(task.scheduler_config.start_date);
+    let now = get_now(task.scheduler_config.timezone);
 
-    let next_run = 'TBA'
+    let start_date = str_to_date(task.scheduler_config.start_date);
+
+    let next_run_text = '';
     let repeat_info = '';
     
-    let since = cur_date > start_date ? 'Desde de ' : 'A partir de ';
+    let since = now > start_date ? 'Desde de ' : 'A partir de ';
     since += `${start_date.getDate()} de ${MONTHS[start_date.getMonth()]} de ${start_date.getFullYear()}.`;
 
     switch (task.scheduler_config.repeat_mode) {
         case 'no_repeat':
-            next_run = `Ocorre em ${start_date.getDate()} de ${MONTHS[start_date.getMonth()]} de ${start_date.getFullYear()} às ${start_date.getHours()}h${String(start_date.getMinutes()).padStart(2, '0')}.`;
             repeat_info = 'Não se repete.';    
             break;
         
@@ -454,6 +459,42 @@ function show_task_detail(task_id, open_all_schedulings_after_close = false) {
             break;
     };
 
+    // O único caso em que o next_run não é definido é quando a coleta é agendada para ser executada uma única vez e o horário de início já passou.
+    if (task.next_run == null) 
+        task.next_run = task.scheduler_config.start_date;
+
+    let next_run_date = str_to_date(task.next_run);
+    next_run_text = new Intl.DateTimeFormat('pt-BR', {
+        dateStyle: 'full',
+        timeStyle: 'long',
+        timeZone: task.scheduler_config.timezone
+    }).format(next_run_date);
+
+    // the first letter must be capitalized
+    next_run_text = next_run_text[0].toUpperCase() + next_run_text.slice(1);
+
+    if (next_run_date.getDate() == now.getDate() && next_run_date.getMonth() == now.getMonth() && next_run_date.getFullYear() == now.getFullYear()) 
+        next_run_text = next_run_text.replace(/^[^,]*/, 'Hoje');
+
+    let next_run_html = '';
+
+    // if next_run is in the past, it means that the task is running right now
+    if (next_run_date < now) 
+        next_run_html = `<div class="text-danger"
+                            title="A coleta já foi executada em: ${next_run_text}">
+                            <i class="fa fa-calendar-alt mr-2" aria-hidden="true"></i>
+                            <small
+                                style="text-decoration: line-through;" 
+                                class="font-weight-bold">${next_run_text}
+                            </small> 
+                        </div>`
+    
+    else 
+        next_run_html = `<div title="Aguardando execução em: ${next_run_text}">
+                            <i class="fa fa-calendar-alt mr-2" aria-hidden="true"></i>   
+                            <small class="font-weight-bold">${next_run_text}</small>
+                        </div>`
+        
     let bg_crawler_queue_info = '';
     let crawler_queue_info = '';
 
@@ -481,10 +522,7 @@ function show_task_detail(task_id, open_all_schedulings_after_close = false) {
                 <h3 class="h5 font-weight-bold">${task.crawler_name}</h3>
                 
                 <div class="bg-light rounded p-3 border mt-3">
-                    <div class="">
-                        <i class="fa fa-calendar-alt mr-2 text-muted" aria-hidden="true"></i>
-                        <small class="font-weight-bold">${next_run}</small> 
-                    </div>
+                    ${next_run_html} 
 
                     <div class="my-2">
                         <i class="fa fa-redo mr-1 text-muted fa-sm" aria-hidden="true"></i>

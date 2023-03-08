@@ -9,7 +9,7 @@ from django.db import models
 from django.db.models.base import ModelBase
 from django.utils import timezone
 from typing_extensions import Literal, TypedDict
-from schedule import SchedulerConfigDict
+from schedule import SchedulerConfigDict, SchedulerConfig
 
 CRAWLER_QUEUE_DB_ID = 1
 
@@ -673,5 +673,13 @@ class Task(TimeStamped):
     def __str__(self):
         return f'{self.crawl_request} - {self.start_date}'
     
-    def get_next_run(self):
-        pass # TODO
+    @property
+    def next_run(self):
+        sched_config = SchedulerConfig()
+        sched_config.load_config(self.scheduler_config)
+
+        if self.last_run is None:
+            return sched_config.first_run_date()
+        
+        return sched_config.next_run_date(self.last_run) 
+

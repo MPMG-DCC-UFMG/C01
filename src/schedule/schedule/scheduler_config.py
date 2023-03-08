@@ -102,8 +102,8 @@ class SchedulerConfig:
         now = self.now()
 
         if start_date < now:
-            raise SchedulerConfigError('Start date must be greater than current date')
-
+            return self.next_run_date(start_date)
+        
         if self.repeat_mode == NO_REPEAT_MODE:
             return start_date
         
@@ -164,7 +164,7 @@ class SchedulerConfig:
 
     def next_run_date(self, last_run_date: datetime.datetime) -> datetime.datetime:
         if self.repeat_mode == NO_REPEAT_MODE:
-            raise SchedulerConfigError('No repeat mode does not have next run date')
+            return None
         
         elif self.repeat_mode == DAILY_REPEAT_MODE:
             return last_run_date + datetime.timedelta(days=self.repeat_interval)
@@ -200,24 +200,25 @@ class SchedulerConfig:
             raise SchedulerConfigError('Invalid repeat mode')
 
     def load_config(self, config_dict: SchedulerConfigDict) -> None:
-        SchedulerConfig.valid_config(config_dict)
+        # We assume that the config_dict is valid. That is, it has been validated before
+        # SchedulerConfig.valid_config(config_dict)
 
         self.timezone = pytz.timezone(config_dict['timezone'])
-        self.start_date = apply_timezone(decode_datetimestr(config_dict['start_date']), self.timezone)
+        self.start_date = decode_datetimestr(config_dict['start_date'])
         self.repeat_mode = config_dict['repeat_mode']
 
         if config_dict['repeat_mode'] == PERSONALIZED_REPEAT_MODE:
             self._parse_personalized_config(config_dict['personalized_repeat'])
 
     def now(self) -> datetime.datetime:
-        return apply_timezone(datetime.datetime.now(), self.timezone)
+        return datetime.datetime.now(self.timezone).replace(tzinfo=None)
 
     def _parse_personalized_config(self, config_dict: PersonalizedRepeat) -> None:
         self.repeat_mode = config_dict['mode']
         self.repeat_interval = config_dict['interval']
 
         if self.repeat_mode == WEEKLY_REPEAT_MODE:
-            self.weekdays_to_run = config_dict['data'].sort()
+            self.weekdays_to_run = sorted(config_dict['data'])
 
         elif self.repeat_mode == MONTHLY_REPEAT_MODE:
             self.monthly_repeat_mode = config_dict['data']['mode']
@@ -241,70 +242,72 @@ class SchedulerConfig:
                 self.max_repeats = config_dict['finish']['value']
 
             elif finish_repeat_mode == REPEAT_FINISH_BY_DATE:
-                self.max_datetime = apply_timezone(decode_datetimestr(config_dict['finish']['value']), self.timezone)
+                self.max_datetime = decode_datetimestr(config_dict['finish']['value'])
 
     @staticmethod
-    def valid_config(config: SchedulerConfigDict) -> None:
-        config_fields = config.keys()
+    def valid_config(config_dict: SchedulerConfigDict) -> None:
+        config_fields = config_dict.keys()
 
         for req_field in REQUIRED_FIELDS:
             if req_field not in config_fields:
                 raise SchedulerConfigMissingFieldError(f'The field "{req_field}" if the config of schedule is missing!') 
 
-        if config['start_date'] is None:
+        if config_dict['start_date'] is None:
             valid_formats = '\n\t- '.join(VALID_DATETIME_FORMATS)
             raise SchedulerConfigValueError(f'The field `start_date` must be in one of the following formats: \n\t- {valid_formats}')
 
-        start_date = decode_datetimestr(config['start_date'])
+        start_date = decode_datetimestr(config_dict['start_date'])
 
         if start_date is None:
             valid_formats = '\n\t- '.join(VALID_DATETIME_FORMATS)
             raise SchedulerConfigValueError(f'The field `start_date` must be in one of the following formats: \n\t- {valid_formats}')
 
-        now = datetime.datetime.now()
+        if config_dict['timezone'] not in pytz.all_timezones:
+            raise SchedulerConfigValueError(f'The timezone "{config_dict["timezone"]}" is not valid!')
+
+        timezone = pytz.timezone(config_dict['timezone'])
+        now = datetime.datetime.now(timezone).replace(tzinfo=None)
+
         if start_date < now:
             raise SchedulerConfigValueError('The start date for scheduling has passed.' \
                                         f' Now is {now} and start date has been set to {start_date}!')
 
-        if config['timezone'] not in pytz.all_timezones:
-            raise SchedulerConfigValueError(f'The timezone "{config["timezone"]}" is not valid!')
-
-        repeat_mode = config['repeat_mode']
+        repeat_mode = config_dict['repeat_mode']
 
         if repeat_mode not in VALID_REPEAT_MODES:
             valid_repeat_modes = ', '.join(VALID_REPEAT_MODES)
             raise SchedulerConfigInvalidRepeatModeError(f'The valid repeats modes are: {valid_repeat_modes}. `{repeat_mode}` is not included!')
 
         if repeat_mode == PERSONALIZED_REPEAT_MODE:
-            if type(config['personalized_repeat']) is not dict:
+            if type(config_dict['personalized_repeat']) is not dict:
                 personalized_required_fields = ', '.join(PERSONALIZED_REQUIRED_FIELDS)
                 raise SchedulerConfigValueError('If repeat mode is personalized, the field `personalized_repeat`' \
                                             f' must be a dict with the following fields: {personalized_required_fields}.')
 
-            personalized_available_fields = config['personalized_repeat'].keys()
+            personalized_available_fields = config_dict['personalized_repeat'].keys()
 
             for req_field in PERSONALIZED_REQUIRED_FIELDS:
                 if req_field not in personalized_available_fields:
                     raise SchedulerConfigMissingFieldError(f'The field `{req_field}` of `personalized_repeat` is missing!') 
 
-            personalized_repeat = config['personalized_repeat']['mode']
+            personalized_repeat = config_dict['personalized_repeat']['mode']
 
             if personalized_repeat not in VALID_PERSONALIZED_REPEAT_MODES:
                 valid_repeat_modes = ', '.join(VALID_PERSONALIZED_REPEAT_MODES)
                 raise SchedulerConfigInvalidRepeatModeError(f'The valid repeats modes for `personalized_repeat` are: {valid_repeat_modes}. `{repeat_mode}` is not included!')
 
-            personalized_interval = config['personalized_repeat']['interval']
+            personalized_interval = config_dict['personalized_repeat']['interval']
             if type(personalized_interval) is not int:
                 raise SchedulerConfigValueError(f'The repeat interval for `personalized_repeat` must be `int`, not `{type(personalized_interval)}`!')
             
             if personalized_interval <= 0:
                 raise SchedulerConfigValueError(f'The repeat interval for `personalized_repeat` must be a integer greater than 0!')
                 
-            personalized_data = config['personalized_repeat']['data']
+            personalized_data = config_dict['personalized_repeat']['data']
             if type(personalized_data) not in (type(None), list, dict):
                 raise SchedulerConfigValueError(f'The field `data` of `personalized_repeat` must be: None, a list or a dict.')
             
-            personalized_repeat_mode = config['personalized_repeat']['mode']
+            personalized_repeat_mode = config_dict['personalized_repeat']['mode']
 
             if personalized_repeat_mode == WEEKLY_REPEAT_MODE:
                 if type(personalized_data) is not list:
@@ -352,7 +355,7 @@ class SchedulerConfig:
                                                 f' between 0 and 6, for monthly personalized repeat `{personalized_repetion_monthly_mode}`!')
                     
 
-            finish_repeat = config['personalized_repeat']['finish']
+            finish_repeat = config_dict['personalized_repeat']['finish']
             if type(finish_repeat) not in (type(None), dict):
                 raise SchedulerConfigValueError('The field `finish` of `personalized_repeat` must be None or dict!')
 

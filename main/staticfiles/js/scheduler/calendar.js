@@ -316,6 +316,22 @@ calendar.daily.get_daily_tasks = function () {
     }
 }
 
+function get_task_next_run_text(now, next_run_date, timezone) {    
+    next_run_text = new Intl.DateTimeFormat('pt-BR', {
+        dateStyle: 'full',
+        timeStyle: 'long',
+        timeZone: timezone
+    }).format(next_run_date);
+
+    // the first letter must be capitalized
+    next_run_text = next_run_text[0].toUpperCase() + next_run_text.slice(1);
+
+    if (next_run_date.getDate() == now.getDate() && next_run_date.getMonth() == now.getMonth() && next_run_date.getFullYear() == now.getFullYear())
+        next_run_text = next_run_text.replace(/^[^,]*/, 'Hoje');
+
+    return next_run_text;
+}
+
 calendar.daily.show = function () {
     this.get_daily_tasks();
 
@@ -356,12 +372,30 @@ calendar.daily.show = function () {
                     bg_color = 'bg-primary';
                     break;
             }
+            
+            let now = get_now(task.scheduler_config.timezone);
+
+            // O único caso em que o next_run não é definido é quando a coleta é agendada para ser executada uma única vez e o horário de início já passou.
+            if (task.next_run == null)
+                task.next_run = task.scheduler_config.start_date;
+
+            let next_run_date = str_to_date(task.next_run);
+            let_next_run_text = get_task_next_run_text(now, next_run_date, task.scheduler_config.timezone);
+
+            let title = '';
+            let opacity = 'opacity: 0.5;';
+            if (next_run_date < now) {
+                title = 'Coleta executada em: ' + next_run_text + '. \n\nClique para opções.';
+            } else {
+                title = 'Coleta agendada para: ' + next_run_text + '. \n\nClique para opções.';
+                opacity = '';
+            }
 
             tasks_in_hour.push(`
                 <div
-                    style="cursor: pointer;" 
+                    style="cursor: pointer; ${opacity}" 
                     onclick="show_task_detail(${task.id})" 
-                    title="Clique para opções."
+                    title="${title}"
                     class="${bg_color} text-white rounded-pill px-2 ml-2 mt-2">
                     ${task.crawler_name}
                 </div>
