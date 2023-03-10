@@ -2,24 +2,41 @@ from cv2 import FarnebackOpticalFlow
 from django import forms
 from .models import CrawlRequest, ParameterHandler, ResponseHandler
 from django.core.exceptions import ValidationError
+from crawling_utils.constants import HEADER_ENCODE_DETECTION
 
 
 class CrawlRequestForm(forms.ModelForm):
     class Meta:
         model = CrawlRequest
 
-        labels = {
-            'request_type': 'Método da requisição',
-            'form_request_type': 'Método da requisição ao injetar em formulários',
-        }
-
         fields = [
             'source_name',
             'base_url',
-            'request_type',
-            'form_request_type',
             'obey_robots',
+            'ignore_data_crawled_in_previous_instances',
             'captcha',
+            'crawler_description',
+            'crawler_type_desc',
+            'crawler_issue',
+
+            'sc_scheduler_persist',
+            'sc_scheduler_queue_refresh',
+            'sc_queue_hits',
+            'sc_queue_window',
+            'sc_queue_moderated',
+            'sc_dupefilter_timeout',
+            'sc_global_page_per_domain_limit',
+            'sc_global_page_per_domain_limit_timeout',
+            'sc_domain_max_page_timeout',
+            'sc_scheduler_ip_refresh',
+            'sc_scheduler_backlog_blacklist',
+            'sc_scheduler_type_enabled',
+            'sc_scheduler_ip_enabled',
+            'sc_scheduler_item_retries',
+            'sc_scheduler_queue_timeout',
+            'sc_httperror_allow_all',
+            'sc_retry_times',
+            'sc_download_timeout',
 
             'antiblock_download_delay',
             'antiblock_autothrottle_enabled',
@@ -42,7 +59,10 @@ class CrawlRequestForm(forms.ModelForm):
             'img_xpath',
             'sound_xpath',
             'dynamic_processing',
+            'browser_type',
             'skip_iter_errors',
+            'browser_resolution_width',
+            'browser_resolution_height',
             'explore_links',
 
             'link_extractor_max_depth',
@@ -87,16 +107,94 @@ class RawCrawlRequestForm(CrawlRequestForm):
         }),
         help_text="A URL pode conter espaços para parâmetros, representados como um conjunto de chaves vazias {}. Os parâmetros são configurados na aba URL Parametrizada."
     )
+
+    ignore_data_crawled_in_previous_instances = forms.BooleanField(
+        required=False,
+        help_text='Ao habilitar essa opção, o sistema ignorará dados (arquivos e páginas html) cujo hash de seu conteúdo é igual ao hash de outros dados coletados em ' \
+            'execuções anteriores. Ou seja, o sistema não salvará dados que já foram coletados em execuções anteriores.',
+        label="Ignorar dados já coletados em instâncias anteriores")
+
     obey_robots = forms.BooleanField(
         required=False, label="Obedecer robots.txt")
 
     data_path = forms.CharField(
-        required=False, max_length=2000, label="Caminho para salvar arquivos",
+        required=False, max_length=2000,
+        label="Caminho para salvar os arquivos dentro da pasta de destino",
         widget=forms.TextInput(
-            attrs={'placeholder': '/home/user/Documents/<crawler_name>'}),
+            attrs={'placeholder': '<crawler_type>/<crawler_name>'}),
         help_text="Esse caminho deve ser único para cada coletor. Caso a pasta não esteja criada, o coletor a criará automaticamente.",
         validators=[CrawlRequest.pathValid]
     )
+
+    crawler_description = forms.CharField(
+        label="Descrição do coletor",
+        widget=forms.TextInput(
+            attrs={'placeholder': 'Descrição geral do coletor, por exemplo, município e ano alvo de coleta.'})
+    )
+
+    crawler_type_desc = forms.ChoiceField(
+        label="Tipo do coletor",
+        choices=(
+            ('Contratos', 'Contratos'),
+            ('Despesas', 'Despesas'),
+            ('Diários', 'Diários'),
+            ('Licitação', 'Licitação'),
+            ('Não Informado', 'Não Informado'),
+            ('Processos', 'Processos'),
+            ('Servidores', 'Servidores'),
+            ('Transparência', 'Transparência'),
+            ('Outro', 'Outro'),
+        )
+    )
+
+    crawler_issue = forms.IntegerField(required=False, initial=0, label='Issue')
+
+    # SCRAPY CLUSTER ##########################################################
+
+    # página de detalhes do coletor
+    sc_scheduler_persist = forms.BooleanField(
+        required=False, initial=True, label="Don't cleanup redis queues, allows to pause/resume crawls.", widget=forms.CheckboxInput())
+
+    sc_scheduler_queue_refresh = forms.IntegerField(
+        required=False, initial=10, label='Seconds to wait between seeing new queues, cannot be faster than spider_idle time of 5', min_value=5)
+
+    sc_queue_moderated = forms.BooleanField(
+        required=False, initial=True, label='We want the queue to produce a consistent pop flow')
+
+    sc_dupefilter_timeout = forms.IntegerField(
+        required=False, initial=600, label='How long we want the duplicate timeout queues to stick around in seconds')
+
+    sc_httperror_allow_all = forms.BooleanField(
+        required=False, initial=True, label='Allow all return codes')
+
+    sc_retry_times = forms.IntegerField(required=False, initial=3, label='Retry times')
+
+    sc_download_timeout = forms.IntegerField(required=False, initial=10, label='Download timeout')
+
+    sc_queue_hits = forms.IntegerField(required=False, initial=10, label='Queue hits')
+
+    sc_queue_window = forms.IntegerField(required=False, initial=60, label='Queue Windows')
+
+    sc_scheduler_type_enabled = forms.BooleanField(required=False, initial=True, label='Scheduler type enabled')
+
+    sc_scheduler_ip_enabled = forms.BooleanField(required=False, initial=True, label='Scheduler ip enabled')
+
+    sc_global_page_per_domain_limit = forms.IntegerField(required=False, label='Global page per domain limit')
+
+    sc_global_page_per_domain_limit_timeout = forms.IntegerField(
+        required=False, initial=600, label='Global page per domain timeout')
+
+    sc_domain_max_page_timeout = forms.IntegerField(required=False, initial=600, label='Domain max page timeout')
+
+    sc_scheduler_ip_refresh = forms.IntegerField(required=False, initial=60, label='Scheduler ip refresh')
+
+    sc_scheduler_backlog_blacklist = forms.BooleanField(
+        required=False, initial=True, label='Scheduler backlog blacklist')
+
+    sc_scheduler_item_retries = forms.IntegerField(required=False, initial=3, label='Scheduler item retries')
+
+    sc_scheduler_queue_timeout = forms.IntegerField(required=False, initial=3600, label='Scheduler queue timeout')
+
 
     # ANTIBLOCK ###############################################################
     # Options for Delay
@@ -158,6 +256,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
         help_text="Utiliza Tor ou uma lista de proxy para que IPs diferentes sejam utilizados durante a coleta.",
         widget=forms.CheckboxInput(
             attrs={
+                "disabled": "true",
                 "onclick": "ipRotationEnabled();",
             }
         )
@@ -233,6 +332,7 @@ class RawCrawlRequestForm(CrawlRequestForm):
         help_text="Útil se o site a ser coletado possui algum tipo de autenticação para acessar determinado conteúdo. Com esta opção, cookies de acesso são enviados em cada requisição contornando tal restrição.",
         widget=forms.CheckboxInput(
             attrs={
+                "disabled": "true",
                 "onclick": "insertCookiesEnabled();",
             }
         )
@@ -293,6 +393,42 @@ class RawCrawlRequestForm(CrawlRequestForm):
             attrs={'onchange': 'detailDynamicProcessing();'}
         )
     )
+    browser_resolution_width = forms.IntegerField(
+        required=False,
+        label="Largura da janela do navegador (em pixels)",
+        initial=1280,
+        min_value=640,
+        widget=forms.NumberInput(
+            attrs={
+                'style': 'display:inline',
+                'class': 'form-control col-5'
+            }
+        )
+    )
+    browser_resolution_height = forms.IntegerField(
+        required=False,
+        label="Altura da janela do navegador (em pixels)",
+        initial=720,
+        min_value=360,
+        widget=forms.NumberInput(
+            attrs={
+                'style': 'display:inline',
+                'class': 'form-control col-5'
+            }
+        )
+    )
+
+    browser_type = forms.ChoiceField(
+        choices=(
+            ('chromium', 'Chromium'),
+            ('firefox', 'Mozilla Firefox'),
+            ('webkit', 'WebKit'),
+        ),
+        label='Navegador Web',
+        initial='chromium',
+        widget=forms.RadioSelect
+    )
+
     skip_iter_errors = forms.BooleanField(
         required=False, label="Pular iterações com erro"
     )
@@ -414,18 +550,19 @@ class RawCrawlRequestForm(CrawlRequestForm):
     # ENCODE DETECTION METHOD
     encoding_detection_method = forms.ChoiceField(choices=CrawlRequest.ENCODE_DETECTION_CHOICES,
                                                   label='Método de detecção de codificação das páginas',
-                                                  initial=CrawlRequest.HEADER_ENCODE_DETECTION,
+                                                  initial=HEADER_ENCODE_DETECTION,
                                                   widget=forms.RadioSelect)
 
     expected_runtime_category = forms.ChoiceField(choices=(
-            ('fast', 'Rápido (até algumas horas)'),
-            ('medium', 'Médio (até um dia)'),
-            ('slow', 'Lento (mais de um dia)'),
-        ),
+        ('fast', 'Rápido (até algumas horas)'),
+        ('medium', 'Médio (até um dia)'),
+        ('slow', 'Lento (mais de um dia)'),
+    ),
         label='Expectativa de tempo de execução',
         initial='medium',
         help_text='Escolha subjetiva de quanto tempo o coletor demorará para completar a coleta. Na prática, está se definindo em qual fila de execução o coletor irá aguardar.',
         widget=forms.RadioSelect)
+
 
 class ResponseHandlerForm(forms.ModelForm):
     """
@@ -446,8 +583,7 @@ class ResponseHandlerForm(forms.ModelForm):
         widgets = {
             'handler_type': forms.Select(attrs={
                 'onchange': 'detailResponseType(event);'
-            }),
-            'injection_type': forms.HiddenInput(),
+            })
         }
 
 
@@ -456,29 +592,6 @@ class ParameterHandlerForm(forms.ModelForm):
     Contains the fields related to the configuration of the request parameters
     to be injected
     """
-
-    def __init__(self, *args, **kwargs):
-        super(ParameterHandlerForm, self).__init__(*args, **kwargs)
-
-        injection_type = ""
-        if self.initial:
-            injection_type = self.initial['injection_type']
-
-        def filter_option(opt):
-            if injection_type == "templated_url" and opt[0] == "const_value":
-                return False
-            return True
-
-        # Templated URL forms shouldn't have a constant injector option
-        choices = list(filter(filter_option, ParameterHandler.PARAM_TYPES))
-
-        self.fields['parameter_type'] = forms.ChoiceField(
-            choices=choices,
-            label='Tipo de parâmetro',
-            widget=forms.Select(attrs={
-                'onchange': 'detailParamType(event);'
-            })
-        )
 
     def clean(self):
         """
@@ -561,10 +674,8 @@ class ParameterHandlerForm(forms.ModelForm):
             'origin_ids_proc_param': ('Identificadores de origens a buscar, '
                                       'separados por vírgula'),
             'value_list_param': 'Lista de valores a gerar (separados por vírgula)',
-            'value_const_param': 'Valor a gerar',
             'filter_range': 'Filtrar limites',
-            'parameter_label': 'Descrição do campo',
-            'parameter_key': 'Nome do campo',
+            'parameter_type': 'Tipo de parâmetro'
         }
 
         widgets = {
@@ -591,7 +702,9 @@ class ParameterHandlerForm(forms.ModelForm):
                 'pattern': ParameterHandler.LIST_REGEX,
                 'title': 'Insira uma lista de números separados por vírgula.',
             }),
-            'injection_type': forms.HiddenInput(),
+            'parameter_type': forms.Select(attrs={
+                'onchange': 'detailParamType(event);'
+            }),
         }
 
     step_num_param = forms.IntegerField(initial=1, required=False,

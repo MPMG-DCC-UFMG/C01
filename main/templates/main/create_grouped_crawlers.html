@@ -1,0 +1,107 @@
+{% extends 'main/base.html' %}
+
+{% load static %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}
+New Crawler
+{% endblock %}
+
+{% block style %}
+<style>
+    .grouped_crawlers_container{
+        height: 400px;
+        overflow-y: scroll;
+        margin-right: -15px;
+        margin-left: -15px;
+        padding-right: 15px;
+        padding-left: 15px;
+        border: 1px solid #ddd;
+    }
+
+    /* Esconde as setinhas no campo numérico - Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Esconde as setinhas no campo numérico - Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<form id="myForm" method="POST" action="" class="form-group">{% csrf_token %}
+    <!-- esse token é para segurança em forms do tipo POST -->
+    <!-- Bootstrap row -->
+    <div class="row" id="body-row">
+        <!-- Sidebar -->
+        <div id="sidebar-container" class="sidebar-expanded d-none d-md-block col-2">
+            {% include "main/_create_00_sidebar.html" %}
+        </div>
+        <!-- sidebar-container END -->
+        <div class="col py-3">
+            <div class="row justify-content-center">
+                <div class="col-12">
+                    <hr class="mt-0 mb-4">
+                    {% include "main/_create_02_scheduler.html" %}
+
+                    {% include "main/_create_03_basic_group.html" %}
+
+                    {% include "main/_create_04_antiblock.html" %}
+
+                    {% include "main/_create_05_captcha.html" %}
+
+                    {% include "main/_create_06_dynamic.html" %}
+
+                    {% include "main/_create_07_details.html" %}
+                </div>
+                {% include "main/_create_08_url.html" %}
+            </div>
+        </div>
+    </div>
+</form>
+
+{% endblock %}
+
+{% block js %}
+<script>
+    // remove duplicate tool tip to the crawler queue
+    $('#div_id_expected_runtime_category > div > button').remove();
+
+    // initialize formsets
+    $('#templated_url_param').formset({
+        prefix: '{{ templated_parameter_formset.prefix }}',
+        templateId: 'base_templated_url_param_template',
+        subformSelector: '.param-step',
+        displayControls: false,
+    });
+    $('#templated_url_response').formset({
+        prefix: '{{ templated_response_formset.prefix }}',
+        templateId: 'base_templated_url_response_template',
+        subformSelector: '.resp-step',
+        addBtnContent: $('<a><span class="fa fa-plus"></span> ' +
+                         'Adicionar validação</a>'),
+        addBtnClass: 'add_form',
+        rmBtnClass: 'close',
+        added: () => checkTemplatedURL(),
+        removed: () => checkTemplatedURL(),
+    });
+    $(function () {$('[data-toggle="popover"]').popover({
+        trigger: 'hover',
+        html: true,
+        animation: false,
+        placement: 'right'
+    })});
+</script>
+<script src="{% static 'js/create_crawler.js' %}"></script>
+<script>detailDynamicProcessing();</script>
+<script src="{% static 'js/steps.js' %}"></script>
+<script src="{% static 'js/step_block.js' %}"></script>
+<script src="{% static 'js/create_crawler_grouped.js' %}"></script>
+{% endblock %}

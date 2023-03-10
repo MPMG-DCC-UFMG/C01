@@ -1,0 +1,21 @@
+<div id="import-settings-item-block" class="block" hidden>
+    <div class="row" style="padding: 20px;">
+        <div class="col md-6">
+            <div id="div_id_import_settings" class="form-group">
+                <label for="id_import_settings">
+                    Importar arquivo de configuração
+                    <button type="button" class="popover-icon btn btn-link" data-toggle="popover" data-trigger="click" data-content="Carregue um arquivo de configuração externo em formato json e preencher automaticamente os parâmetros de configuração de uma coleta." data-placement="auto left"><i class="fa fa-info-circle" aria-hidden="true"></i></button>
+                </label>
+                <div class="">
+                    <input type="file"
+                            class="form-control-file"
+                            accept="application/JSON"
+                            id="id_import_settings"
+                            name="import_settings"
+                            onchange="parseSettings(this)"
+                    >
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

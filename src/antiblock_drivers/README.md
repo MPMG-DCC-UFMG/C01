@@ -10,7 +10,7 @@ General antiblock module for libraries other than Scrapy. Supported features:
     - Proxy list
 - Cookie management
 
-Currently only supports the Requests library. Will support Pyppeteer in the
+Currently only supports the Requests library. Will support Playwright in the
 future.
 
 **IP-rotation using Tor requires Tor to be installed, and switches system-wide
@@ -150,5 +150,5 @@ req.post('https://example.com/')
 req.head('https://example.com/')
 ```
 
-### Pyppeteer Antiblock
+### Playwright Antiblock
 To be added.

@@ -176,7 +176,7 @@ table.dataTable thead .sorting_desc_disabled:before {
     background-color: #E8F6EF;
 }
 
-#dynamic-processing-item-wrap.disabled, #dynamic-processing-skip-errors.disabled {
+#dynamic-processing-item-wrap.disabled, #dynamic-processing-skip-errors.disabled, #dynamic-processing-browser-type.disabled, #dynamic-processing-resolution.disabled {
     opacity: .5;
     pointer-events: none;
 }
@@ -370,3 +370,95 @@ a.close, a.add_form {
     #sidebar-container #createButton {width: 85px !important; font-size: .9rem;}
 }
 /* End making the layout responsive */
+
+
+/* scheduler */
+.calendar-monthly {
+    display: none;
+    column-gap: 15px;
+    row-gap: 15px;
+    height: calc(100vh - 148px);
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    grid-template-rows: 0fr 1fr 1fr 1fr 1fr 1fr 1fr;
+}
+
+.calendar-cell {
+    display: inline-grid;
+
+}
+
+.no-current-month {
+    color: lightgray;
+}
+
+.calendar-cell-content {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 100%;
+    flex-direction: column;
+}
+
+.calendar-yearly {
+    display: none;
+    column-gap: 25px;
+    row-gap: 25px;
+    height: calc(100vh - 148px);
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+}
+
+.calendar-yearly-month {
+    display: none;
+    column-gap: 5px;
+    row-gap: 5px;
+    height: 100%;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+    margin-top: 15px;
+}
+
+.calendar-weekly {
+    display: none;
+    column-gap: 5px;
+    row-gap: 5px;
+    height: 100%;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(25, 1fr);
+    margin-top: 82px;
+}
+
+.calendar {
+    margin-top: 82px;
+    display: none;
+}
+
+.float-btn {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+}
+
+.toast {
+    position: fixed;
+    top: 164px;
+    right: 15px;
+}
+
+.weekday {
+    cursor: pointer;
+    width: 36px;
+    height: 35px;
+    padding-bottom: 2px;
+}
+
+.scheduling-detail-options {
+    width: 2em;
+    height: 2em;
+}
+
+a.scheduling-detail-options:hover {
+    text-decoration: none;
+}
+
+/* end of scheduler */

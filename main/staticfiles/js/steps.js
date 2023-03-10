@@ -23,11 +23,11 @@ function load_steps_interface(interface_root_element_id, output_element_id, json
         step_list = step_list.concat(JSON.parse('{"name": "atribuicao", "name_display" : "Atribuição", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name": "abrir_em_nova_aba", "name_display" : "Abrir em nova aba", "executable_contexts": ["page", "tab"], "mandatory_params":["link_xpath"], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name": "fechar_aba", "name_display" : "Fechar aba", "executable_contexts": ["tab"], "mandatory_params":[], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name": "executar_em_iframe", "name_display" : "Executar em iframe", "executable_contexts": ["page", "tab"], "mandatory_params":["xpath"], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "executar_em_iframe", "name_display" : "Executar em iframe", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":["xpath"], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name": "sair_de_iframe", "name_display" : "Sair de iframe", "executable_contexts": ["iframe"], "mandatory_params":[], "optional_params":{}}'))
         step_list = step_list.concat(JSON.parse('{"name": "screenshot", "name_display" : "Screenshot", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name": "enquanto", "name_display" : "Enquanto", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
-        step_list = step_list.concat(JSON.parse('{"name": "se", "name_display" : "Se", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":[], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "enquanto", "name_display" : "Enquanto", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":["invert"], "optional_params":{}}'))
+        step_list = step_list.concat(JSON.parse('{"name": "se", "name_display" : "Se", "executable_contexts": ["page", "tab", "iframe"], "mandatory_params":["invert"], "optional_params":{}}'))
 
         step_list_complete = step_list
         
@@ -196,6 +196,7 @@ function load_steps(json_steps, step_list){
         let condition = Object.keys(name_dict).find(key => name_dict[key] === json_steps.condition.call.step)
         block.condition_select.value = condition
         block.condition_select.onchange()
+        block.invert_input.checked = json_steps.invert
         args = json_steps.condition.call.arguments
 
         for(let child of json_steps.children){
@@ -205,6 +206,7 @@ function load_steps(json_steps, step_list){
         let condition = Object.keys(name_dict).find(key => name_dict[key] === json_steps.condition.call.step)
         block.condition_select.value = condition
         block.condition_select.onchange()
+        block.invert_input.checked = json_steps.invert
         args = json_steps.condition.call.arguments
 
         for(let child of json_steps.children){
@@ -219,6 +221,10 @@ function load_steps(json_steps, step_list){
 
     }else if(json_steps.step == "abrir_em_nova_aba"){
         block.xpath_input.value = json_steps.link_xpath
+        args = {}
+
+    }else if(json_steps.step == "executar_em_iframe"){
+        block.xpath_input.value = json_steps.xpath
         args = {}
 
     }else if(json_steps.step == "elemento_existe_na_pagina"){
@@ -329,6 +335,7 @@ function get_step_json_format(block){
             step: steps_names[block.condition_select.value],
             arguments: load_param_dict(block)
         }
+        step_dict.invert = block.invert_input.checked
     }else if(param_name == "se"){
         step_dict.children = []
         step_dict.condition = {call:{}}
@@ -336,6 +343,7 @@ function get_step_json_format(block){
             step: steps_names[block.condition_select.value],
             arguments: load_param_dict(block)
         }
+        step_dict.invert = block.invert_input.checked
     }else if(param_name == "elemento_existe_na_pagina"){
         step_dict.children = []
         step_dict.arguments = load_param_dict(block)
@@ -348,6 +356,9 @@ function get_step_json_format(block){
         }
     }else if(param_name == "abrir_em_nova_aba"){
         step_dict.link_xpath = block.xpath_input.value
+        step_dict.children = []
+    }else if(param_name == "executar_em_iframe"){
+        step_dict.xpath = block.xpath_input.value
         step_dict.children = []
     }else{
         step_dict.arguments = load_param_dict(block)

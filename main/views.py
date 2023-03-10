@@ -1,48 +1,42 @@
+import base64
+import json
+import logging
+import multiprocessing as mp
+import os
+import time
+from datetime import datetime
+from typing_extensions import Literal
+
+import crawler_manager.crawler_manager as crawler_manager
+from crawler_manager.settings import TASK_TOPIC
+from crawler_manager.constants import *
+
 from django.conf import settings
-from django.utils import timezone
-from django.db import transaction
-from django.http import HttpResponseRedirect, JsonResponse, \
-    FileResponse, HttpResponseNotFound, HttpResponse
-from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import Q
-
-from rest_framework import viewsets
-from rest_framework import status
+from django.http import (FileResponse, HttpResponse, HttpResponseNotFound,
+                         HttpResponseRedirect, JsonResponse)
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from .iframe_loader import iframe_loader
 
-from .forms import CrawlRequestForm, RawCrawlRequestForm,\
-    ResponseHandlerFormSet, ParameterHandlerFormSet
-from .models import CrawlRequest, CrawlerInstance, CrawlerQueue, CrawlerQueueItem, \
-                    CRAWLER_QUEUE_DB_ID, ParameterHandler, ResponseHandler
+from .forms import (CrawlRequestForm, ParameterHandlerFormSet,
+                    RawCrawlRequestForm, ResponseHandlerFormSet)
+from .models import (CRAWLER_QUEUE_DB_ID, CrawlerInstance, CrawlerQueue,
+                     CrawlerQueueItem, CrawlRequest, Log, Task)
+from .serializers import (CrawlerInstanceSerializer, CrawlerQueueSerializer,
+                          CrawlRequestSerializer, TaskSerializer)
+from .task_filter import task_filter_by_date_interval
 
-from .serializers import CrawlRequestSerializer, CrawlerInstanceSerializer, CrawlerQueueSerializer
+# Log the information to the file logger
+logger = logging.getLogger('file')
 
-from crawlers.constants import *
-
-import base64
-import itertools
-import json
-import subprocess
-import time
-import os
-import multiprocessing as mp
-from datetime import datetime
-
-import crawlers.crawler_manager as crawler_manager
-
-from crawlers.injector_tools import create_probing_object,\
-    create_parameter_generators
-
-from requests.exceptions import MissingSchema
-
-from formparser.html import HTMLExtractor, HTMLParser
-
-from scrapy_puppeteer import iframe_loader
 # Helper methods
-
 
 try:
     CRAWLER_QUEUE = CrawlerQueue.object()
@@ -56,34 +50,33 @@ except:
 
 def process_run_crawl(crawler_id):
     instance = None
-    instance_id = None
     instance_info = dict()
 
-    with transaction.atomic():
-        # Execute DB commands atomically
-        crawler_entry = CrawlRequest.objects.filter(id=crawler_id)
-        data = crawler_entry.values()[0]
+    crawler_entry = CrawlRequest.objects.filter(id=crawler_id)
+    data = crawler_entry.values()[0]
 
-        # Instance already running
-        if crawler_entry.get().running:
-            instance_id = crawler_entry.get().running_instance.instance_id
-            raise ValueError("An instance is already running for this crawler "
-                             f"({instance_id})")
+    # Instance already running
+    if crawler_entry.get().running:
+        instance_id = crawler_entry.get().running_instance.instance_id
+        raise ValueError("An instance is already running for this crawler "
+                         f"({instance_id})")
 
-        data = CrawlRequest.process_config_data(crawler_entry.get(), data)
-        instance_id = crawler_manager.start_crawler(data.copy())
-        instance = create_instance(data['id'], instance_id)
+    data = CrawlRequest.process_config_data(crawler_entry.get(), data)
+
+    data["instance_id"] = crawler_manager.gen_key()
+    instance = create_instance(data['id'], data["instance_id"])
+    crawler_manager.start_crawler(data.copy())
 
     instance_info["started_at"] = str(instance.creation_date)
     instance_info["finished_at"] = None
 
     crawler_manager.update_instances_info(
-        data["data_path"], str(instance_id), instance_info)
+        data["data_path"], str(data["instance_id"]), instance_info)
 
     return instance
 
 
-def add_crawl_request(crawler_id):
+def add_crawl_request(crawler_id, wait_on: Literal['last_position', 'first_position', 'no_wait'] = 'last_position'):
     already_in_queue = CrawlerQueueItem.objects.filter(crawl_request_id=crawler_id).exists()
 
     if already_in_queue:
@@ -92,19 +85,37 @@ def add_crawl_request(crawler_id):
     crawl_request = CrawlRequest.objects.get(pk=crawler_id)
     cr_expec_runtime_cat = crawl_request.expected_runtime_category
 
-    # The new element of the crawler queue must be in the correct position (after the last added) and
-    # in the correct queue: fast, normal or slow
+    if wait_on == 'no_wait':
+        queue_item = CrawlerQueueItem(crawl_request_id=crawler_id,
+                                    position=CrawlerQueueItem.NO_WAIT_POSITION,
+                                    running=True,
+                                    forced_execution=True,
+                                    queue_type=cr_expec_runtime_cat)
+        queue_item.save()
 
-    position = 1
-    last_queue_item_created = CrawlerQueueItem.objects.filter(queue_type=cr_expec_runtime_cat).last()
+    else:
+        # The new element of the crawler queue must be in the correct position (after the last added) and
+        # in the correct queue: fast, normal or slow
 
-    if last_queue_item_created:
-        position = last_queue_item_created.position + 1
+        position = 0
 
-    queue_item = CrawlerQueueItem(crawl_request_id=crawler_id,
-                                position=position,
-                                queue_type=cr_expec_runtime_cat)
-    queue_item.save()
+        if wait_on == 'first_position':
+            first_queue_item_created = CrawlerQueueItem.objects.filter(
+                queue_type=cr_expec_runtime_cat).order_by('position').first()
+                
+            if first_queue_item_created:
+                position = first_queue_item_created.position - 1
+
+        else:
+            last_queue_item_created = CrawlerQueueItem.objects.filter(
+                queue_type=cr_expec_runtime_cat).order_by('position').last()
+            if last_queue_item_created:
+                position = last_queue_item_created.position + 1
+
+        queue_item = CrawlerQueueItem(crawl_request_id=crawler_id,
+                                    position=position,
+                                    queue_type=cr_expec_runtime_cat)
+        queue_item.save()
 
 
 def remove_crawl_request(crawler_id):
@@ -145,7 +156,7 @@ def unqueue_crawl_requests(queue_type: str):
     return response
 
 
-def process_stop_crawl(crawler_id):
+def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
     instance = CrawlRequest.objects.filter(
         id=crawler_id).get().running_instance
     # instance = CrawlerInstance.objects.get(instance_id=instance_id)
@@ -154,20 +165,28 @@ def process_stop_crawl(crawler_id):
     if instance is None:
         raise ValueError("No instance running")
 
+    if from_sm_listener and not instance.download_files_finished():
+        instance.page_crawling_finished = True
+        instance.save()
+
+        return
+
     instance_id = instance.instance_id
     config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
 
+    # FIXME: Colocar esse trecho de código no módulo writer
     # computa o tamanho em kbytes do diretório "data"
-    command_output = subprocess.run(["du " + config['data_path'] + "/data -d 0"], shell=True, stdout=subprocess.PIPE)
-    output_line = command_output.stdout.decode('utf-8').strip('\n')
-    parts = output_line.split('\t')
-    data_size_kbytes = int(parts[0])
+    # command_output = subprocess.run(["du " + config['data_path'] + "/data -d 0"], shell=True, stdout=subprocess.PIPE)
+    # output_line = command_output.stdout.decode('utf-8').strip('\n')
+    # parts = output_line.split('\t')
+    data_size_kbytes = 0  # int(parts[0])
 
+    # FIXME: Colocar esse trecho de código no módulo writer
     # conta a qtde de arquivos no diretório "data"
-    command_output = subprocess.run(
-        ["find " + config['data_path'] + "/data -type f | wc -l"], shell=True, stdout=subprocess.PIPE)
-    output_line = command_output.stdout.decode('utf-8').strip('\n')
-    num_data_files = int(output_line)
+    # command_output = subprocess.run(
+    #     ["find " + config['data_path'] + "/data -type f | wc -l"], shell=True, stdout=subprocess.PIPE)
+    # output_line = command_output.stdout.decode('utf-8').strip('\n')
+    num_data_files = 0  # int(output_line)
 
     instance = None
     instance_info = {}
@@ -196,12 +215,9 @@ def process_stop_crawl(crawler_id):
     crawler_manager.update_instances_info(
         config["data_path"], str(instance_id), instance_info)
 
-    crawler_manager.stop_crawler(crawler_id, instance_id, config)
+    crawler_manager.stop_crawler(crawler_id)
 
-    #
     unqueue_crawl_requests(queue_type)
-
-    return instance
 
 
 def list_process(request):
@@ -267,18 +283,11 @@ def getAllDataFiltered(filter_crawler_id, filter_name, filter_base_url, filter_d
 def create_instance(crawler_id, instance_id):
     mother = CrawlRequest.objects.filter(id=crawler_id)
     obj = CrawlerInstance.objects.create(
-        crawler_id=mother[0], instance_id=instance_id, running=True)
+        crawler=mother[0], instance_id=instance_id, running=True)
     return obj
 
 
-def generate_injector_forms(*args, injection_type, filter_queryset=False,
-                            crawler=None, **kwargs):
-    form_kwargs = {
-        'initial': {
-            'injection_type': f'{injection_type}'
-        },
-    }
-
+def generate_injector_forms(*args, filter_queryset=False, **kwargs):
     queryset = None
     crawler = None
     if filter_queryset:
@@ -288,21 +297,15 @@ def generate_injector_forms(*args, injection_type, filter_queryset=False,
             raise ValueError("If the filter_queryset option is True, the " +
                 "instance property must be set.")
 
-        queryset = crawler.parameter_handlers.filter(
-            injection_type__exact=injection_type
-        )
+        queryset = crawler.parameter_handlers
 
     parameter_formset = ParameterHandlerFormSet(*args,
-        prefix=f'{injection_type}-params',
-        form_kwargs=form_kwargs, queryset=queryset, **kwargs)
+        prefix='templated_url-params', queryset=queryset, **kwargs)
 
     if filter_queryset:
-        queryset = crawler.response_handlers.filter(
-            injection_type__exact=injection_type
-        )
+        queryset = crawler.response_handlers
     response_formset = ResponseHandlerFormSet(*args,
-        prefix=f'{injection_type}-responses',
-        form_kwargs=form_kwargs, queryset=queryset, **kwargs)
+        prefix='templated_url-responses', queryset=queryset, **kwargs)
 
     return parameter_formset, response_formset
 
@@ -346,23 +349,95 @@ def list_crawlers(request):
     return render(request, "main/list_crawlers.html", context)
 
 
+def get_grouped_crawlers_filtered(filter_crawler_id, filter_dynamic, filter_start_date, filter_end_date):
+    filters_url = ''
+
+    filter_string = ''
+    if filter_crawler_id != '':
+        filters_url += '&filter_crawler_id=' + filter_crawler_id
+        filter_string += f" and X.id = {filter_crawler_id}"
+    if filter_dynamic != '':
+        filters_url += '&filter_dynamic=' + filter_dynamic
+        if int(filter_dynamic) == 1:
+            filter_string += " and dynamic_processing = TRUE"
+        else:
+            filter_string += " and (dynamic_processing = FALSE or dynamic_processing IS NULL)"
+    if filter_start_date != '':
+        filters_url += '&filter_start_date=' + filter_start_date
+        filter_string += f" and date(creation_date) >= '{filter_start_date}'"
+    if filter_end_date != '':
+        filters_url += '&filter_end_date=' + filter_end_date
+        filter_string += f" and date(creation_date) <= '{filter_end_date}'"
+
+    grouped_crawlers = CrawlRequest.objects.raw(
+        "select X.id, X.source_name, Y.total, X.last_modified \
+        from main_crawlrequest as X inner join \
+        ( \
+            select B.id, A.steps, count(1) as total \
+            from main_crawlrequest as A inner join \
+            (select max(id) as id, steps from main_crawlrequest group by steps) as B on A.steps=B.steps \
+            where A.steps is not null and A.steps <> '' and A.steps <> '{}' \
+            group by B.id, A.steps \
+        ) as Y on X.id = Y.id \
+        where 1=1 "+filter_string+" order by X.last_modified desc"
+    )
+    
+    return grouped_crawlers, filters_url
+
+def list_grouped_crawlers(request):
+    page_number = request.GET.get('page', 1)
+    filter_crawler_id = request.GET.get('filter_crawler_id', '')
+    filter_dynamic = request.GET.get('filter_dynamic', '')
+    filter_start_date = request.GET.get('filter_start_date', '')
+    filter_end_date = request.GET.get('filter_end_date', '')
+    
+    grouped_crawlers, filters_url = get_grouped_crawlers_filtered(filter_crawler_id, filter_dynamic, filter_start_date, filter_end_date)
+    crawlers_paginator = Paginator(grouped_crawlers, 20)
+    
+    grouped_crawlers_page = crawlers_paginator.get_page(page_number)
+    
+    context = {
+        'grouped_crawlers_page': grouped_crawlers_page,
+        'filter_crawler_id': filter_crawler_id,
+        'filter_dynamic': filter_dynamic,
+        'filter_start_date': filter_start_date,
+        'filter_end_date': filter_end_date,
+        'filters_url': filters_url,
+    }
+
+    return render(request, "main/list_grouped_crawlers.html", context)
+
+def get_crawlers_from_same_group(request, crawler_id):
+    crawlers = CrawlRequest.objects.raw(
+        "select id, source_name \
+        from main_crawlrequest \
+        where steps=( \
+           select steps from main_crawlrequest where id = "+str(crawler_id)+") order by id desc")
+
+    json_data = []
+    for item in crawlers:
+        json_data.append({
+            'id': item.id,
+            'source_name': item.source_name,
+            'last_modified': item.last_modified,
+            'base_url': item.base_url,
+        })
+    
+    json_data = json.dumps(json_data, default=str)
+    
+    return JsonResponse(json_data, safe=False)
+
+
 def create_crawler(request):
     context = {}
 
     my_form = RawCrawlRequestForm(request.POST or None)
     templated_parameter_formset, templated_response_formset = \
-        generate_injector_forms(request.POST or None,
-            injection_type='templated_url')
-
-    static_parameter_formset, static_response_formset = \
-        generate_injector_forms(request.POST or None,
-            injection_type='static_form')
+        generate_injector_forms(request.POST or None)
 
     if request.method == "POST":
         if my_form.is_valid() and templated_parameter_formset.is_valid() and \
-           templated_response_formset.is_valid() and \
-           static_parameter_formset.is_valid() and \
-           static_response_formset.is_valid():
+           templated_response_formset.is_valid():
 
             new_crawl = CrawlRequestForm(my_form.cleaned_data)
             instance = new_crawl.save()
@@ -372,59 +447,152 @@ def create_crawler(request):
             templated_parameter_formset.save()
             templated_response_formset.instance = instance
             templated_response_formset.save()
-            static_parameter_formset.instance = instance
-            static_parameter_formset.save()
-            static_response_formset.instance = instance
-            static_response_formset.save()
 
-            return redirect('/detail/' + str(instance.id))
+            return redirect(detail_crawler, crawler_id=instance.id)
 
     context['form'] = my_form
     context['templated_response_formset'] = templated_response_formset
     context['templated_parameter_formset'] = templated_parameter_formset
-    context['static_response_formset'] = static_response_formset
-    context['static_parameter_formset'] = static_parameter_formset
     return render(request, "main/create_crawler.html", context)
 
 
-def edit_crawler(request, id):
-    crawler = get_object_or_404(CrawlRequest, pk=id)
+def create_grouped_crawlers(request):
+    context = {}
+
+    my_form = RawCrawlRequestForm(request.POST or None)
+    templated_parameter_formset, templated_response_formset = \
+        generate_injector_forms(request.POST or None)
+
+    if request.method == "POST":
+        source_names = request.POST.getlist('source_name')
+        base_urls = request.POST.getlist('base_url')
+        data_paths = request.POST.getlist('data_path')
+        crawl_types = request.POST.getlist('crawler_type_desc')
+        crawl_descriptions = request.POST.getlist('crawler_description')
+        crawl_issues = request.POST.getlist('crawler_issue')
+
+        if my_form.is_valid() and templated_parameter_formset.is_valid() and \
+           templated_response_formset.is_valid():
+
+            # new_crawl = my_form.save(commit=False)
+            form_new_crawl = CrawlRequestForm(my_form.cleaned_data)
+            new_crawl = form_new_crawl.save(commit=False)
+
+            for i in range(len(source_names)):
+                new_crawl.id = None
+                new_crawl.source_name = source_names[i]
+                new_crawl.base_url = base_urls[i]
+                new_crawl.data_path = data_paths[i]
+                new_crawl.crawler_type_desc = crawl_types[i]
+                new_crawl.crawler_description = crawl_descriptions[i]
+                new_crawl.crawler_issue = crawl_issues[i]
+                new_crawl.save()
+
+                # save sub-forms and attribute to this crawler instance
+                templated_parameter_formset.instance = new_crawl
+                templated_parameter_formset.save()
+                templated_response_formset.instance = new_crawl
+                templated_response_formset.save()
+
+            return redirect('/grouped_crawlers')
+
+    context['form'] = my_form
+    context['templated_response_formset'] = templated_response_formset
+    context['templated_parameter_formset'] = templated_parameter_formset
+    context['crawler_types'] = CrawlRequest.CRAWLERS_TYPES
+    context['page_context'] = 'new_group'
+    return render(request, "main/create_grouped_crawlers.html", context)
+
+
+def edit_crawler(request, crawler_id):
+    crawler = get_object_or_404(CrawlRequest, pk=crawler_id)
 
     form = RawCrawlRequestForm(request.POST or None, instance=crawler)
     templated_parameter_formset, templated_response_formset = \
-        generate_injector_forms(request.POST or None,
-            injection_type='templated_url', filter_queryset=True,
-            instance=crawler)
-
-    static_parameter_formset, static_response_formset = \
-        generate_injector_forms(request.POST or None,
-            injection_type='static_form', filter_queryset=True,
+        generate_injector_forms(request.POST or None, filter_queryset=True,
             instance=crawler)
 
     if request.method == 'POST' and form.is_valid() and \
        templated_parameter_formset.is_valid() and \
-       templated_response_formset.is_valid() and \
-       static_parameter_formset.is_valid() and \
-       static_response_formset.is_valid():
+       templated_response_formset.is_valid():
         form.save()
         templated_parameter_formset.save()
         templated_response_formset.save()
-        static_parameter_formset.save()
-        static_response_formset.save()
-        return redirect('/detail/' + str(id))
+        return redirect(detail_crawler, crawler_id=crawler_id)
+
     else:
         return render(request, 'main/create_crawler.html', {
             'form': form,
             'templated_response_formset': templated_response_formset,
             'templated_parameter_formset': templated_parameter_formset,
-            'static_parameter_formset': static_parameter_formset,
-            'static_response_formset': static_response_formset,
             'crawler': crawler
         })
 
 
-def delete_crawler(request, id):
-    crawler = CrawlRequest.objects.get(id=id)
+def edit_grouped_crawlers(request, id):
+    # busca pelo crawler que representa o grupo (pra ajudar a preencher o form)
+    crawler = get_object_or_404(CrawlRequest, pk=id)
+    
+    # e busca por todos os crawlers do grupo
+    crawlers = CrawlRequest.objects.raw(
+        "select id, source_name \
+        from main_crawlrequest \
+        where steps=( \
+           select steps from main_crawlrequest where id = "+str(id)+") order by id desc")
+
+    
+    form = RawCrawlRequestForm(request.POST or None, instance=crawler)
+    templated_parameter_formset, templated_response_formset = \
+        generate_injector_forms(request.POST or None, filter_queryset=True,
+            instance=crawler)
+    
+    if request.method == 'POST':
+        crawler_ids = request.POST.getlist('crawler_id')
+        source_names = request.POST.getlist('source_name')
+        base_urls = request.POST.getlist('base_url')
+        data_paths = request.POST.getlist('data_path')
+        crawl_types = request.POST.getlist('crawler_type_desc')
+        crawl_descriptions = request.POST.getlist('crawler_description')
+        crawl_issues = request.POST.getlist('crawler_issue')
+
+
+        # cria a instância do crawler com os dados do formulário, mas não salva no banco
+        post_crawler = form.save(commit=False)
+
+        # essa mesma instância será modificada com os dados de cada crawler e aí sim será
+        # salva no banco
+        for i, _id in enumerate(crawler_ids):
+            post_crawler.id = None if _id == '' else _id
+            post_crawler.source_name = source_names[i]
+            post_crawler.base_url = base_urls[i]
+            post_crawler.data_path = data_paths[i]
+            post_crawler.crawler_type_desc = crawl_types[i]
+            post_crawler.crawler_description = crawl_descriptions[i]
+            post_crawler.crawler_issue = crawl_issues[i]
+            post_crawler.save()
+
+            templated_parameter_formset.instance = post_crawler
+            templated_parameter_formset.save()
+            templated_response_formset.instance = post_crawler
+            templated_response_formset.save()
+        
+        return redirect('/grouped_crawlers')
+    
+    context = {
+        'crawler': crawler,
+        'crawlers': crawlers,
+        'form': form,
+        'templated_response_formset': templated_response_formset,
+        'templated_parameter_formset': templated_parameter_formset,
+        'crawler_types': CrawlRequest.CRAWLERS_TYPES,
+        'page_context': 'edit',
+    }
+
+    return render(request, 'main/create_grouped_crawlers.html', context)
+
+
+def delete_crawler(request, crawler_id):
+    crawler = CrawlRequest.objects.get(id=crawler_id)
 
     if request.method == 'POST':
         crawler.delete()
@@ -437,15 +605,14 @@ def delete_crawler(request, id):
     )
 
 
-def detail_crawler(request, id):
-    crawler = CrawlRequest.objects.get(id=id)
+def detail_crawler(request, crawler_id):
+    crawler = CrawlRequest.objects.get(id=crawler_id)
     # order_by("-atribute") orders descending
-    instances = CrawlerInstance.objects.filter(
-        crawler_id=id).order_by("-last_modified")
+    instances = crawler.instances.order_by("-last_modified")
 
     queue_item_id = None
     if crawler.waiting_on_queue:
-        queue_item = CrawlerQueueItem.objects.get(crawl_request_id=id)
+        queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
         queue_item_id = queue_item.id
 
     context = {
@@ -467,8 +634,9 @@ def create_steps(request):
 
 
 def stop_crawl(request, crawler_id):
-    process_stop_crawl(crawler_id)
-    return redirect(detail_crawler, id=crawler_id)
+    from_sm_listener = request.GET.get('from', '') == 'sm_listener'
+    process_stop_crawl(crawler_id, from_sm_listener)
+    return redirect(detail_crawler, crawler_id=crawler_id)
 
 
 def run_crawl(request, crawler_id):
@@ -479,172 +647,200 @@ def run_crawl(request, crawler_id):
 
     unqueue_crawl_requests(queue_type)
 
-    return redirect(detail_crawler, id=crawler_id)
+    return redirect(detail_crawler, crawler_id=crawler_id)
 
 
 def tail_log_file(request, instance_id):
-    crawler_id = CrawlerInstance.objects.filter(
-        instance_id=instance_id
-    ).values()[0]["crawler_id_id"]
+    instance = CrawlerInstance.objects.get(instance_id=instance_id)
 
-    config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
-    data_path = config["data_path"]
+    files_found = instance.number_files_found
+    download_file_success = instance.number_files_success_download
+    download_file_error = instance.number_files_error_download
+    number_files_previously_crawled = instance.number_files_previously_crawled
 
-    out = subprocess.run(["tail",
-                          f"{data_path}/log/{instance_id}.out",
-                          "-n",
-                          "10"],
-                         stdout=subprocess.PIPE).stdout
-    err = subprocess.run(["tail",
-                          f"{data_path}/log/{instance_id}.err",
-                          "-n",
-                          "10"],
-                         stdout=subprocess.PIPE).stdout
+    pages_found = instance.number_pages_found
+    download_page_success = instance.number_pages_success_download
+    download_page_error = instance.number_pages_error_download
+    number_pages_duplicated_download = instance.number_pages_duplicated_download
+    number_pages_previously_crawled = instance.number_pages_previously_crawled
+
+    logs = Log.objects.filter(instance_id=instance_id).order_by('-creation_date')
+
+    log_results = logs.filter(Q(log_level="out"))[:20]
+    err_results = logs.filter(Q(log_level="err"))[:20]
+
+    log_text = [f"[{r.logger_name}] {r.log_message}" for r in log_results]
+    log_text = "\n".join(log_text)
+    err_text = [f"[{r.logger_name}] [{r.log_level:^5}] {r.log_message}" for r in err_results]
+    err_text = "\n".join(err_text)
+
     return JsonResponse({
-        "out": out.decode('utf-8'),
-        "err": err.decode('utf-8'),
+        "files_found": files_found,
+        "files_success": download_file_success,
+        "files_error": download_file_error,
+        "files_previously_crawled": number_files_previously_crawled,
+
+        "pages_found": pages_found,
+        "pages_success": download_page_success,
+        "pages_error": download_page_error,
+        "pages_duplicated": number_pages_duplicated_download,
+        "pages_previously_crawled": number_pages_previously_crawled,
+
+        "out": log_text,
+        "err": err_text,
         "time": str(datetime.fromtimestamp(time.time())),
     })
+
+
+def raw_log(request, instance_id):
+    logs = Log.objects.filter(instance_id=instance_id)\
+                      .order_by('-creation_date')
+
+    raw_results = logs[:100]
+    raw_text = [json.loads(r.raw_log) for r in raw_results]
+
+    resp = JsonResponse({str(instance_id): raw_text},
+                        json_dumps_params={'indent': 2})
+
+    if len(logs) > 0 and logs[0].instance.running:
+        resp['Refresh'] = 5
+    return resp
+
+
+def files_found(request, instance_id, num_files):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id=instance_id)
+
+        instance.number_files_found += num_files
+        instance.save()
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def success_download_file(request, instance_id):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id=instance_id)
+
+        instance.number_files_success_download += 1
+        instance.save()
+
+        if instance.page_crawling_finished and instance.download_files_finished():
+            process_stop_crawl(instance.crawler.id)
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+def previously_crawled_file(request, instance_id):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id=instance_id)
+
+        instance.number_files_previously_crawled += 1
+        instance.save()
+
+        if instance.page_crawling_finished and instance.download_files_finished():
+            process_stop_crawl(instance.crawler.id)
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def error_download_file(request, instance_id):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id=instance_id)
+
+        instance.number_files_error_download += 1
+        instance.save()
+
+        if instance.page_crawling_finished and instance.download_files_finished():
+            process_stop_crawl(instance.crawler.id)
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def pages_found(request, instance_id, num_pages):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id=instance_id)
+
+        instance.number_pages_found += num_pages
+        instance.save()
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def success_download_page(request, instance_id):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id=instance_id)
+
+        instance.number_pages_success_download += 1
+        instance.save()
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+def previously_crawled_page(request, instance_id):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id=instance_id)
+
+        instance.number_pages_previously_crawled += 1
+        instance.save()
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+def error_download_page(request, instance_id):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id=instance_id)
+
+        instance.number_pages_error_download += 1
+        instance.save()
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def duplicated_download_page(request, instance_id):
+    try:
+        instance = CrawlerInstance.objects.get(instance_id=instance_id)
+
+        instance.number_pages_duplicated_download += 1
+        instance.save()
+
+        return JsonResponse({}, status=status.HTTP_200_OK)
+
+    except:
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def downloads(request):
     return render(request, "main/downloads.html")
 
 
-def load_form_fields(request):
-    """
-    Load the existing form fields in a page and returns their data as a JSON
-    object
-    """
-
-    # Maximum number of Templated URL tries before giving up on getting form
-    # data
-    MAX_TRIES = 5
-
-    base_url = request.GET.get('base_url')
-    req_type = request.GET.get('req_type')
-
-    params = json.loads(request.GET.get('url_param_data'))
-    responses = json.loads(request.GET.get('url_response_data'))
-
-    # Clear empty values from dicts
-    def clear_dict(entry):
-        return {k: v for k, v in entry.items() if v != ""}
-
-    params = list(map(clear_dict, params))
-    responses = list(map(clear_dict, responses))
-
-    probe = create_probing_object(base_url, req_type, responses)
-
-    try:
-        # Instantiate the parameter injectors for the URL
-        injectors = create_parameter_generators(probe, params, False)
-    except:
-        # Invalid templated URL configuration
-        return JsonResponse({
-            'error': 'Erro ao gerar URLs parametrizadas. Verifique se a ' +
-                     'injeção foi configurada corretamente.'
-        }, status=404)
-
-    # Generate the requests
-    generator = itertools.product(*injectors)
-
-    # Tries to find a valid page
-    for i in range(MAX_TRIES):
-        values = None
-        try:
-            values = next(generator)
-        except:
-            # No more values to generate
-            return JsonResponse({
-                'error': 'Nenhuma página válida encontrada com os valores ' +
-                         'gerados.'
-            }, status=404)
-
-        try:
-            is_valid = probe.check_entry(url_entries=values)
-        except MissingSchema as e:
-            # URL schema error
-            return JsonResponse({
-                'error': 'URL inválida, o protocolo foi especificado? (ex: ' +
-                         'http://, https://)'
-            }, status=404)
-
-        if is_valid:
-            curr_url = base_url.format(*values)
-            parser = None
-
-            try:
-                extractor = HTMLExtractor(url=curr_url)
-            except MissingSchema as e:
-                # URL schema error
-                return JsonResponse({
-                    'error': 'URL inválida, o protocolo foi especificado? ' +
-                             '(ex: http://, https://)'
-                }, status=404)
-
-            if not extractor.html_response.ok:
-                # Error during form extractor request
-                status_code = extractor.html_response.status_code
-                return JsonResponse({
-                    'error': 'Erro ao acessar a página (HTTP ' +
-                    str(status_code) + '). Verifique se a URL inicial ' +
-                    'está correta e se a página de interesse está ' +
-                    'funcionando.'
-                }, status=404)
-
-            forms = extractor.get_forms()
-
-            if len(forms) == 0:
-                # Failed to find a form in a valid page
-                return JsonResponse({
-                    'error': 'Nenhum formulário encontrado na página.'
-                }, status=404)
-
-            result = []
-            for form in forms:
-                current_data = {}
-                parser = HTMLParser(form=form)
-
-                if parser is not None:
-                    fields = parser.list_fields()
-
-                    def field_names(field):
-                        return parser.field_attributes(field).get('name', '')
-
-                    names = list(map(field_names, fields))
-
-                    method = parser.form.get('method', 'GET')
-                    if method == "":
-                        method = 'GET'
-
-                    method = method.upper()
-
-                    # Filter leading or trailing whitespace
-                    labels = [x.strip() for x in parser.list_field_labels()]
-
-                    result.append({
-                        'method': method,
-                        'length': parser.number_of_fields(),
-                        'names': names,
-                        'types': parser.list_input_types(),
-                        'labels': labels
-                    })
-
-            return JsonResponse({'forms': result})
-
-    return JsonResponse({
-        'error': f'Nenhuma página válida encontrada com os {MAX_TRIES} ' +
-        'primeiros valores gerados.'
-    }, status=404)
-
-
 def export_config(request, instance_id):
     instance = get_object_or_404(CrawlerInstance, pk=instance_id)
-    data_path = instance.crawler_id.data_path
+    data_path = instance.crawler.data_path
 
     file_name = f"{instance_id}.json"
-    path = os.path.join(data_path, "config", file_name)
+    rel_path = os.path.join(data_path, str(instance_id), "config", file_name)
+    path = os.path.join(settings.OUTPUT_FOLDER, rel_path)
 
     try:
         response = FileResponse(open(path, 'rb'), content_type='application/json')
@@ -662,10 +858,12 @@ def view_screenshots(request, instance_id, page):
     IMGS_PER_PAGE = 20
 
     instance = get_object_or_404(CrawlerInstance, pk=instance_id)
-    data_path = instance.crawler_id.data_path
 
-    screenshot_dir = os.path.join(data_path, "data", "screenshots",
-        str(instance_id))
+    output_folder = os.getenv('OUTPUT_FOLDER', '/data')
+    data_path = instance.crawler.data_path
+    instance_path = os.path.join(output_folder, data_path, str(instance_id))
+
+    screenshot_dir = os.path.join(instance_path, "data", "screenshots")
 
     if not os.path.isdir(screenshot_dir):
         return JsonResponse({
@@ -718,6 +916,13 @@ def load_iframe(request):
         }
         return render(request, 'main/error_iframe_loader.html', ctx)
 
+
+def scheduler(request):
+    crawl_requests = CrawlRequest.objects.all()
+    context = {
+        'crawl_requests': crawl_requests
+    }
+    return render(request, 'main/scheduler.html', context)
 
 # API
 ########
@@ -793,11 +998,34 @@ class CrawlerViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def run(self, request, pk):
+        query_params = self.request.query_params.dict()
+        action = query_params.get('action', '')
 
-        # instance = None
+        if action == 'run_immediately':
+            wait_on = 'no_wait'
+
+            add_crawl_request(pk, wait_on)
+            instance = process_run_crawl(pk)
+            data = {
+                'status': settings.API_SUCCESS,
+                'instance': CrawlerInstanceSerializer(instance).data
+            }
+
+            return JsonResponse(data)
+
+        elif action == 'wait_on_first_queue_position':
+            wait_on = 'first_position'
+
+        else: 
+            wait_on = 'last_position'
+
         try:
-            add_crawl_request(pk)
-            unqueue_crawl_requests()
+            add_crawl_request(pk, wait_on)
+
+            crawl_request = CrawlRequest.objects.get(pk=pk)
+            queue_type = crawl_request.expected_runtime_category
+
+            unqueue_crawl_requests(queue_type)
 
         except Exception as e:
             data = {
@@ -806,9 +1034,15 @@ class CrawlerViewSet(viewsets.ModelViewSet):
             }
             return JsonResponse(data)
 
+        if wait_on == 'first_position':
+            message = f'Crawler added to crawler queue in first position'
+
+        else:
+            message = f'Crawler added to crawler queue in last position'
+
         data = {
             'status': settings.API_SUCCESS,
-            'message': f'Crawler added to crawler queue'
+            'message': message
         }
 
         return JsonResponse(data)
@@ -945,3 +1179,89 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
             unqueue_crawl_requests('slow')
 
         return response
+
+
+class TaskViewSet(viewsets.ModelViewSet):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+
+    def create(self, request):
+        response = super().create(request)
+        if response.status_code == status.HTTP_201_CREATED:
+            message = {
+                'action': 'create',
+                'data': response.data
+            }
+            crawler_manager.message_sender.send(TASK_TOPIC, message)
+        return response
+
+    def update(self, request, pk=None):
+        response = super().update(request, pk=pk)
+        if response.status_code == status.HTTP_200_OK:
+            message = {
+                'action': 'update',
+                'data': response.data
+            }
+            crawler_manager.message_sender.send(TASK_TOPIC, message)
+        return response
+
+    def partial_update(self, request, pk=None):
+        response = super().partial_update(request, pk=pk)
+        if response.status_code == status.HTTP_200_OK:
+            message = {
+                'action': 'update',
+                'data': response.data
+            }
+            crawler_manager.message_sender.send(TASK_TOPIC, message)
+        return response
+
+    def destroy(self, request, pk=None):
+        response = super().destroy(request, pk=pk)
+        if response.status_code == status.HTTP_204_NO_CONTENT:
+            message = {
+                'action': 'cancel',
+                'data': {
+                    'id': pk
+                }
+            }
+        crawler_manager.message_sender.send(TASK_TOPIC, message)
+        return response
+
+    def __str2date(self, s: str) -> datetime:
+        date = None
+
+        try:
+            date = datetime.strptime(s, '%d-%m-%Y')
+
+        except Exception as e:
+            print(e)
+
+        return date
+
+    @action(detail=False)
+    def filter(self, request):
+        query_params = self.request.query_params.dict()
+
+        end_date = None
+        start_date = None
+
+        if 'end_date' in query_params:
+            end_date = self.__str2date(query_params['end_date'])
+
+            start_date = None
+            if 'start_date' in query_params:
+                start_date = self.__str2date(query_params['start_date'])
+        if end_date is None or start_date is None:
+            msg = {'message': 'You must send the params start_date and end_date, both in the format day-month-year' +
+                   ' in the query params of the url. Eg.: <api_address>?start_date=23-04-2023&end_date=01-01-2020, etc.'}
+
+            return Response(msg, status=status.HTTP_400_BAD_REQUEST)
+
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+
+        # serializer.data is ordered_dict
+        tasks = json.loads(json.dumps(serializer.data))
+        data = task_filter_by_date_interval(tasks, start_date, end_date)
+
+        return Response(data, status=status.HTTP_200_OK)

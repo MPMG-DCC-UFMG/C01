@@ -1,0 +1,9 @@
+{% load crispy_forms_tags %}
+
+<div id="templated_url-item-block" class="block" hidden>
+    <div class="row">
+        <div class="col md-6" id="templated_url-config">
+            {% include "main/injection_config.html" with parameter_formset=templated_parameter_formset response_formset=templated_response_formset %}
+        </div>
+    </div>
+</div>
