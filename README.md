@@ -39,14 +39,6 @@ python run.py
 ```
 E em seguida acessar _http://localhost:8000/_
 
-Se quiser acessar o programa através da rede, execute:
-```
-python run.py 0.0.0.0:8000
-```
-E então use o IP da máquina onde a interface está sendo executada para acessá-la. Por exemplo, se a máquina onde você rodou o comando acima tem endereço de IP _1.2.3.4_, e esse endereço é visível para sua máquina através da rede, você pode acessar _http://1.2.3.4:8000/_. Essa execução só dará certo se a máquina estiver com o acesso externo desse IP liberado, caso contrário, não será possível acessar o sistema remotamente.
-
-Mais informações de como utilizar a interface pode ser encontrado nas próximas páginas dessa Wiki.
-
 Ao final da execução, deve-se desligar o sistema através do comando:
 
 ```
