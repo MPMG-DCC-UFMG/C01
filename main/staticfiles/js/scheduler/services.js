@@ -37,7 +37,7 @@ services.get_tasks_in_interval = function (start_date, end_date) {
         async: false,
         success: function (data) {
             tasks_by_date = data;
-            
+            console.log('Tasks received!', tasks_by_date);
         },
         error: function (data) {
             console.error(data.responseText);

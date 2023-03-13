@@ -128,7 +128,7 @@ def process_weekly_repeat_mode(filtered_tasks_ids: Dict[str, int],
                             max_occurrences: int = math.inf,
                             max_date: datetime = MAX_DATE,
                             interval: int = 1) -> Dict[str, int]:
-
+    
     delta_weeks = timedelta(weeks=interval)
     num_occorrences = 0
 

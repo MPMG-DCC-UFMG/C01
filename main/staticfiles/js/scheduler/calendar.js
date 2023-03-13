@@ -186,7 +186,66 @@ calendar.yearly.hide = function () {
     this.container.css('display', 'none');
 }
 
+calendar.weekly.tasks = {};
+
+calendar.weekly.get_tasks = function () {
+    let last_day_of_week = new Date(this.active_start_day.getFullYear(), 
+                                    this.active_start_day.getMonth(), 
+                                    this.active_start_day.getDate() + 6);
+    
+    let start_date = calendar.get_formated_date(this.active_start_day.getDate(), this.active_start_day.getMonth() + 1, this.active_start_day.getFullYear());
+    let end_date = calendar.get_formated_date(last_day_of_week.getDate(), last_day_of_week.getMonth() + 1, last_day_of_week.getFullYear());
+
+    
+    let tasks_of_week = services.get_tasks_in_interval(start_date, end_date);
+    let task, task_runtime, key;
+    
+    for (let day in tasks_of_week) {
+        this.tasks[day] = {};
+
+        for (let hour = 0; hour < 24; hour++)
+            this.tasks[day][String(hour).padStart(2, '0')] = [];
+
+        for (let i = 0; i < tasks_of_week[day].length; i++) {
+            task = TASKS[tasks_of_week[day][i]];
+
+            task_runtime = task.scheduler_config.start_date;
+            key = calendar.get_hour_from_str_datetime(task_runtime);
+            
+            this.tasks[day][key].push(task);
+        }
+    }
+
+}
+
+calendar.weekly.get_datetime_tasks = function (week_day, hour) {
+    let day = new Date(this.active_start_day.getFullYear(), this.active_start_day.getMonth(), this.active_start_day.getDate() + week_day);
+    day = calendar.get_formated_date(day.getDate(), day.getMonth() + 1, day.getFullYear());
+
+    // check if day is in this.tasks
+    if (!(day in this.tasks)) 
+        return '';  
+
+    let tasks = this.tasks[day][hour];
+    let task, task_repr, task_reprs = [];
+
+    for (let i = 0; i < tasks.length; i++) {
+        task = tasks[i];
+        task_repr = `
+                    <div 
+                        class="px-2 py-1 bg-primary rounded-pill text-white text-container"
+                        style="overflow: hidden; white-space: nowrap;overflow">
+                        <p class="font-weight-bold small m-0 p-0 scroll-text">${task.crawler_name}</p>
+                    </div>`;
+        task_reprs.push(task_repr);
+    }
+
+    return task_reprs.join('\n');
+}
+
 calendar.weekly.show = function () {
+    this.get_tasks();
+    
     // mostra os dias da semana
     let calendar_cells = ['<div></div>'];
 
@@ -194,13 +253,12 @@ calendar.weekly.show = function () {
     
     let active_year = this.active_start_day.getFullYear();
     let active_month = this.active_start_day.getMonth();
-    let week_start_day = this.active_start_day.getDate();
     
     let day, day_repr, days = [];
 
 
     for (i=0;i<7;i++) {
-        day = new Date(active_year, active_month, week_start_day + i);
+        day = new Date(active_year, active_month, this.active_start_day.getDate() + i);
 
         let diff_month_css_class = day.getMonth() != calendar.curr_date.getMonth() ? 'no-current-month' : '';
 
@@ -227,13 +285,28 @@ calendar.weekly.show = function () {
         days.push(day);
     }
 
-    let hour_idx = 0;
+    let hour_idx = 0, week_day, hour, tasks_of_hour_html;
+
     for (i=0;i<8 * 24;i++) {
         if (i % 8 == 0) 
-            calendar_cells.push(`<div id="calendar-weekly-hour-${hour_idx}" class="${FLEX_CENTER} text-muted small">${HOURS[hour_idx++]}</div>`)
-        
-        else 
-            calendar_cells.push(`<div id="calendar-weekly-cell-${hour_idx}-${i % 8 - 1}" class=""></div>`);
+            calendar_cells.push(`<div 
+                                    id="calendar-weekly-hour-${hour_idx}" 
+                                    class="${FLEX_CENTER} text-muted small">
+                                    ${HOURS[hour_idx++]}
+                                </div>`)
+            
+        else {
+            week_day = i % 8 - 1;
+            hour = hour_idx - 1;
+            
+            tasks_of_hour_html = this.get_datetime_tasks(week_day, String(hour).padStart(2, '0'));
+
+            calendar_cells.push(`<div 
+                                    id="calendar-weekly-cell-${hour}-${week_day}" 
+                                    class="">
+                                    ${tasks_of_hour_html}
+                                </div>`);
+        }
     }
 
     this.container.empty();
@@ -256,6 +329,37 @@ calendar.weekly.show = function () {
         first_day_year = ` de ${first_day_of_week.getFullYear()}`;
 
     calendar.date_info.text(`${first_day_of_week.getDate()}${first_day_month}${first_day_year} - ${last_day_of_week.getDate()}${last_day_month}${last_day_year}`);
+
+    $(".text-container").hover(
+        function () {
+            const $this = $(this);
+            const $textParagraph = $this.find("p");
+            const maxWidth = parseFloat($textParagraph.css("max-width"));
+            const fontSize = parseFloat($textParagraph.css("font-size"));
+            const realWidth = $textParagraph.width();
+            const proportion = realWidth / maxWidth;
+            const textLength = $textParagraph.text().length * fontSize;
+            const realLength = Math.round(textLength * proportion);
+
+            const animation_time = realLength * 5;
+
+            $this.animate({ scrollLeft: realLength }, animation_time);
+        },
+        function () {
+            const $this = $(this);
+            const $textParagraph = $this.find("p");
+            const maxWidth = parseFloat($textParagraph.css("max-width"));
+            const fontSize = parseFloat($textParagraph.css("font-size"));
+            const realWidth = $textParagraph.width();
+            const proportion = realWidth / maxWidth;
+            const textLength = $textParagraph.text().length * fontSize;
+            const realLength = Math.round(textLength * proportion);
+
+            const animation_time = realLength;
+
+            $this.animate({ scrollLeft: 0 }, animation_time);
+        }
+    );
 }
 
 calendar.weekly.next = function () {
@@ -287,7 +391,7 @@ calendar.get_hour_from_str_datetime = function (str_datetime) {
 }
 
 calendar.daily.tasks = {};
-calendar.daily.get_daily_tasks = function () {
+calendar.daily.get_tasks = function () {
     let day = this.active_day;
     let key = start_date = end_date = calendar.get_formated_date(day.getDate(), day.getMonth() + 1, day.getFullYear());
 
@@ -309,7 +413,7 @@ calendar.daily.get_daily_tasks = function () {
 
     // iterates over all tasks of the day
     for (let task_id of all_tasks_of_day) {
-        task = services.get_task(task_id);
+        task = TASKS[task_id];
         task_runtime = task.scheduler_config.start_date;
         key = calendar.get_hour_from_str_datetime(task_runtime);
         this.tasks[key].push(task);
@@ -333,7 +437,7 @@ function get_task_next_run_text(now, next_run_date, timezone) {
 }
 
 calendar.daily.show = function () {
-    this.get_daily_tasks();
+    this.get_tasks();
 
     let active_day_classes = this.curr_day.toDateString() == this.active_day.toDateString() ? 'bg-primary text-white' : ''; 
 
