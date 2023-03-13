@@ -385,7 +385,11 @@ calendar.daily.show = function () {
             let title = '';
             let opacity = 'opacity: 0.5;';
             
-            if (next_run_date < now) 
+            let past_day = this.active_day.getDate() < now.getDate() 
+                            && this.active_day.getMonth() == now.getMonth() 
+                            && this.active_day.getFullYear() == now.getFullYear();
+
+            if (past_day || next_run_date < now) 
                 title = 'Coleta executada em: ' + next_run_text + '. \n\nClique para opções.';
             
             else 
