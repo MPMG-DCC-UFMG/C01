@@ -227,13 +227,28 @@ calendar.weekly.get_datetime_tasks = function (week_day, hour) {
         return '';  
 
     let tasks = this.tasks[day][hour];
-    let task, task_repr, task_reprs = [];
+    let task, task_repr, task_reprs = [], bg_color;
 
     for (let i = 0; i < tasks.length; i++) {
         task = tasks[i];
+
+        switch (task.crawler_queue_behavior) {
+            case 'wait_on_first_queue_position':
+                bg_color = 'bg-warning';
+                break;
+
+            case 'run_immediately':
+                bg_color = 'bg-danger';
+                break;
+
+            default:
+                bg_color = 'bg-primary';
+                break;
+        }
+
         task_repr = `
                     <div 
-                        class="px-2 py-1 bg-primary rounded-pill text-white text-container"
+                        class="px-2 py-1 ${bg_color} rounded-pill text-white text-container"
                         style="overflow: hidden; white-space: nowrap;overflow">
                         <p class="font-weight-bold small m-0 p-0 scroll-text">${task.crawler_name}</p>
                     </div>`;
@@ -285,7 +300,7 @@ calendar.weekly.show = function () {
         days.push(day);
     }
 
-    let hour_idx = 0, week_day, hour, tasks_of_hour_html;
+    let hour_idx = 0, week_day, hour, tasks_of_hour_html, crawler_queue_behavior;
 
     for (i=0;i<8 * 24;i++) {
         if (i % 8 == 0) 
@@ -299,6 +314,7 @@ calendar.weekly.show = function () {
             week_day = i % 8 - 1;
             hour = hour_idx - 1;
             
+
             tasks_of_hour_html = this.get_datetime_tasks(week_day, String(hour).padStart(2, '0'));
 
             calendar_cells.push(`<div 
