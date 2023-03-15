@@ -218,9 +218,35 @@ calendar.weekly.get_tasks = function () {
 
 }
 
+function get_task_title_and_opacity(task, curr_date) {
+    let now = get_now(task.scheduler_config.timezone);
+
+    // O único caso em que o next_run não é definido é quando a coleta é agendada para ser executada uma única vez e o horário de início já passou.
+    if (task.next_run == null)
+        task.next_run = task.scheduler_config.start_date;
+
+    let next_run_date = str_to_date(task.next_run);
+    let_next_run_text = get_task_next_run_text(now, next_run_date, task.scheduler_config.timezone);
+
+    let title = '';
+    let opacity = 'opacity: 0.5;';
+
+    let past_day = curr_date.getDate() < now.getDate()
+        && curr_date.getMonth() == now.getMonth()
+        && curr_date.getFullYear() == now.getFullYear();
+
+    if (past_day || next_run_date < now)
+        title = 'Coleta executada em: ' + next_run_text + '. \n\nClique para opções.';
+
+    else
+        title = 'Coleta agendada para: ' + next_run_text + '. \n\nClique para opções.', opacity = '';
+
+    return [title, opacity];
+}
+
 calendar.weekly.get_datetime_tasks = function (week_day, hour) {
-    let day = new Date(this.active_start_day.getFullYear(), this.active_start_day.getMonth(), this.active_start_day.getDate() + week_day);
-    day = calendar.get_formated_date(day.getDate(), day.getMonth() + 1, day.getFullYear());
+    let curr_day = new Date(this.active_start_day.getFullYear(), this.active_start_day.getMonth(), this.active_start_day.getDate() + week_day);
+    day = calendar.get_formated_date(curr_day.getDate(), curr_day.getMonth() + 1, curr_day.getFullYear());
 
     // check if day is in this.tasks
     if (!(day in this.tasks)) 
@@ -228,11 +254,11 @@ calendar.weekly.get_datetime_tasks = function (week_day, hour) {
 
     let tasks = this.tasks[day][hour];
     let task, task_repr, task_reprs = [], bg_color;
-
+    let max_tasks = 3;
     let num_tasks = tasks.length;
 
-    if (num_tasks > 3) {
-        for (let i = 0; i < 2; i++) {
+    if (num_tasks > max_tasks) {
+        for (let i = 0; i < max_tasks - 1; i++) {
             task = tasks[i];
 
             switch (task.crawler_queue_behavior) {
@@ -249,10 +275,17 @@ calendar.weekly.get_datetime_tasks = function (week_day, hour) {
                     break;
             }
 
+            let [title, opacity] = get_task_title_and_opacity(task, curr_day);
+
             task_repr = `
                         <div 
+                            onclick="show_task_detail(${task.id})" 
+                            title="${title}"
                             class="px-2 py-1 ${bg_color} rounded-pill text-white text-container mt-2"
-                            style="overflow: hidden; white-space: nowrap;overflow">
+                            style="overflow: hidden; 
+                                    white-space: nowrap; 
+                                    cursor: pointer;
+                                    ${opacity}">
                             <p class="font-weight-bold small m-0 p-0 scroll-text">${task.crawler_name}</p>
                         </div>`;
 
@@ -261,6 +294,7 @@ calendar.weekly.get_datetime_tasks = function (week_day, hour) {
 
         task_repr = `
                     <div 
+                        style="cursor: pointer;"
                         class="px-2 py-1 bg-light rounded border border-dark rounded-pill mt-2 text-center">
                         <p class="font-weight-bold small m-0 p-0">+${num_tasks - 2} outras</p>
                     </div>`;
@@ -283,17 +317,23 @@ calendar.weekly.get_datetime_tasks = function (week_day, hour) {
                     bg_color = 'bg-primary';
                     break;
             }
-    
+            
+            let [title, opacity] = get_task_title_and_opacity(task, curr_day);
+            
             task_repr = `
                         <div 
+                            onclick="show_task_detail(${task.id})" 
+                            title="${title}"
                             class="px-2 py-1 ${bg_color} rounded-pill text-white text-container mt-2"
-                            style="overflow: hidden; white-space: nowrap;overflow">
+                            style="overflow: hidden; 
+                                    white-space: nowrap; 
+                                    cursor: pointer;
+                                    ${opacity}">
                             <p class="font-weight-bold small m-0 p-0 scroll-text">${task.crawler_name}</p>
                         </div>`;
             task_reprs.push(task_repr);
         }
     }
-
 
     return task_reprs.join('\n');
 }
@@ -311,7 +351,6 @@ calendar.weekly.show = function () {
     
     let day, day_repr, days = [], bg_light = '';
 
-
     for (i=0;i<7;i++) {
         day = new Date(active_year, active_month, this.active_start_day.getDate() + i);
 
@@ -326,17 +365,19 @@ calendar.weekly.show = function () {
                             ${day.getDate()}
                         </div>`;
 
-        calendar_cells.push(`<div>
-                    <h2 class="${FLEX_CENTER} mb-3">
-                        <div class="d-flex align-items-center" style="flex-direction: column;">
-                            <div class="h6 text-muted">
-                                ${WEEKDAYS[i]}
-                            </div>
-                            ${day_repr}
-                        </div>
-                    </h2>
-                </div>`);
-        
+        calendar_cells.push(`<div class="d-flex justify-content-center">
+                                <div class="bg-white" style="position: fixed; flex: 1;">
+                                    <h2 class="${FLEX_CENTER} mb-3">
+                                        <div class="d-flex align-items-center" style="flex-direction: column;">
+                                            <div class="h6 text-muted">
+                                                ${WEEKDAYS[i]}
+                                            </div>
+                                            ${day_repr}
+                                        </div>
+                                    </h2>
+                                </div>
+                            </div>`);
+                    
         days.push(day);
     }
 
@@ -538,27 +579,8 @@ calendar.daily.show = function () {
                     break;
             }
             
-            let now = get_now(task.scheduler_config.timezone);
-
-            // O único caso em que o next_run não é definido é quando a coleta é agendada para ser executada uma única vez e o horário de início já passou.
-            if (task.next_run == null)
-                task.next_run = task.scheduler_config.start_date;
-
-            let next_run_date = str_to_date(task.next_run);
-            let_next_run_text = get_task_next_run_text(now, next_run_date, task.scheduler_config.timezone);
-
-            let title = '';
-            let opacity = 'opacity: 0.5;';
-            
-            let past_day = this.active_day.getDate() < now.getDate() 
-                            && this.active_day.getMonth() == now.getMonth() 
-                            && this.active_day.getFullYear() == now.getFullYear();
-
-            if (past_day || next_run_date < now) 
-                title = 'Coleta executada em: ' + next_run_text + '. \n\nClique para opções.';
-            
-            else 
-                title = 'Coleta agendada para: ' + next_run_text + '. \n\nClique para opções.', opacity = '';
+            // get_task_title_and_opacity
+            const [title, opacity] = get_task_title_and_opacity(task, this.active_day);
             
             tasks_in_hour.push(`
                 <div
