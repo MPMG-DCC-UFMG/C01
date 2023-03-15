@@ -229,31 +229,71 @@ calendar.weekly.get_datetime_tasks = function (week_day, hour) {
     let tasks = this.tasks[day][hour];
     let task, task_repr, task_reprs = [], bg_color;
 
-    for (let i = 0; i < tasks.length; i++) {
-        task = tasks[i];
+    let num_tasks = tasks.length;
 
-        switch (task.crawler_queue_behavior) {
-            case 'wait_on_first_queue_position':
-                bg_color = 'bg-warning';
-                break;
+    if (num_tasks > 3) {
+        for (let i = 0; i < 2; i++) {
+            task = tasks[i];
 
-            case 'run_immediately':
-                bg_color = 'bg-danger';
-                break;
+            switch (task.crawler_queue_behavior) {
+                case 'wait_on_first_queue_position':
+                    bg_color = 'bg-warning';
+                    break;
 
-            default:
-                bg_color = 'bg-primary';
-                break;
+                case 'run_immediately':
+                    bg_color = 'bg-danger';
+                    break;
+
+                default:
+                    bg_color = 'bg-primary';
+                    break;
+            }
+
+            task_repr = `
+                        <div 
+                            class="px-2 py-1 ${bg_color} rounded-pill text-white text-container mt-2"
+                            style="overflow: hidden; white-space: nowrap;overflow">
+                            <p class="font-weight-bold small m-0 p-0 scroll-text">${task.crawler_name}</p>
+                        </div>`;
+
+            task_reprs.push(task_repr);
         }
 
         task_repr = `
                     <div 
-                        class="px-2 py-1 ${bg_color} rounded-pill text-white text-container"
-                        style="overflow: hidden; white-space: nowrap;overflow">
-                        <p class="font-weight-bold small m-0 p-0 scroll-text">${task.crawler_name}</p>
+                        class="px-2 py-1 bg-light rounded border border-dark rounded-pill mt-2 text-center">
+                        <p class="font-weight-bold small m-0 p-0">+${num_tasks - 2} outras</p>
                     </div>`;
+
         task_reprs.push(task_repr);
+    } else {
+        for (let i = 0; i < num_tasks; i++) {
+            task = tasks[i];
+    
+            switch (task.crawler_queue_behavior) {
+                case 'wait_on_first_queue_position':
+                    bg_color = 'bg-warning';
+                    break;
+    
+                case 'run_immediately':
+                    bg_color = 'bg-danger';
+                    break;
+    
+                default:
+                    bg_color = 'bg-primary';
+                    break;
+            }
+    
+            task_repr = `
+                        <div 
+                            class="px-2 py-1 ${bg_color} rounded-pill text-white text-container mt-2"
+                            style="overflow: hidden; white-space: nowrap;overflow">
+                            <p class="font-weight-bold small m-0 p-0 scroll-text">${task.crawler_name}</p>
+                        </div>`;
+            task_reprs.push(task_repr);
+        }
     }
+
 
     return task_reprs.join('\n');
 }
@@ -269,7 +309,7 @@ calendar.weekly.show = function () {
     let active_year = this.active_start_day.getFullYear();
     let active_month = this.active_start_day.getMonth();
     
-    let day, day_repr, days = [];
+    let day, day_repr, days = [], bg_light = '';
 
 
     for (i=0;i<7;i++) {
@@ -303,23 +343,28 @@ calendar.weekly.show = function () {
     let hour_idx = 0, week_day, hour, tasks_of_hour_html, crawler_queue_behavior;
 
     for (i=0;i<8 * 24;i++) {
-        if (i % 8 == 0) 
+        if (i % 8 == 0) {
+            if (bg_light == 'bg-light')
+                bg_light = '';
+
+            else
+                bg_light = 'bg-light';
+
             calendar_cells.push(`<div 
                                     id="calendar-weekly-hour-${hour_idx}" 
                                     class="${FLEX_CENTER} text-muted small">
                                     ${HOURS[hour_idx++]}
-                                </div>`)
-            
-        else {
+                                </div>`);
+        } else {
+
             week_day = i % 8 - 1;
             hour = hour_idx - 1;
             
-
             tasks_of_hour_html = this.get_datetime_tasks(week_day, String(hour).padStart(2, '0'));
 
             calendar_cells.push(`<div 
                                     id="calendar-weekly-cell-${hour}-${week_day}" 
-                                    class="">
+                                    class="border rounded px-2 pb-2 ${bg_light}">
                                     ${tasks_of_hour_html}
                                 </div>`);
         }
