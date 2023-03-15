@@ -28,7 +28,8 @@ from .iframe_loader import iframe_loader
 from .forms import (CrawlRequestForm, ParameterHandlerFormSet,
                     RawCrawlRequestForm, ResponseHandlerFormSet)
 from .models import (CRAWLER_QUEUE_DB_ID, CrawlerInstance, CrawlerQueue,
-                     CrawlerQueueItem, CrawlRequest, Log, Task)
+                     CrawlerQueueItem, CrawlRequest, Log, Task, ResponseHandler,
+                     ParameterHandler)
 from .serializers import (CrawlerInstanceSerializer, CrawlerQueueSerializer,
                           CrawlRequestSerializer, TaskSerializer)
 from .task_filter import task_filter_by_date_interval
@@ -962,13 +963,11 @@ class CrawlerViewSet(viewsets.ModelViewSet):
     def _create_templated_url_parameter_handlers(self, parameter_handlers, crawler_id):
         for handler in parameter_handlers:
             handler['crawler_id'] = crawler_id
-            handler['injection_type'] = 'templated_url'
             ParameterHandler.objects.create(**handler)
 
     def _create_templated_url_response_handlers(self, response_handlers, crawler_id):
         for handler in response_handlers:
             handler['crawler_id'] = crawler_id
-            handler['injection_type'] = 'templated_url'
             ResponseHandler.objects.create(**handler)
 
     def create(self, request, *args, **kwargs):
