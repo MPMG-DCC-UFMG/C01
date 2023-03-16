@@ -837,19 +837,32 @@ def downloads(request):
 
 def export_config(request, instance_id):
     instance = get_object_or_404(CrawlerInstance, pk=instance_id)
+
+    output_folder = settings.OUTPUT_FOLDER
     data_path = instance.crawler.data_path
 
-    file_name = f"{instance_id}.json"
-    rel_path = os.path.join(data_path, str(instance_id), "config", file_name)
-    path = os.path.join(settings.OUTPUT_FOLDER, rel_path)
+    file_name = f'{instance_id}.json'
+    file_path = None 
 
+    for crawler_config_path_format in settings.CRAWLER_CONFIG_PATH_FORMATS:
+        file_path = crawler_config_path_format.format(
+            output_folder=output_folder,
+            data_path=data_path,
+            instance_id=instance_id
+        )
+
+        if os.path.exists(file_path):
+            break
+    
     try:
-        response = FileResponse(open(path, 'rb'), content_type='application/json')
+        response = FileResponse(open(file_path, 'rb'), content_type='application/json')
+
     except FileNotFoundError:
         print(f"Arquivo de Configuração Não Encontrado: {file_name}")
         return HttpResponseNotFound("<h1>Página Não Encontrada</h1>")
+    
     else:
-        response['Content-Length'] = os.path.getsize(path)
+        response['Content-Length'] = os.path.getsize(file_path)
         response['Content-Disposition'] = "attachment; filename=%s" % file_name
 
     return response
