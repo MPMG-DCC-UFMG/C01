@@ -856,15 +856,28 @@ def export_config(request, instance_id):
 
 
 def view_screenshots(request, instance_id, page):
-    IMGS_PER_PAGE = 20
-
     instance = get_object_or_404(CrawlerInstance, pk=instance_id)
 
     output_folder = os.getenv('OUTPUT_FOLDER', '/data')
     data_path = instance.crawler.data_path
-    instance_path = os.path.join(output_folder, data_path, str(instance_id))
 
-    screenshot_dir = os.path.join(instance_path, "data", "screenshots")
+    if output_folder[-1] == '/':
+        output_folder = output_folder[:-1]
+    
+    if data_path[-1] == '/':
+        data_path = data_path[:-1]
+
+    screenshot_dir = None 
+
+    for screenshot_path_format in settings.SCREENSHOT_PATH_FORMATS:
+        screenshot_dir = screenshot_path_format.format(
+            output_folder=output_folder,
+            data_path=data_path,
+            instance_id=instance_id
+        )
+
+        if os.path.isdir(screenshot_dir):
+            break
 
     if not os.path.isdir(screenshot_dir):
         return JsonResponse({
@@ -881,8 +894,8 @@ def view_screenshots(request, instance_id, page):
             'total_screenshots': 0
         }, status=200)
 
-    screenshot_list = screenshot_list[(page - 1) * IMGS_PER_PAGE:
-        page * IMGS_PER_PAGE]
+    screenshot_list = screenshot_list[(page - 1) * settings.SCREENSHOT_IMGS_PER_PAGE:
+        page * settings.SCREENSHOT_IMGS_PER_PAGE]
 
     image_data = []
     for index, screenshot in enumerate(screenshot_list):
@@ -890,7 +903,7 @@ def view_screenshots(request, instance_id, page):
         with open(img_path, "rb") as image:
             curr_img = {
                 'base64': base64.b64encode(image.read()).decode('ascii'),
-                'title': str(1 + index + ((page - 1) * IMGS_PER_PAGE))
+                'title': str(1 + index + ((page - 1) * settings.SCREENSHOT_IMGS_PER_PAGE))
             }
             image_data.append(curr_img)
 
