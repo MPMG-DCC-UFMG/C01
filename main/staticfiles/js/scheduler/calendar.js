@@ -66,6 +66,10 @@ calendar.weekly = {};
 calendar.daily = {};
 
 calendar.weekly.container = $('#calendar-weekly');
+
+calendar.weekly.weekdays_container = $('#calendar-weekly-weekdays');
+calendar.weekly.days_container = $('#calendar-weekly-days');
+
 calendar.daily.container = $('#calendar-daily');
 calendar.monthly.container = $('#calendar-monthly');
 calendar.yearly.container = $('#calendar-monthly');
@@ -295,6 +299,7 @@ calendar.weekly.get_datetime_tasks = function (week_day, hour) {
         task_repr = `
                     <div 
                         style="cursor: pointer;"
+                        onclick="show_all_scheduling_modal()"
                         class="px-2 py-1 bg-light rounded border border-dark rounded-pill mt-2 text-center">
                         <p class="font-weight-bold small m-0 p-0">+${num_tasks - 2} outras</p>
                     </div>`;
@@ -342,7 +347,7 @@ calendar.weekly.show = function () {
     this.get_tasks();
     
     // mostra os dias da semana
-    let calendar_cells = ['<div></div>'];
+    let weekdays_cells = ['<div class=""></div>'];
 
     let i;
     
@@ -365,8 +370,8 @@ calendar.weekly.show = function () {
                             ${day.getDate()}
                         </div>`;
 
-        calendar_cells.push(`<div class="d-flex justify-content-center">
-                                <div class="bg-white" style="position: fixed; flex: 1;">
+        weekdays_cells.push(`<div class="d-flex justify-content-center">
+                                <div class="bg-white">
                                     <h2 class="${FLEX_CENTER} mb-3">
                                         <div class="d-flex align-items-center" style="flex-direction: column;">
                                             <div class="h6 text-muted">
@@ -381,7 +386,13 @@ calendar.weekly.show = function () {
         days.push(day);
     }
 
+    this.weekdays_container.empty();
+    this.weekdays_container.html(weekdays_cells.join('\n'));
+    this.weekdays_container.css('display', 'grid');
+
     let hour_idx = 0, week_day, hour, tasks_of_hour_html, crawler_queue_behavior;
+
+    let calendar_cells = [];
 
     for (i=0;i<8 * 24;i++) {
         if (i % 8 == 0) {
@@ -405,16 +416,18 @@ calendar.weekly.show = function () {
 
             calendar_cells.push(`<div 
                                     id="calendar-weekly-cell-${hour}-${week_day}" 
+                                    style="min-height: 8em;"
                                     class="border rounded px-2 pb-2 ${bg_light}">
                                     ${tasks_of_hour_html}
                                 </div>`);
         }
     }
 
-    this.container.empty();
-    this.container.html(calendar_cells.join('\n'));
-    this.container.css('display', 'grid');
-
+    
+    this.days_container.empty();
+    this.days_container.html(calendar_cells.join('\n'));
+    this.days_container.css('display', 'grid');
+    
     let first_day_of_week = days[0];
     let last_day_of_week = days[6];
 
@@ -462,6 +475,8 @@ calendar.weekly.show = function () {
             $this.animate({ scrollLeft: 0 }, animation_time);
         }
     );
+
+    this.container.css('display', 'block');
 }
 
 calendar.weekly.next = function () {

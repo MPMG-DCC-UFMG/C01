@@ -420,12 +420,28 @@ a.close, a.add_form {
 
 .calendar-weekly {
     display: none;
+}
+
+.calendar-weekly-weekdays {
     column-gap: 5px;
     row-gap: 5px;
-    height: 100%;
+    /* height: 100%; */
+    width: 100%;
     grid-template-columns: repeat(8, 1fr);
-    grid-template-rows: repeat(25, 1fr);
+    grid-template-rows: repeat(1, 1fr);
+    margin-top: -112px;
+    position: fixed;
+    z-index: 100;
+    background-color: white;
+}
+
+.calendar-weekly-days {
+    column-gap: 5px;
+    row-gap: 5px;
     margin-top: 82px;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(24, 1fr);
+    margin-top: 182px;
 }
 
 .calendar {
