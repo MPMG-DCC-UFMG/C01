@@ -296,10 +296,15 @@ calendar.weekly.get_datetime_tasks = function (week_day, hour) {
             task_reprs.push(task_repr);
         }
 
+        let tasks_not_shown = [];
+        for (let i = max_tasks - 1; i < num_tasks; i++)
+            tasks_not_shown.push(tasks[i].id);
+        
+
         task_repr = `
                     <div 
                         style="cursor: pointer;"
-                        onclick="show_all_scheduling_modal()"
+                        onclick="show_more_schedulings([${tasks_not_shown}], '${day}', '${hour}')"
                         class="px-2 py-1 bg-light rounded border border-dark rounded-pill mt-2 text-center">
                         <p class="font-weight-bold small m-0 p-0">+${num_tasks - 2} outras</p>
                     </div>`;

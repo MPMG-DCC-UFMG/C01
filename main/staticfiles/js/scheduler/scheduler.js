@@ -47,11 +47,8 @@ var repeat_finish_date;
 var calendar_mode = null; //daily, weekly, monthly or yearly
 
 var task_being_edited = null;
-
-// the detail modal can be opened by the modal that lists all schedulings. 
-// This variable is used to know if the modal of all schedulings should be
-// opened when the detail modal is closed 
-var open_all_schedulings = false;
+ 
+var modal_open_callback;
 
 function open_set_scheduling(creating_task = true) {
     
@@ -413,10 +410,15 @@ function get_now(timezone) {
     return new Date(now);
 }
 
-function show_task_detail(task_id, open_all_schedulings_after_close = false) {
-    $('#allScheduling').modal('hide');
+function show_task_detail(task_id, modal_open_callback_funct = null) {
+
+    if (modal_open_callback_funct != null) {
+        close_all_scheduling_modal();
+        close_show_more_schedulings_modal();
+    }
     
-    open_all_schedulings = open_all_schedulings_after_close;
+    modal_open_callback = modal_open_callback_funct;
+
     let task = TASKS[task_id];
 
     let now = get_now(task.scheduler_config.timezone);
@@ -974,7 +976,7 @@ function create_task_item(task) {
                             title="Visualizar agendamento"
                             style="width: 1.75rem; height: 1.75rem;"
                             class="scheduling-item text-muted rounded-circle bg-white border-0 d-flex align-items-center justify-content-center mr-2"
-                            onclick="show_task_detail(${task.id}, true)">
+                            onclick="show_task_detail(${task.id}, show_all_scheduling_modal)">
                             
                             <i class="far fa-eye" aria-hidden="true"></i>
                         </button>
@@ -1011,10 +1013,89 @@ function close_all_scheduling_modal() {
 function close_detail_scheduling_modal() {
     $('#detailScheduling').modal('hide');
 
-    if (open_all_schedulings) {
-        open_all_schedulings = false;
-        show_all_scheduling_modal();
+    if (modal_open_callback) {
+        modal_open_callback();
+        modal_open_callback = null;
     }
+}
+
+function open_show_more_schedulings_modal() {
+    $('#showMoreSchedulings').modal({ backdrop: 'static', keyboard: false }, 'show');
+}
+
+function close_show_more_schedulings_modal() {
+    $('#showMoreSchedulings').modal('hide');
+}
+
+function get_more_scheduling_li_html(task, curr_day) {
+    let bg_color = '';
+
+    if (task.crawler_queue_behavior == 'run_immediately')
+        bg_color = 'bg-danger';
+    
+    else if (task.crawler_queue_behavior == 'wait_on_last_queue_position')
+        bg_color = 'bg-primary';
+    
+    else
+        bg_color = 'bg-warning';
+
+    let [title, opacity] = get_task_title_and_opacity(task, curr_day);
+
+    return `
+        <li class="rounded border p-3 mb-2 text-white ${bg_color}"
+            onclick="show_task_detail(${task.id}, open_show_more_schedulings_modal)"
+            title="${title}"
+            style="cursor: pointer; ${opacity}">
+            <div class="d-flex justify-content-between align-items-center"> 
+                <div class="">
+                    <p class="font-weight-bold m-0 p-0 small">${task.crawler_name}</p>
+                </div>
+            </div>
+        </li>
+    `;
+}
+
+function show_more_schedulings(tasks_not_shown, day, hour) {
+    let splited_day = day.split('-');
+
+    let curr_day = new Date(parseInt(splited_day[2]),
+        parseInt(splited_day[1]) - 1,
+        parseInt(splited_day[0]),
+        hour);
+
+    // formatar data para o formato dia da semana, dia/mês/anos, a partir das horas e minutos
+    let formatted_date = curr_day.toLocaleDateString('pt-BR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
+
+    let from_hour = curr_day.getHours();
+    let to_hour = from_hour + 1;
+
+    if (to_hour >= 24)
+        to_hour = 0;
+    
+    formatted_date += `, ${from_hour}h - ${to_hour}h`;
+
+    // first letter uppercase
+    formatted_date = formatted_date.charAt(0).toUpperCase() + formatted_date.slice(1);
+
+    $('#showMoreSchedulings .modal-title').html(formatted_date);
+
+    let task_list = $('#showMoreSchedulings .modal-body ul');
+
+    let task_items = [], task;
+    for (let i in tasks_not_shown) {
+        task_id = tasks_not_shown[i];
+        task = TASKS[task_id];
+        task_items.push(get_more_scheduling_li_html(task, curr_day));
+    }
+
+    task_list.html(task_items.join(''));
+
+    open_show_more_schedulings_modal();
 }
 
 $(document).ready(function () {
