@@ -49,6 +49,7 @@ var calendar_mode = null; //daily, weekly, monthly or yearly
 var task_being_edited = null;
  
 var modal_open_callback;
+var excluded_tasks = [];
 
 function open_set_scheduling(creating_task = true) {
     
@@ -1043,6 +1044,7 @@ function get_more_scheduling_li_html(task, curr_day) {
 
     return `
         <li class="rounded border p-3 mb-2 text-white ${bg_color}"
+            id="more-showing-task-${task.id}"
             onclick="show_task_detail(${task.id}, open_show_more_schedulings_modal)"
             title="${title}"
             style="cursor: pointer; ${opacity}">
@@ -1089,6 +1091,11 @@ function show_more_schedulings(tasks_not_shown, day, hour) {
     let task_items = [], task;
     for (let i in tasks_not_shown) {
         task_id = tasks_not_shown[i];
+        
+        // ckeck if task is in excluded tasks
+        if (excluded_tasks.includes(task_id))
+            continue;
+
         task = TASKS[task_id];
         task_items.push(get_more_scheduling_li_html(task, curr_day));
     }
@@ -1096,6 +1103,29 @@ function show_more_schedulings(tasks_not_shown, day, hour) {
     task_list.html(task_items.join(''));
 
     open_show_more_schedulings_modal();
+}
+
+function update_view() {
+    switch (calendar_mode) {
+        case 'daily':
+            calendar.daily.show();
+            break;
+
+        case 'weekly':
+            calendar.weekly.show();
+            break;
+
+        case 'monthly':
+            calendar.monthly.show();
+            break;
+
+        case 'yearly':
+            calendar.yearly.show();
+            break;
+
+        default:
+            break;
+    }
 }
 
 $(document).ready(function () {

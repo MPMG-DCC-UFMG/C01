@@ -22,6 +22,8 @@ services.save_new_scheduling = function (new_scheduling_config) {
             TASKS[data.id] = data;
             
             fill_task_list();
+            update_view();
+
         },
         error: function (data) {
             alert('Houve um erro no agendamento, tente novamente!');
@@ -72,15 +74,22 @@ services.update_tasks = function (tarks_ids) {
         task_id = tarks_ids[i];
         tasks[task_id] = this.get_task(task_id);
     }
+
+
 }
 
 services.delete_task = function(task_id) {
+    excluded_tasks.push(task_id);
+
+    // Remove task from view
+    $(`#more-showing-task-${task_id}`).remove();
+
     $.ajax({
         url: `/api/scheduler/tasks/${task_id}`,
         type: 'delete',
         async: false,
         success: function (data) {
-            calendar.daily.today();
+            update_view();
         },
         error: function (data) {
             console.error(data.responseText);
@@ -105,7 +114,7 @@ services.save_updated_scheduling = function (task_being_edited) {
             $('#toast').toast('show');
 
             TASKS[task_id] = data;
-
+            update_view();
         },
         error: function (data) {
             console.error(data.responseText);
