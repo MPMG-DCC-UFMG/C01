@@ -182,12 +182,9 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
     # parts = output_line.split('\t')
     data_size_kbytes = 0  # int(parts[0])
 
-    # FIXME: Colocar esse trecho de código no módulo writer
-    # conta a qtde de arquivos no diretório "data"
-    # command_output = subprocess.run(
-    #     ["find " + config['data_path'] + "/data -type f | wc -l"], shell=True, stdout=subprocess.PIPE)
-    # output_line = command_output.stdout.decode('utf-8').strip('\n')
-    num_data_files = 0  # int(output_line)
+    # Get the number of files downloaded from the instance object
+    num_data_files = instance.number_files_success_download
+    
 
     instance = None
     instance_info = {}
