@@ -1057,13 +1057,12 @@ function get_more_scheduling_li_html(task, curr_day) {
     `;
 }
 
-function show_more_schedulings(tasks_not_shown, day, hour) {
-    let splited_day = day.split('-');
+function show_more_schedulings(tasks_not_shown, date, from_hour, to_hour=null) {
+    let splited_day = date.split('-');
 
     let curr_day = new Date(parseInt(splited_day[2]),
         parseInt(splited_day[1]) - 1,
-        parseInt(splited_day[0]),
-        hour);
+        parseInt(splited_day[0]));
 
     // formatar data para o formato dia da semana, dia/mês/anos, a partir das horas e minutos
     let formatted_date = curr_day.toLocaleDateString('pt-BR', {
@@ -1073,8 +1072,8 @@ function show_more_schedulings(tasks_not_shown, day, hour) {
         year: 'numeric'
     });
 
-    let from_hour = curr_day.getHours();
-    let to_hour = from_hour + 1;
+    if (to_hour == null)
+        to_hour = parseInt(from_hour) + 1;
 
     if (to_hour >= 24)
         to_hour = 0;

@@ -54,6 +54,7 @@ var FLEX_CENTER = 'd-flex justify-content-center align-items-center';
 
 var JANUARY = 0;
 var DECEMBER = 11;
+var MAX_TASKS = 3;
 
 var calendar = {};
 
@@ -83,38 +84,194 @@ calendar.weekly.active_start_day = calendar.weekly.curr_start_day = new Date(cal
 calendar.monthly.active_month = calendar.monthly.curr_month = new Date(calendar.curr_date.getFullYear(), calendar.curr_date.getMonth());
 calendar.yearly.active_year = calendar.yearly.curr_year = calendar.curr_date.getFullYear();
 
+calendar.monthly.tasks = {};
 
-calendar.fill_month = function (container, year, month) {
+calendar.monthly.get_tasks = function (start_date, end_date) {    
+    let formatted_start_date = calendar.get_formated_date(start_date.getDate(), start_date.getMonth() + 1, start_date.getFullYear());
+    let formatted_end_date = calendar.get_formated_date(end_date.getDate(), end_date.getMonth() + 1, end_date.getFullYear());
+
+    let tasks = services.get_tasks_in_interval(formatted_start_date, formatted_end_date);
+
+    this.tasks = tasks;
+}
+
+calendar.monthly.get_schedulings_html = function (schedulings, curr_date) {
+    if (!schedulings)
+        return '';
+
+    let schedulings_html = '', task;
+    
+    let title = '';
+    let bg_color = '';
+    let opacity = '';
+
+    let num_tasks = schedulings.length;
+
+    if (num_tasks > MAX_TASKS) {
+        for (let i = 0; i < MAX_TASKS - 1; i++) {
+            task = TASKS[schedulings[i]];
+
+            switch (task.crawler_queue_behavior) {
+                case 'wait_on_first_queue_position':
+                    bg_color = 'bg-warning';
+                    break;
+
+                case 'run_immediately':
+                    bg_color = 'bg-danger';
+                    break;
+
+                default:
+                    bg_color = 'bg-primary';
+                    break;
+            }
+
+            [title, opacity] = get_task_title_and_opacity(task, curr_date);
+
+            schedulings_html += `<div 
+                            onclick="show_task_detail(${task.id})" 
+                            title="${title}"
+                            class="px-2 py-0 ${bg_color} rounded-pill text-white text-container mt-1 w-100"
+                            style="overflow: hidden; 
+                                    white-space: nowrap; 
+                                    cursor: pointer;
+                                    padding: 5px 0px 5px 0px;
+                                    ${opacity}">
+                            <p  
+                                style="font-size: .75em;"
+                                class="font-weight-bold m-0 p-0 scroll-text">
+                                ${task.crawler_name}
+                            </p>
+                        </div>`;
+        }
+
+        let tasks_not_shown = [];
+        for (let i = MAX_TASKS - 1; i < num_tasks; i++)
+            tasks_not_shown.push(TASKS[schedulings[i]].id);
+
+        let formatted_date = calendar.get_formated_date(curr_date.getDate(), curr_date.getMonth() + 1, curr_date.getFullYear());
+
+        schedulings_html += `
+                    <div 
+                        style="cursor: pointer;"
+                        onclick="show_more_schedulings([${tasks_not_shown}], '${formatted_date}', '0', '23')"
+                        class="px-2 py-0 bg-light rounded border border-dark rounded-pill mt-2 text-center">
+                        <p class="font-weight-bold m-0 p-0" style="font-size: .75em;">+${num_tasks - MAX_TASKS + 1} outras</p>
+                    </div>`;
+
+    } else {
+        for (let i = 0; i < schedulings.length; i++) {
+            task = TASKS[schedulings[i]];
+            
+            switch (task.crawler_queue_behavior) {
+                case 'wait_on_first_queue_position':
+                    bg_color = 'bg-warning';
+                    break;
+        
+                case 'run_immediately':
+                    bg_color = 'bg-danger';
+                    break;
+        
+                default:
+                    bg_color = 'bg-primary';
+                    break;
+            }
+    
+            [title, opacity] = get_task_title_and_opacity(task, curr_date)
+    
+            schedulings_html += `<div 
+                                    onclick="show_task_detail(${task.id})" 
+                                    title="${title}"
+                                    class="px-2 py-0 ${bg_color} rounded-pill text-white text-container mt-1 w-100"
+                                    style="overflow: hidden; 
+                                            white-space: nowrap; 
+                                            cursor: pointer;
+                                            padding: 5px 0px 5px 0px;
+                                            ${opacity}">
+                                    <p  
+                                        style="font-size: .75em;"
+                                        class="font-weight-bold m-0 p-0 scroll-text">
+                                        ${task.crawler_name}
+                                    </p>
+                                </div>`;
+        }
+    }
+
+    return schedulings_html;
+}
+
+calendar.monthly.fill_cells = function (container, year, month) {
     let first_day = new Date(year, month, 1);
     let last_day = new Date(year, month + 1, 0);
-
+    
     let weekday_month_start = first_day.getDay();
     let num_days_previous_month = (new Date(year, month, 0)).getDate();
+    
+    let previous_month = num_days_previous_month - weekday_month_start + 1 > 0 ? month - 1 : month;
+
+    let start_date = new Date(year, previous_month, num_days_previous_month - weekday_month_start + 1);
+    let end_date;
+
+    if (6 - last_day.getDay() == 0)
+        end_date = last_day;
+
+    else 
+        end_date = new Date(year, month + 1, 6 - last_day.getDay());
+
+    this.get_tasks(start_date, end_date);
 
     let calendar_cells = [];
-    let i;
-
-    for (i = 0; i < WEEKDAYS.length; i++)
-        calendar_cells.push(`<div class="calendar-cell h6 text-center text-muted">${WEEKDAYS[i]}</div>`);
+    for (i = 0; i < WEEKDAYS.length; i++) {
+        calendar_cells.push(`<div class="calendar-cell">
+                                <h2 class="h6 text-center text-muted">
+                                ${WEEKDAYS[i]}
+                                </h2>
+                            </div>`);
+    }
 
     i = num_days_previous_month - weekday_month_start + 1;
+    let date, formatted_date, schedulings_html;
+    
+    let bg_color = '';
     for (i; i <= num_days_previous_month; i++) {
-        calendar_cells.push(`<div class="d-flex justify-content-center calendar-cell no-current-month">
-                                ${i}
+        date = new Date(year, previous_month, i);
+        formatted_date = calendar.get_formated_date(date.getDate(), date.getMonth() + 1, date.getFullYear());
+        schedulings_html = this.get_schedulings_html(this.tasks[formatted_date], date);
+        
+        bg_color = date.getDay() % 2 ? 'bg-light' : 'bg-white';
+
+        calendar_cells.push(`<div class="${bg_color} calendar-cell no-current-month rounded p-2 border">
+                                <div class="w-100">
+                                    <div class="d-flex justify-content-center"> 
+                                        <p class="m-0 p-0 font-weight-bold">${i}</p>
+                                    </div>
+                                    <div>
+                                        ${schedulings_html}
+                                    </div>    
+                                </div>
                             </div>`);
     }
 
     let is_curr_day_css = '';
     for (i = 1; i <= last_day.getDate(); i++) {
-        if (this.curr_date.getFullYear() == year && this.curr_date.getMonth() == month && this.curr_date.getDate() == i) 
+        if (calendar.curr_date.getFullYear() == year && calendar.curr_date.getMonth() == month && calendar.curr_date.getDate() == i) 
             is_curr_day_css = `class="bg-primary rounded-circle text-white text-center border font-weight-bold" style="width: 1.8em; height: 2.3em; padding-top: 2px;"`;
 
-        calendar_cells.push(`<div class="${FLEX_CENTER} calendar-cell" style="flex-direction: column;">
-                                <div ${is_curr_day_css}>
-                                ${i}
-                                </div>
-                                <div class="calendar-cell-content" id="calendar-cell-${year}-${month}-${i}">
-                                
+        date = new Date(year, month, i);
+
+        bg_color = date.getDay() % 2 ? 'bg-light' : 'bg-white';
+
+        formatted_date = calendar.get_formated_date(date.getDate(), date.getMonth() + 1, date.getFullYear());
+        schedulings_html = this.get_schedulings_html(this.tasks[formatted_date], date);
+
+        calendar_cells.push(`<div class="calendar-cell calendar-cell-monthly rounded p-2 border ${bg_color}">
+                                <div class="w-100">
+                                    <div class="d-flex justify-content-center">
+                                        <p class="m-0 p-0 font-weight-bold">${i}</p>
+                                    </div>
+                                    <div 
+                                        id="calendar-cell-${year}-${month}-${i}">
+                                        ${schedulings_html}
+                                    </div>
                                 </div>
                             </div>`);
 
@@ -123,16 +280,32 @@ calendar.fill_month = function (container, year, month) {
 
     let diff_until_saturday = 6 - last_day.getDay();
 
-    for (i = 1; i <= diff_until_saturday; i++)
-        calendar_cells.push(`<div class="d-flex justify-content-center calendar-cell no-current-month">${i}</div>`);
+    for (i = 1; i <= diff_until_saturday; i++) {
+        date = new Date(year, month + 1, i);
 
+        formatted_date = calendar.get_formated_date(date.getDate(), date.getMonth() + 1, date.getFullYear());
+        schedulings_html = this.get_schedulings_html(this.tasks[formatted_date], date);
+
+        bg_color = date.getDay() % 2 ? 'bg-light' : 'bg-white';
+
+        calendar_cells.push(`<div class="${bg_color} calendar-cell no-current-month rounded p-2 border">
+                                <div class="w-100">
+                                    <div class="d-flex justify-content-center"> 
+                                        <p class="m-0 p-0 font-weight-bold">${i}</p>
+                                    </div>
+                                    <div>
+                                        ${schedulings_html}
+                                    </div>    
+                                </div>
+                            </div>`);
+    }
 
     container.empty();
     container.html(calendar_cells.join('\n'))
 } 
 
 calendar.monthly.show = function () {
-    calendar.fill_month(this.container, this.active_month.getFullYear(), this.active_month.getMonth());
+    this.fill_cells(this.container, this.active_month.getFullYear(), this.active_month.getMonth());
     this.container.css('display', 'grid');
     calendar.date_info.text(`${MONTHS[this.active_month.getMonth()]} de ${this.active_month.getFullYear()}`);
 }
@@ -258,11 +431,10 @@ calendar.weekly.get_datetime_tasks = function (week_day, hour) {
 
     let tasks = this.tasks[day][hour];
     let task, task_repr, task_reprs = [], bg_color;
-    let max_tasks = 3;
     let num_tasks = tasks.length;
 
-    if (num_tasks > max_tasks) {
-        for (let i = 0; i < max_tasks - 1; i++) {
+    if (num_tasks > MAX_TASKS) {
+        for (let i = 0; i < MAX_TASKS - 1; i++) {
             task = tasks[i];
 
             switch (task.crawler_queue_behavior) {
@@ -297,8 +469,10 @@ calendar.weekly.get_datetime_tasks = function (week_day, hour) {
         }
 
         let tasks_not_shown = [];
-        for (let i = max_tasks - 1; i < num_tasks; i++)
+        for (let i = MAX_TASKS - 1; i < num_tasks; i++)
             tasks_not_shown.push(tasks[i].id);
+        
+        // transforma a data no formato dia/mês/ano
         
 
         task_repr = `
@@ -306,7 +480,7 @@ calendar.weekly.get_datetime_tasks = function (week_day, hour) {
                         style="cursor: pointer;"
                         onclick="show_more_schedulings([${tasks_not_shown}], '${day}', '${hour}')"
                         class="px-2 py-1 bg-light rounded border border-dark rounded-pill mt-2 text-center">
-                        <p class="font-weight-bold small m-0 p-0">+${num_tasks - 2} outras</p>
+                        <p class="font-weight-bold small m-0 p-0">+${num_tasks - MAX_TASKS + 1} outras</p>
                     </div>`;
 
         task_reprs.push(task_repr);
@@ -330,8 +504,7 @@ calendar.weekly.get_datetime_tasks = function (week_day, hour) {
             
             let [title, opacity] = get_task_title_and_opacity(task, curr_day);
             
-            task_repr = `
-                        <div 
+            task_repr = `<div 
                             onclick="show_task_detail(${task.id})" 
                             title="${title}"
                             class="px-2 py-1 ${bg_color} rounded-pill text-white text-container mt-2"
@@ -428,7 +601,6 @@ calendar.weekly.show = function () {
         }
     }
 
-    
     this.days_container.empty();
     this.days_container.html(calendar_cells.join('\n'));
     this.days_container.css('display', 'grid');
