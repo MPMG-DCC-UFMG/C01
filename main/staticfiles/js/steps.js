@@ -59,7 +59,6 @@ function init_steps_creation_interface(interface_root_element, output_element, s
     step_controler.type = "step_controler"
     step_board = init_step_board(step_list)
 
-
     add_block_button = document.createElement("a")
     add_block_button.className="btn btn-primary step-controler-buttons"
     add_block_button.style.color = "white"
@@ -238,6 +237,26 @@ function load_steps(json_steps, step_list){
     }
 
     refill_parameters(args, block)
+}
+
+// reload the json steps and the steps creation interface.
+function reload_step_creation_interface(){
+    step_board.parentElement.remove();
+    init_steps_creation_interface(interface_root_element,output_element,step_list);
+}
+
+// reload the json steps when a new config file is imported.
+function reload_imported_config(){
+    let new_config = document.querySelector("#id_import_settings").value != '';
+    let proc_dinamic = document.querySelector("#div_id_dynamic_processing").childNodes[1].checked;
+    let proc_dinamic_tab = document.querySelector("#dynamic-processing-item");
+
+    if (new_config & proc_dinamic){
+        if(confirm("Você deseja substituir as configurações do processamento dinâmico pelos passos importados?")){
+            proc_dinamic_tab.addEventListener("click", reload_step_creation_interface);
+            alert("Para ativar os novos passos, clique na aba do processamento dinâmico.");
+        }
+    }
 }
 
 function refill_parameters(args, block){
