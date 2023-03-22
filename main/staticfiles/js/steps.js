@@ -55,6 +55,7 @@ function init_steps_creation_interface(interface_root_element, output_element, s
     steps_creation_interface = document.createElement("div")
     steps_creation_interface.type= "steps_creation_interface"
 
+<<<<<<< Updated upstream
     step_controler = document.createElement("div")
     step_controler.type = "step_controler"
     step_board = init_step_board(step_list)
@@ -600,6 +601,8 @@ function init_steps_creation_interface(interface_root_element, output_element, s
     steps_creation_interface = document.createElement("div")
     steps_creation_interface.type= "steps_creation_interface"
 
+=======
+>>>>>>> Stashed changes
     step_controler = document.createElement("div")
     step_controler.type = "step_controler"
     step_board = init_step_board(step_list)
@@ -798,10 +801,17 @@ function reload_imported_config(){
 
     if (new_config & proc_dinamic){
         if(confirm("Você deseja substituir as configurações do processamento dinâmico pelos passos importados?")){
+<<<<<<< Updated upstream
             proc_dinamic_tab.addEventListener("click", reload_step_creation_interface);
             alert("Para ativar os novos passos, clique na aba do processamento dinâmico.");
         }
     }
+=======
+            proc_dinamic_tab.addEventListener('click', reload_step_creation_interface);
+        }
+    }
+    proc_dinamic_tab.click();
+>>>>>>> Stashed changes
 }
 
 function refill_parameters(args, block){
