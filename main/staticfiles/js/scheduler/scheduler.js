@@ -1078,7 +1078,8 @@ function show_more_schedulings(tasks_not_shown, date, from_hour, to_hour=null) {
     if (to_hour >= 24)
         to_hour = 0;
     
-    formatted_date += `, ${from_hour}h - ${to_hour}h`;
+    if (from_hour != to_hour)
+        formatted_date += `, ${from_hour}h - ${to_hour}h`;
 
     // first letter uppercase
     formatted_date = formatted_date.charAt(0).toUpperCase() + formatted_date.slice(1);
@@ -1086,6 +1087,21 @@ function show_more_schedulings(tasks_not_shown, date, from_hour, to_hour=null) {
     $('#showMoreSchedulings .modal-title').html(formatted_date);
 
     let task_list = $('#showMoreSchedulings .modal-body ul');
+
+    if (tasks_not_shown.length == 0) {
+
+        task_list.html(`<li class="p-3">
+                            <div class="d-flex justify-content-center"
+                                style="flex-direction: column;">
+                                <span style="font-size: 1.5rem;">¯\\_(ツ)_/¯</span>
+                                <p class="m-0 p-0 mt-3">Sem agendamentos para a data informada!</p>
+                            </div>
+                        </li>`);
+
+        open_show_more_schedulings_modal();
+
+        return;
+    }
 
     let task_items = [], task;
     for (let i in tasks_not_shown) {

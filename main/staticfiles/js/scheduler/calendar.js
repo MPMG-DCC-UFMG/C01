@@ -153,7 +153,7 @@ calendar.monthly.get_schedulings_html = function (schedulings, curr_date) {
         schedulings_html += `
                     <div 
                         style="cursor: pointer;"
-                        onclick="show_more_schedulings([${tasks_not_shown}], '${formatted_date}', '0', '23')"
+                        onclick="show_more_schedulings([${tasks_not_shown}], '${formatted_date}', '0', '0')"
                         class="px-2 py-0 bg-light rounded border border-dark rounded-pill mt-2 text-center">
                         <p class="font-weight-bold m-0 p-0" style="font-size: .75em;">+${num_tasks - MAX_TASKS + 1} outras</p>
                     </div>`;
@@ -251,10 +251,15 @@ calendar.monthly.fill_cells = function (container, year, month) {
                             </div>`);
     }
 
-    let is_curr_day_css = '';
+    let custom_style = '';
     for (i = 1; i <= last_day.getDate(); i++) {
-        if (calendar.curr_date.getFullYear() == year && calendar.curr_date.getMonth() == month && calendar.curr_date.getDate() == i) 
-            is_curr_day_css = `class="bg-primary rounded-circle text-white text-center border font-weight-bold" style="width: 1.8em; height: 2.3em; padding-top: 2px;"`;
+        if (calendar.curr_date.getFullYear() == year 
+            && calendar.curr_date.getMonth() == month 
+            && calendar.curr_date.getDate() == i) 
+                custom_style = `class="bg-primary rounded-circle text-white text-center border font-weight-bold" style="width: 1.8em; height: 1.9em; padding-top: 2px;"`;
+        else 
+            custom_style = 'class="m-0 p-0 font-weight-bold"';
+        
 
         date = new Date(year, month, i);
 
@@ -266,7 +271,7 @@ calendar.monthly.fill_cells = function (container, year, month) {
         calendar_cells.push(`<div class="calendar-cell calendar-cell-monthly rounded p-2 border ${bg_color}">
                                 <div class="w-100">
                                     <div class="d-flex justify-content-center">
-                                        <p class="m-0 p-0 font-weight-bold">${i}</p>
+                                        <p ${custom_style}>${i}</p>
                                     </div>
                                     <div 
                                         id="calendar-cell-${year}-${month}-${i}">
@@ -275,7 +280,6 @@ calendar.monthly.fill_cells = function (container, year, month) {
                                 </div>
                             </div>`);
 
-        is_curr_day_css = '';
     }
 
     let diff_until_saturday = 6 - last_day.getDay();
@@ -329,16 +333,84 @@ calendar.monthly.hide = function () {
     this.container.css('display', 'none');
 }
 
+calendar.show_tasks_of_day = function (date) {
+    let start_date = end_date = calendar.get_formated_date(date.getDate(), date.getMonth() + 1, date.getFullYear());
+    
+    let tasks = services.get_tasks_in_interval(start_date, end_date);
+    let tasks_of_day = [];
+
+    //checks if tasks has a key equals to start_date
+    if (tasks.hasOwnProperty(start_date)) 
+        tasks_of_day = tasks[start_date];
+    
+    show_more_schedulings(tasks_of_day, start_date, 0, 0);
+}
+
+calendar.yearly.fill_month = function (container, year, month) {
+    let first_day = new Date(year, month, 1);
+    let last_day = new Date(year, month + 1, 0);
+
+    let weekday_month_start = first_day.getDay();
+    let num_days_previous_month = (new Date(year, month, 0)).getDate();
+
+    let calendar_cells = [];
+    let i;
+
+    for (i = 0; i < WEEKDAYS.length; i++)
+        calendar_cells.push(`<div class="calendar-cell h6 text-center text-muted">${WEEKDAYS[i]}</div>`);
+
+    i = num_days_previous_month - weekday_month_start + 1;
+    for (i; i <= num_days_previous_month; i++) {
+        calendar_cells.push(`<div
+                                onclick="calendar.show_tasks_of_day(new Date(${year}, ${month - 1}, ${i}))" 
+                                class="d-flex justify-content-center calendar-cell no-current-month" style="cursor: pointer;">
+                                ${i}
+                            </div>`);
+    }
+
+
+
+    let is_curr_day_css = '';
+    for (i = 1; i <= last_day.getDate(); i++) {
+        if (calendar.curr_date.getFullYear() == year && calendar.curr_date.getMonth() == month && calendar.curr_date.getDate() == i)
+            is_curr_day_css = `class="bg-primary rounded-circle text-white text-center border font-weight-bold" style="width: 1.75em; height: 1.9m; padding-top: 2px;"`;
+
+        calendar_cells.push(`<div 
+                                onclick="calendar.show_tasks_of_day(new Date(${year}, ${month}, ${i}))"
+                                class="${FLEX_CENTER} calendar-cell" style="cursor: pointer;">
+                                <div ${is_curr_day_css} >
+                                ${i}
+                                </div>
+                            </div>`);
+
+        is_curr_day_css = '';
+    }
+
+    let diff_until_saturday = 6 - last_day.getDay();
+
+    for (i = 1; i <= diff_until_saturday; i++)
+        calendar_cells.push(`<div 
+                                onclick="calendar.show_tasks_of_day(new Date(${year}, ${month + 1}, ${i}))"
+                                class="d-flex justify-content-center calendar-cell no-current-month" style="cursor: pointer;">
+                                    ${i}
+                            </div>`);
+
+
+    container.empty();
+    container.html(calendar_cells.join('\n'))
+}
+
 calendar.yearly.show = function () {
     let i, month_el, month;
+
     for (i=0;i<this.month_containers.length;i++) {
         month_el = $(this.month_containers[i]);
         month = parseInt(month_el.attr('month'));
-        calendar.fill_month(month_el, this.active_year, month);
+        this.fill_month(month_el, this.active_year, month);
         month_el.css('display', 'grid');
     }
-    this.container.css('display', 'grid');
 
+    this.container.css('display', 'grid');
     calendar.date_info.text(`${this.active_year}`);
 } 
 
