@@ -413,6 +413,7 @@ function detailDynamicProcessing() {
     dynamic_processing_skip_errors = document.getElementById("dynamic-processing-skip-errors")
     dynamic_processing_resolution = document.getElementById("dynamic-processing-resolution")
     dynamic_processing_browser_type = document.getElementById("dynamic-processing-browser-type")
+    dynamic_processing_browser_user_agent = document.getElementById("dynamic-processing-browser-user-agent")
     dynamic_processing_debug_mode = document.getElementById("dynamic-processing-debug-mode")
 
     if(getCheckboxState("id_dynamic_processing")){
@@ -421,6 +422,7 @@ function detailDynamicProcessing() {
         dynamic_processing_skip_errors.classList.remove("disabled")
         dynamic_processing_resolution.classList.remove("disabled")
         dynamic_processing_browser_type.classList.remove("disabled")
+        dynamic_processing_browser_user_agent.classList.remove("disabled")
         dynamic_processing_debug_mode.classList.remove("disabled")
     }else{
         dynamic_processing_check.classList.add("disabled")
@@ -428,9 +430,23 @@ function detailDynamicProcessing() {
         dynamic_processing_skip_errors.classList.add("disabled")
         dynamic_processing_resolution.classList.add("disabled")
         dynamic_processing_browser_type.classList.add("disabled")
+        dynamic_processing_browser_user_agent.classList.add("disabled")
         dynamic_processing_debug_mode.classList.add("disabled")
     }
 }
+
+// changes the user-agent to match the browser type
+$(document).ready(function(){
+    $("#dynamic-processing-browser-type").change(function(){
+        user_agent = {};
+        user_agent['chromium'] = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36';
+        user_agent['firefox']  = 'Mozilla/5.0 (X11; Linux i686; rv:111.0) Gecko/20100101 Firefox/111.0';
+        user_agent['webkit']   = 'Mozilla/5.0 (X11; U; Linux x86_64; en-us) AppleWebKit/531.2+ (KHTML, like Gecko) Version/5.0 Safari/531.2+';
+
+        browser_type = $('input[name=browser_type]:checked', '#dynamic-processing-browser-type').val();
+        document.querySelector("#id_browser_user_agent").value = user_agent[browser_type]
+    });
+});
 
 function detailCaptcha() {
     var mainSelect = document.getElementById("id_captcha");
