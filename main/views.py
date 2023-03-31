@@ -662,15 +662,29 @@ def tail_log_file(request, instance_id):
     number_pages_duplicated_download = instance.number_pages_duplicated_download
     number_pages_previously_crawled = instance.number_pages_previously_crawled
 
-    logs = Log.objects.filter(instance_id=instance_id).order_by('-creation_date')
+    # logs = Log.objects.filter(instance_id=instance_id).order_by('-creation_date')
 
-    log_results = logs.filter(Q(log_level="out"))[:20]
-    err_results = logs.filter(Q(log_level="err"))[:20]
+    # log_results = logs.filter(Q(log_level="out"))[:20]
+    # err_results = logs.filter(Q(log_level="err"))[:20]
 
-    log_text = [f"[{r.logger_name}] {r.log_message}" for r in log_results]
-    log_text = "\n".join(log_text)
-    err_text = [f"[{r.logger_name}] [{r.log_level:^5}] {r.log_message}" for r in err_results]
-    err_text = "\n".join(err_text)
+    # log_text = [f"[{r.logger_name}] {r.log_message}" for r in log_results]
+    # log_text = "\n".join(log_text)
+    # err_text = [f"[{r.logger_name}] [{r.log_level:^5}] {r.log_message}" for r in err_results]
+    # err_text = "\n".join(err_text)
+
+    config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
+    data_path = config["data_path"]
+
+    out = subprocess.run(["tail",
+                          f"{data_path}/log/{instance_id}.out",
+                          "-n",
+                          "20"],
+                         stdout=subprocess.PIPE).stdout
+    err = subprocess.run(["tail",
+                          f"{data_path}/log/{instance_id}.err",
+                          "-n",
+                          "20"],
+                         stdout=subprocess.PIPE).stdout
 
     return JsonResponse({
         "files_found": files_found,
@@ -684,8 +698,8 @@ def tail_log_file(request, instance_id):
         "pages_duplicated": number_pages_duplicated_download,
         "pages_previously_crawled": number_pages_previously_crawled,
 
-        "out": log_text,
-        "err": err_text,
+        "out": out.decode('utf-8'),
+        "err": err.decode('utf-8'),
         "time": str(datetime.fromtimestamp(time.time())),
     })
 
