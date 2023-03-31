@@ -2,10 +2,31 @@ import datetime
 from typing import List, Optional, Union
 
 import pytz
+import environ
 from typing_extensions import Literal, TypedDict
 
-from schedule.constants import *
-from schedule.utils import *
+from constants import *
+from utils import *
+
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, ARRAY
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm.session import Session
+
+env = environ.Env(
+    POSTGRES_SCHEDULER_CONFIG_TABLE_NAME=(str, 'scheduler_config'),
+    POSTGRES_USER=(str, 'django'),
+    POSTGRES_PASSWORD=(str, 'c01_password'),
+    POSTGRES_HOST=(str, 'localhost'),
+    POSTGRES_PORT=(int, 5432),
+    POSTGRES_DB=(str, 'c01_prod'),
+)
+
+Base = declarative_base()
+
+DB_URI = f'postgresql://{env("POSTGRES_USER")}:{env("POSTGRES_PASSWORD")}@{env("POSTGRES_HOST")}:{env("POSTGRES_PORT")}/{env("POSTGRES_DB")}'
+
+# DB_URI = 'postgresql://django:c01_password@localhost:5432/c01_prod'
 
 class Finish(TypedDict):
     '''Define qual parâmetro para parar de reagendar uma coleta, a saber:
@@ -69,31 +90,44 @@ class SchedulerConfigValueError(SchedulerConfigError):
 class SchedulerConfigInvalidRepeatModeError(SchedulerConfigError):
     pass 
 
-class SchedulerConfig:
-    def __init__(self) -> None:
-        self.start_date: datetime.datetime = None
-        self.timezone = None
+class SchedulerConfig(Base):
+    __tablename__ = env('POSTGRES_SCHEDULER_CONFIG_TABLE_NAME')
 
-        self.repeat_mode: str = NO_REPEAT_MODE
-        self.repeat_interval: int = 1
-        
-        self.max_repeats: Optional[int] = None 
-        self.max_datetime: Optional[datetime.datetime] = None
+    id = Column(Integer, primary_key=True)
 
-        # If repeat_mode == 'weekly', the days of week to run 
-        self.weekdays_to_run: Optional[List[int]] = None
+    start_date: datetime.datetime = Column(DateTime, nullable=False)
+    timezone: str = Column(String, nullable=True) 
 
-        # Can be day-x, first-weekday, last-weekday
-        self.monthly_repeat_mode: Optional[str] = None
-        
-        # If monthly_repeat_mode is day-x, the variable represents the day of month scheduled.
-        # However, if monthly_repeat_mode is first-weekday or last-weekday, the value in the 
-        # variable is the first or last weekday of month scheduled, respectivelly. 
-        self.monthly_day_x_ocurrence: Optional[int] = None
+    repeat_mode: str = Column(String, default=NO_REPEAT_MODE)
+    repeat_interval: int = Column(Integer, default=1)
+    
+    max_repeats: Optional[int] = Column(Integer, default=None) 
+    max_datetime: Optional[datetime.datetime] = Column(DateTime, default=None)
 
-        self.monthly_day_x_ocurrence: Optional[int] = None
-        self.monthly_first_weekday: Optional[int] = None
-        self.monthly_last_weekday: Optional[int] = None
+    # If repeat_mode == 'weekly', the days of week to run 
+    weekdays_to_run: Optional[List[int]] = Column(ARRAY(Integer), default=None)
+
+    # Can be day-x, first-weekday, last-weekday
+    monthly_repeat_mode: Optional[str] = Column(String, default=None)
+    
+    # If monthly_repeat_mode is day-x, the variable represents the day of month scheduled.
+    # However, if monthly_repeat_mode is first-weekday or last-weekday, the value in the 
+    # variable is the first or last weekday of month scheduled, respectivelly. 
+    monthly_day_x_ocurrence: Optional[int] = Column(Integer, default=None)
+
+    monthly_day_x_ocurrence: Optional[int] = Column(Integer, default=None)
+    monthly_first_weekday: Optional[int] = Column(Integer, default=None)
+    monthly_last_weekday: Optional[int] = Column(Integer, default=None)
+
+    session = None 
+
+    def __init__(self, session: Session):
+        super().__init__()
+        self.session = session
+
+    def save(self):
+        self.session.add(self)
+        self.session.commit()
 
     def first_run_date(self) -> datetime.datetime:
         start_date = self.start_date
@@ -161,7 +195,7 @@ class SchedulerConfig:
         
         else:
             raise SchedulerConfigError('Invalid repeat mode')
-
+    
     def next_run_date(self, last_run_date: datetime.datetime) -> datetime.datetime:
         if self.repeat_mode == NO_REPEAT_MODE:
             return None
@@ -203,7 +237,7 @@ class SchedulerConfig:
         # We assume that the config_dict is valid. That is, it has been validated before
         # SchedulerConfig.valid_config(config_dict)
 
-        self.timezone = pytz.timezone(config_dict['timezone'])
+        self.timezone = config_dict['timezone']
         self.start_date = decode_datetimestr(config_dict['start_date'])
         self.repeat_mode = config_dict['repeat_mode']
 
@@ -211,7 +245,8 @@ class SchedulerConfig:
             self._parse_personalized_config(config_dict['personalized_repeat'])
 
     def now(self) -> datetime.datetime:
-        return datetime.datetime.now(self.timezone).replace(tzinfo=None)
+        timezone = pytz.timezone(self.timezone)
+        return datetime.datetime.now(timezone).replace(tzinfo=None)
 
     def _parse_personalized_config(self, config_dict: PersonalizedRepeat) -> None:
         self.repeat_mode = config_dict['mode']
@@ -394,3 +429,34 @@ class SchedulerConfig:
                     if finish_date < now:
                         raise SchedulerConfigValueError(f'When the field `mode` of `finish` of `personalized_repeat` is `{REPEAT_FINISH_BY_DATE}`, ' \
                                                         f'the value of field `value` must be a datetime greater than now.')
+                    
+if __name__ == '__main__':
+    engine = create_engine(DB_URI, echo=False)
+    Base.metadata.create_all(engine)
+
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    config = {
+        'start_date': '2023-03-08T13:14',
+        'timezone': 'America/Sao_Paulo',
+        'repeat_mode': 'personalized',
+        'personalized_repeat': {
+            'mode': 'weekly',
+            'data': [0, 1, 2, 3, 4, 5, 6],
+            'interval': 3
+        }
+    }
+
+    scheduler_config = SchedulerConfig(session)
+    scheduler_config.load_config(config)
+
+    scheduler_config.save()
+
+    # configs = session.query(SchedulerConfig).all()
+
+    # for config in configs:
+    #     print(config.start_date)
+    #     print(config.timezone)
+    #     print(config.repeat_mode)
+    #     print(config.weekdays_to_run)
