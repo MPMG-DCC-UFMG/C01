@@ -23,7 +23,7 @@ from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from scrapy_puppeteer import iframe_loader
+from .iframe_loader import iframe_loader
 
 from .forms import (CrawlRequestForm, ParameterHandlerFormSet,
                     RawCrawlRequestForm, ResponseHandlerFormSet)
@@ -32,6 +32,7 @@ from .models import (CRAWLER_QUEUE_DB_ID, CrawlerInstance, CrawlerQueue,
 from .serializers import (CrawlerInstanceSerializer, CrawlerQueueSerializer,
                           CrawlRequestSerializer, TaskSerializer)
 from .task_filter import task_filter_by_date_interval
+
 
 # Log the information to the file logger
 logger = logging.getLogger('file')
@@ -181,12 +182,9 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
     # parts = output_line.split('\t')
     data_size_kbytes = 0  # int(parts[0])
 
-    # FIXME: Colocar esse trecho de código no módulo writer
-    # conta a qtde de arquivos no diretório "data"
-    # command_output = subprocess.run(
-    #     ["find " + config['data_path'] + "/data -type f | wc -l"], shell=True, stdout=subprocess.PIPE)
-    # output_line = command_output.stdout.decode('utf-8').strip('\n')
-    num_data_files = 0  # int(output_line)
+    # Get the number of files downloaded from the instance object
+    num_data_files = instance.number_files_success_download
+    
 
     instance = None
     instance_info = {}
@@ -853,6 +851,24 @@ def export_config(request, instance_id):
 
     return response
 
+def export_trace(request, instance_id):
+    instance = get_object_or_404(CrawlerInstance, pk=instance_id)
+    data_path = instance.crawler.data_path
+
+    file_name = f"{instance_id}.zip"
+    rel_path = os.path.join(data_path, str(instance_id), "debug", "trace", file_name)
+    path = os.path.join(settings.OUTPUT_FOLDER, rel_path)
+
+    try:
+        response = FileResponse(open(path, 'rb'), content_type='zip')
+    except FileNotFoundError:
+        print(f"Arquivo Trace Não Encontrado: {file_name}. Verifique se a opção de gerar arquivo trace foi habilitada na configuração do coletor.")
+        return HttpResponseNotFound("<h1>Página Não Encontrada</h1><p>Verifique se a opção de gerar arquivo trace foi habilitada na configuração do coletor.</p>")
+    else:
+        response['Content-Length'] = os.path.getsize(path)
+        response['Content-Disposition'] = "attachment; filename=%s" % file_name
+
+    return response
 
 def view_screenshots(request, instance_id, page):
     IMGS_PER_PAGE = 20
@@ -959,6 +975,43 @@ class CrawlerViewSet(viewsets.ModelViewSet):
     queryset = CrawlRequest.objects.all().order_by('-creation_date')
     serializer_class = CrawlRequestSerializer
 
+    def _create_templated_url_parameter_handlers(self, parameter_handlers, crawler_id):
+        for handler in parameter_handlers:
+            handler['crawler_id'] = crawler_id
+            handler['injection_type'] = 'templated_url'
+            ParameterHandler.objects.create(**handler)
+
+    def _create_templated_url_response_handlers(self, response_handlers, crawler_id):
+        for handler in response_handlers:
+            handler['crawler_id'] = crawler_id
+            handler['injection_type'] = 'templated_url'
+            ResponseHandler.objects.create(**handler)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create a new crawler.
+        """
+        data = request.data
+
+        if type(data) is not dict:
+            data = data.dict()
+
+        templated_url_parameter_handlers = data.pop('templated_url_parameter_handlers', [])
+        templated_url_response_handlers = data.pop('templated_url_response_handlers', [])
+
+        serializer = CrawlRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            with transaction.atomic():
+                serializer.save()
+
+                crawler_id = serializer.data['id']
+                
+                self._create_templated_url_parameter_handlers(templated_url_parameter_handlers, crawler_id)
+                self._create_templated_url_response_handlers(templated_url_response_handlers, crawler_id)
+
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=True, methods=['get'])
     def run(self, request, pk):
         query_params = self.request.query_params.dict()
@@ -1028,7 +1081,6 @@ class CrawlerViewSet(viewsets.ModelViewSet):
             'instance': CrawlerInstanceSerializer(instance).data
         }
         return JsonResponse(data)
-
 
 class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     """

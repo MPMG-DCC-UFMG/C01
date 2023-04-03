@@ -87,10 +87,21 @@ Crawler "{{ crawler.source_name }}"
                         <th scope="col">Duração</th>
                         <th scope="col">Nº de arquivos</th>
                         <th scope="col">Tamanho</th>
+                        <th scope="col">Arquivo de configurações</th>
                         {% if crawler.dynamic_processing %}
                         <th scope="col">Screenshots</th>
+                        <th scope="col">
+                            Trace
+                            <button type="button" class="popover-icon btn btn-link" data-toggle="popover" data-trigger="click" data-content=
+                                    "<p>Clique neste link para acessar a interface de execução do trace no seu navegador:</p>
+                                     <p>
+                                        <a href='https://trace.playwright.dev/' target='_blank'>https://playwright.dev/docs/trace-viewer</a>
+                                    </p>"
+                                    data-html="true">
+                                <i class="fa fa-info-circle" aria-hidden="true"></i>
+                            </button>
+                        </th>
                         {% endif %}
-                        <th scope="col">Arquivo de configurações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -102,10 +113,11 @@ Crawler "{{ crawler.source_name }}"
                         <td>{{instance.duration_readable}}</td>
                         <td>{{instance.num_data_files}} arquivos</td>
                         <td>{{instance.data_size_readable}}</td>
+                        <td><a class="btn btn-primary" href="{% url 'export_config' instance.instance_id%}">Baixar</a></td>
                         {% if crawler.dynamic_processing %}
                         <td><button type="button" class="btn btn-primary" onclick="displayScreenshotModal({{instance.instance_id}})">Visualizar</button></td>
+                        <td><a class="btn btn-primary" href="{% url 'export_trace' instance.instance_id%}">Baixar</a></td>
                         {% endif %}
-                        <td><a class="btn btn-primary" href="{% url 'export_config' instance.instance_id%}">Baixar</a></td>
                     </tr>
                     
                     {% if forloop.last and forloop.counter > 3 %}

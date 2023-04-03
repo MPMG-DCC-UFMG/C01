@@ -39,7 +39,7 @@ urlpatterns = [
     path("download/page/duplicated/<str:instance_id>", views.duplicated_download_page, name="duplicated_download_page"),
     
     path("export_config/<str:instance_id>", views.export_config, name="export_config"),
-
+    path("export_trace/<str:instance_id>", views.export_trace, name="export_trace"),
 
     path("info/screenshots/<str:instance_id>/<int:page>", views.view_screenshots, name="view_screenshots"),
 
