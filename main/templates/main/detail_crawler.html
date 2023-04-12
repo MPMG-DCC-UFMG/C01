@@ -251,7 +251,7 @@ Crawler "{{ crawler.source_name }}"
             <div class="row mb-3">
                 <div class="col pr-0 d-flex align-items-center justify-content-between">
                     <h5>Últimas linhas do stdout</h5>
-                    <a class="btn btn-primary" href="{% url 'raw_log' last_instance.instance_id %}">Abrir Log Bruto</a>
+                    <a class="btn btn-primary" target="_blank"  href="{% url 'raw_log_out' last_instance.instance_id %}">Abrir Log Bruto</a>
                 </div>
             </div>
             <div class="row">
@@ -272,9 +272,10 @@ Crawler "{{ crawler.source_name }}"
     <!-- Tail stderr -->
     <div class="row">
         <div class="col">
-            <div class="row">
-                <div class="col">
+            <div class="row mb-3">
+                <div class="col pr-0 d-flex align-items-center justify-content-between">
                     <h5>Últimas linhas do stderr</h5>
+                    <a class="btn btn-primary" target="_blank" href="{% url 'raw_log_err' last_instance.instance_id %}">Abrir Log Bruto</a>
                 </div>
             </div>
             <div class="row">
