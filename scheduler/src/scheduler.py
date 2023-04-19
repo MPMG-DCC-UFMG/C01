@@ -13,6 +13,10 @@ import settings
 
 SERVER_SESSION = requests.sessions.Session()
 
+CANCEL_TASK = "cancel"
+UPDATE_TASK = "update"
+CREATE_TASK = "create"
+
 def run_crawler(crawler_id, action):
     SERVER_SESSION.get(settings.RUN_CRAWLER_URL + "/api/crawlers/{}/run?action={}".format(crawler_id, action))
     print(f'[{datetime.now()}] [TC] Crawler {crawler_id} processed by schedule...')
@@ -67,14 +71,14 @@ class Scheduler:
         crawler_id = data['task_data']['crawl_request']
         behavior = data['task_data']['crawler_queue_behavior']
 
-        if action == "cancel":
+        if action == CANCEL_TASK:
             self.scheduler.cancel_job(self.jobs[task_id])
         
-        if action == "update":
+        if action == UPDATE_TASK:
             self.scheduler.cancel_job(self.jobs[task_id])
             self._set_schedule_call_for_task(config_dict, task_id, crawler_id, behavior)
 
-        if action == "create":
+        if action == CREATE_TASK:
             self._set_schedule_call_for_task(config_dict, task_id, crawler_id, behavior)
 
     def __create_task_consumer(self):
@@ -86,12 +90,3 @@ class Scheduler:
         while True:
             self.scheduler.run_pending()
             sleep(1)
-
-
-if __name__ == '__main__':
-    jobs = {}
-
-    # get initial jobs
-
-    scheduler = Scheduler(jobs)
-    scheduler.run()
