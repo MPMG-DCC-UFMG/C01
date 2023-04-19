@@ -2,31 +2,12 @@ import datetime
 from typing import List, Optional, Union
 
 import pytz
-import environ
 from typing_extensions import Literal, TypedDict
 
-from constants import *
-from utils import *
+from schedule.constants import *
+from schedule.utils import *
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, ARRAY
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm.session import Session
-
-env = environ.Env(
-    POSTGRES_SCHEDULER_CONFIG_TABLE_NAME=(str, 'scheduler_config'),
-    POSTGRES_USER=(str, 'django'),
-    POSTGRES_PASSWORD=(str, 'c01_password'),
-    POSTGRES_HOST=(str, 'localhost'),
-    POSTGRES_PORT=(int, 5432),
-    POSTGRES_DB=(str, 'c01_prod'),
-)
-
-Base = declarative_base()
-
-DB_URI = f'postgresql://{env("POSTGRES_USER")}:{env("POSTGRES_PASSWORD")}@{env("POSTGRES_HOST")}:{env("POSTGRES_PORT")}/{env("POSTGRES_DB")}'
-
-# DB_URI = 'postgresql://django:c01_password@localhost:5432/c01_prod'
+from sqlalchemy import Column, Integer, String, DateTime, ARRAY
 
 class Finish(TypedDict):
     '''Define qual parâmetro para parar de reagendar uma coleta, a saber:
@@ -36,7 +17,6 @@ class Finish(TypedDict):
     '''
     mode: Literal['never', 'occurrence', 'date']
     value: Union[None, int, str]
-
 
 class MonthlyRepeatConf(TypedDict):
     ''' Caso a repetição personalizado seja por mês, o usuário pode escolher 3 tipos de agendamento mensal:
@@ -49,7 +29,6 @@ class MonthlyRepeatConf(TypedDict):
     # Se <type> [first,last]-weekday, indica qual dia semana a coleta deverá ocorrer, contado a partir de 0 - domingo.
     # Se <type> day-x, o dia do mês que a coleta deverá ocorrer.
     value: int
-
 
 class PersonalizedRepeat(TypedDict):
     # Uma repetição personalizada pode ser por dia, semana, mês ou ano.
@@ -90,8 +69,8 @@ class SchedulerConfigValueError(SchedulerConfigError):
 class SchedulerConfigInvalidRepeatModeError(SchedulerConfigError):
     pass 
 
-class SchedulerConfig(Base):
-    __tablename__ = env('POSTGRES_SCHEDULER_CONFIG_TABLE_NAME')
+class Config(SQL_ALCHEMY_BASE):
+    __tablename__ = ENV('POSTGRES_SCHED_CONFIG_TABLE_NAME')
 
     id = Column(Integer, primary_key=True)
 
@@ -119,15 +98,14 @@ class SchedulerConfig(Base):
     monthly_first_weekday: Optional[int] = Column(Integer, default=None)
     monthly_last_weekday: Optional[int] = Column(Integer, default=None)
 
-    session = None 
-
-    def __init__(self, session: Session):
+    def __init__(self):
         super().__init__()
-        self.session = session
+
+        self.repeat_interval = 1
 
     def save(self):
-        self.session.add(self)
-        self.session.commit()
+        SQL_ALCHEMY_DB_SESSION.add(self)
+        SQL_ALCHEMY_DB_SESSION.commit()
 
     def first_run_date(self) -> datetime.datetime:
         start_date = self.start_date
@@ -429,34 +407,3 @@ class SchedulerConfig(Base):
                     if finish_date < now:
                         raise SchedulerConfigValueError(f'When the field `mode` of `finish` of `personalized_repeat` is `{REPEAT_FINISH_BY_DATE}`, ' \
                                                         f'the value of field `value` must be a datetime greater than now.')
-                    
-if __name__ == '__main__':
-    engine = create_engine(DB_URI, echo=False)
-    Base.metadata.create_all(engine)
-
-    Session = sessionmaker(bind=engine)
-    session = Session()
-
-    config = {
-        'start_date': '2023-03-08T13:14',
-        'timezone': 'America/Sao_Paulo',
-        'repeat_mode': 'personalized',
-        'personalized_repeat': {
-            'mode': 'weekly',
-            'data': [0, 1, 2, 3, 4, 5, 6],
-            'interval': 3
-        }
-    }
-
-    scheduler_config = SchedulerConfig(session)
-    scheduler_config.load_config(config)
-
-    scheduler_config.save()
-
-    # configs = session.query(SchedulerConfig).all()
-
-    # for config in configs:
-    #     print(config.start_date)
-    #     print(config.timezone)
-    #     print(config.repeat_mode)
-    #     print(config.weekdays_to_run)

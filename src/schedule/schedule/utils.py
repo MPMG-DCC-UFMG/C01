@@ -2,8 +2,7 @@ import calendar
 import datetime
 from typing import Optional
 
-from constants import *
-
+from schedule.constants import *
 
 def get_date(year: int, month: int, day: int, hour: int = 0, minute: int = 0, second: int = 0) -> datetime:
     try:
@@ -87,3 +86,6 @@ def apply_timezone(datetime_obj: datetime.datetime, timezone = None) -> datetime
         return datetime_obj
     
     return timezone.localize(datetime_obj).astimezone(timezone).replace(tzinfo=None)
+
+def create_db_tables():
+    SQL_ALCHEMY_BASE.metadata.create_all(bind=SQL_ALCHEMY_ENGINE)

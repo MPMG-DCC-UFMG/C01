@@ -17,5 +17,5 @@ setup(
     # In production we may want to use the psycopg2 package itself, I'm using
     # the psycopg2-binary package here to avoid problems with external
     # libraries
-    install_requires=[]
+    install_requires=['SQLAlchemy==2.0.7', 'pytz==2022.1']
 )

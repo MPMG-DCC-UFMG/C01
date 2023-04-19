@@ -1,3 +1,28 @@
+import environ
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+ENV = environ.Env(
+    POSTGRES_SCHED_CONFIG_TABLE_NAME=(str, 'sched_config'),
+    POSTGRES_SCHED_JOB_TABLE_NAME=(str, 'sched_job'),
+    
+    POSTGRES_USER=(str, 'django'),
+    POSTGRES_PASSWORD=(str, 'c01_password'),
+    POSTGRES_HOST=(str, 'localhost'),
+    POSTGRES_PORT=(int, 5432),
+    POSTGRES_DB=(str, 'c01_prod'),
+)
+
+# SQL ALCHEMY CONFIG
+
+SQL_ALCHEMY_BASE = declarative_base() 
+DB_URI = f'postgresql://{ENV("POSTGRES_USER")}:{ENV("POSTGRES_PASSWORD")}@{ENV("POSTGRES_HOST")}:{ENV("POSTGRES_PORT")}/{ENV("POSTGRES_DB")}'
+SQL_ALCHEMY_ENGINE = create_engine(DB_URI, echo=False)
+SQL_ALCHEMY_DB_SESSION = sessionmaker(bind=SQL_ALCHEMY_ENGINE)()
+
+# SCHEDULE CONFIG
+
 NUM_DAYS_IN_WEEK = 7
 NUM_MONTHS_IN_YEAR = 12
 
