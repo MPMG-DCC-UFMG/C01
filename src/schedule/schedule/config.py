@@ -98,10 +98,10 @@ class Config(SQL_ALCHEMY_BASE):
     monthly_first_weekday: Optional[int] = Column(Integer, default=None)
     monthly_last_weekday: Optional[int] = Column(Integer, default=None)
 
-    def __init__(self):
+    def __init__(self, config_dict: SchedulerConfigDict = None):
         super().__init__()
-
         self.repeat_interval = 1
+        self._load_config(config_dict)
 
     def save(self):
         SQL_ALCHEMY_DB_SESSION.add(self)
@@ -211,7 +211,7 @@ class Config(SQL_ALCHEMY_BASE):
         else:
             raise SchedulerConfigError('Invalid repeat mode')
 
-    def load_config(self, config_dict: SchedulerConfigDict) -> None:
+    def _load_config(self, config_dict: SchedulerConfigDict) -> None:
         # We assume that the config_dict is valid. That is, it has been validated before
         # SchedulerConfig.valid_config(config_dict)
 
