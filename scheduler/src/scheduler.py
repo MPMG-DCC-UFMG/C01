@@ -3,6 +3,7 @@ from time import sleep
 import threading
 import ujson
 from schedule import Scheduler as Schedule
+from schedule import Config as ScheduleConfig
 import requests
 
 from kafka import KafkaConsumer
@@ -15,11 +16,6 @@ SERVER_SESSION = requests.sessions.Session()
 def run_crawler(crawler_id, action):
     SERVER_SESSION.get(settings.RUN_CRAWLER_URL + "/api/crawlers/{}/run?action={}".format(crawler_id, action))
     print(f'[{datetime.now()}] [TC] Crawler {crawler_id} processed by schedule...')
-
-def run_crawler_once(crawler_id, action):
-    SERVER_SESSION.get(settings.RUN_CRAWLER_URL + "/api/crawlers/{}/run?action={}".format(crawler_id, action))
-    print(f'[{datetime.now()}] [TC] Crawler {crawler_id} processed by schedule...')
-    return scheduler.CancelJob
 
 class Scheduler:
     def __init__(self, jobs):
@@ -47,31 +43,39 @@ class Scheduler:
 
         for message in consumer:
             # try:
-                task_data = ujson.loads(message.value.decode('utf-8'))
+                data = ujson.loads(message.value.decode('utf-8'))
 
                 print(f'[{datetime.now()}] [TC] {worker_name} Worker: Processing task data')
 
-                self.__process_task_data(task_data)
+                self.__process_task_data(data)
 
             # except Exception as e:
             #     print(f'[{datetime.now()}] [TC] {worker_name} Worker: Error processing task data: "{e}"')
 
-    def _set_schedule_call_for_task(self, task_data):
-        params = [run_crawler, task_data["data"]["crawl_request"], task_data["data"]["crawler_queue_behavior"]]
-        job = self.scheduler.schedule_from_config(task_data["data"]).do(*params)
-        self.jobs[task_data["data"]["id"]] = job
+    def _set_schedule_call_for_task(self, config_dict, task_id, crawler_id, behavior):
+        config = ScheduleConfig()
+        config.load_config(config_dict)
 
-    def __process_task_data(self, task_data):
+        job = self.scheduler.schedule_job(config, run_crawler, crawler_id=crawler_id, action=behavior)
+        self.jobs[task_id] = job
 
-        if task_data["action"] == "cancel":
-            schedule.cancel_job(self.jobs[task_data["data"]["id"]])
+    def __process_task_data(self, data):
+        action = data['action']
+        config_dict = data['schedule_config']
         
-        if task_data["action"] == "update":
-            schedule.cancel_job(self.jobs[task_data["data"]["id"]])
-            self._set_schedule_call_for_task(task_data)
+        task_id = data['task_data']['id']
+        crawler_id = data['task_data']['crawl_request']
+        behavior = data['task_data']['crawler_queue_behavior']
 
-        if task_data["action"] == "create":
-            self._set_schedule_call_for_task(task_data)
+        if action == "cancel":
+            self.scheduler.cancel_job(self.jobs[task_id])
+        
+        if action == "update":
+            self.scheduler.cancel_job(self.jobs[task_id])
+            self._set_schedule_call_for_task(config_dict, task_id, crawler_id, behavior)
+
+        if action == "create":
+            self._set_schedule_call_for_task(config_dict, task_id, crawler_id, behavior)
 
     def __create_task_consumer(self):
         self.thread = threading.Thread(target=self.__run_task_consumer, daemon=True)
@@ -80,8 +84,8 @@ class Scheduler:
     def run(self):
         self.__create_task_consumer()
         while True:
+            self.scheduler.run_pending()
             sleep(1)
-            schedule.run_pending()
 
 
 if __name__ == '__main__':
