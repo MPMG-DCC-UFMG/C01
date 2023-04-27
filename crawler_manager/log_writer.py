@@ -59,15 +59,15 @@ class LogWriter():
         This method writes log in database
 
         """
-        Log = apps.get_model('main', 'Log')
+        # Log = apps.get_model('main', 'Log')
 
-        new_log = Log(raw_log=log['raw'],
-                      log_level=log['lvl'],
-                      instance_id=log['iid'],
-                      log_message=log['msg'],
-                      logger_name=log['name'])
+        # new_log = Log(raw_log=log['raw'],
+        #               log_level=log['lvl'],
+        #               instance_id=log['iid'],
+        #               log_message=log['msg'],
+        #               logger_name=log['name'])
 
-        new_log.save()
+        # new_log.save()
 
         system_path = os.path.join(settings.OUTPUT_FOLDER, log["dtp"])
         filename = f'{system_path}/{log["iid"]}/log/{log["iid"]}.{log["lvl"]}'

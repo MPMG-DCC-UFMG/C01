@@ -4,11 +4,12 @@ import logging
 import multiprocessing as mp
 import os
 import time
+import subprocess
 from datetime import datetime
 from typing_extensions import Literal
 
 import crawler_manager.crawler_manager as crawler_manager
-from crawler_manager.settings import TASK_TOPIC
+from crawler_manager.settings import (TASK_TOPIC, OUTPUT_FOLDER)
 from crawler_manager.constants import *
 
 from django.conf import settings
@@ -662,15 +663,19 @@ def tail_log_file(request, instance_id):
     number_pages_duplicated_download = instance.number_pages_duplicated_download
     number_pages_previously_crawled = instance.number_pages_previously_crawled
 
-    logs = Log.objects.filter(instance_id=instance_id).order_by('-creation_date')
+    config = CrawlRequest.objects.filter(id=int(instance.crawler.id)).values()[0]
+    data_path = os.path.join(OUTPUT_FOLDER, config["data_path"])
 
-    log_results = logs.filter(Q(log_level="out"))[:20]
-    err_results = logs.filter(Q(log_level="err"))[:20]
-
-    log_text = [f"[{r.logger_name}] {r.log_message}" for r in log_results]
-    log_text = "\n".join(log_text)
-    err_text = [f"[{r.logger_name}] [{r.log_level:^5}] {r.log_message}" for r in err_results]
-    err_text = "\n".join(err_text)
+    out = subprocess.run(["tail",
+                          f"{data_path}/{instance_id}/log/{instance_id}.out",
+                          "-n",
+                          "20"],
+                         stdout=subprocess.PIPE).stdout
+    err = subprocess.run(["tail",
+                          f"{data_path}/{instance_id}/log/{instance_id}.err",
+                          "-n",
+                          "20"],
+                         stdout=subprocess.PIPE).stdout
 
     return JsonResponse({
         "files_found": files_found,
@@ -684,23 +689,51 @@ def tail_log_file(request, instance_id):
         "pages_duplicated": number_pages_duplicated_download,
         "pages_previously_crawled": number_pages_previously_crawled,
 
-        "out": log_text,
-        "err": err_text,
+        "out": out.decode('utf-8'),
+        "err": err.decode('utf-8'),
         "time": str(datetime.fromtimestamp(time.time())),
     })
 
 
-def raw_log(request, instance_id):
-    logs = Log.objects.filter(instance_id=instance_id)\
-                      .order_by('-creation_date')
+def raw_log_out(request, instance_id):
+    instance = CrawlerInstance.objects.get(instance_id=instance_id)
 
-    raw_results = logs[:100]
-    raw_text = [json.loads(r.raw_log) for r in raw_results]
+    config = CrawlRequest.objects.filter(id=int(instance.crawler.id)).values()[0]
+    data_path = os.path.join(OUTPUT_FOLDER, config["data_path"])
 
-    resp = JsonResponse({str(instance_id): raw_text},
+    out = subprocess.run(["tail",
+                          f"{data_path}/{instance_id}/log/{instance_id}.out",
+                          "-n",
+                          "100"],
+                         stdout=subprocess.PIPE).stdout
+    
+    raw_text = out.decode('utf-8')
+    raw_results = raw_text.splitlines(True)
+    resp = JsonResponse({str(instance_id): raw_results},
                         json_dumps_params={'indent': 2})
 
-    if len(logs) > 0 and logs[0].instance.running:
+    if len(raw_results) > 0 and instance.running:
+        resp['Refresh'] = 5
+    return resp
+
+def raw_log_err(request, instance_id):
+    instance = CrawlerInstance.objects.get(instance_id=instance_id)
+
+    config = CrawlRequest.objects.filter(id=int(instance.crawler.id)).values()[0]
+    data_path = os.path.join(OUTPUT_FOLDER, config["data_path"])
+
+    err = subprocess.run(["tail",
+                          f"{data_path}/{instance_id}/log/{instance_id}.err",
+                          "-n",
+                          "100"],
+                         stdout=subprocess.PIPE).stdout
+
+    raw_text = err.decode('utf-8')
+    raw_results = raw_text.splitlines(True)
+    resp = JsonResponse({str(instance_id): raw_results},
+                        json_dumps_params={'indent': 2})
+
+    if len(raw_results) > 0 and instance.running:
         resp['Refresh'] = 5
     return resp
 
