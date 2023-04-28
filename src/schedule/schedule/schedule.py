@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 
 from schedule.constants import SQL_ALCHEMY_DB_SESSION, SQL_ALCHEMY_ENGINE, SQL_ALCHEMY_BASE
 from schedule.config import ConfigDict, Config
-from schedule.job import Job, CancelJob
+from schedule.job import Job, CancelledJob
 
 logger = logging.getLogger('scheduler')
 logger.setLevel(logging.DEBUG)
@@ -76,7 +76,7 @@ class Scheduler:
         ret = job.run()
         job.save()
 
-        if isinstance(ret, CancelJob) or ret is CancelJob:
+        if isinstance(ret, CancelledJob) or ret is CancelledJob:
             self.cancel_job(job)
 
     def schedule_job(self, sched_config_dict: ConfigDict, job_func: Callable, *job_args, **job_kwargs) -> Job:
@@ -102,7 +102,7 @@ class Scheduler:
 
         return new_job
 
-    def cancel_job(self, job: Job) -> None:
+    def cancel_job(self, job: Job, reason: str = None) -> None:
         '''
         Delete a scheduled job.
 
@@ -111,7 +111,7 @@ class Scheduler:
         try:
             logger.debug('Cancelling job "%s"', job)
             
-            job.cancel()
+            job.cancel(reason)
             job.save()
 
             self.jobs.remove(job)
@@ -125,7 +125,7 @@ class Scheduler:
         '''
 
         logger.debug('Recovering jobs')
-        retrieved_jobs = SQL_ALCHEMY_DB_SESSION.query(Job).filter(Job.cancelled == False).all()
+        retrieved_jobs = SQL_ALCHEMY_DB_SESSION.query(Job).filter(Job.cancelled_at is None).all()
 
         self.jobs = list()
 

@@ -90,7 +90,7 @@ class JobTest(unittest.TestCase):
         self.job.sched_config.behavior_after_system_restart = CANCELL_TASK_ON_RESTART
         self.job.recover()
 
-        self.assertTrue(self.job.cancelled)
+        self.assertTrue(self.job.cancelled_at is not None)
 
     def test_reschedule_job_after_restart(self):
         past_date = self.config.now() - timedelta(days=1)

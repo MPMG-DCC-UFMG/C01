@@ -3,7 +3,7 @@ import logging
 import datetime
 from typing import Callable, Any
 
-from sqlalchemy import Column, Integer, PickleType, DateTime, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, PickleType, DateTime, ForeignKey, String
 from sqlalchemy.orm import relationship
 
 from schedule.constants import (ENV, SQL_ALCHEMY_BASE, CANCELL_TASK_ON_RESTART, 
@@ -14,9 +14,15 @@ from schedule.function_wrapper import FunctionWrapper
 logger = logging.getLogger('scheduler_job')
 logger.setLevel(logging.DEBUG)
 
+class CancelledJob(object):
+    """
+    Returned by a job when it is cancelled.
+    """
+    pass
+
 class CancelJob(object):
     """
-    Can be returned from a job to unschedule itself.
+    Can be returned by a job to request its cancellation.
     """
     pass
 
@@ -25,7 +31,8 @@ class Job(SQL_ALCHEMY_BASE):
 
     id = Column(Integer, primary_key=True)
 
-    cancelled = Column(Boolean, default=False)
+    cancelled_at = Column(DateTime)
+    cancelled_reason = Column(String)
 
     sched_config_id = Column(Integer, ForeignKey('sched_config.id'))
     sched_config = relationship('Config', backref='jobs', lazy=True, uselist=False)
@@ -55,7 +62,7 @@ class Job(SQL_ALCHEMY_BASE):
         return self.next_run < other.next_run    
 
     def __eq__(self, other: 'Job') -> bool:
-        return self.cancelled == other.cancelled and \
+        return self.cancelled_at == other.cancelled_at and \
             self.sched_config_id == other.sched_config_id and \
             self.num_repeats == other.num_repeats and \
             self.last_run == other.last_run and \
@@ -140,7 +147,10 @@ class Job(SQL_ALCHEMY_BASE):
         
         if self._is_overdue(self.sched_config.now()):
             logger.debug(f'Cancelling job {self}.\n\tReason: The job is overdue.')
-            return CancelJob
+
+            self.cancel(f'The job is overdue.')
+
+            return CancelledJob
 
         logger.debug('Running job %s', self)
 
@@ -150,33 +160,51 @@ class Job(SQL_ALCHEMY_BASE):
         except Exception as e:
             logger.exception('Error running job %s', self)
             logger.debug(f'Cancelling job {self}.\n\tReason: Exception raised.')
-            return CancelJob
+            
+            self.cancel(f'Exception raised: {e}')
+
+            return CancelledJob
         
         self.num_repeats += 1
         if self._achieved_max_repeats():
             logger.debug(f'Cancelling job {self}.\n\tReason: Max repeats achieved ({self.cancel_after_max_repeats})')
-            return CancelJob
+
+            self.cancel(f'Max repeats achieved ({self.cancel_after_max_repeats})')
+
+            return CancelledJob
         
         self.last_run = self.sched_config.now()
+        
+        if isinstance(ret, CancelJob) or ret is CancelJob:
+            logger.debug(f'Cancelling job {self}.\n\tReason: CancelJob returned.')
+
+            self.cancel(f'CancelJob returned.')
+
+            return CancelledJob
         
         self._schedule_next_run()
 
         # The repeat_mode is no_repeat, so we cancel the job
         if self.next_run is None:
             logger.debug(f'Cancelling job {self}.\n\tReason: No more runs.')
-            return CancelJob
+            return CancelledJob
         
         if self._is_overdue(self.next_run):
             logger.debug(f'Cancelling next job {self} run.\n\tReason: The job is overdue.')
-            return CancelJob
+            return CancelledJob
         
         return ret
     
-    def cancel(self):
+    def cancel(self, reason: str = None):
         '''
         Cancel the job.
         '''
-        self.cancelled = True
+        # The job is already cancelled
+        if self.cancelled_at is not None:
+            return
+        
+        self.cancelled_at = self.sched_config.now()
+        self.cancelled_reason = reason
 
     def _schedule_first_run(self) -> None:
         '''
