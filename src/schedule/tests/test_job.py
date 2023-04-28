@@ -1,7 +1,7 @@
 import unittest
 from mock_alchemy.mocking import UnifiedAlchemyMagicMock
 from datetime import timedelta, datetime
-from schedule.job import Job
+from schedule.job import Job, CancelJob
 from schedule.config import Config
 from schedule.function_wrapper import FunctionWrapper
 from schedule.constants import (VALID_DATETIME_FORMATS, 
@@ -141,3 +141,13 @@ class JobTest(unittest.TestCase):
         self.job.run()
 
         self.assertEqual(self.job.num_repeats, 1)
+
+    def test_job_can_self_cancel(self):
+        self.job.job_funct = FunctionWrapper(lambda: CancelJob)
+
+        now = self.config.now()
+        self.job.next_run = now
+
+        self.job.run()
+
+        self.assertTrue(self.job.cancelled_at is not None)
