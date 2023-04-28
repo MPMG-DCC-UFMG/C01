@@ -1,5 +1,4 @@
 from typing import Any, Callable, Dict, List, Any
-
 class FunctionWrapper:
     def __init__(self, funct: Callable, *args, **kwargs):
         self.funct: Callable = funct

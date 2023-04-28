@@ -57,9 +57,7 @@ class Scheduler:
             #     print(f'[{datetime.now()}] [TC] {worker_name} Worker: Error processing task data: "{e}"')
 
     def _set_schedule_call_for_task(self, config_dict, task_id, crawler_id, behavior):
-        config = ScheduleConfig()
-        config.load_config(config_dict)
-
+        config = ScheduleConfig(config_dict)
         job = self.scheduler.schedule_job(config, run_crawler, crawler_id=crawler_id, action=behavior)
         self.jobs[task_id] = job
 

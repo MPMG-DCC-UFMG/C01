@@ -1,5 +1,5 @@
 import unittest
-from date_utils import *
+from schedule.date_utils import *
 
 class DateUtilsTest(unittest.TestCase):
     def test_date_date_with_invalid_date(self):
