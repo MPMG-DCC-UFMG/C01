@@ -27,9 +27,9 @@ class IntervalError(ScheduleValueError):
 
     pass
 
-class Scheduler:
+class Schedule:
     def __init__(self, 
-                persist_task: bool = False,
+                connect_db: bool = False,
                 db_host: str = 'localhost',
                 db_port: str = 5432,
                 db_user: str = 'sched_user',
@@ -41,7 +41,7 @@ class Scheduler:
         self.db_session = None
         self.db_engine = None
 
-        if persist_task:
+        if connect_db:
             for arg in (db_host, db_port, db_user, db_pass, db_db):
                 assert arg is not None, "Must provide all arguments for persisting tasks"
             

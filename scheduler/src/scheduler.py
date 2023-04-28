@@ -2,8 +2,9 @@ from datetime import datetime
 from time import sleep
 import threading
 import ujson
-from schedule import Scheduler as Schedule
-from schedule import Config as ScheduleConfig
+from schedule.schedule import Schedule
+from schedule.config import Config as ScheduleConfig
+from schedule.job import CancelJob
 import requests
 
 from kafka import KafkaConsumer
@@ -24,7 +25,12 @@ def run_crawler(crawler_id, action):
 class Scheduler:
     def __init__(self, jobs):
         self.jobs = jobs
-        self.scheduler = Schedule()
+        self.scheduler = Schedule(connect_db=True, 
+                                db_host=settings.DB_HOST, 
+                                db_port=settings.DB_PORT, 
+                                db_user=settings.DB_USER, 
+                                db_pass=settings.DB_PASS, 
+                                db_db=settings.DB_DB)
 
     def __run_task_consumer(self):
         # Generates a random name for the consumer
