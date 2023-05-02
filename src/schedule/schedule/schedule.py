@@ -4,8 +4,8 @@ from typing import Callable, List
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-from schedule.constants import SQL_ALCHEMY_DB_SESSION, SQL_ALCHEMY_ENGINE, SQL_ALCHEMY_BASE
+from sqlalchemy import null
+from schedule.constants import SQL_ALCHEMY_BASE
 from schedule.config import ConfigDict, Config
 from schedule.job import Job, CancelledJob
 
@@ -74,7 +74,7 @@ class Schedule:
 
     def _run_job(self, job: "Job") -> None:
         ret = job.run()
-        job.save()
+        job.save(self.db_session)
 
         if isinstance(ret, CancelledJob) or ret is CancelledJob:
             self.cancel_job(job)
@@ -92,12 +92,13 @@ class Schedule:
         '''
         logger.debug('Scheduling job "%s" %s %s', job_func.__name__, job_args, job_kwargs)
         
-        sched_config = Config(self.db_session)
+        sched_config = Config()
         sched_config.load_config(sched_config_dict)
 
-        new_job = Job(sched_config, self.db_session)
+        new_job = Job(sched_config)
         new_job.do(job_func, *job_args, **job_kwargs)
-        
+        new_job.save(self.db_session)
+
         self.jobs.append(new_job)
 
         return new_job
@@ -112,7 +113,7 @@ class Schedule:
             logger.debug('Cancelling job "%s"', job)
             
             job.cancel(reason)
-            job.save()
+            job.save(self.db_session)
 
             self.jobs.remove(job)
 
@@ -125,14 +126,12 @@ class Schedule:
         '''
 
         logger.debug('Recovering jobs')
-        retrieved_jobs = SQL_ALCHEMY_DB_SESSION.query(Job).filter(Job.cancelled_at is None).all()
+        retrieved_jobs = self.db_session.query(Job).filter(Job.cancelled_at == null()).all()
 
         self.jobs = list()
-
         for job in sorted(retrieved_jobs):
             job.recover()
-
-            if not job.cancelled:
+            if not job.cancelled_at:
                 self.jobs.append(job)
 
     def cancel_all_jobs(self) -> None:

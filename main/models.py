@@ -1,5 +1,4 @@
 import datetime
-from typing import List, Union
 
 from crawler_manager.constants import *
 from crawling_utils.constants import (AUTO_ENCODE_DETECTION,
@@ -8,8 +7,8 @@ from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 from django.db.models.base import ModelBase
 from django.utils import timezone
-from typing_extensions import Literal, TypedDict
-from schedule import SchedulerConfigDict, SchedulerConfig
+from typing_extensions import Literal
+from schedule.config import ConfigDict, Config
 
 CRAWLER_QUEUE_DB_ID = 1
 
@@ -650,7 +649,7 @@ class CrawlerQueueItem(TimeStamped):
     running = models.BooleanField(default=False, blank=True)
     position = models.IntegerField(null=False, default=0)
 
-class TaskType(SchedulerConfigDict):
+class TaskType(ConfigDict):
     id: int
     crawl_request: int
     crawler_queue_behavior: Literal['wait_on_last_queue_position', 'wait_on_first_queue_position', 'run_immediately']
@@ -675,7 +674,7 @@ class Task(TimeStamped):
     
     @property
     def next_run(self):
-        sched_config = SchedulerConfig()
+        sched_config = Config()
         sched_config.load_config(self.scheduler_config)
 
         if self.last_run is None:

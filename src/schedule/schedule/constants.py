@@ -1,10 +1,12 @@
 import environ
+from enum import Enum
 from sqlalchemy.orm import declarative_base
 
 SQL_ALCHEMY_BASE = declarative_base() 
 ENV = environ.Env(
     POSTGRES_SCHED_CONFIG_TABLE_NAME=(str, 'sched_config'),
     POSTGRES_SCHED_JOB_TABLE_NAME=(str, 'sched_job'))
+
 
 # SCHEDULE CONFIG
 
@@ -45,6 +47,10 @@ VALID_DATETIME_FORMATS = (
                             '%d-%m-%Y %H:%M:%S',
                             '%Y-%m-%d %H:%M',
                             '%d-%m-%Y %H:%M',
+                            '%Y-%m-%dT%H:%M:%S',
+                            '%d-%m-%YT%H:%M:%S',
+                            '%Y-%m-%dT%H:%M',
+                            '%d-%m-%YT%H:%M',
                             '%Y-%m-%d',
                             '%d-%m-%Y',
                         )

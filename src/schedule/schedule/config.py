@@ -44,7 +44,7 @@ class Config(SQL_ALCHEMY_BASE):
     timezone: str = Column(String, nullable=True) 
 
     # 0: cancel task, 1: re-schedule task for next valid run, 2: execute task now
-    behavior_after_system_restart: int = Column(Integer, default=0)
+    behavior_after_system_restart: int = Column(Integer, default=DEFAULT_BEHAVIOR_AFTER_SYSTEM_RESTART)
 
     repeat_mode: str = Column(String, default=NO_REPEAT_MODE)
     repeat_interval: int = Column(Integer, default=1)
@@ -67,10 +67,8 @@ class Config(SQL_ALCHEMY_BASE):
     monthly_first_weekday: Optional[int] = Column(Integer, default=None)
     monthly_last_weekday: Optional[int] = Column(Integer, default=None)
 
-    def __init__(self, db_session=None):
+    def __init__(self):
         super().__init__()
-
-        self.db_session = db_session
         self.repeat_interval = 1
 
     def __eq__(self, other):
@@ -87,15 +85,12 @@ class Config(SQL_ALCHEMY_BASE):
             self.monthly_first_weekday == other.monthly_first_weekday and \
             self.monthly_last_weekday == other.monthly_last_weekday
     
-    def save(self):
+    def save(self, db_session):
         '''
         Saves the config to the database.
         '''
-        if self.db_session is None:
-            return
-        
-        self.db_session.add(self)
-        self.db_session.commit()
+        db_session.add(self)
+        db_session.commit()
 
     def first_run_date(self) -> datetime.datetime:
         '''
@@ -116,12 +111,26 @@ class Config(SQL_ALCHEMY_BASE):
         
         elif self.repeat_mode == MINUTELY_REPEAT_MODE:
             # Must consider the hour of start date
-            raise NotImplementedError()
+            if now < start_date:
+                return start_date
+            
+            # TODO: Make this more efficient
+            while start_date < self.now():
+                start_date += datetime.timedelta(minutes=repeat_interval)
 
+            return start_date
+        
         if self.repeat_mode == HOURLY_REPEAT_MODE:
             # Must consider the hour of start date
-            raise NotImplementedError()
-        
+            if now < start_date:
+                return start_date
+            
+            # TODO: Make this more efficient
+            while start_date < self.now():
+                start_date += datetime.timedelta(hours=repeat_interval)
+
+            return start_date
+
         elif self.repeat_mode == DAILY_REPEAT_MODE:
             return start_date if now < start_date else start_date + datetime.timedelta(days=repeat_interval)
         

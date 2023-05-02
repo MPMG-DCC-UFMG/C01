@@ -12,7 +12,12 @@ from schedule.config import Config
 from schedule.function_wrapper import FunctionWrapper
 
 logger = logging.getLogger('scheduler_job')
-logger.setLevel(logging.DEBUG)
+
+# saving log in file
+file_handler = logging.FileHandler('scheduler_job.log')
+file_handler.setLevel(logging.DEBUG)
+
+# logger.setLevel(logging.DEBUG)
 
 class CancelledJob(object):
     """
@@ -44,7 +49,7 @@ class Job(SQL_ALCHEMY_BASE):
 
     job_funct = Column(PickleType, default=None, nullable=False)
 
-    def __init__(self, sched_config: Config, db_session = None) -> None:
+    def __init__(self, sched_config: Config) -> None:
         '''
         Create a new job.
 
@@ -53,8 +58,6 @@ class Job(SQL_ALCHEMY_BASE):
         
         self.sched_config: Config = sched_config        
         self.num_repeats: int = 0
-
-        self.db_session = db_session
 
     def __lt__(self, other: 'Job') -> bool:
         assert self.next_run is not None, "must run _schedule_next_run before"
@@ -86,20 +89,15 @@ class Job(SQL_ALCHEMY_BASE):
         '''
         self.job_funct = FunctionWrapper(job_func, *args, **kwargs)
         self._schedule_first_run()
-        self.save()
 
-    def save(self):
+    def save(self, db_session):
         '''
         Save the job to the database.
         '''
+        self.sched_config.save(db_session)
 
-        self.sched_config.save()
-
-        if self.db_session is None:
-            return
-        
-        self.db_session.add(self)
-        self.db_session.commit()
+        db_session.add(self)
+        db_session.commit()
 
     def recover(self):
         '''
@@ -151,8 +149,6 @@ class Job(SQL_ALCHEMY_BASE):
             self.cancel(f'The job is overdue.')
 
             return CancelledJob
-
-        logger.debug('Running job %s', self)
 
         try:
             ret = self.exec_funct()
@@ -217,11 +213,9 @@ class Job(SQL_ALCHEMY_BASE):
         Schedule the next run of the job.
         ''' 
         self.next_run = self.sched_config.next_run_date(self.next_run)
-
         # If the next run is overdue, we schedule the next run.
         # This can happen if the system is down for a long time 
         while self.next_run is not None and self._is_overdue(self.next_run):
-            logger.debug(f'Job {self} is overdue. Scheduling next run.')
             self.next_run = self.sched_config.next_run_date(self.next_run)
 
     def _is_overdue(self, when: datetime.datetime) -> bool:

@@ -34,7 +34,7 @@ from .serializers import (CrawlerInstanceSerializer, CrawlerQueueSerializer,
                           CrawlRequestSerializer, TaskSerializer)
 from .task_filter import task_filter_by_date_interval
 
-from schedule.scheduler_config import SchedulerConfig
+from schedule.config import Config as SchedulerConfig
 
 # Log the information to the file logger
 logger = logging.getLogger('file')
