@@ -12,12 +12,7 @@ from schedule.config import Config
 from schedule.function_wrapper import FunctionWrapper
 
 logger = logging.getLogger('scheduler_job')
-
-# saving log in file
-file_handler = logging.FileHandler('scheduler_job.log')
-file_handler.setLevel(logging.DEBUG)
-
-# logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.DEBUG)
 
 class CancelledJob(object):
     """
@@ -99,7 +94,7 @@ class Job(SQL_ALCHEMY_BASE):
         db_session.add(self)
         db_session.commit()
 
-    def recover(self):
+    def recover(self) -> Any:
         '''
         Ensure that the job is scheduled to run again after a system restart.
         '''
@@ -110,10 +105,20 @@ class Job(SQL_ALCHEMY_BASE):
                 self.cancel()
 
             elif self.sched_config.behavior_after_system_restart == RESCHEDULE_TASK_ON_RESTART:
-                self._schedule_next_run()
+                self._schedule_next_run(True)
 
             elif self.sched_config.behavior_after_system_restart == RUN_TASK_IMMEDIATELLY:
-                self.run()
+                try:
+                    ret = self.exec_funct()
+                
+                except Exception as e:
+                    logger.exception('Error running job %s in recovery mode.', self)
+                    logger.debug(f'Cancelling job {self}.\n\tReason: Exception raised.')
+                    self.cancel(f'Exception raised: {e}')
+                    return CancelledJob
+
+                self._schedule_next_run(True)
+                return ret 
 
             else:
                 raise ValueError(f'Invalid behavior_after_system_restart: {self.sched_config.behavior_after_system_restart}')
@@ -145,9 +150,7 @@ class Job(SQL_ALCHEMY_BASE):
         
         if self._is_overdue(self.sched_config.now()):
             logger.debug(f'Cancelling job {self}.\n\tReason: The job is overdue.')
-
             self.cancel(f'The job is overdue.')
-
             return CancelledJob
 
         try:
@@ -156,26 +159,20 @@ class Job(SQL_ALCHEMY_BASE):
         except Exception as e:
             logger.exception('Error running job %s', self)
             logger.debug(f'Cancelling job {self}.\n\tReason: Exception raised.')
-            
             self.cancel(f'Exception raised: {e}')
-
             return CancelledJob
         
         self.num_repeats += 1
         if self._achieved_max_repeats():
             logger.debug(f'Cancelling job {self}.\n\tReason: Max repeats achieved ({self.cancel_after_max_repeats})')
-
             self.cancel(f'Max repeats achieved ({self.cancel_after_max_repeats})')
-
             return CancelledJob
         
         self.last_run = self.sched_config.now()
         
         if isinstance(ret, CancelJob) or ret is CancelJob:
             logger.debug(f'Cancelling job {self}.\n\tReason: CancelJob returned.')
-
             self.cancel(f'CancelJob returned.')
-
             return CancelledJob
         
         self._schedule_next_run()
@@ -208,15 +205,26 @@ class Job(SQL_ALCHEMY_BASE):
         '''
         self.next_run = self.sched_config.first_run_date()
     
-    def _schedule_next_run(self) -> None: 
+    def _schedule_next_run(self, recovery_mode: bool = False) -> None: 
         '''
         Schedule the next run of the job.
         ''' 
         self.next_run = self.sched_config.next_run_date(self.next_run)
-        # If the next run is overdue, we schedule the next run.
-        # This can happen if the system is down for a long time 
-        while self.next_run is not None and self._is_overdue(self.next_run):
-            self.next_run = self.sched_config.next_run_date(self.next_run)
+
+        if recovery_mode:
+            # If the next run is overdue, we schedule the next run.
+            # This can happen if the system is down for a long time     
+            while True:
+                if self.next_run is None:
+                    break
+
+                if self._is_overdue(self.next_run):
+                    break
+
+                if self.sched_config.now() < self.next_run:
+                    break
+                
+                self.next_run = self.sched_config.next_run_date(self.next_run)
 
     def _is_overdue(self, when: datetime.datetime) -> bool:
         '''

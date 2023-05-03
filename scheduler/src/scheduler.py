@@ -23,8 +23,8 @@ def run_crawler(crawler_id, action):
     print(f'[{datetime.now()}] [TC] Crawler {crawler_id} processed by schedule...')
 
 class Scheduler:
-    def __init__(self, jobs):
-        self.jobs = jobs
+    def __init__(self):
+        self.jobs = dict()
         self.scheduler = Schedule(connect_db=True, 
                                 db_host=settings.DB_HOST, 
                                 db_port=settings.DB_PORT, 
@@ -63,8 +63,7 @@ class Scheduler:
             #     print(f'[{datetime.now()}] [TC] {worker_name} Worker: Error processing task data: "{e}"')
 
     def _set_schedule_call_for_task(self, config_dict, task_id, crawler_id, behavior):
-        config = ScheduleConfig(config_dict)
-        job = self.scheduler.schedule_job(config, run_crawler, crawler_id=crawler_id, action=behavior)
+        job = self.scheduler.schedule_job(config_dict, run_crawler, crawler_id=crawler_id, action=behavior)
         self.jobs[task_id] = job
 
     def __process_task_data(self, data):
@@ -94,3 +93,8 @@ class Scheduler:
         while True:
             self.scheduler.run_pending()
             sleep(1)
+
+
+if __name__ == "__main__":
+    scheduler = Scheduler()
+    scheduler.run()
