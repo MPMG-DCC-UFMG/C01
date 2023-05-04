@@ -1,11 +1,18 @@
+from datetime import datetime
 from typing import Any, Callable, Dict, List, Any
+import inspect
+
 class FunctionWrapper:
     def __init__(self, funct: Callable, *args, **kwargs):
         self.funct: Callable = funct
         self.args: List[Any] = list(args)
         self.kwargs: Dict[str, Any] = kwargs
 
-    def __call__(self) -> Any:
+    def __call__(self, next_run: datetime = None) -> Any:
+        # check if the funct accepts a next_run argument
+        if self.funct_requires_next_run() and next_run is not None:
+            self.kwargs["next_run"] = next_run
+
         return self.funct(*self.args, **self.kwargs)
 
     def __repr__(self) -> str:
@@ -19,3 +26,8 @@ class FunctionWrapper:
     
     def __hash__(self) -> int:
         return hash((self.funct, tuple(self.args), frozenset(self.kwargs.items())))
+    
+    def funct_requires_next_run(self) -> bool:
+        args_accept = inspect.getfullargspec(self.funct).args
+        return 'next_run' in args_accept
+    

@@ -3,8 +3,6 @@ from time import sleep
 import threading
 import ujson
 from schedule.schedule import Schedule
-from schedule.config import Config as ScheduleConfig
-from schedule.job import CancelJob
 import requests
 
 from kafka import KafkaConsumer
@@ -18,9 +16,11 @@ CANCEL_TASK = "cancel"
 UPDATE_TASK = "update"
 CREATE_TASK = "create"
 
-def run_crawler(crawler_id, action):
-    SERVER_SESSION.get(settings.RUN_CRAWLER_URL + "/api/crawlers/{}/run?action={}".format(crawler_id, action))
-    print(f'[{datetime.now()}] [TC] Crawler {crawler_id} processed by schedule...')
+def run_crawler(crawler_id, action, next_run):
+    SERVER_SESSION.get(settings.RUN_CRAWLER_URL + \
+                        "/api/crawlers/{}/run?action={}&next_run={}".format(crawler_id, action, next_run))
+    
+    print(f'[{datetime.now()}] [TC] Crawler {crawler_id} processed by schedule. \n\tAction: {action} \n\tNext run: {next_run}')
 
 class Scheduler:
     def __init__(self):

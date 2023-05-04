@@ -662,8 +662,9 @@ class Task(TimeStamped):
     ]
 
     crawl_request = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE, related_name='scheduler_jobs')
+    next_run = models.DateTimeField(null=True, blank=True)
     last_run = models.DateTimeField(null=True, blank=True)
-
+    
     crawler_queue_behavior = models.CharField(
         max_length=32, choices=CRAWLER_QUEUE_BEHAVIOR_CHOICES, default='wait_on_last_queue_position')
 
@@ -671,14 +672,3 @@ class Task(TimeStamped):
 
     def __str__(self):
         return f'{self.crawl_request} - {self.start_date}'
-    
-    @property
-    def next_run(self):
-        sched_config = Config()
-        sched_config.load_config(self.scheduler_config)
-
-        if self.last_run is None:
-            return sched_config.first_run_date()
-        
-        return sched_config.next_run_date(self.last_run) 
-

@@ -1,6 +1,7 @@
 
 import logging
 import datetime
+import inspect
 from typing import Callable, Any
 
 from sqlalchemy import Column, Integer, PickleType, DateTime, ForeignKey, String
@@ -141,7 +142,11 @@ class Job(SQL_ALCHEMY_BASE):
         if self.job_funct is None:
             raise ValueError('job_func is None')
         
-        return self.job_funct() 
+        next_run = None 
+        if self.job_funct.funct_requires_next_run():
+            next_run = self.get_next_run()
+
+        return self.job_funct(next_run)
 
     def run(self):
         '''
@@ -205,26 +210,32 @@ class Job(SQL_ALCHEMY_BASE):
         '''
         self.next_run = self.sched_config.first_run_date()
     
-    def _schedule_next_run(self, recovery_mode: bool = False) -> None: 
+    def get_next_run(self, recovery_mode: bool = False) -> datetime.datetime:
         '''
-        Schedule the next run of the job.
-        ''' 
-        self.next_run = self.sched_config.next_run_date(self.next_run)
+        Get the next run of the job.
+        '''
+        next_run = self.sched_config.next_run_date(self.next_run)
 
         if recovery_mode:
-            # If the next run is overdue, we schedule the next run.
-            # This can happen if the system is down for a long time     
             while True:
                 if self.next_run is None:
                     break
 
-                if self._is_overdue(self.next_run):
+                if self._is_overdue(next_run):
                     break
 
-                if self.sched_config.now() < self.next_run:
+                if self.sched_config.now() < next_run:
                     break
                 
-                self.next_run = self.sched_config.next_run_date(self.next_run)
+                next_run = self.sched_config.next_run_date(next_run)
+
+        return next_run
+    
+    def _schedule_next_run(self, recovery_mode: bool = False) -> None: 
+        '''
+        Schedule the next run of the job.
+        ''' 
+        self.next_run = self.get_next_run(recovery_mode)
 
     def _is_overdue(self, when: datetime.datetime) -> bool:
         '''

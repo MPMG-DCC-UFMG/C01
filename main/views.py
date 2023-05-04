@@ -970,6 +970,16 @@ class CrawlerViewSet(viewsets.ModelViewSet):
     def run(self, request, pk):
         query_params = self.request.query_params.dict()
         action = query_params.get('action', '')
+        next_run = query_params.get('next_run')
+
+        if next_run:
+            next_run = datetime.strptime(next_run, '%Y-%m-%d %H:%M:%S')
+            # next_run = pytz.timezone(settings.TIME_ZONE).localize(next_run)
+
+            task = Task.objects.get(crawl_request__pk=pk)
+            task.next_run = next_run
+            task.last_run = datetime.now()
+            task.save()
 
         if action == 'run_immediately':
             wait_on = 'no_wait'
