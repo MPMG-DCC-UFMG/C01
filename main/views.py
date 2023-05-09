@@ -1232,7 +1232,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         if response.status_code == status.HTTP_200_OK:
             data = response.data
 
-            schedule_data = {
+            schedule_config = {
                 'start_date': data.get('start_date'),
                 'timezone': data.get('timezone'),
                 'repeat_mode': data.get('repeat_mode'),
@@ -1240,14 +1240,14 @@ class TaskViewSet(viewsets.ModelViewSet):
             }
 
             task_data = {
-                'id': data.get('id'),
+                'id': int(data.get('id')),
                 'crawl_request': data.get('crawl_request'),
                 'crawler_queue_behavior': data.get('crawler_queue_behavior'),
             }
 
             message = {
                 'action': 'update',
-                'schedule_data': schedule_data,
+                'schedule_config': schedule_config,
                 'task_data': task_data
             }
 

@@ -68,22 +68,30 @@ class Scheduler:
 
     def __process_task_data(self, data):
         action = data['action']
-        config_dict = data['schedule_config']
-        
-        task_id = data['task_data']['id']
-        crawler_id = data['task_data']['crawl_request']
-        behavior = data['task_data']['crawler_queue_behavior']
+        print(f'[{datetime.now()}] [TC] Jobs at start: {self.jobs}')
 
         if action == CANCEL_TASK:
+            task_id = int(data['id'])
             self.scheduler.cancel_job(self.jobs[task_id])
+            return
+        
+        config_dict = data['schedule_config']
+        task_id = int(data['task_data']['id'])
+        crawler_id = data['task_data']['crawl_request']
+        behavior = data['task_data']['crawler_queue_behavior']
         
         if action == UPDATE_TASK:
             self.scheduler.cancel_job(self.jobs[task_id])
             self._set_schedule_call_for_task(config_dict, task_id, crawler_id, behavior)
 
-        if action == CREATE_TASK:
+        elif action == CREATE_TASK:
             self._set_schedule_call_for_task(config_dict, task_id, crawler_id, behavior)
 
+        else:
+            print(f'[{datetime.now()}] [TC] Unknown action: {action}')
+
+        print(f'\t[{datetime.now()}] [TC] Jobs at end: {self.jobs}')
+        
     def __create_task_consumer(self):
         self.thread = threading.Thread(target=self.__run_task_consumer, daemon=True)
         self.thread.start()
