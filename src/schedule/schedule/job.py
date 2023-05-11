@@ -8,7 +8,8 @@ from sqlalchemy import Column, Integer, PickleType, DateTime, ForeignKey, String
 from sqlalchemy.orm import relationship
 
 from schedule.constants import (ENV, SQL_ALCHEMY_BASE, CANCELL_TASK_ON_RESTART, 
-                                RESCHEDULE_TASK_ON_RESTART, RUN_TASK_IMMEDIATELLY)
+                                RESCHEDULE_TASK_ON_RESTART, RUN_TASK_IMMEDIATELLY,
+                                NO_REPEAT_MODE)
 from schedule.config import Config
 from schedule.function_wrapper import FunctionWrapper
 
@@ -102,10 +103,16 @@ class Job(SQL_ALCHEMY_BASE):
 
         # Pending task during idle time
         if self.next_run < self.sched_config.now():
+
             if self.sched_config.behavior_after_system_restart == CANCELL_TASK_ON_RESTART:
                 self.cancel()
 
             elif self.sched_config.behavior_after_system_restart == RESCHEDULE_TASK_ON_RESTART:
+                if self.sched_config.repeat_mode == NO_REPEAT_MODE:
+                    print(f'Cancelling job {self}.\n\tReason: Job is overdue and has no repeat mode.')
+                    self.cancel(f'Job {self} is overdue and has no repeat mode.')
+                    return CancelledJob
+
                 self._schedule_next_run(True)
 
             elif self.sched_config.behavior_after_system_restart == RUN_TASK_IMMEDIATELLY:
@@ -118,6 +125,9 @@ class Job(SQL_ALCHEMY_BASE):
                     self.cancel(f'Exception raised: {e}')
                     return CancelledJob
 
+                if self.sched_config.repeat_mode == NO_REPEAT_MODE:
+                    return CancelledJob
+                
                 self._schedule_next_run(True)
                 return ret 
 
@@ -145,6 +155,7 @@ class Job(SQL_ALCHEMY_BASE):
         next_run = None 
         if self.job_funct.funct_requires_next_run():
             next_run = self.get_next_run()
+            print(f'The job function {self.job_funct} requires the next run time: {next_run}')
 
         return self.job_funct(next_run)
 

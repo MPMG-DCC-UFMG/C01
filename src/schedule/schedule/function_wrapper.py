@@ -10,7 +10,13 @@ class FunctionWrapper:
 
     def __call__(self, next_run: datetime = None) -> Any:
         # check if the funct accepts a next_run argument
-        if self.funct_requires_next_run() and next_run is not None:
+
+        print('-' * 15)
+        print(f'The funct {self.funct} requires next_run: {self.funct_requires_next_run()}')
+        print(f'next_run: {next_run}')
+        print('-' * 15)
+
+        if self.funct_requires_next_run():
             self.kwargs["next_run"] = next_run
 
         return self.funct(*self.args, **self.kwargs)

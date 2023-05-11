@@ -4,10 +4,10 @@ import threading
 import ujson
 from schedule.schedule import Schedule
 import requests
-
+from requests.exceptions import ConnectionError
 from kafka import KafkaConsumer
 from coolname import generate_slug
-
+ 
 import settings
 
 SERVER_SESSION = requests.sessions.Session()
@@ -16,21 +16,71 @@ CANCEL_TASK = "cancel"
 UPDATE_TASK = "update"
 CREATE_TASK = "create"
 
+MAX_ATTEMPTS = 3
+SLEEP_TIME = 5
+
 def run_crawler(crawler_id, action, next_run):
-    SERVER_SESSION.get(settings.RUN_CRAWLER_URL + \
-                        "/api/crawlers/{}/run?action={}&next_run={}".format(crawler_id, action, next_run))
+    attempt = 0
+    sleep_time = SLEEP_TIME
+
+    url = settings.RUN_CRAWLER_URL + "/api/crawlers/{}/run?action={}".format(crawler_id, action)
+    if next_run:
+        url += "&next_run={}".format(next_run)
     
-    print(f'[{datetime.now()}] [TC] Crawler {crawler_id} processed by schedule. \n\tAction: {action} \n\tNext run: {next_run}')
+    while attempt < MAX_ATTEMPTS:
+        try:
+            resp = SERVER_SESSION.get(url)
+            
+            if resp.status_code != 200:
+                raise ConnectionError(f'[{datetime.now()}] [TC] Error running crawler {crawler_id}. \n\tServer response: {resp.text}')
+
+            print(f'[{datetime.now()}] [TC] Crawler {crawler_id} processed by schedule. \n\tAction: {action} \n\tNext run: {next_run}\n\t Server response: {resp}')
+            break
+
+        except Exception as e:
+            attempt += 1
+            sleep_time *= attempt
+
+            print(f'[{datetime.now()}] [TC] Error running crawler {crawler_id}.\n\tAttempt: {attempt}\n\tSleep time: {sleep_time}\n\tReason: {e}')
+            sleep(sleep_time)
+
+            continue
+    
+    if attempt == MAX_ATTEMPTS:
+        print(f'[{datetime.now()}] [TC] Error running crawler {crawler_id}. \n\tMax attempts reached.')
 
 class Scheduler:
     def __init__(self):
         self.jobs = dict()
+        self._lock_until_server_up()
         self.scheduler = Schedule(connect_db=True, 
                                 db_host=settings.DB_HOST, 
                                 db_port=settings.DB_PORT, 
                                 db_user=settings.DB_USER, 
                                 db_pass=settings.DB_PASS, 
                                 db_db=settings.DB_DB)
+
+    def _lock_until_server_up(self):
+        '''
+        Lock the scheduler until the server is up.
+        '''
+        print(f'[{datetime.now()}] [TC] Waiting for server to be up...')
+
+        time_waited = 0
+        while time_waited < settings.MAX_WAIT_TIME:
+            try:
+                SERVER_SESSION.get(settings.RUN_CRAWLER_URL)
+                break
+
+            except:
+                time_waited += settings.WAIT_TIME
+                sleep(settings.WAIT_TIME)
+                continue
+        
+        if time_waited == settings.MAX_WAIT_TIME:
+            raise ConnectionError(f'[{datetime.now()}] [TC] Server is down. \n\tMax wait time reached.')
+        
+        print(f'[{datetime.now()}] [TC] Server is up.')
 
     def __run_task_consumer(self):
         # Generates a random name for the consumer
