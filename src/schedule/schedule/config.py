@@ -92,6 +92,10 @@ class Config(SQL_ALCHEMY_BASE):
         db_session.add(self)
         db_session.commit()
 
+    def delete(self, db_session):
+        db_session.delete(self)
+        db_session.commit()
+
     def first_run_date(self) -> datetime.datetime:
         '''
         Calculates the first run date based on the config.

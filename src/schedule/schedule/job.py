@@ -95,6 +95,14 @@ class Job(SQL_ALCHEMY_BASE):
 
         db_session.add(self)
         db_session.commit()
+    
+    def delete(self, db_session):
+        '''
+        Delete the job from the database.
+        '''
+        self.sched_config.delete(db_session)
+        db_session.delete(self)
+        db_session.commit()
 
     def recover(self) -> Any:
         '''

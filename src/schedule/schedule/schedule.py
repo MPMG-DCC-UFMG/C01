@@ -103,7 +103,7 @@ class Schedule:
 
         return new_job
 
-    def cancel_job(self, job: Job, reason: str = None) -> None:
+    def cancel_job(self, job: Job, reason: str = None, remove_from_db: bool = False) -> None:
         '''
         Delete a scheduled job.
 
@@ -116,6 +116,9 @@ class Schedule:
             job.save(self.db_session)
 
             self.jobs.remove(job)
+
+            if remove_from_db:
+                job.delete(self.db_session)
 
         except ValueError:
             logger.debug('Cancelling not-scheduled job "%s"', job)
