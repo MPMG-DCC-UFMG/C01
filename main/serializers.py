@@ -58,4 +58,4 @@ class TaskSerializer(serializers.ModelSerializer):
 
         fields = ['id', 'creation_date', 'last_modified', 'crawl_request', 
                   'crawler_name', 'crawler_queue_behavior','last_run', 
-                  'scheduler_config', 'next_run']
+                  'scheduler_config', 'next_run', 'cancelled_at']

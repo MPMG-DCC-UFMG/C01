@@ -665,6 +665,8 @@ class Task(TimeStamped):
     next_run = models.DateTimeField(null=True, blank=True)
     last_run = models.DateTimeField(null=True, blank=True)
     
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    
     crawler_queue_behavior = models.CharField(
         max_length=32, choices=CRAWLER_QUEUE_BEHAVIOR_CHOICES, default='wait_on_last_queue_position')
 

@@ -96,6 +96,20 @@ services.delete_task = function(task_id) {
     });   
 }
 
+services.cancel_task = function(task_id) {
+    $.ajax({
+        url: `/api/scheduler/tasks/${task_id}/cancel`,
+        type: 'post',
+        async: false,
+        success: function (data) {
+            update_view();
+        },
+        error: function (data) {
+            console.error(data.responseText);
+        }
+    });   
+}
+
 services.save_updated_scheduling = function (task_being_edited) {
 
     let task_id = task_being_edited.id;

@@ -138,14 +138,14 @@ class Schedule:
             if not job.cancelled_at:
                 self.jobs.append(job)
 
-    def cancel_all_jobs(self) -> None:
+    def cancel_all_jobs(self, reason: str = None) -> None:
         '''
         Clear all scheduled jobs.
         '''
         logger.debug('Cancelling all jobs')
 
         for job in self.jobs:
-            job.cancel()
+            job.cancel(reason)
 
         self.jobs.clear()
 

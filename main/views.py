@@ -1171,7 +1171,12 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         try:
             SchedulerConfig.valid_config(schedule_config)
-        
+
+            sched_config = SchedulerConfig()
+            sched_config.load_config(schedule_config)
+            
+            next_run = sched_config.first_run_date()
+
         except Exception as e:
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -1180,17 +1185,22 @@ class TaskViewSet(viewsets.ModelViewSet):
         if response.status_code == status.HTTP_201_CREATED:
             data = response.data
 
-            message = {
-                'action': 'create',
-                'schedule_config': schedule_config,
-                'task_data': {
-                    'id': data['id'],
-                    'crawl_request': data['crawl_request'],
-                    'crawler_queue_behavior': data['crawler_queue_behavior'],
-                }
-            }
-
             try:
+                task_created = Task.objects.get(pk=data['id'])
+                
+                task_created.next_run = next_run
+                task_created.save()
+                
+                message = {
+                    'action': 'create',
+                    'schedule_config': schedule_config,
+                    'task_data': {
+                        'id': data['id'],
+                        'crawl_request': data['crawl_request'],
+                        'crawler_queue_behavior': data['crawler_queue_behavior'],
+                    }
+                }
+
                 crawler_manager.message_sender.send(TASK_TOPIC, message)
             
             except Exception as e:
@@ -1247,12 +1257,33 @@ class TaskViewSet(viewsets.ModelViewSet):
 
             crawler_manager.message_sender.send(TASK_TOPIC, message)
         return response
+    
+    @action(detail=True, methods=['get'])
+    def cancel(self, request, pk=None):
+        try:
+            task = Task.objects.get(pk=pk)
+        
+        except ObjectDoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        task.cancelled_at = datetime.now()
+        task.save()
+
+        message = {
+            'action': 'cancel',
+            'remove_from_db': False,
+            'id': pk
+        }
+
+        crawler_manager.message_sender.send(TASK_TOPIC, message)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def destroy(self, request, pk=None):
         response = super().destroy(request, pk=pk)
         if response.status_code == status.HTTP_204_NO_CONTENT:
             message = {
                 'action': 'cancel',
+                'remove_from_db': True,
                 'id': pk
             }
         crawler_manager.message_sender.send(TASK_TOPIC, message)

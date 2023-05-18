@@ -128,7 +128,8 @@ class Scheduler:
 
         if action == CANCEL_TASK:
             task_id = int(data['id'])
-            self._remove_task(task_id, reason='Task canceled by user', remove_from_db=False)
+            remove_from_db = data['remove_from_db']
+            self._remove_task(task_id, reason='Task canceled by user', remove_from_db=remove_from_db)
             return
         
         config_dict = data['schedule_config']
