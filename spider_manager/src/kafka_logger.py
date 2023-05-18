@@ -7,7 +7,9 @@ import settings
 
 
 class KafkaLogger:
-    def __init__(self, instance_id: str, name: str, log_level: str):
+    def __init__(self, crawler_id: str, data_path: str, instance_id: str, name: str, log_level: str):
+        self.__crawler_id = crawler_id
+        self.__data_path = data_path
         self.__instance_id = instance_id
         self.__name = name
         self.__log_level = log_level
@@ -32,6 +34,8 @@ class KafkaLogger:
         self.__producer.send(self.__kafka_topic, {
             'name': self.__name,
             'levelname': self.__log_level,
+            'crawler_id': self.__crawler_id,
+            'data_path': self.__data_path,
             'instance_id': self.__instance_id,
             'message': message
         })

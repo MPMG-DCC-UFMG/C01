@@ -5,11 +5,12 @@ import multiprocessing as mp
 import os
 import time
 import pytz
+import subprocess
 from datetime import datetime
 from typing_extensions import Literal
 
 import crawler_manager.crawler_manager as crawler_manager
-from crawler_manager.settings import TASK_TOPIC
+from crawler_manager.settings import (TASK_TOPIC, OUTPUT_FOLDER)
 from crawler_manager.constants import *
 
 from django.conf import settings
@@ -24,7 +25,7 @@ from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from scrapy_puppeteer import iframe_loader
+from .iframe_loader import iframe_loader
 
 from .forms import (CrawlRequestForm, ParameterHandlerFormSet,
                     RawCrawlRequestForm, ResponseHandlerFormSet)
@@ -184,12 +185,9 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
     # parts = output_line.split('\t')
     data_size_kbytes = 0  # int(parts[0])
 
-    # FIXME: Colocar esse trecho de código no módulo writer
-    # conta a qtde de arquivos no diretório "data"
-    # command_output = subprocess.run(
-    #     ["find " + config['data_path'] + "/data -type f | wc -l"], shell=True, stdout=subprocess.PIPE)
-    # output_line = command_output.stdout.decode('utf-8').strip('\n')
-    num_data_files = 0  # int(output_line)
+    # Get the number of files downloaded from the instance object
+    num_data_files = instance.number_files_success_download
+    
 
     instance = None
     instance_info = {}
@@ -667,15 +665,19 @@ def tail_log_file(request, instance_id):
     number_pages_duplicated_download = instance.number_pages_duplicated_download
     number_pages_previously_crawled = instance.number_pages_previously_crawled
 
-    logs = Log.objects.filter(instance_id=instance_id).order_by('-creation_date')
+    config = CrawlRequest.objects.filter(id=int(instance.crawler.id)).values()[0]
+    data_path = os.path.join(OUTPUT_FOLDER, config["data_path"])
 
-    log_results = logs.filter(Q(log_level="out"))[:20]
-    err_results = logs.filter(Q(log_level="err"))[:20]
-
-    log_text = [f"[{r.logger_name}] {r.log_message}" for r in log_results]
-    log_text = "\n".join(log_text)
-    err_text = [f"[{r.logger_name}] [{r.log_level:^5}] {r.log_message}" for r in err_results]
-    err_text = "\n".join(err_text)
+    out = subprocess.run(["tail",
+                          f"{data_path}/{instance_id}/log/{instance_id}.out",
+                          "-n",
+                          "20"],
+                         stdout=subprocess.PIPE).stdout
+    err = subprocess.run(["tail",
+                          f"{data_path}/{instance_id}/log/{instance_id}.err",
+                          "-n",
+                          "20"],
+                         stdout=subprocess.PIPE).stdout
 
     return JsonResponse({
         "files_found": files_found,
@@ -689,23 +691,51 @@ def tail_log_file(request, instance_id):
         "pages_duplicated": number_pages_duplicated_download,
         "pages_previously_crawled": number_pages_previously_crawled,
 
-        "out": log_text,
-        "err": err_text,
+        "out": out.decode('utf-8'),
+        "err": err.decode('utf-8'),
         "time": str(datetime.fromtimestamp(time.time())),
     })
 
 
-def raw_log(request, instance_id):
-    logs = Log.objects.filter(instance_id=instance_id)\
-                      .order_by('-creation_date')
+def raw_log_out(request, instance_id):
+    instance = CrawlerInstance.objects.get(instance_id=instance_id)
 
-    raw_results = logs[:100]
-    raw_text = [json.loads(r.raw_log) for r in raw_results]
+    config = CrawlRequest.objects.filter(id=int(instance.crawler.id)).values()[0]
+    data_path = os.path.join(OUTPUT_FOLDER, config["data_path"])
 
-    resp = JsonResponse({str(instance_id): raw_text},
+    out = subprocess.run(["tail",
+                          f"{data_path}/{instance_id}/log/{instance_id}.out",
+                          "-n",
+                          "100"],
+                         stdout=subprocess.PIPE).stdout
+    
+    raw_text = out.decode('utf-8')
+    raw_results = raw_text.splitlines(True)
+    resp = JsonResponse({str(instance_id): raw_results},
                         json_dumps_params={'indent': 2})
 
-    if len(logs) > 0 and logs[0].instance.running:
+    if len(raw_results) > 0 and instance.running:
+        resp['Refresh'] = 5
+    return resp
+
+def raw_log_err(request, instance_id):
+    instance = CrawlerInstance.objects.get(instance_id=instance_id)
+
+    config = CrawlRequest.objects.filter(id=int(instance.crawler.id)).values()[0]
+    data_path = os.path.join(OUTPUT_FOLDER, config["data_path"])
+
+    err = subprocess.run(["tail",
+                          f"{data_path}/{instance_id}/log/{instance_id}.err",
+                          "-n",
+                          "100"],
+                         stdout=subprocess.PIPE).stdout
+
+    raw_text = err.decode('utf-8')
+    raw_results = raw_text.splitlines(True)
+    resp = JsonResponse({str(instance_id): raw_results},
+                        json_dumps_params={'indent': 2})
+
+    if len(raw_results) > 0 and instance.running:
         resp['Refresh'] = 5
     return resp
 
@@ -856,6 +886,24 @@ def export_config(request, instance_id):
 
     return response
 
+def export_trace(request, instance_id):
+    instance = get_object_or_404(CrawlerInstance, pk=instance_id)
+    data_path = instance.crawler.data_path
+
+    file_name = f"{instance_id}.zip"
+    rel_path = os.path.join(data_path, str(instance_id), "debug", "trace", file_name)
+    path = os.path.join(settings.OUTPUT_FOLDER, rel_path)
+
+    try:
+        response = FileResponse(open(path, 'rb'), content_type='zip')
+    except FileNotFoundError:
+        print(f"Arquivo Trace Não Encontrado: {file_name}. Verifique se a opção de gerar arquivo trace foi habilitada na configuração do coletor.")
+        return HttpResponseNotFound("<h1>Página Não Encontrada</h1><p>Verifique se a opção de gerar arquivo trace foi habilitada na configuração do coletor.</p>")
+    else:
+        response['Content-Length'] = os.path.getsize(path)
+        response['Content-Disposition'] = "attachment; filename=%s" % file_name
+
+    return response
 
 def view_screenshots(request, instance_id, page):
     IMGS_PER_PAGE = 20
@@ -966,6 +1014,43 @@ class CrawlerViewSet(viewsets.ModelViewSet):
     queryset = CrawlRequest.objects.all().order_by('-creation_date')
     serializer_class = CrawlRequestSerializer
 
+    def _create_templated_url_parameter_handlers(self, parameter_handlers, crawler_id):
+        for handler in parameter_handlers:
+            handler['crawler_id'] = crawler_id
+            handler['injection_type'] = 'templated_url'
+            ParameterHandler.objects.create(**handler)
+
+    def _create_templated_url_response_handlers(self, response_handlers, crawler_id):
+        for handler in response_handlers:
+            handler['crawler_id'] = crawler_id
+            handler['injection_type'] = 'templated_url'
+            ResponseHandler.objects.create(**handler)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create a new crawler.
+        """
+        data = request.data
+
+        if type(data) is not dict:
+            data = data.dict()
+
+        templated_url_parameter_handlers = data.pop('templated_url_parameter_handlers', [])
+        templated_url_response_handlers = data.pop('templated_url_response_handlers', [])
+
+        serializer = CrawlRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            with transaction.atomic():
+                serializer.save()
+
+                crawler_id = serializer.data['id']
+                
+                self._create_templated_url_parameter_handlers(templated_url_parameter_handlers, crawler_id)
+                self._create_templated_url_response_handlers(templated_url_response_handlers, crawler_id)
+
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=True, methods=['get'])
     def run(self, request, pk):
         query_params = self.request.query_params.dict()
@@ -1044,7 +1129,6 @@ class CrawlerViewSet(viewsets.ModelViewSet):
             'instance': CrawlerInstanceSerializer(instance).data
         }
         return JsonResponse(data)
-
 
 class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     """

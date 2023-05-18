@@ -2,27 +2,25 @@ from pyext import RuntimeModule
 from step_crawler.functions_file import *
 from step_crawler import functions_file
 from step_crawler import code_generator as code_g
-from pyppeteer import launch
+from playwright.async_api import async_playwright
+
+import asyncio
 import json
 
 import sys
 sys.path.append("../../../")
 
-
-
-
-
-
-
 async def main():
-    browser = await launch(headless=False)
-    page = await browser.newPage()
-    await page.goto('http://www.in.gov.br/web/guest/inicio')
+    async with async_playwright() as apw:
+        browser = await apw.firefox.launch(headless=False)
+        page = await browser.new_page()
+        await page.goto('http://www.in.gov.br/web/guest/inicio')
+        await page.wait_for_load_state("networkidle")
 
-    steps = __import__('steps')
-    await steps.execute_steps(page=page)
-    await browser.close()
-    return
+        steps = __import__('steps')
+        await steps.execute_steps(page=page)
+        await browser.close()
+        return
 
 
 with open('recipe.json') as file:

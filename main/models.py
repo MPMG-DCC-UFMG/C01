@@ -178,6 +178,9 @@ class CrawlRequest(TimeStamped):
     browser_resolution_width = models.IntegerField(blank=True, null=True)
     browser_resolution_height = models.IntegerField(blank=True, null=True)
 
+    # Debug Mode
+    create_trace_enabled = models.BooleanField(default=False)
+    video_recording_enabled = models.BooleanField(default=False)
 
     # DETAILS #################################################################
     explore_links = models.BooleanField(blank=True, null=True)

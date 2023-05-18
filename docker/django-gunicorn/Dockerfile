@@ -11,33 +11,30 @@ RUN apt-get update && apt-get install -y default-jre postgresql-client gcc musl-
 
 # Don't create bytecode files
 ENV PYTHONDONTWRITEBYTECODE 1
+
 # Don't buffer output
 ENV PYTHONUNBUFFERED 1
 
-# Create the django user
-ENV HOME=/home/django
-RUN useradd --create-home --home-dir $HOME django
-RUN chown -R django:django $HOME
-
 # Create the appropriate directories
-ENV APP_HOME=/home/django/C01
+ENV APP_HOME=/usr/src/app
 RUN mkdir $APP_HOME
 RUN mkdir $APP_HOME/staticfiles
 WORKDIR $APP_HOME
 
 COPY requirements.txt .
+RUN pip install -U pip
+RUN pip install -r requirements.txt
+
 COPY *.py ./
 COPY src src
+RUN python3 web_install.py
+RUN pip install pyee==9
+
 COPY main main
 COPY interface interface
 COPY crawler_manager crawler_manager
 
 RUN mkdir logs
-
-RUN python3 web_install.py
-
-RUN mkdir /data
-RUN chown django:django /data
 
 # Install gunicorn for integration with Nginx
 RUN pip install gunicorn
@@ -46,10 +43,7 @@ RUN pip install gunicorn
 COPY docker/config/gunicorn.conf.py ./gunicorn.conf.py
 
 COPY docker/scripts/django_run.sh ./django_run.sh
-RUN chmod +x django_run.sh
-
-RUN chown -R django:django $APP_HOME
-USER django
+RUN chmod +x ./django_run.sh
 
 # Collect static files
 RUN python3 manage.py collectstatic --no-input --clear

@@ -19,10 +19,13 @@ jobs:
           python web_install.py
       - name: Test with pytest
         run: |
-          coverage run -m pytest
-          coverage xml
+          pip install coverage
+          pip install pytest
+          pip install pyee==9
+          python -m coverage run -m pytest
+          python -m coverage xml
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           fail_ci_if_error: true
           verbose: true
