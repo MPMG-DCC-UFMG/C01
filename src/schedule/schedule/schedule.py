@@ -111,14 +111,15 @@ class Schedule:
         '''
         try:
             logger.debug('Cancelling job "%s"', job)
-            
-            job.cancel(reason)
-            job.save(self.db_session)
 
             self.jobs.remove(job)
 
             if remove_from_db:
                 job.delete(self.db_session)
+
+            else:    
+                job.cancel(reason)
+                job.save(self.db_session)
 
         except ValueError:
             logger.debug('Cancelling not-scheduled job "%s"', job)

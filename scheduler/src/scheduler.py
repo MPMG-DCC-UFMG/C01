@@ -116,24 +116,19 @@ class Scheduler:
         job = self.scheduler.schedule_job(config_dict, run_crawler, crawler_id=crawler_id, action=behavior)
         self.jobs[task_id] = job
 
-    def _remove_task(self, task_id: int):
+    def _remove_task(self, task_id: int, reason: str = None, remove_from_db: bool = True):
         if task_id not in self.jobs:
             return
         
-        self.scheduler.cancel_job(self.jobs[task_id], reason='User request.', remove_from_db=True)
+        self.scheduler.cancel_job(self.jobs[task_id], reason=reason, remove_from_db=remove_from_db)
         del self.jobs[task_id]
 
     def __process_task_data(self, data):
         action = data['action']
-        print(f'[{datetime.now()}] [TC] Jobs at start: {self.jobs}')
-
-        print('-' * 35)
-        print(f'[{datetime.now()}] [TC] data: {data}')
-        print('-' * 35)
 
         if action == CANCEL_TASK:
             task_id = int(data['id'])
-            self._remove_task(task_id)
+            self._remove_task(task_id, reason='Task canceled by user', remove_from_db=False)
             return
         
         config_dict = data['schedule_config']
