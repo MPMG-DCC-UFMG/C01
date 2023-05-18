@@ -255,18 +255,15 @@ class Config(SQL_ALCHEMY_BASE):
         self.repeat_mode = config_dict['repeat_mode']
         self.behavior_after_system_restart = config_dict.get('behavior_after_system_restart', DEFAULT_BEHAVIOR_AFTER_SYSTEM_RESTART)
 
-        if config_dict['repeat_mode'] == PERSONALIZED_REPEAT_MODE:
+        if self.repeat_mode == WEEKLY_REPEAT_MODE:
+            self.weekdays_to_run = [(self.start_date.weekday() + 1) % 7]
+
+        if self.repeat_mode == MONTHLY_REPEAT_MODE:
+            self.monthly_repeat_mode = MONTHLY_DAY_X_OCCURRENCE_TYPE
+            self.monthly_day_x_ocurrence = self.start_date.day
+
+        if self.repeat_mode == PERSONALIZED_REPEAT_MODE:
             self._parse_personalized_config(config_dict['personalized_repeat'])
-
-    def now(self) -> datetime.datetime:
-        '''
-        Returns the current datetime.
-
-        :returns: The current datetime.
-        '''
-
-        timezone = pytz.timezone(self.timezone)
-        return datetime.datetime.now(timezone).replace(tzinfo=None)
 
     def _parse_personalized_config(self, config_dict: PersonalizedRepeat) -> None:
         '''
@@ -632,3 +629,13 @@ class Config(SQL_ALCHEMY_BASE):
         Config._valid_repeat_mode(config_dict)
         Config._valid_behavior_after_system_restart(config_dict)
         Config._valid_personalized_repeat_mode(config_dict)
+    
+    def now(self) -> datetime.datetime:
+        '''
+        Returns the current datetime.
+
+        :returns: The current datetime.
+        '''
+
+        timezone = pytz.timezone(self.timezone)
+        return datetime.datetime.now(timezone).replace(tzinfo=None)

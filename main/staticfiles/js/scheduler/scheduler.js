@@ -387,8 +387,6 @@ function valid_new_scheduling() {
     
     let year_month_day = scheduling_task.scheduler_config.start_date.split('T')[0].split('-')
     calendar.daily.active_day = new Date(parseInt(year_month_day[0]), parseInt(year_month_day[1]) - 1, parseInt(year_month_day[2])); 
-
-    calendar.daily.show();
 }
 
 function str_to_date(runtime) {

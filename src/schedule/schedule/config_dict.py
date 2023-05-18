@@ -43,8 +43,8 @@ class PersonalizedRepeat(TypedDict):
 
     The attribute `mode` can be one of the following:
         - daily: The job will run every <interval> days.
-        - weekly: The job will run every <interval> weeks, on the days specified in <additional_data>.
-        - monthly: The job will run every <interval> months, on the days specified in <additional_data>.
+        - weekly: The job will run every <interval> weeks, on the days specified in <data>.
+        - monthly: The job will run every <interval> months, on the days specified in <data>.
         - yearly: The job will run every <interval> years.
     
     The attribute `interval` is the interval of the repetition. 
