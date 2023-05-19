@@ -3,8 +3,8 @@ import unittest
 
 from schedule.constants import *
 
-from schedule.schedule.config_dict import ConfigDict
-from schedule.schedule.config_dict import (Config,
+from schedule.config_dict import ConfigDict
+from schedule.config_dict import (Config,
                             ConfigInvalidRepeatModeError, 
                             ConfigMissingFieldError, 
                             ConfigValueError)
