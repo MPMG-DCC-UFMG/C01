@@ -4,7 +4,7 @@ import unittest
 from schedule.constants import *
 
 from schedule.config_dict import ConfigDict
-from schedule.config_dict import (Config,
+from schedule.config import (Config,
                             ConfigInvalidRepeatModeError, 
                             ConfigMissingFieldError, 
                             ConfigValueError)
