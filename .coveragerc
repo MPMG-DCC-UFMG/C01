@@ -11,10 +11,8 @@ source_pkgs =
     crawled_request_filter
     cssify
     entry_probing
-    formparser
     param_injector
     range_inference
-    scrapy_puppeteer
     step_crawler
 
 [report]

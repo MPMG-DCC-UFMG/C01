@@ -3,7 +3,7 @@ Implementation of the general anti-blocking measures, to be used more
 concretely by sub-classes.
 """
 from itertools import cycle
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, Optional
 
 import logging
 import random

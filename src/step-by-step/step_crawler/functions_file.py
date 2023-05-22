@@ -197,9 +197,7 @@ async def retorna_pagina(pagina):
 @step("Digitar em")
 async def digite(pagina, xpath, texto):
     el_locator = pagina.locator(f'xpath={xpath}')
-    await el_locator.evaluate('el => el.value = ""')
-    await el_locator.type(texto)
-
+    await el_locator.evaluate(f'el => el.value = "{texto.strip()}"')
 
 @step("Objeto")
 async def objeto(pagina, objeto):
@@ -228,7 +226,7 @@ async def nesse_elemento_esta_escrito(pagina, xpath, texto):
 async def quebrar_captcha_imagem(pagina, xpath_do_elemento_captcha, xpath_do_campo_a_preencher, funcao_preprocessamento=None):
     """This step downloads the captcha image then solves it and fills its respective form field
 
-        :param pagina : a pyppeteer page
+        :param pagina : a playwright page
         :param xpath_do_elemento_captcha : XPATH of the captcha image element
         :param xpath_do_campo_a_preencher : XPATH of the form field for captcha text.
         :param funcao_preprocessamento (optional): The preprocessing function, to be applied
@@ -257,7 +255,7 @@ async def quebrar_captcha_imagem(pagina, xpath_do_elemento_captcha, xpath_do_cam
 async def elemento_existe_na_pagina(pagina, xpath):
     """This step returns True if there's any visible element given a xpath, otherwise, returns False
 
-        :param pagina : a pyppeteer page
+        :param pagina : a playwright page
         :param xpath : elements xpaths
         :returns bool: True or False
     """

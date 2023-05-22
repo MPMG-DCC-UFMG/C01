@@ -3,11 +3,8 @@
 import asyncio
 import time
 
-from pyppeteer import launch
+from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
-
-from .chromium_downloader import chromium_executable
-
 
 def content_empty(content: str) -> bool:
     """Check if iframe content is empty
@@ -40,52 +37,53 @@ async def async_iframe_loader(url: str, xpath: str, max_attempts: int = 5) -> st
     """
     wait_time = 1.5
 
-    browser = await launch({'handleSIGINT': False,
-                            'handleSIGTERM': False,
-                            'handleSIGHUP': False,
-                            'LOG_LEVEL': 'INFO',
-                            'executablePath': chromium_executable(),
-                            'headless': True})
+    with async_playwright() as pw:
+        browser = pw.chromium.launch(headless=False,
+                                    handle_sighup=False,
+                                    handle_sigint=False,
+                                    handle_sigterm=False,
+                                    )
 
-    page = await browser.newPage()
+        page = await browser.new_page()
 
-    await page.goto(url)
-    await page.waitForXPath(xpath)
+        await page.goto(url)
+        await page.wait_for_load_state("networkidle")
+        await page.wait_for_selector(xpath)
 
-    el_handlers = await page.xpath(xpath)
-    iframe = await el_handlers[0].contentFrame()
+        el_handlers = await page.xpath(xpath)
+        iframe = await el_handlers[0].content_frame()
 
-    attempt = 1
-    error = None
-    while attempt <= max_attempts:
-        try:
+        attempt = 1
+        error = None
+        while attempt <= max_attempts:
+            try:
 
-            time.sleep(wait_time * attempt)
+                time.sleep(wait_time * attempt)
 
-            # Extract the content inside the iframe
-            content = await iframe.evaluate('''
+                # Extract the content inside the iframe
+                content = await iframe.evaluate('''
                 () => {
                     const el = document.querySelector("*");
                     return el.innerHTML;
                 }
-            ''')
+                ''')
 
-            if content_empty(content):
+                if content_empty(content):
+                    attempt += 1
+
+                else:
+                    break
+
+            except Exception as e:
                 attempt += 1
+                error = e
 
-            else:
-                break
+        await browser.close()
 
-        except Exception as e:
-            attempt += 1
-            error = e
+        if attempt == max_attempts:
+            raise error
 
-    await browser.close()
-
-    if attempt == max_attempts:
-        raise error
-
-    return content
+        return content
 
 
 def iframe_loader(url: str, xpath: str) -> str:

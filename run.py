@@ -13,7 +13,7 @@ myenv = {
     "ENVFILENAME": str(args["debug"]),
 }
 subprocess.run("docker-compose down".split(), env=myenv)
-subprocess.run("docker volume rm c01_static_volume".split())
+subprocess.run("docker-compose -f docker-compose-cleanup.yml down -v".split(), env=myenv)
 subprocess.run("docker-compose build --parallel".split(), env=myenv)
 subprocess.run("docker-compose up -d".split(), env=myenv)
 time.sleep(10)
