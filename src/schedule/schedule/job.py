@@ -165,6 +165,8 @@ class Job(SQL_ALCHEMY_BASE):
             next_run = self.get_next_run()
             print(f'The job function {self.job_funct} requires the next run time: {next_run}')
 
+        self.last_run = self.sched_config.now()
+        
         return self.job_funct(next_run)
 
     def run(self):
@@ -191,8 +193,6 @@ class Job(SQL_ALCHEMY_BASE):
             logger.debug(f'Cancelling job {self}.\n\tReason: Max repeats achieved ({self.cancel_after_max_repeats})')
             self.cancel(f'Max repeats achieved ({self.cancel_after_max_repeats})')
             return CancelledJob
-        
-        self.last_run = self.sched_config.now()
         
         if isinstance(ret, CancelJob) or ret is CancelJob:
             logger.debug(f'Cancelling job {self}.\n\tReason: CancelJob returned.')

@@ -8,7 +8,7 @@ class DateUtilsTest(unittest.TestCase):
 
         year, month, day = 2021, 2, 31
         date = get_date(year, month, day)
-        self.assertEqual(date.day, 28) 
+        self.assertEqual(date.day, 28, 'The day should be 28')
     
     def test_get_last_day_of_month(self):
         # get_last_day_of_month should return the last day of the month
@@ -16,7 +16,7 @@ class DateUtilsTest(unittest.TestCase):
 
         year, month = 2021, 12
         last_day = get_last_day_of_month(month, year)
-        self.assertEqual(last_day, 31)
+        self.assertEqual(last_day, 31, 'The last day should be 31')
 
     def test_get_first_weekday_date_of_month(self):
         # get_first_weekday_date_of_month should return the first weekday of the month
@@ -24,7 +24,7 @@ class DateUtilsTest(unittest.TestCase):
 
         year, month, weekday = 2023, 3, 6
         date = get_first_weekday_date_of_month(weekday, year, month)
-        self.assertEqual(date.day, 4)
+        self.assertEqual(date.day, 4, 'The first saturday of march of 2023 is 04/03/2023')
 
     def test_get_last_weekday_date_of_month(self):
         # get_last_weekday_date_of_month should return the last weekday of the month
@@ -32,7 +32,7 @@ class DateUtilsTest(unittest.TestCase):
 
         year, month, weekday = 2023, 4, 0
         date = get_last_weekday_date_of_month(weekday, year, month)
-        self.assertEqual(date.day, 30)
+        self.assertEqual(date.day, 30, 'The last sunday of april of 2023 is 30/04/2023')
     
     def test_weeks_next_execution_date(self):
         # weeks_next_execution_date should return the next execution date given a base date, a list of days of week and a interval between executions
@@ -42,28 +42,28 @@ class DateUtilsTest(unittest.TestCase):
         days_of_week = [3]
         interval = 1
         date = weeks_next_execution_date(base_date, days_of_week, interval)
-        self.assertEqual(date.day, 8)
+        self.assertEqual(date.day, 8, 'The next execution date should be 08/02/2023')
 
         # Another example, the next execution date of 2023-02-01, given a list of days of week [0, 2] (sunday and tuesday), interval equal to 3 weeks is 19/02/2023.
 
         days_of_week = [0, 2]
         interval = 3
         date = weeks_next_execution_date(base_date, days_of_week, interval)
-        self.assertEqual(date.day, 19)
+        self.assertEqual(date.day, 19, 'The next execution date should be 19/02/2023')
 
         # Another example, the next execution date of 2023-02-01, given a list of days of week [2, 6] (sunday and tuesday), interval equal to 2 weeks is 04/02/2023.
 
         days_of_week = [2, 6]
         interval = 2
         date = weeks_next_execution_date(base_date, days_of_week, interval)
-        self.assertEqual(date.day, 4)
+        self.assertEqual(date.day, 4, 'The next execution date should be 04/02/2023')
 
         # But if the list of days is only [2], the next execution date should be 14/02/2023.
 
         days_of_week = [2]
         interval = 2
         date = weeks_next_execution_date(base_date, days_of_week, interval)
-        self.assertEqual(date.day, 14)
+        self.assertEqual(date.day, 14, 'The next execution date should be 14/02/2023')
     
     def test_month_next_execution_date(self):
         # months_next_execution_date should return the next execution date given a base date, the type of execution (day of month or weekday of month) and a interval between executions
@@ -75,8 +75,8 @@ class DateUtilsTest(unittest.TestCase):
 
         date = month_next_execution_date(base_date, type_of_execution, interval)
 
-        self.assertEqual(date.day, 1)
-        self.assertEqual(date.month, 3)
+        self.assertEqual(date.day, 1, 'The next execution date should be 01/03/2023')
+        self.assertEqual(date.month, 3, 'The next execution date should be 01/03/2023')
 
         # If the the next month has not the same number of days of the base date, the next execution date should be the last day of the next month.
         # For example, the next execution date of 2023-01-01, given a type of execution equal to 'day-x', day_x = 31 and interval equal to 1 is 28/02/2023.
@@ -89,8 +89,8 @@ class DateUtilsTest(unittest.TestCase):
 
         date = month_next_execution_date(base_date, type_of_execution, day_x, interval=interval)
 
-        self.assertEqual(date.day, 28)
-        self.assertEqual(date.month, 2)
+        self.assertEqual(date.day, 28, 'The next execution date should be 28/02/2023')
+        self.assertEqual(date.month, 2, 'The next execution date should be 28/02/2023')
 
         # Another example, the next execution date of 2023-02-01, given a type of execution equal to 'fist-weekday', first_weekday_to_run = 3 (runs every first wednesday of <interval> month), interval equal to 2 is 05/04/2023.
         # Because the next execution date is the first wednesday of march.
@@ -102,8 +102,8 @@ class DateUtilsTest(unittest.TestCase):
 
         date = month_next_execution_date(base_date, type_of_execution, first_weekday_to_run=first_weekday_to_run, interval=interval)
 
-        self.assertEqual(date.day, 5)
-        self.assertEqual(date.month, 4)
+        self.assertEqual(date.day, 5, 'The next execution date should be 05/04/2023')
+        self.assertEqual(date.month, 4, 'The next execution date should be 05/04/2023')
 
         # Another example, the next execution date of 2023-02-01, given a type of execution equal to 'last-weekday', last_weekday_to_run = 1 (runs every last monday of <interval> month), interval equal to 7 is 25/09/2023.
         # Because the next execution date is the last monday of september.
@@ -115,8 +115,8 @@ class DateUtilsTest(unittest.TestCase):
 
         date = month_next_execution_date(base_date, type_of_execution, last_weekday_to_run=last_weekday_to_run, interval=interval)
 
-        self.assertEqual(date.day, 25)
-        self.assertEqual(date.month, 9)
+        self.assertEqual(date.day, 25, 'The next execution date should be 25/09/2023')
+        self.assertEqual(date.month, 9, 'The next execution date should be 25/09/2023')
 
     def test_year_next_execution_date(self):
         # year_next_execution_date should return the next execution date given a base date and a interval between executions
@@ -125,9 +125,9 @@ class DateUtilsTest(unittest.TestCase):
         base_date = datetime.datetime(2023, 2, 1)
         date = year_next_execution_date(base_date, interval=1)
 
-        self.assertEqual(date.day, 1)
-        self.assertEqual(date.month, 2)
-        self.assertEqual(date.year, 2024)
+        self.assertEqual(date.day, 1, 'The next execution date should be 01/02/2024')
+        self.assertEqual(date.month, 2, 'The next execution date should be 01/02/2024')
+        self.assertEqual(date.year, 2024, 'The next execution date should be 01/02/2024')
         
         # However, if the next year has not the same number of days of the base date, the next execution date should be the last day of the next year.
         # For example, the next execution date of 2020-02-29, interval equal to 3 is 28/02/2021.
@@ -136,9 +136,9 @@ class DateUtilsTest(unittest.TestCase):
         base_date = datetime.datetime(2020, 2, 29)
         date = year_next_execution_date(base_date, interval=3)
 
-        self.assertEqual(date.day, 28)
-        self.assertEqual(date.month, 2)
-        self.assertEqual(date.year, 2023)
+        self.assertEqual(date.day, 28, 'The next execution date should be 28/02/2021')
+        self.assertEqual(date.month, 2, 'The next execution date should be 28/02/2021')
+        self.assertEqual(date.year, 2023, 'The next execution date should be 28/02/2021')
 
         # Another example, the next execution date of 2020-02-29, interval equal to 4 is 29/02/2024.
         # Because the next year (2024) has 29 days.
@@ -146,9 +146,9 @@ class DateUtilsTest(unittest.TestCase):
         base_date = datetime.datetime(2020, 2, 29)
         date = year_next_execution_date(base_date, interval=4)
         
-        self.assertEqual(date.day, 29)
-        self.assertEqual(date.month, 2)
-        self.assertEqual(date.year, 2024)
+        self.assertEqual(date.day, 29, 'The next execution date should be 29/02/2024')
+        self.assertEqual(date.month, 2, 'The next execution date should be 29/02/2024')
+        self.assertEqual(date.year, 2024, 'The next execution date should be 29/02/2024')
 
 
     def test_decode_datetimestr(self):
@@ -157,20 +157,20 @@ class DateUtilsTest(unittest.TestCase):
 
         date = decode_datetimestr('2023-02-01 12:00:00')
 
-        self.assertEqual(date.day, 1)
-        self.assertEqual(date.month, 2)
-        self.assertEqual(date.year, 2023)
-        self.assertEqual(date.hour, 12)
-        self.assertEqual(date.minute, 0)
-        self.assertEqual(date.second, 0)
+        self.assertEqual(date.day, 1, 'The day should be 1')
+        self.assertEqual(date.month, 2, 'The month should be 2')
+        self.assertEqual(date.year, 2023, 'The year should be 2023')
+        self.assertEqual(date.hour, 12, 'The hour should be 12')
+        self.assertEqual(date.minute, 0, 'The minute should be 0')
+        self.assertEqual(date.second, 0, 'The second should be 0')
 
         # Another example, the datetime object of 2023-02-01 12:00:00 is 2023-02-01 12:00:00.
 
         date = decode_datetimestr('2023-02-01 12:00:00')
 
-        self.assertEqual(date.day, 1)
-        self.assertEqual(date.month, 2)
-        self.assertEqual(date.year, 2023)
-        self.assertEqual(date.hour, 12)
-        self.assertEqual(date.minute, 0)
-        self.assertEqual(date.second, 0)
+        self.assertEqual(date.day, 1, 'The day should be 1')
+        self.assertEqual(date.month, 2, 'The month should be 2')
+        self.assertEqual(date.year, 2023, 'The year should be 2023')
+        self.assertEqual(date.hour, 12, 'The hour should be 12')
+        self.assertEqual(date.minute, 0, 'The minute should be 0')
+        self.assertEqual(date.second, 0, 'The second should be 0')
