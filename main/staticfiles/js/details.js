@@ -134,10 +134,6 @@ function status_instance(instance_id){
         } else if (this.readyState == 4 && this.status == 200) {
             var response = JSON.parse(this.responseText);
 
-            stopBtn = document.getElementById("stopBtn")
-            runBtn = document.getElementById("runBtn")
-            testBtn = document.getElementById("testBtn")
-
             if(response["running"] == true){
                 document.getElementById("crawler_status").innerHTML = '<span class="badge badge-success">Rodando</span>'
                 stopBtn.classList.remove("disabled")

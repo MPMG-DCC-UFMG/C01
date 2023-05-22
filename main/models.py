@@ -373,7 +373,7 @@ class CrawlRequest(TimeStamped):
         raw_pages_crawled = os.listdir(files_path + 'raw_pages/')
         files_crawled = os.listdir(files_path + 'files/')
 
-        for ignore_file in ['file_description.jsonl', 'temp']:
+        for ignore_file in ('file_description.jsonl', 'temp', 'browser_downloads'):
             if ignore_file in raw_pages_crawled:
                 raw_pages_crawled.remove(ignore_file)
             

@@ -1,5 +1,3 @@
-from cmath import log
-from glob import glob
 import random
 import time
 
