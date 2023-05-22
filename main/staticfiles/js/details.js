@@ -242,3 +242,7 @@ function update_test_runtime_label() {
 $(document).ready(function () {
     update_test_runtime_label();
 });
+// Initiates all popovers on the page
+$(function () {
+    $('[data-toggle="popover"]').popover()
+})

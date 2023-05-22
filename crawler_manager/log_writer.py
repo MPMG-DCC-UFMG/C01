@@ -1,14 +1,11 @@
 """This file contains the kafka consumer for the spider logs."""
 
-from __future__ import print_function
-from concurrent.futures import thread
+import os
 import ujson
 import threading
-
 from django.apps import apps
-from django.db.utils import IntegrityError
 from kafka import KafkaConsumer
-
+from django.db.utils import IntegrityError
 from crawler_manager import settings
 from crawling_utils import system_is_deploying
 
@@ -60,7 +57,9 @@ class LogWriter():
                     continue 
 
                 log = {}
-                log['iid'] = instance_id
+                log['cid'] = message['crawler_id']
+                log['dtp'] = message['data_path']                
+                log['iid'] = message['instance_id']
                 log['raw'] = ujson.dumps(message)
                 log['name'] = message['name']
                 log['msg'] = message['message']
@@ -87,11 +86,18 @@ class LogWriter():
         This method writes log in database
 
         """
-        new_log = self.log_model(raw_log=log['raw'],
-                    log_level=log['lvl'],
-                    instance_id=log['iid'],
-                    log_message=log['msg'],
-                    logger_name=log['name'])
+        # Log = apps.get_model('main', 'Log')
 
-        new_log.save()
-       
+        # new_log = Log(raw_log=log['raw'],
+        #               log_level=log['lvl'],
+        #               instance_id=log['iid'],
+        #               log_message=log['msg'],
+        #               logger_name=log['name'])
+
+        # new_log.save()
+
+        system_path = os.path.join(settings.OUTPUT_FOLDER, log["dtp"])
+        filename = f'{system_path}/{log["iid"]}/log/{log["iid"]}.{log["lvl"]}'
+        message = f'[{log["name"]}] {log["msg"]}\n'
+        with open(filename, 'a') as f:
+            f.write(message)

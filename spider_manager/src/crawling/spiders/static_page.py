@@ -392,14 +392,26 @@ class StaticPageSpider(BaseSpider):
                     downloads_path=temp_download_path)
 
             normalized_headers = request.headers.to_unicode_dict()
-            new_page_kwargs = {}
+            
+            # Set browser context
+            context_kwargs = {}
 
             # Set the user agent according to what was sent by Scrapy
             if 'user-agent' in normalized_headers:
-                new_page_kwargs['user_agent'] = \
+                context_kwargs['user_agent'] = \
                     normalized_headers['user-agent']
+            
 
-            page = await browser.new_page(**new_page_kwargs)
+            if self.config['video_recording_enabled']:
+                context_kwargs['record_video_dir'] = os.path.join(instance_path, 'debug', 'video')
+                context_kwargs['record_video_size'] = {"width": self.config["browser_resolution_width"], "height": self.config["browser_resolution_height"]}
+          
+            context = await browser.new_context(**context_kwargs)
+
+            if self.config['create_trace_enabled']:
+                await context.tracing.start(screenshots=True, snapshots=True, sources=True)
+            
+            page = await context.new_page()
             await page.set_viewport_size({
                 'width': self.config["browser_resolution_width"],
                 'height': self.config["browser_resolution_height"]
@@ -416,7 +428,11 @@ class StaticPageSpider(BaseSpider):
                 ignore_data_crawled_in_previous_instances)
             self.generate_file_descriptions(download_path)
 
+            if self.config['create_trace_enabled']:
+                await context.tracing.stop(path = os.path.join(instance_path, 'debug', 'trace', f"{instance_id}.zip"))
+
             await page.close()
+            await context.close()
             await browser.close()
 
         # Necessary to bypass the compression middleware (?)

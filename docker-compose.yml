@@ -46,9 +46,9 @@ services:
             dockerfile: ./docker/django-gunicorn/Dockerfile
         command: ./django_run.sh
         volumes:
-            - static_volume:/home/django/C01/staticfiles
+            - static_volume:/usr/src/app/staticfiles
             - data:/data
-            - migrations:/home/django/C01/main/migrations
+            - migrations:/usr/src/app/main/migrations
         expose:
             - 8000
         env_file:

@@ -82,7 +82,7 @@ def get_first_weekday_date_of_month(weekday: int, year: int, month: int) -> date
 def get_last_weekday_date_of_month(weekday: int, year: int, month: int) -> datetime:
     date = None
     last_day_of_month = get_last_day_of_month(month, year)
-    for day in range(last_day_of_month - 7, last_day_of_month + 1):
+    for day in range(last_day_of_month - 6, last_day_of_month + 1):
         date = get_date(day, month, year)
         if WEEKDAY[date.weekday()] == weekday:
             break

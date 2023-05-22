@@ -413,6 +413,7 @@ function detailDynamicProcessing() {
     dynamic_processing_skip_errors = document.getElementById("dynamic-processing-skip-errors")
     dynamic_processing_resolution = document.getElementById("dynamic-processing-resolution")
     dynamic_processing_browser_type = document.getElementById("dynamic-processing-browser-type")
+    dynamic_processing_debug_mode = document.getElementById("dynamic-processing-debug-mode")
 
     if(getCheckboxState("id_dynamic_processing")){
         dynamic_processing_check.classList.remove("disabled")
@@ -420,12 +421,14 @@ function detailDynamicProcessing() {
         dynamic_processing_skip_errors.classList.remove("disabled")
         dynamic_processing_resolution.classList.remove("disabled")
         dynamic_processing_browser_type.classList.remove("disabled")
+        dynamic_processing_debug_mode.classList.remove("disabled")
     }else{
         dynamic_processing_check.classList.add("disabled")
         dynamic_processing_block.classList.add("disabled")
         dynamic_processing_skip_errors.classList.add("disabled")
         dynamic_processing_resolution.classList.add("disabled")
         dynamic_processing_browser_type.classList.add("disabled")
+        dynamic_processing_debug_mode.classList.add("disabled")
     }
 }
 
@@ -682,3 +685,4 @@ function parseSettings(e) {
 
     reader.readAsText(file);
 }
+
