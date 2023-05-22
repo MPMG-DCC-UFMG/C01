@@ -166,7 +166,7 @@ Crawler "{{ crawler.source_name }}"
         </div>
         {% elif crawler.functional_status == 'testing' %}
         <div class="col">
-            <span class="btn btn-warning font-weight-bold" id="testing-crawler-info">Testando coletor (finaliza em 1min. 23 secs)</span>
+            <span class="btn btn-warning font-weight-bold" id="testing-crawler-info">Iniciando...</span>
             <a id="stopBtn" class="btn btn-danger font-weight-bold" href="{% url 'stop_crawl' crawler.id %}">Parar</a>
         </div>
         {% else %}

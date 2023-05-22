@@ -11,6 +11,7 @@ from typing_extensions import Literal
 import crawler_manager.crawler_manager as crawler_manager
 
 from crawler_manager.crawler_manager import LOG_WRITER
+from crawler_manager.settings import WRITER_TOPIC
 from crawler_manager.settings import (TASK_TOPIC, OUTPUT_FOLDER)
 from crawler_manager.constants import *
 
