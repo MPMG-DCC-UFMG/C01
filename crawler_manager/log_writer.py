@@ -1,6 +1,8 @@
 """This file contains the kafka consumer for the spider logs."""
 
+import os
 import ujson
+from pathlib import Path
 
 from django.apps import apps
 from kafka import KafkaConsumer
@@ -38,6 +40,8 @@ class LogWriter():
                 message = ujson.loads(message.value.decode('utf-8'))
 
                 log = {}
+                log['cid'] = message['crawler_id']
+                log['dtp'] = message['data_path']                
                 log['iid'] = message['instance_id']
                 log['raw'] = ujson.dumps(message)
                 log['name'] = message['name']
@@ -55,12 +59,18 @@ class LogWriter():
         This method writes log in database
 
         """
-        Log = apps.get_model('main', 'Log')
+        # Log = apps.get_model('main', 'Log')
 
-        new_log = Log(raw_log=log['raw'],
-                      log_level=log['lvl'],
-                      instance_id=log['iid'],
-                      log_message=log['msg'],
-                      logger_name=log['name'])
+        # new_log = Log(raw_log=log['raw'],
+        #               log_level=log['lvl'],
+        #               instance_id=log['iid'],
+        #               log_message=log['msg'],
+        #               logger_name=log['name'])
 
-        new_log.save()
+        # new_log.save()
+
+        system_path = os.path.join(settings.OUTPUT_FOLDER, log["dtp"])
+        filename = f'{system_path}/{log["iid"]}/log/{log["iid"]}.{log["lvl"]}'
+        message = f'[{log["name"]}] {log["msg"]}\n'
+        with open(filename, 'a') as f:
+            f.write(message)

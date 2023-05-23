@@ -141,8 +141,10 @@ class Executor:
 
         logger_name = f'Worker: {self.__container_id}-{crawler_id}'
 
-        sys.stdout = KafkaLogger(instance_id, logger_name, 'out')
-        sys.stderr = KafkaLogger(instance_id, logger_name, 'err')
+        data_path = str(config['data_path'])
+
+        sys.stdout = KafkaLogger(crawler_id, data_path, instance_id, logger_name, 'out')
+        sys.stderr = KafkaLogger(crawler_id, data_path, instance_id, logger_name, 'err')
 
         base_settings = self.__get_spider_base_settings(config)
         self.__parse_config(base_settings)
