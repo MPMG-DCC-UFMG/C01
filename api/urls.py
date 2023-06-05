@@ -31,6 +31,10 @@ urlpatterns = [
     path('instance/', views.CrawlerInstanceViewSet.as_view(only_list_action), name='instance'),
     path('instance/<int:pk>', views.CrawlerInstanceViewSet.as_view(only_retrieve_action), name='instance-detail'),
     path('instance/<int:pk>/export_config', views.CrawlerInstanceViewSet.as_view({'get': 'export_config'}), name='instance-export-config'),
+    path('instance/<int:pk>/file/found/<int:num_files>', views.CrawlerInstanceViewSet.as_view({'get': 'files_found'}), name='instance-files-found'),
+    path('instance/<int:pk>/file/success', views.CrawlerInstanceViewSet.as_view({'get': 'success_download_file'}), name='instance-success-download-file'),
+    path('instance/<int:pk>/file/error', views.CrawlerInstanceViewSet.as_view({'get': 'error_download_file'}), name='instance-error-download-file'),
+    path('instance/<int:pk>/file/duplicated', views.CrawlerInstanceViewSet.as_view({'get': 'previously_crawled_file'}), name='instance-duplicated-download-file'),
 
     path('task/', views.TaskViewSet.as_view(list_and_create_actions), name='task'),
     path('task/<int:pk>', views.TaskViewSet.as_view(retrieve_update_and_destroy_actions), name='task-detail'),
