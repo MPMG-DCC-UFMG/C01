@@ -44,8 +44,9 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
             response['Content-Disposition'] = 'attachment; filename=%s' % file_name
 
         return response
-    
-    def _update_file_info(self, instance_id, operation: Literal['found', 'success', 'error', 'duplicated'], val: int = 1):
+
+    def _update_download_info(self, instance_id, download_type: Literal['page', 'file'], 
+                            operation: Literal['found', 'success', 'error', 'duplicated', 'previously'], val: int = 1):
         try:
             instance = CrawlerInstance.objects.get(instance_id=instance_id)
         
@@ -53,17 +54,43 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         try:
-            if operation == 'found':
-                instance.number_files_found += val
+            if download_type == 'page':
+                if operation == 'found':
+                    instance.number_pages_found += val
 
-            elif operation == 'success':
-                instance.number_files_success_download += val
+                elif operation == 'success':
+                    instance.number_pages_success_download += val
 
-            elif operation == 'error':
-                instance.number_files_error_download += val
+                elif operation == 'error':
+                    instance.number_pages_error_download+= val
 
-            elif operation == 'duplicated':
-                instance.number_files_previously_crawled += val
+                elif operation == 'duplicated':
+                    instance.number_pages_duplicated_download += val
+
+                elif operation == 'previously':
+                    instance.number_pages_previously_crawled += val
+
+                else:
+                    raise Exception(f'Invalid operation: {operation}')
+                
+            elif download_type == 'file':
+                if operation == 'found':
+                    instance.number_files_found += val
+
+                elif operation == 'success':
+                    instance.number_files_success_download += val
+
+                elif operation == 'error':
+                    instance.number_files_error_download += val
+
+                elif operation == 'previously':
+                    instance.number_files_previously_crawled += val
+
+                else:
+                    raise Exception(f'Invalid operation: {operation}')
+                
+            else:
+                raise Exception(f'Invalid download type: {download_type}')
 
             instance.save()
 
@@ -75,6 +102,16 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    def _update_file_info(self, instance_id, 
+                        operation: Literal['found', 'success', 'error', 'previously'], 
+                        val: int = 1):
+        return self._update_download_info(instance_id, 'file', operation, val)
+
+    def _update_file_info(self, instance_id, 
+                            operation: Literal['found', 'success', 'error', 'previously', 'duplicated'], 
+                            val: int = 1):
+        return self._update_download_info(instance_id, 'page', operation, val)
+
     @action(detail=True, methods=['get'])
     def files_found(self, request, pk, num_files):
         return self._update_file_info(pk, 'found', num_files)
@@ -84,9 +121,29 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
         return self._update_file_info(pk, 'success')
     
     @action(detail=True, methods=['get'])
-    def file_duplicated(self, request, pk):
-        return self._update_file_info(pk, 'duplicated')
+    def file_previously(self, request, pk):
+        return self._update_file_info(pk, 'previously')
     
     @action(detail=True, methods=['get'])
     def file_error(self, request, pk):
         return self._update_file_info(pk, 'error')
+    
+    @action(detail=True, methods=['get'])
+    def pages_found(self, request, pk, num_files):
+        return self._update_page_info(pk, 'found', num_files)
+    
+    @action(detail=True, methods=['get'])
+    def page_success(self, request, pk):
+        return self._update_page_info(pk, 'success')
+    
+    @action(detail=True, methods=['get'])
+    def page_previously(self, request, pk):
+        return self._update_page_info(pk, 'previously')
+    
+    @action(detail=True, methods=['get'])
+    def page_duplicated(self, request, pk):
+        return self._update_page_info(pk, 'duplicated')
+    
+    @action(detail=True, methods=['get'])
+    def page_error(self, request, pk):
+        return self._update_page_info(pk, 'error')

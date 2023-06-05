@@ -34,7 +34,13 @@ urlpatterns = [
     path('instance/<int:pk>/file/found/<int:num_files>', views.CrawlerInstanceViewSet.as_view({'get': 'files_found'}), name='instance-files-found'),
     path('instance/<int:pk>/file/success', views.CrawlerInstanceViewSet.as_view({'get': 'file_success'}), name='instance-success-download-file'),
     path('instance/<int:pk>/file/error', views.CrawlerInstanceViewSet.as_view({'get': 'file_error'}), name='instance-error-download-file'),
-    path('instance/<int:pk>/file/duplicated', views.CrawlerInstanceViewSet.as_view({'get': 'file_duplicated'}), name='instance-duplicated-download-file'),
+    path('instance/<int:pk>/file/previously', views.CrawlerInstanceViewSet.as_view({'get': 'file_previously'}), name='instance-previously-download-file'),
+    path('instance/<int:pk>/page/found/<int:num_files>', views.CrawlerInstanceViewSet.as_view({'get': 'pages_found'}), name='instance-pages-found'),
+    path('instance/<int:pk>/page/success', views.CrawlerInstanceViewSet.as_view({'get': 'page_success'}), name='instance-success-download-page'),
+    path('instance/<int:pk>/page/error', views.CrawlerInstanceViewSet.as_view({'get': 'page_error'}), name='instance-error-download-page'),
+    path('instance/<int:pk>/page/previously', views.CrawlerInstanceViewSet.as_view({'get': 'page_previously'}), name='instance-previously-download-page'),
+    path('instance/<int:pk>/page/duplicated', views.CrawlerInstanceViewSet.as_view({'get': 'page_duplicated'}), name='instance-duplicated-download-page'),
+
 
     path('task/', views.TaskViewSet.as_view(list_and_create_actions), name='task'),
     path('task/<int:pk>', views.TaskViewSet.as_view(retrieve_update_and_destroy_actions), name='task-detail'),
