@@ -80,13 +80,13 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
         return self._update_file_info(pk, 'found', num_files)
     
     @action(detail=True, methods=['get'])
-    def success_download_file(self, request, pk):
+    def file_success(self, request, pk):
         return self._update_file_info(pk, 'success')
     
     @action(detail=True, methods=['get'])
-    def previously_crawled_file(self, request, pk):
+    def file_duplicated(self, request, pk):
         return self._update_file_info(pk, 'duplicated')
     
     @action(detail=True, methods=['get'])
-    def error_download_file(self, request, pk):
+    def file_error(self, request, pk):
         return self._update_file_info(pk, 'error')
