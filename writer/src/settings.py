@@ -1,6 +1,6 @@
 import os
 
-KAFKA_HOSTS = [x.strip() for x in os.getenv('KAFKA_HOSTS', 'kafka:9092').split(',')]
+KAFKA_HOSTS = [x.strip() for x in os.getenv('KAFKA_HOSTS', 'localhost:9092').split(',')]
 KAFKA_TOPIC_PREFIX = os.getenv('KAFKA_TOPIC_PREFIX', 'crawler_ufmg')
 
 KAFKA_CONSUMER_AUTO_OFFSET_RESET = 'earliest'
@@ -32,4 +32,4 @@ CRAWLED_DATA_CONSUMER_GROUP = os.getenv('CRAWLED_DATA_CONSUMER_DATA', KAFKA_TOPI
 FILE_DOWNLOADER_CONSUMER_GROUP = os.getenv('FILE_DOWNLOADER_CONSUMER_GROUP', KAFKA_TOPIC_PREFIX + '.file_downloader_group')
 FILE_DESCRIPTOR_CONSUMER_GROUP = os.getenv('FILE_DESCRIPTOR_CONSUMER_GROUP', KAFKA_TOPIC_PREFIX + '.file_descriptor_group')
 
-OUTPUT_FOLDER = os.getenv('OUTPUT_FOLDER', '/data')
+OUTPUT_FOLDER = os.getenv('OUTPUT_FOLDER', '/home/elves/Desktop/data')

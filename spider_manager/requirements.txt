@@ -1,9 +1,9 @@
-../crawling_utils/
-../step-by-step/
-../camuflage_scrapy/
-../captcha_solver/
-../cssify/
-../scutils/
+../src/crawling_utils/
+../src/step-by-step/
+../src/camuflage_scrapy/
+../src/captcha_solver/
+../src/cssify/
+./scutils/
 attrs>=19.2.0 # 18.1.0  # Updated from 17.2.0'
 cchardet==2.1.7
 cffi==1.12.3  # Updated from 1.10.0

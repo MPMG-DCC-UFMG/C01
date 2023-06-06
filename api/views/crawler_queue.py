@@ -1,11 +1,10 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.http import JsonResponse
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from main.models import CrawlerQueue, CrawlerQueueItem, CRAWLER_QUEUE_DB_ID
+from main.models import CrawlerQueue, CrawlerQueueItem
 from main.serializers import CrawlerQueueSerializer
 from main.utils import (process_run_crawl, unqueue_crawl_requests, CRAWLER_QUEUE)
 
@@ -13,7 +12,6 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
     queryset = CrawlerQueue.objects.all()
     serializer_class = CrawlerQueueSerializer
     http_method_names = ['get', 'put']
-
     def retrieve(self, request):
         crawler_queue = CrawlerQueue.to_dict()
         return Response(crawler_queue)
@@ -44,7 +42,7 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
             queue_item_a.save()
             queue_item_b.save()
 
-        return Response({'message': 'success'}, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'])
     def force_execution(self, request, item_id: int):
@@ -81,8 +79,11 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    def get_object(self):
+        return CrawlerQueue.object()
+
     def update(self, request):
-        response = super().update(request, pk=CRAWLER_QUEUE_DB_ID)
+        response = super().update(request)
 
         # updade crawler queue instance with new configs
         global CRAWLER_QUEUE

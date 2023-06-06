@@ -44,4 +44,4 @@ STOPPED_SPIDER_NOTIFICATION_ADDRESS = os.getenv(
 TASK_TOPIC = os.getenv('TASK_TOPIC', KAFKA_TOPIC_PREFIX + 'task_topic')
 TASK_DATA_CONSUMER_GROUP = os.getenv('TASK_DATA_CONSUMER_DATA', KAFKA_TOPIC_PREFIX + '.task_data_group')
 
-OUTPUT_FOLDER = os.getenv('OUTPUT_FOLDER', '/data')
+OUTPUT_FOLDER = os.getenv('OUTPUT_FOLDER', '/home/elves/Desktop/data')

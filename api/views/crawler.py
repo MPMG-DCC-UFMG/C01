@@ -97,6 +97,7 @@ class CrawlerViewSet(viewsets.ModelViewSet):
     def stop(self, request, pk):
         try:
             process_stop_crawl(pk)
+            
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
