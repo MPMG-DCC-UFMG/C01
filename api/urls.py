@@ -1,7 +1,10 @@
+from django.shortcuts import redirect
 from django.urls import path
 from django.views.generic import TemplateView
-from rest_framework.schemas import get_schema_view
-from django.shortcuts import redirect
+from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework import permissions
+
 from . import views
 
 app_name = 'api'
@@ -12,8 +15,19 @@ all_actions = {'get': 'list', 'post': 'create', 'put': 'update', 'delete': 'dest
 only_list_action = {'get': 'list'}
 only_retrieve_action = {'get': 'retrieve'}
 
+schema_view = get_schema_view(
+    openapi.Info(
+        title="Plataforma de Coletas - API",
+        default_version="1.0",
+        description="API para as principais funcionalidades da plataforma de coletas.",
+        license=openapi.License(name="BSD License"),
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
+)
+
 urlpatterns = [
-    path('', lambda request: redirect('api:swagger-ui', permanent=True)),
+    path('', lambda request: redirect('api:swagger', permanent=True)),
     
     # crawler info
     path('crawler/', views.CrawlerViewSet.as_view(list_and_create_actions), name='crawler'),
@@ -43,7 +57,7 @@ urlpatterns = [
     path('instance/<int:pk>/page/duplicated', views.CrawlerInstanceViewSet.as_view({'get': 'page_duplicated'}), name='instance-duplicated-download-page'),
 
     # instance get logs
-    path('instance/<int:pk>/log/tail', views.CrawlerInstanceViewSet.as_view({'get': 'tail_log'}), name='instance-log-tail'),
+    path('instance/<int:pk>/log/tail', views.CrawlerInstanceViewSet.as_view({'get': 'tail'}), name='instance-log-tail'),
     path('instance/<int:pk>/log/raw/error', views.CrawlerInstanceViewSet.as_view({'get': 'raw_log_err'}), name='instance-log-raw-error'),
     path('instance/<int:pk>/log/raw/out', views.CrawlerInstanceViewSet.as_view({'get': 'raw_log_out'}), name='instance-log-raw-out'),
 
@@ -62,28 +76,5 @@ urlpatterns = [
     path('queue/force_execution/<int:item_id>', views.CrawlerQueueViewSet.as_view({'get': 'force_execution'}), name='queue-force-execution'),
     path('queue/remove_item/<int:item_id>', views.CrawlerQueueViewSet.as_view({'get': 'remove_item'}), name='queue-remove-item'),
 
-    path('open-api/', get_schema_view(
-        title='Plataforma de Coletas - API',
-        description='API para as principais funcionalidades da plataforma de coletas.',
-        version='1.0.0',
-        public=True,
-        url='/api/',
-        urlconf='api.urls'
-    ), name='open-api'),
-    path('swagger-ui/',  TemplateView.as_view(
-        template_name='api/swagger-ui.html', 
-        extra_context={'schema_url':'api:open-api'}
-    ), name='swagger-ui')
+    path('swagger/', schema_view.with_ui('swagger'), name='swagger'),
 ]
-
-#     # Includes the API endpoints in the URLs
-#     url(r'^api/', include(api_router.urls)),
-#     path('openapi/', get_schema_view(
-#         title='Áduna',
-#         description='API para busca de dados não estruturados',
-#         url='/services/',
-#         version='1.0.0',
-#         urlconf='services.urls',
-#         public=True,
-#     ), name='openapi'),
-# ]

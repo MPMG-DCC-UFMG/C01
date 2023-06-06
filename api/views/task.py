@@ -11,11 +11,17 @@ from main.task_filter import task_filter_by_date_interval
 
 import crawler_manager.crawler_manager as crawler_manager
 from crawler_manager.settings import TASK_TOPIC
+
+from drf_yasg.utils import swagger_auto_schema
                                       
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
 
+    @swagger_auto_schema(
+        operation_summary="Run custom logic",
+        operation_description="This is the description of the `run` method.",
+    )
     def create(self, request):
         response = super().create(request)
         if response.status_code == status.HTTP_201_CREATED:
@@ -26,6 +32,10 @@ class TaskViewSet(viewsets.ModelViewSet):
             crawler_manager.message_sender.send(TASK_TOPIC, message)
         return response
 
+    @swagger_auto_schema(
+        operation_summary="Run custom logic",
+        operation_description="This is the description of the `run` method.",
+    )
     def update(self, request, pk=None):
         response = super().update(request, pk=pk)
         if response.status_code == status.HTTP_200_OK:
@@ -36,6 +46,10 @@ class TaskViewSet(viewsets.ModelViewSet):
             crawler_manager.message_sender.send(TASK_TOPIC, message)
         return response
 
+    @swagger_auto_schema(
+        operation_summary="Run custom logic",
+        operation_description="This is the description of the `run` method.",
+    )
     def partial_update(self, request, pk=None):
         response = super().partial_update(request, pk=pk)
         if response.status_code == status.HTTP_200_OK:
@@ -46,6 +60,10 @@ class TaskViewSet(viewsets.ModelViewSet):
             crawler_manager.message_sender.send(TASK_TOPIC, message)
         return response
 
+    @swagger_auto_schema(
+        operation_summary="Run custom logic",
+        operation_description="This is the description of the `run` method.",
+    )
     def destroy(self, request, pk=None):
         response = super().destroy(request, pk=pk)
         if response.status_code == status.HTTP_204_NO_CONTENT:
@@ -57,7 +75,11 @@ class TaskViewSet(viewsets.ModelViewSet):
             }
         crawler_manager.message_sender.send(TASK_TOPIC, message)
         return response
-
+    
+    @swagger_auto_schema(
+        operation_summary="Run custom logic",
+        operation_description="This is the description of the `run` method.",
+    )
     def __str2date(self, s: str) -> datetime:
         date = None
 
@@ -68,7 +90,11 @@ class TaskViewSet(viewsets.ModelViewSet):
             print(e)
 
         return date
-
+    
+    @swagger_auto_schema(
+        operation_summary="Run custom logic",
+        operation_description="This is the description of the `run` method.",
+    )
     @action(detail=False)
     def filter(self, request):
         query_params = self.request.query_params.dict()

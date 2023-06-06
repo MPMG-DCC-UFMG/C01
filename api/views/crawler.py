@@ -10,6 +10,9 @@ from main.serializers import CrawlRequestSerializer
 from main.utils import (add_crawl_request, unqueue_crawl_requests, 
                         process_run_crawl, process_stop_crawl)
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+          
 class CrawlerViewSet(viewsets.ModelViewSet):
     """
     ViewSet that allows crawlers to be viewed, edited, updated and removed.
@@ -29,6 +32,10 @@ class CrawlerViewSet(viewsets.ModelViewSet):
             handler['injection_type'] = 'templated_url'
             ResponseHandler.objects.create(**handler)
 
+    @swagger_auto_schema(
+        operation_summary='Cria um novo coletor.',
+        operation_description='Ao chamar por esse endpoint, um novo coletor será criado e retornado em formato JSON.',
+    )
     def create(self, request, *args, **kwargs):
         """
         Create a new crawler.
@@ -55,10 +62,31 @@ class CrawlerViewSet(viewsets.ModelViewSet):
             
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(
+        operation_summary='Executa o coletor.',
+        operation_description='Ao chamar por esse endpoint, o coletor irá para a fila de coletas. A fila em que aguardará depende de seu parâmetro `expected_runtime_category`.',
+        manual_parameters=[
+            openapi.Parameter(
+                'id',
+                openapi.IN_PATH,
+                description='ID único do crawler.',
+                type=openapi.TYPE_INTEGER
+            ),
+            openapi.Parameter(
+                'action',
+                openapi.IN_QUERY,
+                description='Esse parâmetro permite definir o comportamento do coletor ao chegar na fila de coletas, sendo as opções: `run_immediately` (xecuta imediatamente), `wait_on_first_queue_position` (aguarda execução na primeira posição da fila) e `wait_on_last_queue_position` (aguarda na última posição).',
+                type=openapi.TYPE_STRING,
+                default='wait_on_last_queue_position',
+                enum=['run_immediately', 'wait_on_first_queue_position', 'wait_on_last_queue_position'],
+                required=False
+            )
+        ],
+    )
     @action(detail=True, methods=['get'])
     def run(self, request, pk):
         query_params = self.request.query_params.dict()
-        action = query_params.get('action', '')
+        action = query_params.get('action', 'wait_on_last_queue_position')
 
         if action == 'run_immediately':
             wait_on = 'no_wait'
@@ -93,6 +121,18 @@ class CrawlerViewSet(viewsets.ModelViewSet):
 
         return Response({'message': message}, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(
+        operation_summary='Interrompe o coletor.',
+        operation_description='Ao chamar por esse endpoint, o coletor comecará o seu processo de encerramento, que pode ou não ser imediato.',
+        manual_parameters=[
+            openapi.Parameter(
+                'id',
+                openapi.IN_PATH,
+                description='ID único do crawler.',
+                type=openapi.TYPE_INTEGER
+            ),
+        ]
+    )
     @action(detail=True, methods=['get'])
     def stop(self, request, pk):
         try:
@@ -102,7 +142,19 @@ class CrawlerViewSet(viewsets.ModelViewSet):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
+    @swagger_auto_schema(
+        operation_summary='Cria agrupamentos baseado em determinado coletor.',
+        operation_description='Retorna um grupo é de coletores dinâmicos que possuem os mesmos passos que o coletor de `id` passado como parâmetro.',
+        manual_parameters=[
+            openapi.Parameter(
+                'id',
+                openapi.IN_PATH,
+                description='ID único do crawler.',
+                type=openapi.TYPE_INTEGER
+            ),
+        ]
+    ) 
     @action(detail=True, methods=['get'])
     def group(self, request, pk):
         crawlers = CrawlRequest.objects.raw(

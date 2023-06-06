@@ -212,7 +212,7 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
         return resp
 
     @action(detail=True, methods=['get'])
-    def tail_log(self, request, pk):
+    def tail(self, request, pk):
         try:
             instance = CrawlerInstance.objects.get(instance_id=pk)
 
