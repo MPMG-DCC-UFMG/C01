@@ -1,4 +1,4 @@
-../src/crawling_utils/
+../crawling_utils/
 beautifulsoup4==4.11.1
 certifi==2021.5.30
 chardet==4.0.0

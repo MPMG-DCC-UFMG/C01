@@ -1,10 +1,12 @@
-from typing import Literal
+from typing_extensions import Literal
 from django.db import transaction
 from django.utils import timezone
 
 import crawler_manager.crawler_manager as crawler_manager
 from main.models import CrawlRequest, CrawlerInstance, CrawlerQueue, CrawlerQueueItem
 from main.forms import ParameterHandlerFormSet, ResponseHandlerFormSet
+
+CRAWLER_QUEUE = None
 
 try:
     CRAWLER_QUEUE = CrawlerQueue.object()

@@ -31,6 +31,7 @@ RUN python3 web_install.py
 RUN pip install pyee==9
 
 COPY main main
+COPY api api
 COPY interface interface
 COPY crawler_manager crawler_manager
 

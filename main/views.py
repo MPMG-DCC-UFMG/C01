@@ -2,7 +2,6 @@ import logging
 import multiprocessing as mp
 
 from django.core.paginator import Paginator
-from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 

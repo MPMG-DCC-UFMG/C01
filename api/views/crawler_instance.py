@@ -9,7 +9,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
-from django.http import FileResponse
+from django.http import FileResponse, JsonResponse
 from typing_extensions import Literal
 
 from main.models import CrawlerInstance, CrawlRequest
@@ -156,12 +156,12 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     def page_error(self, request, pk):
         return self._update_page_info(pk, 'error')
     
-    def raw_log_err(self, request, instance_id):
+    def raw_log_err(self, request, pk):
         try:
-            instance = CrawlerInstance.objects.get(instance_id=instance_id)
+            instance = CrawlerInstance.objects.get(instance_id=pk)
         
         except:
-            return Response({'error': f'Crawler instance {instance_id} not found!'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': f'Crawler instance {pk} not found!'}, status=status.HTTP_404_NOT_FOUND)
 
         n_lines = int(request.GET.get('n_lines', 100))
 
@@ -169,7 +169,7 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
         data_path = os.path.join(OUTPUT_FOLDER, config["data_path"])
 
         err = subprocess.run(['tail',
-                            f'{data_path}/{instance_id}/log/{instance_id}.err',
+                            f'{data_path}/{pk}/log/{pk}.err',
                             '-n',
                             f'{n_lines}'],
                             stdout=subprocess.PIPE).stdout
@@ -177,19 +177,19 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
         raw_text = err.decode('utf-8')
         raw_results = raw_text.splitlines(True)
 
-        resp = Response({str(instance_id): raw_results}, json_dumps_params={'indent': 4}, status=status.HTTP_200_OK)
+        resp = JsonResponse({str(pk): raw_results}, json_dumps_params={'indent': 4}, status=status.HTTP_200_OK)
 
         if len(raw_results) > 0 and instance.running:
             resp['Refresh'] = 5
             
         return resp
 
-    def raw_log_out(self, request, instance_id):
+    def raw_log_out(self, request, pk):
         try:
-            instance = CrawlerInstance.objects.get(instance_id=instance_id)
+            instance = CrawlerInstance.objects.get(instance_id=pk)
         
         except:
-            return Response({'error': f'Crawler instance {instance_id} not found!'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': f'Crawler instance {pk} not found!'}, status=status.HTTP_404_NOT_FOUND)
         
         n_lines = int(request.GET.get('n_lines', 100))
 
@@ -197,14 +197,14 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
         data_path = os.path.join(OUTPUT_FOLDER, config["data_path"])
 
         out = subprocess.run(['tail',
-                            f'{data_path}/{instance_id}/log/{instance_id}.out',
+                            f'{data_path}/{pk}/log/{pk}.out',
                             '-n',
                             f'{n_lines}'],
                             stdout=subprocess.PIPE).stdout
         
         raw_text = out.decode('utf-8')
         raw_results = raw_text.splitlines(True)
-        resp = Response({str(instance_id): raw_results}, json_dumps_params={'indent': 4})
+        resp = JsonResponse({str(pk): raw_results}, json_dumps_params={'indent': 4})
 
         if len(raw_results) > 0 and instance.running:
             resp['Refresh'] = 5
