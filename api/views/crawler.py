@@ -33,8 +33,157 @@ class CrawlerViewSet(viewsets.ModelViewSet):
             ResponseHandler.objects.create(**handler)
 
     @swagger_auto_schema(
+        operation_summary='Retorna a lista de coletores.',
+        operation_description='Ao chamar por esse endpoint, uma lista de coletores será retornada em formato JSON.',
+        responses={
+            200: openapi.Response(
+                description='Lista de coletores.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'id': openapi.Schema(
+                                type=openapi.TYPE_INTEGER,
+                                description='ID único do coletor.'
+                            )
+                        }
+                    )
+                )
+            )
+        }
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_summary='Retorna um coletor.',
+        operation_description='Ao chamar por esse endpoint, um coletor será retornado em formato JSON.',
+        responses={
+            200: openapi.Response(
+                description='Coletor.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description='ID único do coletor.'
+                        )
+                    }
+                )
+            )
+        },
+        manual_parameters=[
+            openapi.Parameter(
+                name='id',
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_INTEGER,
+                description='ID único do coletor.',
+                required=True
+            )
+        ]
+    )
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_summary='Atualiza um coletor.',
+        operation_description='Ao chamar por esse endpoint, um coletor será atualizado e retornado em formato JSON.',
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+        ),
+        responses={
+            200: openapi.Response(
+                description='Coletor atualizado com sucesso.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description='ID único do coletor.'
+                        )
+                    }
+                )
+            ),
+            400: openapi.Response(
+                description='Erro na requisição.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Mensagem de erro.'
+                        )
+                    }
+                )
+            )
+        },
+        manual_parameters=[
+            openapi.Parameter(
+                name='id',
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_INTEGER,
+                description='ID único do coletor.',
+                required=True
+            )
+        ]
+    )
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+    
+    @swagger_auto_schema(
+        operation_summary='Remove um coletor.',
+        operation_description='Ao chamar por esse endpoint, um coletor será removido.',
+        responses={
+            204: openapi.Response(
+                description='Coletor removido com sucesso.'
+            )
+        },
+        manual_parameters=[
+            openapi.Parameter(
+                name='id',
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_INTEGER,
+                description='ID único do coletor.',
+                required=True
+            )
+        ]
+    )
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
+
+    @swagger_auto_schema(
         operation_summary='Cria um novo coletor.',
         operation_description='Ao chamar por esse endpoint, um novo coletor será criado e retornado em formato JSON.',
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+        ),
+        responses={
+            201: openapi.Response(
+                description='Coletor criado com sucesso.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description='ID único do coletor.'
+                        )
+                    }
+                )
+            ),
+            400: openapi.Response(
+                description='Erro na requisição.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Mensagem de erro.'
+                        )
+                    }
+                )
+            )
+        }
     )
     def create(self, request, *args, **kwargs):
         """

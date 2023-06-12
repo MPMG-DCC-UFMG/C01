@@ -11,13 +11,14 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.http import FileResponse, JsonResponse
 from typing_extensions import Literal
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 from main.models import CrawlerInstance, CrawlRequest
 from main.utils import process_stop_crawl
 from main.serializers import CrawlerInstanceSerializer
 
 from crawler_manager.settings import OUTPUT_FOLDER
-
 class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     """
     A simple ViewSet for viewing and listing instances
@@ -25,6 +26,84 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CrawlerInstance.objects.all()
     serializer_class = CrawlerInstanceSerializer
 
+    @swagger_auto_schema(
+        operation_summary='Retorna um arquvivo json com a representação das instâncias.',
+        operation_description='Retorna o estado das instâncias serializado em json.',
+        responses={
+            200: openapi.Response(
+                description='Instâncias encontradas.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                )
+            ),
+            404: openapi.Response(
+                description='Instâncias não encontradas.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Mensagem de erro.'
+                        )
+                    }
+                )
+            )
+        }
+    )
+    def list(self, request):
+        return super().list(request)
+
+    @swagger_auto_schema(
+        operation_summary='Retorna um arquvivo json com a representação da instância.',
+        operation_description='Retorna o estado da instância serializado em json.',
+        responses={
+            200: openapi.Response(
+                description='Instância encontrada.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                )
+            ),
+            404: openapi.Response(
+                description='Instância não encontrada.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Mensagem de erro.'
+                        )
+                    }
+                )
+            )
+        }
+    )
+    def retrieve(self, request, pk=None):
+        return super().retrieve(request, pk)
+
+    @swagger_auto_schema(
+        operation_summary='Retorna um arquvivo json com a representação da instância.',
+        operation_description='Retorna o estado da instância serializado em json.',
+        responses={
+            200: openapi.Response(
+                description='Instância encontrada.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                )
+            ),
+            404: openapi.Response(
+                description='Instância não encontrada.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Mensagem de erro.'
+                        )
+                    }
+                )
+            )
+        }
+    )
     @action(detail=True, methods=['get'])
     def export_config(self, request, pk):
         try:
@@ -120,42 +199,180 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
                             val: int = 1):
         return self._update_download_info(instance_id, 'page', operation, val)
 
+    @swagger_auto_schema(
+        operation_summary='Atualiza a quantidade de links de arquivos encontrados em determinada página.',
+        operation_description='Esse endpoint recebe com parâmetro `num_files`, que é utilizado para atualizar a quantidade de links de arquivos encontrados em determinada página.',
+        operation_id='instance_update_files_found',
+        manual_parameters=[
+            openapi.Parameter(
+                'instance_id',
+                openapi.IN_PATH,
+                description='ID único da instância.',
+                type=openapi.TYPE_INTEGER
+            ),
+        ]
+    )
     @action(detail=True, methods=['get'])
     def files_found(self, request, pk, num_files):
         return self._update_file_info(pk, 'found', num_files)
-    
+
+    @swagger_auto_schema(
+        operation_summary='Incrementa a quantidade de arquivos baixados com sucesso em determinada instância.',
+        operation_description='Esse endpoint incrementa a quantidade de arquivos baixados com sucesso em determinada instância em 1 unidade toda vez que é chamado.',
+        operation_id='instance_update_file_success',
+        manual_parameters=[
+            openapi.Parameter(
+                'instance_id',
+                openapi.IN_PATH,
+                description='ID único da instância.',
+                type=openapi.TYPE_INTEGER
+            ),
+        ]
+    )
     @action(detail=True, methods=['get'])
     def file_success(self, request, pk):
         return self._update_file_info(pk, 'success')
-    
+
+    @swagger_auto_schema(
+        operation_summary='Incrementa a quantidade de arquivos com status já baixados em determinada instância.',
+        operation_description='Esse endpoint incrementa a quantidade de arquivos com status já baixados em determinada instância em 1 unidade toda vez que é chamado.',
+        operation_id='instance_update_file_previously',
+        manual_parameters=[
+            openapi.Parameter(
+                'instance_id',
+                openapi.IN_PATH,
+                description='ID único da instância.',
+                type=openapi.TYPE_INTEGER
+            ),
+        ]
+    )
     @action(detail=True, methods=['get'])
     def file_previously(self, request, pk):
         return self._update_file_info(pk, 'previously')
-    
+
+    @swagger_auto_schema(
+        operation_summary='Incrementa a quantidade de arquivos com erros de download em determinada instância.',
+        operation_description='Esse endpoint incrementa a quantidade de arquivos com erros de download em determinada instância em 1 unidade toda vez que é chamado.',
+        operation_id='instance_update_error',
+        manual_parameters=[
+            openapi.Parameter(
+                'instance_id',
+                openapi.IN_PATH,
+                description='ID único da instância.',
+                type=openapi.TYPE_INTEGER
+            ),
+        ]
+    )
     @action(detail=True, methods=['get'])
     def file_error(self, request, pk):
         return self._update_file_info(pk, 'error')
-    
+
+    @swagger_auto_schema(
+        operation_summary='Atualiza a quantidade de links de páginas encontrados para serem exploradas.',
+        operation_description='Esse endpoint recebe com parâmetro `num_files`, que é utilizado para atualizar a quantidade de links de páginas encontrados para serem exploradas.',
+        operation_id='instance_update_pages_found',
+        manual_parameters=[
+            openapi.Parameter(
+                'instance_id',
+                openapi.IN_PATH,
+                description='ID único da instância.',
+                type=openapi.TYPE_INTEGER
+            ),
+        ]
+    )
     @action(detail=True, methods=['get'])
     def pages_found(self, request, pk, num_files):
         return self._update_page_info(pk, 'found', num_files)
     
+    @swagger_auto_schema(
+        operation_summary='Incrementa a quantidade de páginas exploradas com sucesso em determinada instância.',
+        operation_description='Esse endpoint incrementa a quantidade de páginas exploradas com sucesso em determinada instância em 1 unidade toda vez que é chamado.',
+        operation_id='instance_update_page_success',
+        manual_parameters=[
+            openapi.Parameter(
+                'instance_id',
+                openapi.IN_PATH,
+                description='ID único da instância.',
+                type=openapi.TYPE_INTEGER
+            ),
+        ]
+    )
     @action(detail=True, methods=['get'])
     def page_success(self, request, pk):
         return self._update_page_info(pk, 'success')
-    
+
+    @swagger_auto_schema(
+        operation_summary='Incrementa a quantidade de páginas com status já exploradas em determinada instância.',
+        operation_description='Esse endpoint incrementa a quantidade de páginas com status já exploradas em determinada instância em 1 unidade toda vez que é chamado.',
+        operation_id='instance_update_page_previously',
+        manual_parameters=[
+            openapi.Parameter(
+                'instance_id',
+                openapi.IN_PATH,
+                description='ID único da instância.',
+                type=openapi.TYPE_INTEGER
+            ),
+        ]
+    )
     @action(detail=True, methods=['get'])
     def page_previously(self, request, pk):
         return self._update_page_info(pk, 'previously')
     
+    @swagger_auto_schema(
+        operation_summary='Incrementa a quantidade de páginas com status duplicado em determinada instância.',
+        operation_description='Esse endpoint incrementa a quantidade de páginas com status duplicado em determinada instância em 1 unidade toda vez que é chamado.',
+        operation_id='instance_update_page_duplicated',
+        manual_parameters=[
+            openapi.Parameter(
+                'instance_id',
+                openapi.IN_PATH,
+                description='ID único da instância.',
+                type=openapi.TYPE_INTEGER
+            ),
+        ]
+    )
     @action(detail=True, methods=['get'])
     def page_duplicated(self, request, pk):
         return self._update_page_info(pk, 'duplicated')
     
+    @swagger_auto_schema(
+        operation_summary='Incrementa a quantidade de páginas com erros de exploração em determinada instância.',
+        operation_description='Esse endpoint incrementa a quantidade de páginas com erros de exploração em determinada instância em 1 unidade toda vez que é chamado.',
+        operation_id='instance_update_page_error',
+        manual_parameters=[
+            openapi.Parameter(
+                'instance_id',
+                openapi.IN_PATH,
+                description='ID único da instância.',
+                type=openapi.TYPE_INTEGER
+            ),
+        ]
+    )
     @action(detail=True, methods=['get'])
     def page_error(self, request, pk):
         return self._update_page_info(pk, 'error')
     
+    @swagger_auto_schema(
+        operation_summary='Obtêm logs brutos de erros.',
+        operation_description='Esse endpoint obtêm os logs brutos de erros durante a execução de determinada instância.',
+        operation_id='instance_raw_log_err',
+        manual_parameters=[
+            openapi.Parameter(
+                'instance_id',
+                openapi.IN_PATH,
+                description='ID único da instância.',
+                type=openapi.TYPE_INTEGER
+            ),
+            openapi.Parameter(
+                'n_lines',
+                openapi.IN_QUERY,
+                description='Número de linhas de logs a serem retornadas.',
+                type=openapi.TYPE_INTEGER,
+                default=100,
+                required=False
+            ),  
+        ]
+    )
     def raw_log_err(self, request, pk):
         try:
             instance = CrawlerInstance.objects.get(instance_id=pk)
@@ -184,6 +401,27 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
             
         return resp
 
+    @swagger_auto_schema(
+        operation_summary='Obtêm logs brutos de saída.',
+        operation_description='Esse endpoint obtêm os logs brutos de saída durante a execução de determinada instância.',
+        operation_id='instance_raw_log_out',
+        manual_parameters=[
+            openapi.Parameter(
+                'instance_id',
+                openapi.IN_PATH,
+                description='ID único da instância.',
+                type=openapi.TYPE_INTEGER
+            ),
+            openapi.Parameter(
+                'n_lines',
+                openapi.IN_QUERY,
+                description='Número de linhas de logs a serem retornadas.',
+                type=openapi.TYPE_INTEGER,
+                default=100,
+                required=False
+            ),
+        ]
+    )
     def raw_log_out(self, request, pk):
         try:
             instance = CrawlerInstance.objects.get(instance_id=pk)
@@ -211,6 +449,27 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
 
         return resp
 
+    @swagger_auto_schema(
+        operation_summary='Obtêm logs de saída ou erro do sistema.',
+        operation_description='Esse endpoint obtêm os logs de saída ou erro do sistema durante a execução de determinada instância.',
+        operation_id='instance_log',
+        manual_parameters=[
+            openapi.Parameter(
+                'instance_id',
+                openapi.IN_PATH,
+                description='ID único da instância.',
+                type=openapi.TYPE_INTEGER
+            ),
+            openapi.Parameter(
+                'n_lines',
+                openapi.IN_QUERY,
+                description='Número de linhas de logs a serem retornadas.',
+                type=openapi.TYPE_INTEGER,
+                default=100,
+                required=False
+            )
+        ]
+    )
     @action(detail=True, methods=['get'])
     def tail(self, request, pk):
         try:
@@ -262,6 +521,35 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
             'time': str(datetime.fromtimestamp(time.time())),
         }, status=status.HTTP_200_OK)
     
+    @swagger_auto_schema(
+        operation_summary='Obtêm screenshots de determinada instância.',
+        operation_description='Esse endpoint obtêm os screenshots de determinada instância.',
+        operation_id='instance_screenshots',
+        manual_parameters=[
+            openapi.Parameter(
+                'instance_id',
+                openapi.IN_PATH,
+                description='ID único da instância.',
+                type=openapi.TYPE_INTEGER
+            ),
+            openapi.Parameter(
+                'imgs_per_page',
+                openapi.IN_QUERY,
+                description='Número de imagens por página.',
+                type=openapi.TYPE_INTEGER,
+                default=20,
+                required=False
+            ),
+            openapi.Parameter(
+                'page',
+                openapi.IN_QUERY,
+                description='Número da página.',
+                type=openapi.TYPE_INTEGER,
+                default=1,
+                required=False
+            )
+        ]
+    )
     @action(detail=True, methods=['get'])
     def screenshots(request, pk):
         try:
@@ -312,6 +600,19 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
             'total_screenshots': total_screenshots
         }, status=status.HTTP_200_OK)
     
+    @swagger_auto_schema(
+        operation_summary='Obtêm o arquivo de tracing de execução de coletores dinâmicos.',
+        operation_description='Esse endpoint obtêm o arquivo de tracing de execução de coletores dinâmicos.',
+        operation_id='instance_export_trace',
+        manual_parameters=[
+            openapi.Parameter(
+                'instance_id',
+                openapi.IN_PATH,
+                description='ID único da instância.',
+                type=openapi.TYPE_INTEGER
+            )
+        ]
+    )
     @action(detail=True, methods=['get'])
     def export_trace(self, request, pk):
         try:

@@ -41,7 +41,7 @@ urlpatterns = [
     path('instance/<int:pk>', views.CrawlerInstanceViewSet.as_view(only_retrieve_action), name='instance-detail'),
     
     # instance config export
-    path('instance/<int:pk>/export/config', views.CrawlerInstanceViewSet.as_view({'get': 'export_config'}), name='instance-export-config'),
+    path('instance/<int:pk>/config', views.CrawlerInstanceViewSet.as_view({'get': 'export_config'}), name='instance-config'),
     
     # instance update file download status
     path('instance/<int:pk>/file/found/<int:num_files>', views.CrawlerInstanceViewSet.as_view({'get': 'files_found'}), name='instance-files-found'),

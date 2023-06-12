@@ -5,22 +5,57 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
 from main.models import Task
 from main.serializers import TaskSerializer
 from main.task_filter import task_filter_by_date_interval
 
 import crawler_manager.crawler_manager as crawler_manager
 from crawler_manager.settings import TASK_TOPIC
-
-from drf_yasg.utils import swagger_auto_schema
                                       
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
 
     @swagger_auto_schema(
-        operation_summary="Run custom logic",
-        operation_description="This is the description of the `run` method.",
+        operation_summary="Obtêm todos agendamentos de coletas.",
+        operation_description="Este endpoint obtêm todos agendamentos de coletas.",
+        responses={
+            200: 'OK'
+        }
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_summary="Obtêm um agendamento de coleta.",
+        operation_description="Este endpoint obtêm um agendamento de coleta.",
+        manual_parameters=[
+            openapi.Parameter(
+                name='id',
+                in_=openapi.IN_QUERY,
+                description='ID único do agendamento de coleta',
+                required=True,
+                type=openapi.TYPE_INTEGER
+            )
+        ],
+        responses={
+            200: 'OK',
+            404: 'Not Found'
+        }
+    )
+    def retrieve(self, request, pk=None):
+        return super().retrieve(request, pk=pk)
+
+    @swagger_auto_schema(
+        operation_summary="Cria um novo agendamento de coleta.",
+        operation_description="Este endpoint cria um novo agendamento de coleta.",
+        responses={
+            201: 'Created',
+            400: 'Bad Request'
+        }
     )
     def create(self, request):
         response = super().create(request)
@@ -33,8 +68,22 @@ class TaskViewSet(viewsets.ModelViewSet):
         return response
 
     @swagger_auto_schema(
-        operation_summary="Run custom logic",
-        operation_description="This is the description of the `run` method.",
+        operation_summary="Atualiza um agendamento de coleta.",
+        operation_description="Este endpoint atualiza um agendamento de coleta.",
+        manual_parameters=[
+            openapi.Parameter(
+                name='id',
+                in_=openapi.IN_QUERY,
+                description='ID único do agendamento de coleta',
+                required=True,
+                type=openapi.TYPE_INTEGER
+            )
+        ],
+        responses={
+            200: 'OK',
+            400: 'Bad Request',
+            404: 'Not Found'
+        }
     )
     def update(self, request, pk=None):
         response = super().update(request, pk=pk)
@@ -47,22 +96,21 @@ class TaskViewSet(viewsets.ModelViewSet):
         return response
 
     @swagger_auto_schema(
-        operation_summary="Run custom logic",
-        operation_description="This is the description of the `run` method.",
-    )
-    def partial_update(self, request, pk=None):
-        response = super().partial_update(request, pk=pk)
-        if response.status_code == status.HTTP_200_OK:
-            message = {
-                'action': 'update',
-                'data': response.data
-            }
-            crawler_manager.message_sender.send(TASK_TOPIC, message)
-        return response
-
-    @swagger_auto_schema(
-        operation_summary="Run custom logic",
-        operation_description="This is the description of the `run` method.",
+        operation_summary="Remove um agendamento de coleta.",
+        operation_description="Remove um agendamento de coleta.",
+        manual_parameters=[
+            openapi.Parameter(
+                name='id',
+                in_=openapi.IN_QUERY,
+                description='ID único do agendamento de coleta',
+                required=True,
+                type=openapi.TYPE_INTEGER
+            )
+        ],
+        responses={
+            204: 'No Content',
+            404: 'Not Found'
+        }
     )
     def destroy(self, request, pk=None):
         response = super().destroy(request, pk=pk)
@@ -76,10 +124,6 @@ class TaskViewSet(viewsets.ModelViewSet):
         crawler_manager.message_sender.send(TASK_TOPIC, message)
         return response
     
-    @swagger_auto_schema(
-        operation_summary="Run custom logic",
-        operation_description="This is the description of the `run` method.",
-    )
     def __str2date(self, s: str) -> datetime:
         date = None
 
@@ -92,8 +136,28 @@ class TaskViewSet(viewsets.ModelViewSet):
         return date
     
     @swagger_auto_schema(
-        operation_summary="Run custom logic",
-        operation_description="This is the description of the `run` method.",
+        operation_summary="Filtra agendamentos de coleta por intervalo de datas.",
+        operation_description="Filtra agendamentos de coleta por intervalo de datas.",
+        manual_parameters=[
+            openapi.Parameter(
+                name='start_date',
+                in_=openapi.IN_QUERY,
+                description='Data de início do intervalo',
+                required=True,
+                type=openapi.TYPE_STRING
+            ),
+            openapi.Parameter(
+                name='end_date',
+                in_=openapi.IN_QUERY,
+                description='Data de fim do intervalo',
+                required=True,
+                type=openapi.TYPE_STRING
+            )
+        ],
+        responses={
+            200: 'OK',
+            400: 'Bad Request'
+        }
     )
     @action(detail=False)
     def filter(self, request):
