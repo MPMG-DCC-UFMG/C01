@@ -113,10 +113,10 @@ Crawler "{{ crawler.source_name }}"
                         <td>{{instance.duration_readable}}</td>
                         <td>{{instance.num_data_files}} arquivos</td>
                         <td>{{instance.data_size_readable}}</td>
-                        <td><a class="btn btn-primary" href="{% url 'export_config' instance.instance_id%}">Baixar</a></td>
+                        <td><a class="btn btn-primary" href="{% url 'api:instance-config' instance.instance_id%}">Baixar</a></td>
                         {% if crawler.dynamic_processing %}
                         <td><button type="button" class="btn btn-primary" onclick="displayScreenshotModal({{instance.instance_id}})">Visualizar</button></td>
-                        <td><a class="btn btn-primary" href="{% url 'export_trace' instance.instance_id%}">Baixar</a></td>
+                        <td><a class="btn btn-primary" href="{% url 'api:instance-debug-trace' instance.instance_id%}">Baixar</a></td>
                         {% endif %}
                     </tr>
                     
@@ -251,7 +251,7 @@ Crawler "{{ crawler.source_name }}"
             <div class="row mb-3">
                 <div class="col pr-0 d-flex align-items-center justify-content-between">
                     <h5>Últimas linhas do stdout</h5>
-                    <a class="btn btn-primary" target="_blank"  href="{% url 'raw_log_out' last_instance.instance_id %}">Abrir Log Bruto</a>
+                    <a class="btn btn-primary" target="_blank"  href="{% url 'api:instance-log-raw-out' last_instance.instance_id %}">Abrir Log Bruto</a>
                 </div>
             </div>
             <div class="row">
@@ -275,7 +275,7 @@ Crawler "{{ crawler.source_name }}"
             <div class="row mb-3">
                 <div class="col pr-0 d-flex align-items-center justify-content-between">
                     <h5>Últimas linhas do stderr</h5>
-                    <a class="btn btn-primary" target="_blank" href="{% url 'raw_log_err' last_instance.instance_id %}">Abrir Log Bruto</a>
+                    <a class="btn btn-primary" target="_blank" href="{% url 'api:instance-log-raw-error' last_instance.instance_id %}">Abrir Log Bruto</a>
                 </div>
             </div>
             <div class="row">

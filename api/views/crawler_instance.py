@@ -551,12 +551,14 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
         ]
     )
     @action(detail=True, methods=['get'])
-    def screenshots(request, pk):
+    def screenshots(self, request, pk):
         try:
             instance = CrawlerInstance.objects.get(pk=pk) # get_object_or_404(CrawlerInstance, pk=instance_id)
         
         except:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Instance not found.',
+                             'total_screenshots': 0},
+                            status=status.HTTP_404_NOT_FOUND)
         
         imgs_per_page = int(request.GET.get('imgs_per_page', 20))
         page = int(request.GET.get('page', 1))

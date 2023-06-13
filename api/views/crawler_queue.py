@@ -12,7 +12,6 @@ from main.serializers import CrawlerQueueSerializer
 from main.utils import (process_run_crawl, unqueue_crawl_requests, CRAWLER_QUEUE)
 
 
-
 class CrawlerQueueViewSet(viewsets.ModelViewSet):
     queryset = CrawlerQueue.objects.all()
     serializer_class = CrawlerQueueSerializer
