@@ -41,8 +41,6 @@ function displayScreenshotModal(instance_id) {
         dataType: 'json',
         // async: false,
         success: function (data) {
-            data = data.responseJSON;
-            
             let items_per_page = data["data"].length;
 
             $("#screenshot_modal .pagination").paging(data['total_screenshots'], {
@@ -54,7 +52,7 @@ function displayScreenshotModal(instance_id) {
                     $("#screenshot_modal .spinner-border").show();
                     $("#screenshot_modal .screenshot_list").nanogallery2('destroy');
                     $("#screenshot_modal .screenshot_list").empty();
-                    $.ajax("/info/screenshots/" + instance_id + "/" + page)
+                    $.ajax(`${server_address}/api/instance/${instance_id}/debug/screenshots?page=${page}&imgs_per_page=${items_per_page}`)
                         .done(function (new_data) {
                             updateGallery(new_data["data"]);
                             $("#screenshot_modal .spinner-border").hide();
