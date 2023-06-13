@@ -1,6 +1,5 @@
 from django.shortcuts import redirect
 from django.urls import path
-from django.views.generic import TemplateView
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
@@ -23,6 +22,7 @@ schema_view = get_schema_view(
         license=openapi.License(name="BSD License"),
     ),
     public=True,
+    url='http://localhost:8000/api/',
     permission_classes=(permissions.AllowAny,),
 )
 
