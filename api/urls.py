@@ -63,6 +63,7 @@ urlpatterns = [
 
     # instance debug
     path('instance/<int:pk>/debug/trace', views.CrawlerInstanceViewSet.as_view({'get': 'export_trace'}), name='instance-debug-trace'),
+    path('instance/<int:pk>/debug/video', views.CrawlerInstanceViewSet.as_view({'get': 'export_video'}), name='instance-debug-video'),
     path('instance/<int:pk>/debug/screenshots', views.CrawlerInstanceViewSet.as_view({'get': 'screenshots'}), name='instance-debug-screenshots'),
     
     # task info

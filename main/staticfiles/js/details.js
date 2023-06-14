@@ -186,7 +186,27 @@ function exit_crawler_queue(queue_item_id) {
     });
 }
 
+function downloadInstanceTrace(instance_id) {
+    let server_address = window.location.origin;
+    let url = `${server_address}/api/instance/${instance_id}/debug/trace`;
+
+    // sends a head request to check if the file exists
+    $.ajax({
+        url: url,
+        type: 'head',
+        dataType: 'json',
+        async: false,
+        success: function (data) {            
+            window.open(url, '_blank');
+        },
+        error: function (data) {
+            alert('O arquivo de trace não existe!');
+        }
+    });
+}
+
 // Initiates all popovers on the page
 $(function () {
     $('[data-toggle="popover"]').popover()
 })
+

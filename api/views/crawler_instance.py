@@ -556,7 +556,7 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
             instance = CrawlerInstance.objects.get(pk=pk) # get_object_or_404(CrawlerInstance, pk=instance_id)
         
         except:
-            return Response({'error': 'Instance not found.',
+            return Response({'error': 'Instância não encontrada.',
                              'total_screenshots': 0},
                             status=status.HTTP_404_NOT_FOUND)
         
@@ -571,7 +571,7 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
 
         if not os.path.isdir(screenshot_dir):
             return Response({
-                'error': 'Path of screenshots not found.',
+                'error': 'O diretório de screenshots não foi encontrado.',
                 'total_screenshots': 0
             }, status=status.HTTP_404_NOT_FOUND)
 
@@ -580,7 +580,7 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
 
         if total_screenshots == 0:
             return Response({
-                'error': 'None screenshots found.',
+                'error': 'Nenhum screenshot encontrado.',
                 'total_screenshots': 0
             }, status=status.HTTP_404_NOT_FOUND)
 
@@ -621,8 +621,9 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
             instance = CrawlerInstance.objects.get(pk=pk) # get_object_or_404(CrawlerInstance, pk=instance_id)
         
         except:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-            
+            return Response({'error': 'Instância não encontrada.'},
+                            status=status.HTTP_404_NOT_FOUND)
+                    
         data_path = instance.crawler.data_path
 
         file_name = f'{pk}.zip'
@@ -633,11 +634,45 @@ class CrawlerInstanceViewSet(viewsets.ReadOnlyModelViewSet):
             response = FileResponse(open(path, 'rb'), content_type='zip')
         
         except FileNotFoundError:
-            return Response({'error': 'Verifique se a opção de gerar arquivo trace foi habilitada na configuração do coletor'},
+            return Response({'error': 'Verifique se a opção de gerar arquivo trace foi habilitada na configuração do coletor.'},
                             status=status.HTTP_404_NOT_FOUND)
         
         else:
             response['Content-Length'] = os.path.getsize(path)
             response['Content-Disposition'] = 'attachment; filename=%s' % file_name
 
+        return response
+
+    @action(detail=True, methods=['get'])
+    def export_video(self, request, pk):
+        try:
+            instance = CrawlerInstance.objects.get(pk=pk) # get_object_or_404(CrawlerInstance, pk=instance_id)
+        
+        except:
+            return Response({'error': 'Instância não encontrada.'},
+                            status=status.HTTP_404_NOT_FOUND)
+        
+        data_path = instance.crawler.data_path
+
+        video_path = os.path.join(OUTPUT_FOLDER, data_path, str(pk), 'debug', 'video')
+        
+        try:
+            files = [f for f in os.listdir(video_path) if f.endswith('.webm')]
+            if len(files) == 0:
+                raise FileNotFoundError
+            
+        except FileNotFoundError:
+            return Response({'error': 'Verifique se a opção de gerar vídeo foi habilitada na configuração do coletor.'},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        file_name = files[0]
+        file_path = os.path.join(video_path, file_name)
+
+        response = FileResponse(open(file_path, 'rb'), 
+                                content_type='video/webm', 
+                                status=status.HTTP_200_OK)
+        
+        response['Content-Length'] = os.path.getsize(file_path)
+        response['Content-Disposition'] = 'attachment; filename=%s' % file_name
+    
         return response

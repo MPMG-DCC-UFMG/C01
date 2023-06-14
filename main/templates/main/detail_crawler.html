@@ -101,6 +101,7 @@ Crawler "{{ crawler.source_name }}"
                                 <i class="fa fa-info-circle" aria-hidden="true"></i>
                             </button>
                         </th>
+                        <th scope="col">Video</th>
                         {% endif %}
                     </tr>
                 </thead>
@@ -116,7 +117,8 @@ Crawler "{{ crawler.source_name }}"
                         <td><a class="btn btn-primary" href="{% url 'api:instance-config' instance.instance_id%}">Baixar</a></td>
                         {% if crawler.dynamic_processing %}
                         <td><button type="button" class="btn btn-primary" onclick="displayScreenshotModal({{instance.instance_id}})">Visualizar</button></td>
-                        <td><a class="btn btn-primary" href="{% url 'api:instance-debug-trace' instance.instance_id%}">Baixar</a></td>
+                        <td><button class="btn btn-primary" onclick="downloadInstanceTrace({{instance.instance_id}})">Baixar</button></td>
+                        <td><button class="btn btn-primary" onclick="displayVideoPlayerModal({{instance.instance_id}})">Visualizar</button></td>
                         {% endif %}
                     </tr>
                     
@@ -326,6 +328,25 @@ Crawler "{{ crawler.source_name }}"
         </div>
     </div>
 </div>
+
+
+<div class="modal" id="video_player_modal" tabindex="-1" role="dialog" >
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Video Player</h5>
+            </div>
+            <div class="modal-body px-3">
+            </div>
+            <div class="modal-footer">
+                <div class="pagination mr-auto"></div>
+                <button type="button" class="btn btn-secondary" onclick="closeVideoPlayerModal()">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endif %}
 
 {% endblock %}
@@ -349,5 +370,6 @@ Crawler "{{ crawler.source_name }}"
 
 <script src="{% static 'js/jquery.paging.min.js' %}"></script>
 <script src="{% static 'js/screenshot_viewer.js' %}"></script>
+<script src="{% static 'js/video_viewer.js' %}"></script>
 <script src="{% static 'js/details.js' %}"></script>
 {% endblock %}

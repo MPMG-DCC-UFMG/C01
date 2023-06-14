@@ -72,27 +72,22 @@ function displayScreenshotModal(instance_id) {
                             return '<a href="#" class="paging_entry_arrow"><i class="fa fa-fast-forward"></i></a>';
                     }
                 }
-            }).fail(function () {
-                $("#screenshot_modal .screenshot_list").text("Failed to load screenshots");
             });
 
             $("#screenshot_modal .spinner-border").hide();
-            // $("#screenshot_modal").modal("show");
         },
         error: function (data) {
             data = data.responseJSON;
-            $("#screenshot_modal .screenshot_list").text(data['error']);
+            $("#screenshot_modal .screenshot_list").append(`
+                <div class="alert alert-danger w-100 mt-2" role="alert">
+                    <h4 class="alert-heading">Erro</h4>
+                    <p>${data.error}</p>
+                </div>
+            `);
             $("#screenshot_modal .spinner-border").hide();
             // $("#screenshot_modal").modal("hide");
         }
     });
-
-    // $.ajax().done(function (data) {        
-    //     if ("error" in data) {
-    //         return;
-    //     }
-    // });
-
 }
 
 $('#screenshot_modal').on('hidden.bs.modal', function () {
