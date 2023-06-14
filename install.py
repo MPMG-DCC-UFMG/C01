@@ -12,5 +12,5 @@ myenv = {
     "ENVFILENAME": str(args["debug"]),
 }
 
-subprocess.run("docker-compose down".split(), env=myenv)
-subprocess.run("docker-compose build --parallel".split(), env=myenv)
+subprocess.run("docker compose down".split(), env=myenv)
+subprocess.run("docker compose build --parallel".split(), env=myenv)
