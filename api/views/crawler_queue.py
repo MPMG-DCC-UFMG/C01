@@ -18,27 +18,73 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'put']
 
     @swagger_auto_schema(
-        operation_summary='Retorna a fila de execução',
-        operation_description='Retorna a fila de execução',
+        operation_summary='Retorna a fila de execução.',
+        operation_description='Retorna os itens da fila de execução, incluindo o tamanho máximo de cada uma das 3.',
         responses={
             200: openapi.Response(
-                description='Fila de execução retornada com sucesso',
-                examples={
-                    'application/json': {
-                        'success': True,
-                        'data': {
-                            'queue': [
-                                {
-                                    'id': 1,
-                                    'url': 'http://www.google.com',
-                                    'status': 'pending',
-                                    'created_at': '2020-01-01T00:00:00Z',
-                                    'updated_at': '2020-01-01T00:00:00Z'
+                description='Retorna os itens da fila de execução e o número máximo de itens executando simultaneamente nelas.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'max_fast_runtime_crawlers_running': openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description='Número máximo de crawlers rápidos executando simultaneamente.'
+                        ),
+                        'max_slow_runtime_crawlers_running': openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description='Número máximo de crawlers lentos executando simultaneamente.'
+                        ),
+                        'max_medium_runtime_crawlers_running': openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description='Número máximo de crawlers de temmpo de execução médio executando simultaneamente.'
+                        ),
+                        'items': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    'id': openapi.Schema(
+                                        type=openapi.TYPE_INTEGER,
+                                        description='ID do item da fila de execução.'
+                                    ),
+                                    'creation_date': openapi.Schema(
+                                        type=openapi.TYPE_INTEGER,
+                                        description='Timestamp da data de criação do item da fila de execução.'
+                                    ),
+                                    'last_modified': openapi.Schema(
+                                        type=openapi.TYPE_INTEGER,
+                                        description='Timestamp da última modificação do item da fila de execução.'
+                                    ),
+                                    'crawler_id': openapi.Schema(
+                                        type=openapi.TYPE_INTEGER,
+                                        description='ID do crawler associado ao item da fila de execução.'
+                                    ),
+                                    'crawler_name': openapi.Schema(
+                                        type=openapi.TYPE_STRING,
+                                        description='Nome do crawler associado ao item da fila de execução.'
+                                    ),
+                                    'queue_type': openapi.Schema(
+                                        type=openapi.TYPE_STRING,
+                                        description='Tipo da fila de execução do item.',
+                                        enum=['fast', 'medium', 'slow']
+                                    ),
+                                    'position': openapi.Schema(
+                                        type=openapi.TYPE_INTEGER,
+                                        description='Posição do item em sua respectiva fila de execução.'
+                                    ),
+                                    'forced_execution': openapi.Schema(
+                                        type=openapi.TYPE_BOOLEAN,
+                                        description='Indica se o item foi executado imediatamente.'
+                                    ),
+                                    'running': openapi.Schema(
+                                        type=openapi.TYPE_BOOLEAN,
+                                        description='Indica se o item está sendo executado no momento.'
+                                    ),
                                 }
-                            ]
-                        }
-                    }
-                }
+                            )
+                        )
+                    }   
+                )
             )   
         }
     )
@@ -51,15 +97,15 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
         operation_description='Troca a posição do item A com o item B na fila de execução',
         manual_parameters=[
             openapi.Parameter(
-                name='a',
-                in_=openapi.IN_QUERY,
+                name='item_a',
+                in_=openapi.IN_PATH,
                 description='ID do item A',
                 required=True,
                 type=openapi.TYPE_INTEGER
             ),
             openapi.Parameter(
-                name='b',
-                in_=openapi.IN_QUERY,
+                name='item_b',
+                in_=openapi.IN_PATH,
                 description='ID do item B',
                 required=True,
                 type=openapi.TYPE_INTEGER
@@ -67,45 +113,48 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
         ],
         responses={
             200: openapi.Response(
-                description='Posições trocadas com sucesso',
-                examples={
-                    'application/json': {
-                        'success': True
-                    }
-                }
+                description='Posições dos itens trocadas com sucesso.',
             ),
             400: openapi.Response(
-                description='Os itens devem estar na mesma fila',
-                examples={
-                    'application/json': {
-                        'error': 'Crawler queue items must be in same queue!'
+                description='Os itens devem estar na mesma fila.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Mensagem de erro.'
+                        )
                     }
-                }
+                ),
             ),
             404: openapi.Response(
-                description='Item A ou B não encontrado',
-                examples={
-                    'application/json': {
-                        'error': 'Crawler queue item 1 not found!'
+                description='Item A e/ou B não encontrado.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Mensagem de erro.'
+                        )
                     }
-                }
+                )
             )
         }
     )   
     @action(detail=False, methods=['get'])
-    def switch_position(self, request, a: int, b: int):
+    def switch_position(self, request, item_a: int, item_b: int):
         with transaction.atomic():
             try:
-                queue_item_a = CrawlerQueueItem.objects.get(pk=a)
+                queue_item_a = CrawlerQueueItem.objects.get(pk=item_a)
 
             except ObjectDoesNotExist:
-                return Response({'error': f'Crawler queue item {a} not found!'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'error': f'Crawler queue item {item_a} not found!'}, status=status.HTTP_404_NOT_FOUND)
 
             try:
-                queue_item_b = CrawlerQueueItem.objects.get(pk=b)
+                queue_item_b = CrawlerQueueItem.objects.get(pk=item_b)
 
             except ObjectDoesNotExist:
-                return Response({'error': f'Crawler queue item {b} not found!'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'error': f'Crawler queue item {item_b} not found!'}, status=status.HTTP_404_NOT_FOUND)
 
             if queue_item_a.queue_type != queue_item_b.queue_type:
                 return Response({'error': 'Crawler queue items must be in same queue!'}, status=status.HTTP_400_BAD_REQUEST)
@@ -121,34 +170,45 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
-        operation_summary='Executa um crawler imediatamente',
-        operation_description='Executa um crawler imediatamente, ignorando a fila de execução',
+        operation_summary='Executa um crawler imediatamente.',
+        operation_description='Executa um crawler imediatamente, ignorando a fila de execução.',
         manual_parameters=[
             openapi.Parameter(
                 name='item_id',
-                in_=openapi.IN_QUERY,
-                description='ID do item da fila de execução',
+                in_=openapi.IN_PATH,
+                description='ID do item da fila de execução.',
                 required=True,
                 type=openapi.TYPE_INTEGER
             )
         ],
         responses={
             200: openapi.Response(
-                description='Crawler executado com sucesso',
-                examples={
-                    'application/json': {
-                        'crawler_id': 1,
-                        'instance_id': 1
+                description='Crawler executado com sucesso.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'crawler_id': openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description='ID do crawler executado.'
+                        ),
+                        'instance_id': openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description='ID da instância do crawler executado.'
+                        )
                     }
-                }
+                )
             ),
             404: openapi.Response(
-                description='Item da fila de execução não encontrado',
-                examples={
-                    'application/json': {
-                        'error': 'Crawler queue item 1 not found!'
+                description='Item da fila de execução não encontrado.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Mensagem de erro'
+                        )
                     }
-                }
+                ),
             )
         }
     )
@@ -159,7 +219,7 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
                 queue_item = CrawlerQueueItem.objects.get(pk=item_id)
 
             except ObjectDoesNotExist:
-                return Response({'error': f'Crawler queue item {item_id} not found!'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'error': f'Item não existe na fila de coletas!'}, status=status.HTTP_404_NOT_FOUND)
 
             crawler_id = queue_item.crawl_request.id
 
@@ -182,7 +242,7 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
         manual_parameters=[
             openapi.Parameter(
                 name='item_id',
-                in_=openapi.IN_QUERY,
+                in_=openapi.IN_PATH,
                 description='ID do item da fila de execução',
                 required=True,
                 type=openapi.TYPE_INTEGER
@@ -190,15 +250,19 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
         ],
         responses={
             204: openapi.Response(
-                description='Item removido com sucesso'
+                description='Item removido com sucesso.'
             ),
             404: openapi.Response(
-                description='Item da fila de execução não encontrado',
-                examples={
-                    'application/json': {
-                        'error': 'Crawler queue item 1 not found!'
+                description='Item da fila de execução não encontrado.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Mensagem de erro'
+                        )
                     }
-                }
+                ),
             )
         }
     )
@@ -209,7 +273,7 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
             queue_item.delete()
 
         except ObjectDoesNotExist:
-            return Response({'error': f'Crawler queue item {item_id} not found!'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': f'Ttem {item_id} não está na fila!'}, status=status.HTTP_404_NOT_FOUND)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -244,13 +308,29 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
         ),
         responses={
             200: openapi.Response(
-                description='Configurações atualizadas com sucesso'
+                description='Configurações atualizadas com sucesso.'
+            ),
+            400: openapi.Response(
+                description='Erro ao atualizar as configurações',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Mensagem de erro'
+                        )
+                    }
+                )
             )
         }
     )
     def update(self, request):
-        response = super().update(request)
-
+        try:
+            super().update(request)
+        
+        except Exception as e:
+            return Response({'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+        
         # updade crawler queue instance with new configs
         global CRAWLER_QUEUE
         CRAWLER_QUEUE = CrawlerQueue.object()
@@ -270,4 +350,4 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
         if 'max_slow_runtime_crawlers_running' in request.data:
             unqueue_crawl_requests('slow')
 
-        return response
+        return Response(status=status.HTTP_200_OK)

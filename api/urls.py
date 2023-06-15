@@ -73,7 +73,7 @@ urlpatterns = [
 
     # queue info
     path('queue/', views.CrawlerQueueViewSet.as_view({'get': 'retrieve', 'put': 'update'}), name='queue'),
-    path('queue/switch_position/<int:a>/<int:b>', views.CrawlerQueueViewSet.as_view({'get': 'switch_position'}), name='queue-switch-position'),
+    path('queue/switch_position/<int:item_a>/<int:item_b>', views.CrawlerQueueViewSet.as_view({'get': 'switch_position'}), name='queue-switch-position'),
     path('queue/force_execution/<int:item_id>', views.CrawlerQueueViewSet.as_view({'get': 'force_execution'}), name='queue-force-execution'),
     path('queue/remove_item/<int:item_id>', views.CrawlerQueueViewSet.as_view({'get': 'remove_item'}), name='queue-remove-item'),
 
