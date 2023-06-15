@@ -12,7 +12,39 @@ from main.utils import (add_crawl_request, unqueue_crawl_requests,
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-          
+
+# def get_model_schema(model):
+#     properties = {}
+#     fields = model._meta.fields
+
+#     for field in fields:
+#         field_type = get_field_type(field)
+#         properties[field.name] = openapi.Schema(type=field_type)
+
+#     return openapi.Schema(
+#         type=openapi.TYPE_OBJECT,
+#         properties=properties,
+#     )
+
+# def get_field_type(field):
+#     if isinstance(field, models.CharField) or isinstance(field, models.TextField):
+#         return openapi.TYPE_STRING
+#     elif isinstance(field, models.IntegerField) or isinstance(field, models.AutoField):
+#         return openapi.TYPE_INTEGER
+#     elif isinstance(field, models.FloatField):
+#         return openapi.TYPE_NUMBER
+#     elif isinstance(field, models.BooleanField):
+#         return openapi.TYPE_BOOLEAN
+#     elif isinstance(field, models.DateField):
+#         return openapi.TYPE_STRING  # You can customize the date format if needed
+#     elif isinstance(field, models.DateTimeField):
+#         return openapi.TYPE_STRING  # You can customize the datetime format if needed
+#     else:
+#         return openapi.TYPE_STRING  # Default to string if the field type is not recognized
+    
+
+# print(get_model_schema(CrawlRequest))
+
 class CrawlerViewSet(viewsets.ModelViewSet):
     """
     ViewSet that allows crawlers to be viewed, edited, updated and removed.
@@ -32,27 +64,6 @@ class CrawlerViewSet(viewsets.ModelViewSet):
             handler['injection_type'] = 'templated_url'
             ResponseHandler.objects.create(**handler)
 
-    @swagger_auto_schema(
-        operation_summary='Retorna a lista de coletores.',
-        operation_description='Ao chamar por esse endpoint, uma lista de coletores será retornada em formato JSON.',
-        responses={
-            200: openapi.Response(
-                description='Lista de coletores.',
-                schema=openapi.Schema(
-                    type=openapi.TYPE_ARRAY,
-                    items=openapi.Schema(
-                        type=openapi.TYPE_OBJECT,
-                        properties={
-                            'id': openapi.Schema(
-                                type=openapi.TYPE_INTEGER,
-                                description='ID único do coletor.'
-                            )
-                        }
-                    )
-                )
-            )
-        }
-    )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
@@ -60,14 +71,14 @@ class CrawlerViewSet(viewsets.ModelViewSet):
         operation_summary='Retorna um coletor.',
         operation_description='Ao chamar por esse endpoint, um coletor será retornado em formato JSON.',
         responses={
-            200: openapi.Response(
-                description='Coletor.',
+            404: openapi.Response(
+                description='Coletor não encontrado.',
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'id': openapi.Schema(
-                            type=openapi.TYPE_INTEGER,
-                            description='ID único do coletor.'
+                        'error': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Mensagem de erro.'
                         )
                     }
                 )
@@ -89,22 +100,7 @@ class CrawlerViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(
         operation_summary='Atualiza um coletor.',
         operation_description='Ao chamar por esse endpoint, um coletor será atualizado e retornado em formato JSON.',
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-        ),
         responses={
-            200: openapi.Response(
-                description='Coletor atualizado com sucesso.',
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'id': openapi.Schema(
-                            type=openapi.TYPE_INTEGER,
-                            description='ID único do coletor.'
-                        )
-                    }
-                )
-            ),
             400: openapi.Response(
                 description='Erro na requisição.',
                 schema=openapi.Schema(
@@ -134,11 +130,6 @@ class CrawlerViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(
         operation_summary='Remove um coletor.',
         operation_description='Ao chamar por esse endpoint, um coletor será removido.',
-        responses={
-            204: openapi.Response(
-                description='Coletor removido com sucesso.'
-            )
-        },
         manual_parameters=[
             openapi.Parameter(
                 name='id',
@@ -155,9 +146,6 @@ class CrawlerViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(
         operation_summary='Cria um novo coletor.',
         operation_description='Ao chamar por esse endpoint, um novo coletor será criado e retornado em formato JSON.',
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-        ),
         responses={
             201: openapi.Response(
                 description='Coletor criado com sucesso.',
@@ -214,6 +202,37 @@ class CrawlerViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(
         operation_summary='Executa o coletor.',
         operation_description='Ao chamar por esse endpoint, o coletor irá para a fila de coletas. A fila em que aguardará depende de seu parâmetro `expected_runtime_category`.',
+        responses={
+            200: openapi.Response(
+                description='Coletor foi colocado para execução.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'instance_id': openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description='ID único da instância do coletor, retornado apenas se o parâmetro `action` for `run_immediately`.' + \
+                                'Caso contrário, o coletor será colocado na fila de execução e o ID da instância será null.'
+                        ),
+                        'message': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Mensagem informando em qual posição da fila o coletor foi adicionado ou se executou imediatamente.'
+                        )
+                    }
+                )
+            ),
+            404: openapi.Response(
+                description='Coletor não encontrado.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Mensagem de erro.'
+                        )
+                    }
+                )
+            )
+        },
         manual_parameters=[
             openapi.Parameter(
                 'id',
@@ -243,7 +262,9 @@ class CrawlerViewSet(viewsets.ModelViewSet):
             add_crawl_request(pk, wait_on)
             instance = process_run_crawl(pk)
 
-            return Response({'instance_id': instance.instance_id}, status=status.HTTP_201_CREATED)
+            return Response({'instance_id': instance.instance_id, 
+                             'message': 'Crawler foi colocado para execução sem espera na fila de coletas.'}, 
+                             status=status.HTTP_200_OK)
 
         elif action == 'wait_on_first_queue_position':
             wait_on = 'first_position'
@@ -263,12 +284,12 @@ class CrawlerViewSet(viewsets.ModelViewSet):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         if wait_on == 'first_position':
-            message = f'Crawler added to crawler queue in first position'
+            message = 'Crawler adicionado a fila de coletas na primeira posição'
 
         else:
-            message = f'Crawler added to crawler queue in last position'
+            message = 'Crawler adicionado a fila de coletas na última posição.'
 
-        return Response({'message': message}, status=status.HTTP_200_OK)
+        return Response({'message': message, 'instance_id': None}, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         operation_summary='Interrompe o coletor.',
@@ -280,7 +301,24 @@ class CrawlerViewSet(viewsets.ModelViewSet):
                 description='ID único do crawler.',
                 type=openapi.TYPE_INTEGER
             ),
-        ]
+        ],
+        responses={
+            204: openapi.Response(
+                description='O processo de interrupção do coletor foi iniciado.'
+            ),
+            404: openapi.Response(
+                description='Coletor não encontrado.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Mensagem de erro.'
+                        )
+                    }
+                )
+            )
+        }
     )
     @action(detail=True, methods=['get'])
     def stop(self, request, pk):
@@ -294,7 +332,7 @@ class CrawlerViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         operation_summary='Cria agrupamentos baseado em determinado coletor.',
-        operation_description='Retorna um grupo é de coletores dinâmicos que possuem os mesmos passos que o coletor de `id` passado como parâmetro.',
+        operation_description='Retorna um grupo de coletores dinâmicos que possuem os mesmos passos que o coletor de `id` passado como parâmetro.',
         manual_parameters=[
             openapi.Parameter(
                 'id',
@@ -302,10 +340,57 @@ class CrawlerViewSet(viewsets.ModelViewSet):
                 description='ID único do crawler.',
                 type=openapi.TYPE_INTEGER
             ),
-        ]
+        ],
+        responses={
+            200: openapi.Response(
+                description='Lista de coletores.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'id': openapi.Schema(
+                                type=openapi.TYPE_INTEGER,
+                                description='ID único do coletor.'
+                            ),
+                            'source_name': openapi.Schema(
+                                type=openapi.TYPE_STRING,
+                                description='Nome do coletor.'
+                            ),
+                            'last_modified': openapi.Schema(
+                                type=openapi.TYPE_STRING,
+                                description='Data da última modificação do coletor.'
+                            ),
+                            'base_url': openapi.Schema(
+                                type=openapi.TYPE_STRING,
+                                description='URL base do coletor.'
+                            ),
+                        }
+                    )
+                )
+            ),
+            404: openapi.Response(
+                description='Coletor não encontrado.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Mensagem de erro.'
+                        )
+                    }
+                )
+            )
+        }
     ) 
     @action(detail=True, methods=['get'])
     def group(self, request, pk):
+        try:
+            CrawlRequest.objects.get(pk=pk)
+        
+        except CrawlRequest.DoesNotExist:
+            return Response({'error': 'Coletor não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
         crawlers = CrawlRequest.objects.raw(
             "select id, source_name \
             from main_crawlrequest \
