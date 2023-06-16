@@ -6,6 +6,7 @@ import re
 import requests
 import string
 import time
+from bs4 import BeautifulSoup
 
 import settings
 from crawling_utils import notify_file_downloaded_with_error
@@ -112,6 +113,29 @@ class DownloadRequest:
                     time.sleep(attempt * INTERVAL_BETWEEN_ATTEMPTS)
                     continue
 
+                # Create a BeautifulSoup object to parse the HTML content of the requested page.
+                soup = BeautifulSoup(req.content, "html.parser")
+                # Find any meta tag with an http-equiv attribute equal to "refresh".
+                meta_refresh = soup.find("meta", attrs={"http-equiv": "refresh"})
+                # If such a meta tag is found:
+                if meta_refresh:
+                    # Print a message indicating that the URL uses a meta-tag.
+                    print(f"[FD] A página {self.url} utiliza meta-tag")
+                    # Get the value of the "content" attribute of the meta-refresh tag.
+                    content = meta_refresh["content"]
+                    # Check if there is a substring "url=" within the content value.
+                    url_index = content.find("url=")
+                    # If the substring is found:
+                    if url_index != -1:
+                        # Extract the final URL from the content value.
+                        final_url = content[url_index + 4:]
+                        # Print a message indicating the final URL.
+                        print("[FD] URL final: ", final_url)
+                        # Update the URL to the final URL extracted from the meta tag.
+                        self.url = "https://www.cristais.mg.gov.br"+final_url
+                        # Continue looping through the code since the URL has been updated.
+                        continue
+                
                 with open(self.temp_path_to_save, 'wb') as f:
                     for chunk in req.iter_content(chunk_size=8192):
                         f.write(chunk)

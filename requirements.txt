@@ -68,10 +68,9 @@ pyOpenSSL==22.0.0
 pyasn1-modules==0.2.8
 pyasn1==0.4.8
 pycparser==2.21
-pyee==8.2.2
+pyee==9
 pyext==0.7
 pyparsing==3.0.7
-pyppeteer==0.2.6
 pytesseract==0.3.9
 pytest-mock==3.7.0
 pytest==7.1.1
