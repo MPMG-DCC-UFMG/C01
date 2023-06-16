@@ -55,10 +55,13 @@ function init_steps_creation_interface(interface_root_element, output_element, s
     steps_creation_interface = document.createElement("div")
     steps_creation_interface.type= "steps_creation_interface"
 
+
+    // call reload_step_creation_interface everytime the dynamic processing tab is opened.
+    document.querySelector("#dynamic-processing-item").addEventListener('click', reload_step_creation_interface)
+
     step_controler = document.createElement("div")
     step_controler.type = "step_controler"
     step_board = init_step_board(step_list)
-
 
     add_block_button = document.createElement("a")
     add_block_button.className="btn btn-primary step-controler-buttons"
@@ -238,6 +241,12 @@ function load_steps(json_steps, step_list){
     }
 
     refill_parameters(args, block)
+}
+
+// reload the json steps and the steps creation interface.
+function reload_step_creation_interface(){
+        step_board.parentElement.remove()
+        init_steps_creation_interface(interface_root_element,output_element,step_list)
 }
 
 function refill_parameters(args, block){

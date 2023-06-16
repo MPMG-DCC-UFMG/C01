@@ -210,16 +210,3 @@ if env('LOG_TO_FILE'):
 
 # Folder where collector outputs are stored
 OUTPUT_FOLDER = env('OUTPUT_FOLDER')
-
-# Screenshots viewer settings
-SCREENSHOT_IMGS_PER_PAGE = 20
-
-SCREENSHOT_PATH_FORMATS = [
-    '{output_folder}/{data_path}/{instance_id}/data/screenshots',
-    '{output_folder}/{data_path}/data/screenshots/{instance_id}'
-]
-
-CRAWLER_CONFIG_PATH_FORMATS = [
-    '{output_folder}/{data_path}/{instance_id}/config/{instance_id}.json',
-    '{output_folder}/{data_path}/config/{instance_id}.json'
-]

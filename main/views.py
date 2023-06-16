@@ -29,8 +29,7 @@ from .iframe_loader import iframe_loader
 from .forms import (CrawlRequestForm, ParameterHandlerFormSet,
                     RawCrawlRequestForm, ResponseHandlerFormSet)
 from .models import (CRAWLER_QUEUE_DB_ID, CrawlerInstance, CrawlerQueue,
-                     CrawlerQueueItem, CrawlRequest, Log, Task, ResponseHandler,
-                     ParameterHandler)
+                     CrawlerQueueItem, CrawlRequest, Log, Task)
 from .serializers import (CrawlerInstanceSerializer, CrawlerQueueSerializer,
                           CrawlRequestSerializer, TaskSerializer)
 from .task_filter import task_filter_by_date_interval
@@ -868,32 +867,19 @@ def downloads(request):
 
 def export_config(request, instance_id):
     instance = get_object_or_404(CrawlerInstance, pk=instance_id)
-
-    output_folder = settings.OUTPUT_FOLDER
     data_path = instance.crawler.data_path
 
-    file_name = f'{instance_id}.json'
-    file_path = None 
+    file_name = f"{instance_id}.json"
+    rel_path = os.path.join(data_path, str(instance_id), "config", file_name)
+    path = os.path.join(settings.OUTPUT_FOLDER, rel_path)
 
-    for crawler_config_path_format in settings.CRAWLER_CONFIG_PATH_FORMATS:
-        file_path = crawler_config_path_format.format(
-            output_folder=output_folder,
-            data_path=data_path,
-            instance_id=instance_id
-        )
-
-        if os.path.exists(file_path):
-            break
-    
     try:
-        response = FileResponse(open(file_path, 'rb'), content_type='application/json')
-
+        response = FileResponse(open(path, 'rb'), content_type='application/json')
     except FileNotFoundError:
         print(f"Arquivo de Configuração Não Encontrado: {file_name}")
         return HttpResponseNotFound("<h1>Página Não Encontrada</h1>")
-    
     else:
-        response['Content-Length'] = os.path.getsize(file_path)
+        response['Content-Length'] = os.path.getsize(path)
         response['Content-Disposition'] = "attachment; filename=%s" % file_name
 
     return response
@@ -918,28 +904,15 @@ def export_trace(request, instance_id):
     return response
 
 def view_screenshots(request, instance_id, page):
+    IMGS_PER_PAGE = 20
+
     instance = get_object_or_404(CrawlerInstance, pk=instance_id)
 
     output_folder = os.getenv('OUTPUT_FOLDER', '/data')
     data_path = instance.crawler.data_path
+    instance_path = os.path.join(output_folder, data_path, str(instance_id))
 
-    if output_folder[-1] == '/':
-        output_folder = output_folder[:-1]
-    
-    if data_path[-1] == '/':
-        data_path = data_path[:-1]
-
-    screenshot_dir = None 
-
-    for screenshot_path_format in settings.SCREENSHOT_PATH_FORMATS:
-        screenshot_dir = screenshot_path_format.format(
-            output_folder=output_folder,
-            data_path=data_path,
-            instance_id=instance_id
-        )
-
-        if os.path.isdir(screenshot_dir):
-            break
+    screenshot_dir = os.path.join(instance_path, "data", "screenshots")
 
     if not os.path.isdir(screenshot_dir):
         return JsonResponse({
@@ -956,8 +929,8 @@ def view_screenshots(request, instance_id, page):
             'total_screenshots': 0
         }, status=200)
 
-    screenshot_list = screenshot_list[(page - 1) * settings.SCREENSHOT_IMGS_PER_PAGE:
-        page * settings.SCREENSHOT_IMGS_PER_PAGE]
+    screenshot_list = screenshot_list[(page - 1) * IMGS_PER_PAGE:
+        page * IMGS_PER_PAGE]
 
     image_data = []
     for index, screenshot in enumerate(screenshot_list):
@@ -965,7 +938,7 @@ def view_screenshots(request, instance_id, page):
         with open(img_path, "rb") as image:
             curr_img = {
                 'base64': base64.b64encode(image.read()).decode('ascii'),
-                'title': str(1 + index + ((page - 1) * settings.SCREENSHOT_IMGS_PER_PAGE))
+                'title': str(1 + index + ((page - 1) * IMGS_PER_PAGE))
             }
             image_data.append(curr_img)
 
@@ -1038,11 +1011,13 @@ class CrawlerViewSet(viewsets.ModelViewSet):
     def _create_templated_url_parameter_handlers(self, parameter_handlers, crawler_id):
         for handler in parameter_handlers:
             handler['crawler_id'] = crawler_id
+            handler['injection_type'] = 'templated_url'
             ParameterHandler.objects.create(**handler)
 
     def _create_templated_url_response_handlers(self, response_handlers, crawler_id):
         for handler in response_handlers:
             handler['crawler_id'] = crawler_id
+            handler['injection_type'] = 'templated_url'
             ResponseHandler.objects.create(**handler)
 
     def create(self, request, *args, **kwargs):
