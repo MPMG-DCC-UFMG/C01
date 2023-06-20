@@ -16,7 +16,7 @@ KAFKA_REQUEST_TIMEOUT_MS = 5 * 60 * 1000
 KAFKA_SESSION_TIMEOUT_MS = 2 * 60 * 1000
 
 # Redis host information
-REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+REDIS_HOST = os.getenv('REDIS_HOST', 'redis')
 REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
 REDIS_DB = int(os.getenv('REDIS_DB', 0))
 REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', None)

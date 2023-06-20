@@ -20,11 +20,32 @@ class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
 
     @swagger_auto_schema(
-        operation_summary="Obtêm todos agendamentos de coletas.",
-        operation_description="Este endpoint obtêm todos agendamentos de coletas.",
-        responses={
-            200: 'OK'
-        }
+        operation_summary='Obtêm todos agendamentos de coletas.',
+        operation_description='Retorna todas as configurações de agendamentos.',
+        # responses={
+        #     200: openapi.Response(
+        #         description='Lista de configuração de agendamento de coletas.',
+        #         schema=openapi.Schema(
+        #             type=openapi.TYPE_ARRAY,
+        #             items=openapi.Schema(
+        #                 type=openapi.TYPE_OBJECT,
+        #                 properties={
+        #                     'id': openapi.Schema(
+        #                         type=openapi.TYPE_INTEGER,
+        #                         description='ID único do agendamento de coleta.'
+        #                     ),
+        #                     'crawl_request': openapi.Schema(
+        #                         type=openapi.TYPE_INTEGER,
+        #                         description='ID único da requisição de coleta.'
+        #                     ),
+        #                     'runtime': openapi.Schema(
+        #                         type=openapi.TYPE_INTEGER,
+        #                         description='Tempo de execução do agendamento de coleta.'
+        #                 }
+        #             )
+        #         )
+        #     ),
+        # }
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)

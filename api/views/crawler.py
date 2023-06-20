@@ -13,38 +13,6 @@ from main.utils import (add_crawl_request, unqueue_crawl_requests,
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-# def get_model_schema(model):
-#     properties = {}
-#     fields = model._meta.fields
-
-#     for field in fields:
-#         field_type = get_field_type(field)
-#         properties[field.name] = openapi.Schema(type=field_type)
-
-#     return openapi.Schema(
-#         type=openapi.TYPE_OBJECT,
-#         properties=properties,
-#     )
-
-# def get_field_type(field):
-#     if isinstance(field, models.CharField) or isinstance(field, models.TextField):
-#         return openapi.TYPE_STRING
-#     elif isinstance(field, models.IntegerField) or isinstance(field, models.AutoField):
-#         return openapi.TYPE_INTEGER
-#     elif isinstance(field, models.FloatField):
-#         return openapi.TYPE_NUMBER
-#     elif isinstance(field, models.BooleanField):
-#         return openapi.TYPE_BOOLEAN
-#     elif isinstance(field, models.DateField):
-#         return openapi.TYPE_STRING  # You can customize the date format if needed
-#     elif isinstance(field, models.DateTimeField):
-#         return openapi.TYPE_STRING  # You can customize the datetime format if needed
-#     else:
-#         return openapi.TYPE_STRING  # Default to string if the field type is not recognized
-    
-
-# print(get_model_schema(CrawlRequest))
-
 class CrawlerViewSet(viewsets.ModelViewSet):
     """
     ViewSet that allows crawlers to be viewed, edited, updated and removed.
