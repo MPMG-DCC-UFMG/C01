@@ -23,7 +23,6 @@ urlpatterns = [
     path('grouped_crawlers', views.list_grouped_crawlers, name='list_grouped_crawlers'),
     
     # misc
-    path('monitoring/', views.monitoring, name='monitoring'),
     path('iframe/load', views.load_iframe, name='load_iframe'),
     path('list_process', views.list_process, name='list_process'),
 

@@ -1,4 +1,5 @@
 import json
+import copy
 from datetime import datetime
 
 from rest_framework import viewsets, status
@@ -14,7 +15,114 @@ from main.task_filter import task_filter_by_date_interval
 
 import crawler_manager.crawler_manager as crawler_manager
 from crawler_manager.settings import TASK_TOPIC
-                                      
+
+TASK_SCHEMA = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'id': openapi.Schema(
+            type=openapi.TYPE_INTEGER,
+            description='ID único do agendamento de coleta.'
+        ),
+        'creation_date': openapi.Schema(
+            type=openapi.TYPE_STRING,
+            description='Data de criação do agendamento de coleta.'
+        ),
+        'last_modified': openapi.Schema(
+            type=openapi.TYPE_STRING,
+            description='Data de atualização do agendamento de coleta.'
+        ),
+        'crawl_request': openapi.Schema(
+            type=openapi.TYPE_INTEGER,
+            description='ID único da requisição de coleta que será executada.'
+        ),
+        'crawler_name': openapi.Schema(
+            type=openapi.TYPE_STRING,
+            description='Nome do crawler que será executado.'
+        ),
+        'runtime': openapi.Schema(
+            type=openapi.TYPE_STRING,
+            description='Data e horário base para começar o agendamento de coletas.' + \
+            'Após o primeiro agendamento, o próximo será calculado de acordo com o intervalo de repetição e o horário definido nesse atributo.'
+        ),
+        'crawler_queue_behavior': openapi.Schema(
+            type=openapi.TYPE_STRING,
+            description='Define o que o agendador deve fazer com o coletor ao inserí-lo na fila de coletas, se irá executar' +\
+                        ' imediatamente (`run_immediately`), esperar na primeira (`wait_on_first_queue_position`) ou última posição ' +\
+                        '(`wait_on_last_queue_position`) de sua fila de coletas.',
+            default='wait_on_last_queue_position',
+            enum=['wait_on_last_queue_position', 'wait_on_first_queue_position', 'run_immediately']
+        ),
+        'repeat_mode': openapi.Schema(
+            type=openapi.TYPE_STRING,
+            description='''
+            Define o tipo de repetição da coleta agendada. Pode ser:
+                    - `no_repeat`: Não se repete.
+                    - `daily`: Diariamente, na hora definida em `runtime`.
+                    - `weekly`: Semanalmente, na mesma hora e dia da semana de sua primeira execução, definida em `runtime`.
+                    - `monthly`: Mensalmente, na mesma hora e dia do mês de sua primeira execução, definida em `runtime`. Caso o mês não tenha o dia definido em `runtime`, a coleta ocorrerá no último dia do mês.
+                    - `yearly`: Anualmente, na mesma hora e dia do ano de sua primeira execução, definida em `runtime`. Caso o ano não tenha o dia definido em `runtime`, a coleta ocorrerá no último dia do respectivo mês.
+                    - `personalized`: Personalizado, de acordo com a configuração definida em `personalized_repetition_mode`.
+                ''',
+            default='no_repeat',
+            enum=['no_repeat', 'daily', 'weekly', 'monthly', 'yearly', 'personalized']
+        ),
+        'personalized_repetition_mode': openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            nullable=True,
+            description='Configuração de repetição personalizada. Deve ser definido apenas se `repeat_mode` for `personalized`.',
+            properties={
+                'type': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description='Tipo de repetição personalizada.',
+                    enum=['daily', 'weekly', 'monthly', 'yearly']
+                ),
+                'interval': openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description='Intervalo de repetição da coleta personalizada.'
+                ),
+                'additional_data': openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    description='Dados adicionais para configuração da repetição personalizada.' + \
+                        'Caso o tipo de repetição seja `weekly`, passe uma lista com os dias da semana' + \
+                        ' que o coletor deve ser executado, sendo domingo 0 e sábado 6. Exemplo: [0, 1, 2, 3, 4, 5, 6].' + \
+                        ' Caso o tipo de repetição seja `monthly`, passe um dicionário com os atributos `type`, que pode' + \
+                        ' ser `first-weekday`, `last-weekday` ou `day-x`, e `value`. Nesse último, informe ' + \
+                        ' o primeiro ou último dia da semana do mês que o coletor deve ser executado, ou o dia específico do mês, ' + \
+                        ' respectivamente. Exemplo: {"type": "first-weekday", "value": 0}, executará todo domingo do mês.',
+                    nullable=True           
+                ),
+                'finish': openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    description='Como o agendamento do coletor deve ser finalizado.',
+                    nullable=True,
+                    properties={
+                        'type': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Tipo de finalização do agendamento. Caso seja `never`, o agendamento não será finalizado.' + \
+                            ' Se for `occurrence`, o agendamento será interrompido após um número de ocorrências definido em `value`.' + \
+                            ' Se for `date`, o agendamento será interrompido após uma data definida em `value`.',
+                            enum=['never', 'occurrence', 'date'],
+                            default='never'
+                        ),
+                        'value': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Valor de finalização do agendamento. Deve ser definido apenas se `type` for `occurrence` ou `date`.' + \
+                            ' Se for `occurrence`, informe o número de ocorrências que o agendamento deve executar antes de ser finalizado.' + \
+                            ' Se for `date`, informe a data em que o agendamento deve ser finalizado. O formato deve ser `YYYY-MM-DD`.'
+                        )
+                    }
+                )
+            }
+        ),
+    }
+)
+
+TASK_SCHEMA_CREATE = copy.deepcopy(TASK_SCHEMA)
+
+TASK_SCHEMA_CREATE.properties.pop('id')
+TASK_SCHEMA_CREATE.properties.pop('creation_date')
+TASK_SCHEMA_CREATE.properties.pop('last_modified')
+
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
@@ -22,30 +130,15 @@ class TaskViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(
         operation_summary='Obtêm todos agendamentos de coletas.',
         operation_description='Retorna todas as configurações de agendamentos.',
-        # responses={
-        #     200: openapi.Response(
-        #         description='Lista de configuração de agendamento de coletas.',
-        #         schema=openapi.Schema(
-        #             type=openapi.TYPE_ARRAY,
-        #             items=openapi.Schema(
-        #                 type=openapi.TYPE_OBJECT,
-        #                 properties={
-        #                     'id': openapi.Schema(
-        #                         type=openapi.TYPE_INTEGER,
-        #                         description='ID único do agendamento de coleta.'
-        #                     ),
-        #                     'crawl_request': openapi.Schema(
-        #                         type=openapi.TYPE_INTEGER,
-        #                         description='ID único da requisição de coleta.'
-        #                     ),
-        #                     'runtime': openapi.Schema(
-        #                         type=openapi.TYPE_INTEGER,
-        #                         description='Tempo de execução do agendamento de coleta.'
-        #                 }
-        #             )
-        #         )
-        #     ),
-        # }
+        responses={
+            200: openapi.Response(
+                description='Retorna todas as configurações de agendamento de coleta.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=TASK_SCHEMA
+                )
+            )
+        }
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
@@ -56,15 +149,20 @@ class TaskViewSet(viewsets.ModelViewSet):
         manual_parameters=[
             openapi.Parameter(
                 name='id',
-                in_=openapi.IN_QUERY,
+                in_=openapi.IN_PATH,
                 description='ID único do agendamento de coleta',
                 required=True,
                 type=openapi.TYPE_INTEGER
             )
         ],
         responses={
-            200: 'OK',
-            404: 'Not Found'
+            200: openapi.Response(
+                description='Retorna a configuração do agendamento de coleta.',
+                schema=TASK_SCHEMA
+            ),
+            404: openapi.Response(
+                description='Agendamento de coleta não encontrado.'
+            )
         }
     )
     def retrieve(self, request, pk=None):
@@ -73,6 +171,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(
         operation_summary="Cria um novo agendamento de coleta.",
         operation_description="Este endpoint cria um novo agendamento de coleta.",
+        request_body=TASK_SCHEMA_CREATE,
         responses={
             201: 'Created',
             400: 'Bad Request'
@@ -94,12 +193,13 @@ class TaskViewSet(viewsets.ModelViewSet):
         manual_parameters=[
             openapi.Parameter(
                 name='id',
-                in_=openapi.IN_QUERY,
+                in_=openapi.IN_PATH,
                 description='ID único do agendamento de coleta',
                 required=True,
                 type=openapi.TYPE_INTEGER
             )
         ],
+        request_body=TASK_SCHEMA_CREATE,
         responses={
             200: 'OK',
             400: 'Bad Request',
@@ -122,15 +222,19 @@ class TaskViewSet(viewsets.ModelViewSet):
         manual_parameters=[
             openapi.Parameter(
                 name='id',
-                in_=openapi.IN_QUERY,
+                in_=openapi.IN_PATH,
                 description='ID único do agendamento de coleta',
                 required=True,
                 type=openapi.TYPE_INTEGER
             )
         ],
         responses={
-            204: 'No Content',
-            404: 'Not Found'
+            204: openapi.Response(
+                description='Agendamento de coleta removido com sucesso.'
+            ),
+            404: openapi.Response(
+                description='Agendamento de coleta não encontrado.'
+            )
         }
     )
     def destroy(self, request, pk=None):
@@ -163,21 +267,51 @@ class TaskViewSet(viewsets.ModelViewSet):
             openapi.Parameter(
                 name='start_date',
                 in_=openapi.IN_QUERY,
-                description='Data de início do intervalo',
+                description='Data de início do intervalo, no formato dd-mm-yyyy.',
                 required=True,
                 type=openapi.TYPE_STRING
             ),
             openapi.Parameter(
                 name='end_date',
                 in_=openapi.IN_QUERY,
-                description='Data de fim do intervalo',
+                description='Data de fim do intervalo, no formato dd-mm-yyyy.',
                 required=True,
                 type=openapi.TYPE_STRING
             )
         ],
         responses={
-            200: 'OK',
-            400: 'Bad Request'
+            200: openapi.Response(
+                description='Retorna todos os agendamentos de coleta no intervalo especificado.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    description='Lista de agendamentos de coleta por data. Cada item da lista é um objeto com chave sendo dd-mm-yyyy ' + \
+                        'e valor sendo uma lista de IDS de agendamentos de coleta para a data especificada.',
+                    items=openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'dd-mm-yyyy': openapi.Schema(
+                                type=openapi.TYPE_ARRAY,
+                                description='Lista de IDs de agendamentos para a data dd-mm-yyyy.',
+                                items=openapi.Schema(
+                                    type=openapi.TYPE_INTEGER
+                                )
+                            ),
+                        }
+                    )
+                )
+            ),
+            400: openapi.Response(
+                description='As datas devem estar no formato dd-mm-yyyy e serem válidas.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'message': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Mensagem de erro.'
+                        )
+                    }
+                )
+            )
         }
     )
     @action(detail=False)

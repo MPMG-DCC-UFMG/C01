@@ -69,7 +69,7 @@ urlpatterns = [
     # task info
     path('task/', views.TaskViewSet.as_view(list_and_create_actions), name='task'),
     path('task/<int:pk>', views.TaskViewSet.as_view(retrieve_update_and_destroy_actions), name='task-detail'),
-    path('task/<int:pk>/filter', views.TaskViewSet.as_view({'get': 'filter'}), name='task-filter'),
+    path('task/filter', views.TaskViewSet.as_view({'get': 'filter'}), name='task-filter'),
 
     # queue info
     path('queue/', views.CrawlerQueueViewSet.as_view({'get': 'retrieve', 'put': 'update'}), name='queue'),
