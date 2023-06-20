@@ -329,25 +329,14 @@ class CrawlerQueueViewSet(viewsets.ModelViewSet):
             super().update(request)
         
         except Exception as e:
-            return Response({'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': request.data}, status=status.HTTP_400_BAD_REQUEST)
         
-        # updade crawler queue instance with new configs
-        global CRAWLER_QUEUE
-        CRAWLER_QUEUE = CrawlerQueue.object()
+        try:
+            unqueue_crawl_requests('fast', True)
+            unqueue_crawl_requests('medium', True)
+            unqueue_crawl_requests('slow', True)
 
-        # the size of queue of type fast changed, may is possible run
-        # more crawlers
-        if 'max_fast_runtime_crawlers_running' in request.data:
-            unqueue_crawl_requests('fast')
-
-        # the size of queue of type normal changed, may is possible run
-        # more crawlers
-        if 'max_medium_runtime_crawlers_running' in request.data:
-            unqueue_crawl_requests('medium')
-
-        # the size of queue of type slow changed, may is possible run
-        # more crawlers
-        if 'max_slow_runtime_crawlers_running' in request.data:
-            unqueue_crawl_requests('slow')
-
-        return Response(status=status.HTTP_200_OK)
+            return Response(status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return Response({'error': e.message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -1,8 +1,13 @@
+import os
+import subprocess
+
 from typing_extensions import Literal
 from django.db import transaction
 from django.utils import timezone
 
 import crawler_manager.crawler_manager as crawler_manager
+from crawler_manager.settings import OUTPUT_FOLDER
+
 from main.models import CrawlRequest, CrawlerInstance, CrawlerQueue, CrawlerQueueItem
 from main.forms import ParameterHandlerFormSet, ResponseHandlerFormSet
 
@@ -16,6 +21,10 @@ try:
 
 except:
     pass
+
+def update_queue_instance():
+    global CRAWLER_QUEUE
+    CRAWLER_QUEUE = CrawlerQueue.object()
 
 def create_instance(crawler_id, instance_id):
     mother = CrawlRequest.objects.filter(id=crawler_id)
@@ -64,7 +73,10 @@ def add_crawl_request(crawler_id, wait_on: Literal['last_position', 'first_posit
                                     queue_type=cr_expec_runtime_cat)
         queue_item.save()
 
-def unqueue_crawl_requests(queue_type: str):
+def unqueue_crawl_requests(queue_type: str, update_queue: bool = False):
+    if update_queue:
+        update_queue_instance()
+
     crawlers_runnings = list()
     has_items_from_another_queue, queue_items = CRAWLER_QUEUE.get_next(queue_type)
 
@@ -108,15 +120,16 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
 
     # FIXME: Colocar esse trecho de código no módulo writer
     # computa o tamanho em kbytes do diretório "data"
-    # command_output = subprocess.run(["du " + config['data_path'] + "/data -d 0"], shell=True, stdout=subprocess.PIPE)
-    # output_line = command_output.stdout.decode('utf-8').strip('\n')
-    # parts = output_line.split('\t')
-    data_size_kbytes = 0  # int(parts[0])
+    instance_path = os.path.join(OUTPUT_FOLDER, config['data_path'], str(instance_id), 'data')
+    
+    command_output = subprocess.run(["du " + instance_path + " -d 0"], shell=True, stdout=subprocess.PIPE)
+    output_line = command_output.stdout.decode('utf-8').strip('\n')
+    parts = output_line.split('\t')
+    data_size_kbytes = int(parts[0])
 
     # Get the number of files downloaded from the instance object
     num_data_files = instance.number_files_success_download
     
-
     instance = None
     instance_info = {}
     queue_type = None

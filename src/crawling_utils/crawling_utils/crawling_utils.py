@@ -10,11 +10,11 @@ from datetime import datetime
 
 SERVER_ADDRESS = os.getenv('SERVER_ADDRESS', 'http://localhost:8000')
 
-SERVER_NEW_PAGE_FOUND_API = SERVER_ADDRESS + '/download/pages/found/{instance_id}/{num_pages}'
-SERVER_PAGE_CRAWLED_API = SERVER_ADDRESS + '/download/page/{message}/{instance_id}'
+SERVER_NEW_PAGE_FOUND_API = SERVER_ADDRESS + '/api/instance/{instance_id}/page/found/{num_pages}'
+SERVER_PAGE_CRAWLED_API = SERVER_ADDRESS + '/api/instance/{instance_id}/page/{message}'
 
-SERVER_FILES_FOUND_API = SERVER_ADDRESS + '/download/files/found/{instance_id}/{num_files}'
-SERVER_FILE_DOWNLOADED_API = SERVER_ADDRESS + '/download/file/{message}/{instance_id}'
+SERVER_FILES_FOUND_API = SERVER_ADDRESS + '/api/instance/{instance_id}/file/found/{num_files}'
+SERVER_FILE_DOWNLOADED_API = SERVER_ADDRESS + '/api/instance/{instance_id}/file/{message}'
 
 SERVER_SESSION = requests.sessions.Session()
 
@@ -67,7 +67,6 @@ def notify_new_page_found(instance_id: str, num_pages: int = 1):
         instance_id=instance_id, num_pages=num_pages)
     notify_server(server_notification_url)
 
-
 def notify_page_crawled_successfully(instance_id: str):
     server_notification_url = SERVER_PAGE_CRAWLED_API.format(
         message='success', instance_id=instance_id)
@@ -75,7 +74,7 @@ def notify_page_crawled_successfully(instance_id: str):
 
 def notify_page_previously_crawled(instance_id: str):
     server_notification_url = SERVER_PAGE_CRAWLED_API.format(
-        message='previously_crawled', instance_id=instance_id)
+        message='previously', instance_id=instance_id)
     notify_server(server_notification_url)
 
 def notify_page_crawled_with_error(instance_id: str):
@@ -89,12 +88,10 @@ def notify_page_duplicated_found(instance_id: str):
         message='duplicated', instance_id=instance_id)
     notify_server(server_notification_url)
 
-
 def notify_files_found(instance_id: str, num_files: int):
     server_notification_url = SERVER_FILES_FOUND_API.format(
         instance_id=instance_id, num_files=num_files)
     notify_server(server_notification_url)
-
 
 def notify_file_downloaded_successfully(instance_id: str):
     server_notification_url = SERVER_FILE_DOWNLOADED_API.format(
@@ -103,7 +100,7 @@ def notify_file_downloaded_successfully(instance_id: str):
 
 def notify_file_previously_crawled(instance_id: str):
     server_notification_url = SERVER_FILE_DOWNLOADED_API.format(
-        message='previously_crawled', instance_id=instance_id)
+        message='previously', instance_id=instance_id)
     notify_server(server_notification_url)
 
 def notify_file_downloaded_with_error(instance_id: str):

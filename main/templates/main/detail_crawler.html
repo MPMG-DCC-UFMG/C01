@@ -114,7 +114,7 @@ Crawler "{{ crawler.source_name }}"
                         <td>{{instance.duration_readable}}</td>
                         <td>{{instance.num_data_files}} arquivos</td>
                         <td>{{instance.data_size_readable}}</td>
-                        <td><a class="btn btn-primary" href="{% url 'api:instance-config' instance.instance_id%}">Baixar</a></td>
+                        <td><button class="btn btn-primary" onclick="downloadConfig({{ instance.instance_id }})">Baixar</button></td>
                         {% if crawler.dynamic_processing %}
                         <td><button type="button" class="btn btn-primary" onclick="displayScreenshotModal({{instance.instance_id}})">Visualizar</button></td>
                         <td><button class="btn btn-primary" onclick="downloadInstanceTrace({{instance.instance_id}})">Baixar</button></td>

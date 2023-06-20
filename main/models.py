@@ -704,12 +704,13 @@ class TaskType(TypedDict):
     repeat_mode: Literal['no_repeat', 'daily', 'weekly', 'monthly', 'yearly', 'personalized']
     personalized_repetition_mode: Union[None, PersonalizedRepetionMode]
 
-
 class Task(TimeStamped):
-    crawl_request = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE, related_name='scheduler_jobs')
+    crawl_request = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE, related_name='scheduler_jobs',
+                                      help_text='Coletor que será agendado para execução.')
 
     # data e horário base para começar o agendamento de coletas
-    runtime = models.DateTimeField()
+    runtime = models.DateTimeField(help_text='Data e horário base para começar o agendamento de coletas.' + \
+                                'Após o primeiro agendamento, o próximo será calculado de acordo com o intervalo de repetição e o horário definido nesse atributo.')
 
     CRAWLER_QUEUE_BEHAVIOR_CHOICES = [
         ('wait_on_last_queue_position', 'Esperar na última posição da fila'),
@@ -719,8 +720,11 @@ class Task(TimeStamped):
     ]
 
     # O que o agendador deve fazer com o coletor ao inserí-lo na fila de coletas.
-    crawler_queue_behavior = models.CharField(
-        max_length=32, choices=CRAWLER_QUEUE_BEHAVIOR_CHOICES, default='wait_on_last_queue_position')
+    crawler_queue_behavior = models.CharField(max_length=32, choices=CRAWLER_QUEUE_BEHAVIOR_CHOICES,
+                                              help_text='Define o que o agendador deve fazer com o coletor ao inserí-lo na fila de coletas, se irá executar' +\
+                                              ' imediatamente (`run_immediately`), esperar na primeira (`wait_on_first_queue_position`) ou última posição ' +\
+                                              '(`wait_on_last_queue_position`) de sua fila de coletas.', 
+                                              default='wait_on_last_queue_position')
 
     REPETITION_MODE_CHOICES = [
         ('no_repeat', 'Não se repete'),
@@ -732,7 +736,16 @@ class Task(TimeStamped):
     ]
 
     # modo de repetição da coleta agendada.
-    repeat_mode = models.CharField(max_length=32, choices=REPETITION_MODE_CHOICES, default='no_repeat')
+    repeat_mode = models.CharField(max_length=32, choices=REPETITION_MODE_CHOICES, default='no_repeat',
+                                   help_text='''
+                                   Define o tipo de repetição da coleta agendada. Pode ser:
+                                        - `no_repeat`: Não se repete.
+                                        - `daily`: Diariamente, na hora definida em `runtime`.
+                                        - `weekly`: Semanalmente, na mesma hora e dia da semana de sua primeira execução, definida em `runtime`.
+                                        - `monthly`: Mensalmente, na mesma hora e dia do mês de sua primeira execução, definida em `runtime`. Caso o mês não tenha o dia definido em `runtime`, a coleta ocorrerá no último dia do mês.
+                                        - `yearly`: Anualmente, na mesma hora e dia do ano de sua primeira execução, definida em `runtime`. Caso o ano não tenha o dia definido em `runtime`, a coleta ocorrerá no último dia do respectivo mês.
+                                        - `personalized`: Personalizado, de acordo com a configuração definida em `personalized_repetition_mode`.
+                                    ''')
 
     # json com a configuração personalizada de reexecução do coletor
-    personalized_repetition_mode: PersonalizedRepetionMode = models.JSONField(null=True, blank=True)
+    personalized_repetition_mode: PersonalizedRepetionMode = models.JSONField(null=True, blank=True,)

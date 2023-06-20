@@ -1,7 +1,7 @@
 var SERVER_ADDRESS = window.location.origin;
 
 // the queue always has id = 1 as it is unique and designed that way
-var CRAWLER_QUEUE_API_ADDRESS = SERVER_ADDRESS + '/api/crawler_queue/1/';
+var CRAWLER_QUEUE_API_ADDRESS = SERVER_ADDRESS + '/api/queue/';
 
 // when this variable equals true, it blocks the interface update to prevent 
 // the data being changed from being rewritten by the interface update
@@ -321,6 +321,8 @@ function update_scheduler_config(data) {
 }
 
 function update_ui() {
+    console.log('Atualizando Interface...');
+
     if (UPDATING_SCHEDULER_CONFIG)
         return;
 
@@ -372,15 +374,11 @@ function updateMaxCrawlers() {
     $.ajax({
         url: CRAWLER_QUEUE_API_ADDRESS,
         type: 'put',
-        contentType: "application/json; charset=utf-8",
-        dataType: "json",
         async: false,
         data: data,
         success: function (data) {
             UPDATING_SCHEDULER_CONFIG = false;
-        },
-        error: function (data) {
-            alert('Houve um erro ao editar o campo!');
+            console.log('Configurações atualizadas com sucesso!', data);
         }
     });
 }
@@ -429,25 +427,23 @@ function filter_waiting_crawlers(filter) {
 
 function switch_position(a, b) {
     UPDATING_SCHEDULER_CONFIG = true;
-    let switch_position_address = CRAWLER_QUEUE_API_ADDRESS + `switch_position/?a=${a}&b=${b}`;
+    let switch_position_address = CRAWLER_QUEUE_API_ADDRESS + `switch_position/${a}/${b}`;
     
     $.ajax({
         url: switch_position_address,
         type: 'get',
         dataType: 'json',
         async: false,
-        success: function (data) {
-            UPDATING_SCHEDULER_CONFIG = false;
-            update_ui();
-        },
-        error: function (data) {
-            alert('Houve um erro ao trocar posições na fila!');
-        }
     });
+    
+    console.log('switched');
+
+    UPDATING_SCHEDULER_CONFIG = false;
+    update_ui();
 }
 
 function forceExecution() {
-    let force_exec_address = CRAWLER_QUEUE_API_ADDRESS + `force_execution?queue_item_id=${QUEUE_ITEM_TO_FORCE_EXEC}`;
+    let force_exec_address = CRAWLER_QUEUE_API_ADDRESS + `force_execution/${QUEUE_ITEM_TO_FORCE_EXEC}`;
 
     $.ajax({
         url: force_exec_address,
@@ -466,7 +462,7 @@ function forceExecution() {
 }
 
 function remove_item_from_queue(queue_item_id) {
-    let remove_queue_item_address = CRAWLER_QUEUE_API_ADDRESS + `remove_item?queue_item_id=${queue_item_id}`;
+    let remove_queue_item_address = CRAWLER_QUEUE_API_ADDRESS + `remove_item/${queue_item_id}`;
     UPDATING_SCHEDULER_CONFIG = true;
 
     $.ajax({
@@ -561,7 +557,7 @@ function get_default_active_tab() {
 }
 
 function stop_running_crawler(crawler_id) {
-    let stop_crawler_address = SERVER_ADDRESS + `/api/crawlers/${crawler_id}/stop`;
+    let stop_crawler_address = SERVER_ADDRESS + `/api/crawler/${crawler_id}/stop`;
     $.ajax({
         url: stop_crawler_address,
         type: 'get',

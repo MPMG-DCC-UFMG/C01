@@ -205,6 +205,25 @@ function downloadInstanceTrace(instance_id) {
     });
 }
 
+function downloadConfig(instance_id) {
+    let server_address = window.location.origin;
+    let url = `${server_address}/api/instance/${instance_id}/config`;
+
+    // sends a head request to check if the file exists
+    $.ajax({
+        url: url,
+        type: 'head',
+        dataType: 'json',
+        async: false,
+        success: function (data) {
+            window.open(url, '_blank');
+        },
+        error: function (data) {
+            alert('O arquivo de configuração não existe!');
+        }
+    });
+}
+
 // Initiates all popovers on the page
 $(function () {
     $('[data-toggle="popover"]').popover()
