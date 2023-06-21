@@ -183,6 +183,7 @@ class CrawlRequest(TimeStamped):
         ('firefox', 'Mozilla Firefox'),
     ]
     browser_type = models.CharField(max_length=50, choices=BROWSER_TYPE, default='chromium')
+    browser_user_agent = models.CharField(max_length=500, blank=True, null=True)
 
     # If true, skips failing iterations with a warning, else, stops the crawler
     # if an iteration fails
