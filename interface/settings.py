@@ -44,7 +44,7 @@ if SECRET_KEY is None:
     SECRET_KEY = get_random_secret_key()
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG')
+DEBUG = True#env('DEBUG')
 
 ALLOWED_HOSTS = env('DJANGO_ALLOWED_HOSTS')
 
@@ -210,3 +210,6 @@ if env('LOG_TO_FILE'):
 
 # Folder where collector outputs are stored
 OUTPUT_FOLDER = env('OUTPUT_FOLDER')
+
+# tests crawler for up 5 minutes
+RUNTIME_OF_CRAWLER_TEST = 120

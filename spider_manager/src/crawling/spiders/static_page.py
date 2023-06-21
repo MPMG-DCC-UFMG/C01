@@ -41,6 +41,7 @@ DOWNLOAD_START_TIMEOUT = 7
 class StaticPageSpider(BaseSpider):
     # nome temporário, que será alterado no __init__
     name = 'temp_name'
+    execution_context = 'crawling'
 
     def __init__(self, name: str, spider_manager_id: int, *args, **kwargs):
         # nome único do spider, para que não haja conflitos entre coletores
