@@ -2,12 +2,12 @@
 
 import os
 import ujson
-from pathlib import Path
-
+import threading
 from django.apps import apps
 from kafka import KafkaConsumer
-
+from django.db.utils import IntegrityError
 from crawler_manager import settings
+from crawling_utils import system_is_deploying
 
 class LogWriter():
     """
@@ -17,9 +17,27 @@ class LogWriter():
         consumer_params: get parameters for a KafkaConsumer.
 
     """
+    def __init__(self) -> None:
+        self.log_model = apps.get_model('main', 'Log')
+        self.__ignore_logs_from_instances = set()
 
-    # KafkaConsumer parameters dictionary:
-    DEFAULT_CONSUMER_PARAMS = dict(bootstrap_servers=settings.KAFKA_HOSTS,            
+    def add_instance_to_ignore(self, instance_id: str):
+        instance_id = str(instance_id)
+        self.__ignore_logs_from_instances.add(instance_id)
+    
+    def remove_instance_to_ignore(self, instance_id: str):
+        instance_id = str(instance_id)
+        if instance_id in self.__ignore_logs_from_instances:
+            self.__ignore_logs_from_instances.remove(instance_id) 
+
+    def log_consumer(self):
+        """
+        This is a kafka consumer and parser for each message.
+
+        """
+
+        consumer = KafkaConsumer(settings.LOGGING_TOPIC, 
+                                bootstrap_servers=settings.KAFKA_HOSTS,            
                                 auto_offset_reset=settings.KAFKA_CONSUMER_AUTO_OFFSET_RESET,
                                 connections_max_idle_ms=settings.KAFKA_CONNECTIONS_MAX_IDLE_MS,
                                 request_timeout_ms=settings.KAFKA_REQUEST_TIMEOUT_MS,
@@ -28,16 +46,15 @@ class LogWriter():
                                 enable_auto_commit=settings.KAFKA_CONSUMER_AUTO_COMMIT_ENABLE,
                                 max_partition_fetch_bytes=settings.KAFKA_CONSUMER_FETCH_MESSAGE_MAX_BYTES)
 
-    @staticmethod
-    def log_consumer(params=DEFAULT_CONSUMER_PARAMS):
-        """
-        This is a kafka consumer and parser for each message.
-
-        """
-        consumer = KafkaConsumer(settings.LOGGING_TOPIC, **params)
+        execution_context = '' 
         for message in consumer:
             try:
                 message = ujson.loads(message.value.decode('utf-8'))
+                execution_context = message['execution_context']
+
+                instance_id = message['instance_id'] 
+                if instance_id in self.__ignore_logs_from_instances:
+                    continue 
 
                 log = {}
                 log['cid'] = message['crawler_id']
@@ -48,13 +65,23 @@ class LogWriter():
                 log['msg'] = message['message']
                 log['lvl'] = message['levelname']
 
-                LogWriter.log_writer(log)
+
+                self.log_writer(log)
+
+            except IntegrityError:
+                # the instance that the log is associated was deleted
+                if execution_context != 'testing':
+                    raise 
                 
             except Exception as e:
                 print(f'Error processing message: {e}')
-        
-    @staticmethod
-    def log_writer(log):
+    
+    def run(self):
+        if not system_is_deploying():
+            thread = threading.Thread(target=self.log_consumer, daemon=True)
+            thread.start()
+
+    def log_writer(self, log):
         """
         This method writes log in database
 

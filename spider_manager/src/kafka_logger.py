@@ -7,10 +7,13 @@ import settings
 
 
 class KafkaLogger:
-    def __init__(self, crawler_id: str, data_path: str, instance_id: str, name: str, log_level: str):
+    def __init__(self, crawler_id: str, data_path: str, instance_id: str, name: str, log_level: str, execution_context: str):
         self.__crawler_id = crawler_id
         self.__data_path = data_path
+    
         self.__instance_id = instance_id
+        self.__execution_context = execution_context
+
         self.__name = name
         self.__log_level = log_level
 
@@ -37,6 +40,7 @@ class KafkaLogger:
             'crawler_id': self.__crawler_id,
             'data_path': self.__data_path,
             'instance_id': self.__instance_id,
+            'execution_context': self.__execution_context,
             'message': message
         })
         self.__producer.flush()
