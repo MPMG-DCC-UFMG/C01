@@ -26,8 +26,11 @@
         </div>
     </div>
     <br>
-    <div id="dynamic-processing-browser-type" class="">
+    <div id="dynamic-processing-browser-type" class="hidden">
         {{ form.browser_type | as_crispy_field}}
+    </div>
+    <div id="dynamic-processing-browser-user-agent" class="hidden">
+        {{ form.browser_user_agent | as_crispy_field}}
     </div>
     <div id="dynamic-processing-skip-errors" class="hidden">
         {{ form.skip_iter_errors | as_crispy_field}}
@@ -35,10 +38,10 @@
     <div id="dynamic-processing-debug-mode" class="hidden">
         Modo Debug
         <p class="small">Ferramentas de depuração de coletores que utilizam processamento dinâmico</p>
-        <div id="dynamic-processing-trace-enabled" class="">
+        <div id="dynamic-processing-trace-enabled" class="hidden">
             {{ form.create_trace_enabled | as_crispy_field}}
         </div>
-        <div id="dynamic-processing-video-recording_enabled" class="">
+        <div id="dynamic-processing-video-recording_enabled" class="hidden">
             {{ form.video_recording_enabled | as_crispy_field}}
         </div>
     </div>

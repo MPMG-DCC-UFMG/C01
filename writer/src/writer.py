@@ -92,6 +92,7 @@ class Writer:
         crawler_id = str(config['crawler_id'])
         crawler_source_name = config['source_name']
         ignore_data_crawled_in_previous_instances = config['ignore_data_crawled_in_previous_instances']
+        crawler_executing_test_mode = config['running_in_test_mode']
 
         print(f'[{datetime.now()}] Writer: Registering crawler "{crawler_source_name}" with ID {crawler_id}')
 
@@ -99,11 +100,12 @@ class Writer:
         self.__create_folder_structure(config)
 
         self.__file_downloader.add_crawler_source(crawler_id, config['data_path'],
-                                                  ignore_data_crawled_in_previous_instances)
+                                                ignore_data_crawled_in_previous_instances,
+                                                crawler_executing_test_mode)
 
         self.__hashes_of_already_crawled_pages[crawler_id] = set()
 
-        if ignore_data_crawled_in_previous_instances:
+        if ignore_data_crawled_in_previous_instances and not crawler_executing_test_mode:
             self.__hashes_of_already_crawled_pages[crawler_id] = self.__get_hashes_of_already_crawled(
                 config['data_path'])
 
@@ -224,6 +226,11 @@ class Writer:
             self.__crawled_data_consumer_threads.append(thread)
             thread.start()
 
+    def __delete_folder(self, data_path: str, instance_id: str):
+        instance_path = os.path.join(settings.OUTPUT_FOLDER, data_path, instance_id)
+        if os.path.exists:
+            shutil.rmtree(instance_path)
+
     def __process_command(self, command):
         if 'register' in command:
             crawler_config = command['register']
@@ -232,6 +239,11 @@ class Writer:
         elif 'stop' in command:
             crawler_id = str(command['stop'])
             self.__stop_crawl(crawler_id)
+
+        elif 'delete_folder' in command:
+            data_path = command['delete_folder']['data_path'] 
+            instance_id = command['delete_folder']['instance_id']
+            self.__delete_folder(data_path, instance_id) 
 
     def run(self):
         self.__create_crawled_data_poll()

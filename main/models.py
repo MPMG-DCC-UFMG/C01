@@ -1,4 +1,5 @@
 import datetime
+import os
 
 from crawler_manager.constants import *
 from crawling_utils.constants import (AUTO_ENCODE_DETECTION,
@@ -62,6 +63,17 @@ class CrawlRequest(TimeStamped):
     pathValid = RegexValidator(r'^[0-9a-zA-Z\-_][0-9a-zA-Z\/\\\-_]*$',
                                'Esse não é um caminho relativo válido.')
     data_path = models.CharField(max_length=2000, validators=[pathValid])
+
+    FUNCTIONAL_STATUS_CHOICES = [
+        ('testing', 'Testando'),
+        ('testing_by_crawling', 'Testando via coleta'),
+        ('non_functional', 'Não funcional'),
+        ('functional', 'Funcional'),
+        ('not_tested', 'Não testado')
+    ]
+
+    functional_status = models.CharField(max_length=32, default='not_tested', choices=FUNCTIONAL_STATUS_CHOICES)
+    date_last_functional_test = models.DateTimeField(blank=True, null=True)
 
     # SCRAPY CLUSTER ##########################################################
 
@@ -171,6 +183,7 @@ class CrawlRequest(TimeStamped):
         ('firefox', 'Mozilla Firefox'),
     ]
     browser_type = models.CharField(max_length=50, choices=BROWSER_TYPE, default='chromium')
+    browser_user_agent = models.CharField(max_length=500, blank=True, null=True)
 
     # If true, skips failing iterations with a warning, else, stops the crawler
     # if an iteration fails
@@ -346,6 +359,7 @@ class CrawlRequest(TimeStamped):
             return inst_query.get()
         return None
 
+
     @property
     def last_instance(self):
         last_instance = self.instances.order_by('-creation_date')[:1]
@@ -353,6 +367,32 @@ class CrawlRequest(TimeStamped):
             return last_instance[0]
         except:
             return None
+
+    def __check_if_crawler_worked(self, instance_id) -> bool:
+        files_path = f'/data/{self.data_path}/{instance_id}/data/'
+        
+        raw_pages_crawled = os.listdir(files_path + 'raw_pages/')
+        files_crawled = os.listdir(files_path + 'files/')
+
+        for ignore_file in ('file_description.jsonl', 'temp', 'browser_downloads'):
+            if ignore_file in raw_pages_crawled:
+                raw_pages_crawled.remove(ignore_file)
+            
+            if ignore_file in files_crawled:
+                files_crawled.remove(ignore_file)
+
+        if not raw_pages_crawled and not files_crawled:
+            return False
+
+        return True
+
+    def update_functional_status_after_run(self, instance_id):
+        crawler_worked = self.__check_if_crawler_worked(instance_id)
+
+        self.functional_status = 'functional' if crawler_worked else 'non_functional'
+        self.date_last_functional_test = timezone.now() 
+
+        self.save()
 
     def __str__(self):
         return self.source_name
@@ -450,7 +490,15 @@ class ResponseHandler(models.Model):
 class CrawlerInstance(TimeStamped):
     crawler = models.ForeignKey(CrawlRequest, on_delete=models.CASCADE,
                                 related_name='instances')
+
     instance_id = models.BigIntegerField(primary_key=True)
+    
+    EXECUTION_CONTEXT_CHOICES = [
+        ('crawling', 'Coleta'),
+        ('testing', 'Teste')
+    ]
+
+    execution_context = models.CharField(max_length=8, default='crawling', choices=EXECUTION_CONTEXT_CHOICES)
 
     number_files_found = models.PositiveIntegerField(default=0, null=True, blank=True)
     number_files_success_download = models.PositiveIntegerField(default=0, null=True, blank=True)
