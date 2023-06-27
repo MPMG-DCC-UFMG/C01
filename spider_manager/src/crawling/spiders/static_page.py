@@ -41,6 +41,7 @@ DOWNLOAD_START_TIMEOUT = 7
 class StaticPageSpider(BaseSpider):
     # nome temporário, que será alterado no __init__
     name = 'temp_name'
+    execution_context = 'crawling'
 
     def __init__(self, name: str, spider_manager_id: int, *args, **kwargs):
         # nome único do spider, para que não haja conflitos entre coletores
@@ -395,16 +396,12 @@ class StaticPageSpider(BaseSpider):
             # Set browser context
             context_kwargs = {}
 
-            # Set the user agent according to what was sent by Scrapy
-            if 'user-agent' in normalized_headers:
-                context_kwargs['user_agent'] = \
-                    normalized_headers['user-agent']
-            
+            context_kwargs['user_agent'] = self.config['browser_user_agent']
 
             if self.config['video_recording_enabled']:
                 context_kwargs['record_video_dir'] = os.path.join(instance_path, 'debug', 'video')
                 context_kwargs['record_video_size'] = {"width": self.config["browser_resolution_width"], "height": self.config["browser_resolution_height"]}
-          
+
             context = await browser.new_context(**context_kwargs)
 
             if self.config['create_trace_enabled']:

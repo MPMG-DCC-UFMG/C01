@@ -1,11 +1,14 @@
 import logging
 import multiprocessing as mp
+from datetime import datetime
 
 from django.core.paginator import Paginator
+from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 
 import crawler_manager.crawler_manager as crawler_manager
+
 from crawler_manager.constants import *
 from main.utils import (add_crawl_request, generate_injector_forms,
                         get_all_crawl_requests_filtered, process_stop_crawl,
@@ -13,7 +16,10 @@ from main.utils import (add_crawl_request, generate_injector_forms,
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm
 from .iframe_loader import iframe_loader
+
+from .forms import CrawlRequestForm, RawCrawlRequestForm
 from .models import CrawlerQueueItem, CrawlRequest
+from .utils import NoInstanceRunningException, process_start_test_crawler
 
 # Log the information to the file logger
 logger = logging.getLogger('file')
@@ -158,6 +164,10 @@ def create_crawler(request):
 
     return render(request, "main/create_crawler.html", context)
 
+def test_crawler(request, crawler_id):
+    process_start_test_crawler(crawler_id, settings.RUNTIME_OF_CRAWLER_TEST)
+    return redirect(detail_crawler, crawler_id=crawler_id)
+
 def create_grouped_crawlers(request):
     context = {}
 
@@ -208,7 +218,10 @@ def create_grouped_crawlers(request):
 
 def edit_crawler(request, crawler_id):
     crawler = get_object_or_404(CrawlRequest, pk=crawler_id)
-
+    
+    crawler.functional_status = 'not_tested'
+    crawler.date_last_functional_test = None
+    
     form = RawCrawlRequestForm(request.POST or None, instance=crawler)
     templated_parameter_formset, templated_response_formset = \
         generate_injector_forms(request.POST or None, filter_queryset=True,
@@ -313,10 +326,22 @@ def detail_crawler(request, crawler_id):
         queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
         queue_item_id = queue_item.id
 
+    last_instance = None 
+    running_test_mode = False 
+    test_started_at = None 
+
+    if len(instances):
+        last_instance = instances[0]
+        running_test_mode = last_instance.execution_context == 'testing' and last_instance.running
+        test_started_at = round(datetime.timestamp(last_instance.creation_date) * 1000) # JS is based is ms
+
     context = {
         'crawler': crawler,
         'instances': instances,
         'last_instance': instances[0] if len(instances) else None,
+        'running_test_mode': running_test_mode,
+        'test_started_at': test_started_at,
+        'test_runtime': settings.RUNTIME_OF_CRAWLER_TEST * 1000, #JS is based is ms
         'queue_item_id': queue_item_id
     }
 
@@ -330,7 +355,10 @@ def create_steps(request):
 
 def stop_crawl(request, crawler_id):
     from_sm_listener = request.GET.get('from', '') == 'sm_listener'
-    process_stop_crawl(crawler_id, from_sm_listener)
+    try:
+        process_stop_crawl(crawler_id, from_sm_listener)
+    except NoInstanceRunningException:
+        return redirect(detail_crawler, crawler_id=crawler_id)
     return redirect(detail_crawler, crawler_id=crawler_id)
 
 def run_crawl(request, crawler_id):
@@ -342,9 +370,6 @@ def run_crawl(request, crawler_id):
     unqueue_crawl_requests(queue_type)
 
     return redirect(detail_crawler, crawler_id=crawler_id)
-
-def downloads(request):
-    return render(request, "main/downloads.html")
 
 def load_iframe(request):
     url = request.GET['url'].replace('"', '')

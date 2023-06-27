@@ -122,13 +122,21 @@ function tail_f_logs(instance_id){
 
 function status_instance(instance_id){
     var xhr = new XMLHttpRequest();
+
+    var stopBtn = document.getElementById("stopBtn")
+    var runBtn = document.getElementById("runBtn")
+    var testBtn = document.getElementById("testBtn")
+
     xhr.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
+        // test finished
+        if (RUNNING_TEST_MODE) {
+            if (this.readyState == 4 && this.status == 404)
+                location.reload();
+        } else if (this.readyState == 4 && this.status == 200) {
             var response = JSON.parse(this.responseText);
-            var stopBtn = document.getElementById("stopBtn")
-            var runBtn = document.getElementById("runBtn")
+
             if(response["running"] == true){
-                document.getElementById("crawler_ status").innerHTML = '<span class="badge badge-success">Rodando</span>'
+                document.getElementById("crawler_status").innerHTML = '<span class="badge badge-success">Rodando</span>'
                 stopBtn.classList.remove("disabled")
                 if (stopBtn.hasAttribute("dataref")){
                     stopBtn.setAttribute("href", stopBtn.getAttribute("dataref"))
@@ -141,13 +149,16 @@ function status_instance(instance_id){
                 }
             }else{
                 clearInterval(statusInterval)
-                document.getElementById("crawler_ status").innerHTML = '<span class="badge badge-warning">Parado</span>'
+                document.getElementById("crawler_status").innerHTML = '<span class="badge badge-warning">Parado</span>'
                 stopBtn.classList.add("disabled")
                 if (stopBtn.hasAttribute("href")){
                     stopBtn.setAttribute("dataref", stopBtn.getAttribute("href"))
                     stopBtn.removeAttribute("href")
                 }
+                
                 runBtn.classList.remove("disabled")
+                testBtn.classList.remove("disabled")
+
                 if (runBtn.hasAttribute("dataref")){
                     runBtn.setAttribute("href", runBtn.getAttribute("dataref"))
                     runBtn.removeAttribute("dataref")
@@ -224,8 +235,50 @@ function downloadConfig(instance_id) {
     });
 }
 
+function ms2text(ms) {
+    let secs = Math.floor(ms / 1000);
+
+    let hours = Math.floor(secs / 3600);
+    secs -= hours * 3600;
+
+    let minutes = Math.floor(secs / 60);
+    secs -= minutes * 60;
+
+    if (hours > 0)
+        return `-${hours}h ${minutes}min ${secs}s`;
+    
+    if (minutes > 0)
+        return `-${minutes}min ${secs}s`;
+
+    return `-${secs}s`;
+}
+
+function update_test_runtime_label() {
+    if (!RUNNING_TEST_MODE)
+        return;
+
+    let testing_crawler_info = $('#testing-crawler-info');
+
+    let now = (new Date()).getTime();
+    let remaing_time = TEST_RUNTIME - (now - TEST_STARTED_AT);
+
+    setInterval(() => {
+        if (remaing_time < 0)
+            location.reload();
+
+        testing_crawler_info.text(`Testando coletor (${ms2text(remaing_time)})`);
+
+        now += 1000;
+        remaing_time = TEST_RUNTIME - (now - TEST_STARTED_AT);
+
+    }, 1000);
+}
+
+$(document).ready(function () {
+    update_test_runtime_label();
+});
+
 // Initiates all popovers on the page
 $(function () {
     $('[data-toggle="popover"]').popover()
 })
-

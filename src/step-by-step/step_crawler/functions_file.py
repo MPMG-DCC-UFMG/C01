@@ -87,7 +87,7 @@ async def clique(pagina, elemento):
         el_locator = pagina.locator(f'xpath={elemento}')
 
         try:
-            await el_locator.wait_for()
+            await el_locator.is_visible()
         except playwright._impl._api_types.TimeoutError:
             raise Exception('No element was found with the supplied XPath!')
         except playwright._impl._api_types.Error:
