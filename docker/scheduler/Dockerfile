@@ -4,6 +4,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get autoremove && apt-get autocl
 RUN mkdir -p /usr/src/app
 
 COPY src/crawling_utils /usr/src/crawling_utils
+COPY src/schedule /usr/src/schedule
 COPY scheduler/requirements.txt /usr/src/app/
 
 WORKDIR /usr/src/app

@@ -71,6 +71,7 @@ urlpatterns = [
     # task info
     path('task/', views.TaskViewSet.as_view(list_and_create_actions), name='task'),
     path('task/<int:pk>', views.TaskViewSet.as_view(retrieve_update_and_destroy_actions), name='task-detail'),
+    path('task/<int:pk>/cancel', views.TaskViewSet.as_view({'get': 'cancel'}), name='task-cencel'),
     path('task/filter', views.TaskViewSet.as_view({'get': 'filter'}), name='task-filter'),
 
     # queue info

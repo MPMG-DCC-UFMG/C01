@@ -1,0 +1,182 @@
+<div class="modal fade" id="personalizedCrawlerRepetion" tabindex="-1"
+    aria-labelledby="personalizedCrawlerRepetionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 25rem;">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title font-weight-bold">Repetição personalizada</h5>
+            </div>
+
+            <div class="modal-body">
+                <div class="d-flex align-items-center">
+                    <label for="" class="font-weight-bold">A cada</label>
+
+                    <div class="d-flex justify-content-between ml-auto">
+                        <input type="number" id="interval-in" min="1" value="1"
+                            class="text-center border-left-0 border-right-0 border-top-0 border-bottom mr-3"
+                            style="max-width: 3rem;">
+                        <select name="" id="repeat-mode-selector"
+                            class="border-left-0 border-right-0 border-top-0 border-bottom bg-white">
+                            <option value="daily">Dia</option>
+                            <option value="weekly">Semana</option>
+                            <option value="monthly">Mês</option>
+                            <option value="yearly">Ano</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="days-week-repeat-wrapper" class="d-none justify-content-around mt-3">
+                    <div id="dwr-0" weekday="0" weekday_active="false" onclick="toggle_weekday_select(this)"
+                        class="rounded-circle border text-muted small d-flex align-items-center justify-content-center weekday">
+                        <span class="p-0 m-0">dom.</span>
+                    </div>
+                    <div id="dwr-1" weekday="1" weekday_active="false" onclick="toggle_weekday_select(this)"
+                        class="rounded-circle border text-muted small d-flex align-items-center justify-content-center weekday">
+                        <span class="p-0 m-0">seg.</span>
+                    </div>
+                    <div id="dwr-2" weekday="2" weekday_active="false" onclick="toggle_weekday_select(this)"
+                        class="rounded-circle border text-muted small d-flex align-items-center justify-content-center weekday">
+                        <span class="p-0 m-0">ter.</span>
+                    </div>
+                    <div id="dwr-3" weekday="3" weekday_active="false" onclick="toggle_weekday_select(this)"
+                        class="rounded-circle border text-muted small d-flex align-items-center justify-content-center weekday">
+                        <span class="p-0 m-0">qua.</span>
+                    </div>
+                    <div id="dwr-4" weekday="4" weekday_active="false" onclick="toggle_weekday_select(this)"
+                        class="rounded-circle border text-muted small d-flex align-items-center justify-content-center weekday">
+                        <span class="p-0 m-0">qui.</span>
+                    </div>
+                    <div id="dwr-5" weekday="5" weekday_active="false" onclick="toggle_weekday_select(this)"
+                        class="rounded-circle border text-muted small d-flex align-items-center justify-content-center weekday">
+                        <span class="p-0 m-0">sex.</span>
+                    </div>
+                    <div id="dwr-6" weekday="6" weekday_active="false" onclick="toggle_weekday_select(this)"
+                        class="rounded-circle border text-muted small d-flex align-items-center justify-content-center weekday">
+                        <span class="p-0 m-0">sáb.</span>
+                    </div>
+                </div>
+
+                <div id="monthly-repeat-wrapper" class="d-none mt-3">
+                    <input type="radio" name="montly-repeat" montly_repeat="day-x" id="montly-every-day-x" checked>
+                    <label for="montly-every-day-x">
+                        Todo dia
+                        <select name="" id="montly-day-x-sel"
+                            class="border-left-0 border-right-0 border-top-0 border-bottom bg-white pb-1"
+                            style="min-width: 3rem;">
+                            <option id="medx-1" value="1">1</option>
+                            <option id="medx-2" value="2">2</option>
+                            <option id="medx-3" value="3">3</option>
+                            <option id="medx-4" value="4">4</option>
+                            <option id="medx-5" value="5">5</option>
+                            <option id="medx-6" value="6">6</option>
+                            <option id="medx-7" value="7">7</option>
+                            <option id="medx-8" value="8">8</option>
+                            <option id="medx-9" value="9">9</option>
+                            <option id="medx-10" value="10">10</option>
+                            <option id="medx-11" value="11">11</option>
+                            <option id="medx-12" value="12">12</option>
+                            <option id="medx-13" value="13">13</option>
+                            <option id="medx-14" value="14">14</option>
+                            <option id="medx-15" value="15">15</option>
+                            <option id="medx-16" value="16">16</option>
+                            <option id="medx-17" value="17">17</option>
+                            <option id="medx-18" value="18">18</option>
+                            <option id="medx-19" value="19">19</option>
+                            <option id="medx-20" value="20">20</option>
+                            <option id="medx-21" value="21">21</option>
+                            <option id="medx-22" value="22">22</option>
+                            <option id="medx-23" value="23">23</option>
+                            <option id="medx-24" value="24">24</option>
+                            <option id="medx-25" value="25">25</option>
+                            <option id="medx-26" value="26">26</option>
+                            <option id="medx-27" value="27">27</option>
+                            <option id="medx-28" value="28">28</option>
+                            <option id="medx-29" value="29">29</option>
+                            <option id="medx-30" value="30">30</option>
+                            <option id="medx-31" value="31">31</option>
+                        </select>
+                        do mês
+                    </label>
+
+                    <br>
+
+                    <input class="mt-1" type="radio" name="montly-repeat" montly_repeat="first-weekday"
+                        id="montly-first-weekday">
+                    <label for="montly-first-weekday">No(a) primeiro(a)
+                        <select name="" id="montly-first-weekday-sel"
+                            class="border-left-0 border-right-0 border-top-0 border-bottom bg-white pb-1">
+                            <option id="mfws-0" value="0">domingo</option>
+                            <option id="mfws-1" value="1">segunda-feira</option>
+                            <option id="mfws-2" value="2">terça-feira</option>
+                            <option id="mfws-3" value="3">quarta-feira</option>
+                            <option id="mfws-4" value="4">quinta-feira</option>
+                            <option id="mfws-5" value="5">sexta-feira</option>
+                            <option id="mfws-6" value="6">sábado</option>
+                        </select>
+                        do mês
+                    </label>
+
+                    <br>
+                    <input class="mt-1" type="radio" name="montly-repeat" montly_repeat="last-weekday"
+                        id="montly-last-weekday">
+                    <label for="montly-last-weekday">
+                        No(a) último(a)
+                        <select name="" id="montly-last-weekday-sel"
+                            class="border-left-0 border-right-0 border-top-0 border-bottom bg-white pb-1">
+                            <option id="mlws-0" value="0">domingo</option>
+                            <option id="mlws-1" value="1">segunda-feira</option>
+                            <option id="mlws-2" value="2">terça-feira</option>
+                            <option id="mlws-3" value="3">quarta-feira</option>
+                            <option id="mlws-4" value="4">quinta-feira</option>
+                            <option id="mlws-5" value="5">sexta-feira</option>
+                            <option id="mlws-6" value="6">sábado</option>
+                        </select>
+                        do mês
+                    </label>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between">
+
+                    <label for="" class="font-weight-bold">Término</label>
+
+                    <div class="pr-3">
+                        <input type="radio" name="finish-type" finish_type="never" id="finish-never" checked>
+                        <label for="finish-never">Nunca</label>
+
+                        <br>
+
+                        <input type="radio" name="finish-type" finish_type="occurrence" id="finish-ocurrence">
+                        <label for="finish-ocurrence">
+                            Após
+                            <input type="number"
+                                class="border-left-0 border-right-0 border-top-0 border-bottom text-center" value="1"
+                                min="1" id="finish-occurrence-in" style="width: 3rem;">
+                            ocorrências
+                        </label>
+
+                        <br>
+
+                        <input type="radio" name="finish-type" finish_type="date" id="finish-date">
+                        <label for="finish-date">
+                            <div class="d-flex">
+                                Em
+                                <input type="date" name="" id="finish-date-in"
+                                    class="border-left-0 border-right-0 border-top-0 border-bottom text-center"
+                                    style="max-width: 9rem;">
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer d-flex justify-content-end">
+                <span class="w-100 font-weight-bold small" id="repetition-info">
+                </span>
+                <br>
+                <div class="">
+                    <button type="button" onclick="close_personalized_repeat_modal()"
+                        class="btn btn-success">Concluído</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

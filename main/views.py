@@ -1,14 +1,15 @@
+import json
 import logging
 import multiprocessing as mp
 from datetime import datetime
 
-from django.core.paginator import Paginator
+import pytz
 from django.conf import settings
+from django.core.paginator import Paginator
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 
 import crawler_manager.crawler_manager as crawler_manager
-
 from crawler_manager.constants import *
 from main.utils import (add_crawl_request, generate_injector_forms,
                         get_all_crawl_requests_filtered, process_stop_crawl,
@@ -16,9 +17,8 @@ from main.utils import (add_crawl_request, generate_injector_forms,
 
 from .forms import CrawlRequestForm, RawCrawlRequestForm
 from .iframe_loader import iframe_loader
-
-from .forms import CrawlRequestForm, RawCrawlRequestForm
-from .models import CrawlerQueueItem, CrawlRequest
+from .models import CrawlerQueueItem, CrawlRequest, Task
+from .serializers import TaskSerializer
 from .utils import NoInstanceRunningException, process_start_test_crawler
 
 # Log the information to the file logger
@@ -386,7 +386,14 @@ def load_iframe(request):
             'error': str(e)
         }
         return render(request, 'main/error_iframe_loader.html', ctx)
-
 def scheduler(request):
     crawl_requests = CrawlRequest.objects.all()
-    return render(request, 'main/scheduler.html', {'crawl_requests': crawl_requests})
+    tasks_serialized = TaskSerializer(Task.objects.all(), many=True)
+    
+    context = {
+        'crawl_requests': crawl_requests,
+        'timezones': pytz.common_timezones,
+        'tasks': json.dumps(tasks_serialized.data)
+    }
+
+    return render(request, 'main/scheduler/index.html', context)

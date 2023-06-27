@@ -1,0 +1,65 @@
+{% extends 'main/base.html' %}
+
+{% load static %}
+
+{% block title %}
+Agendamento de coletas
+{% endblock %}
+
+{% block content %}
+
+{% include "main/scheduler/_header.html" %}
+
+<style>
+    /* adiciona borda, background na cor do bg-light e text-white */
+    .scheduling-item:hover {
+        background-color: #6c757d !important;
+        border: 1px solid #6c757d !important;
+        color: #fff !important;
+    }
+
+    .scroll-text {
+        max-width: 1em;
+    }
+</style>
+
+<main class="container-fluid">
+    {% include "main/scheduler/_notification.html" %}
+    
+    <!-- Modos de visualização por período de tempo -->
+    {% include "main/scheduler/_calendar_yearly.html" %}
+
+    {% include "main/scheduler/_calendar_monthly.html" %}
+
+    {% include "main/scheduler/_calendar_weekly.html" %}
+
+    {% include "main/scheduler/_calendar_daily.html" %}
+
+    <button class="btn border rounded-pill float-btn bg-primary text-white shadow-sm" onclick="open_set_scheduling()">
+        <i class="fa fa-plus mr-2 shadow-sm"></i>
+        <strong class="font-weight-bold h5">Criar</strong>
+    </button>
+</main>
+
+{% include "main/scheduler/_modal_set_scheduling.html" %}
+
+{% include "main/scheduler/_modal_scheduling_detail.html" %}
+
+{% include "main/scheduler/_modal_personalized_repetition.html" %}
+
+{% include "main/scheduler/_modal_all_schedulings.html" %}
+
+{% include "main/scheduler/_modal_show_more.html" %}
+
+{% endblock %}
+
+{% block js %}
+<script>
+    var TASKS = {{ tasks|safe }};
+</script>
+
+<script src="{% static 'js/scheduler/scheduler.js' %}"></script>
+<script src="{% static 'js/scheduler/calendar.js' %}"></script>
+<script src="{% static 'js/scheduler/services.js' %}"></script>
+
+{% endblock %}

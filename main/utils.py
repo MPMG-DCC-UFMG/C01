@@ -332,9 +332,7 @@ def process_start_test_crawler(crawler_id: int, runtime: float) -> dict:
         crawler = CrawlRequest.objects.get(pk=crawler_id)
         data_path = crawler.data_path
 
-        server_address = 'http://localhost:8000'
-
-        crawling_timer = CrawlingTimer(crawler_id, test_instance_id, data_path, runtime, server_address)
+        crawling_timer = CrawlingTimer(crawler_id, test_instance_id, data_path, runtime)
         crawling_timer.start()
 
         return settings.API_SUCCESS, f'Testing {crawler_id} for {runtime}s'

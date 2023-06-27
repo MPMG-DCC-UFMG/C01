@@ -19,6 +19,12 @@ services.save_new_scheduling = function (new_scheduling_config) {
         success: function (data) {
             $('#toast-success-text').text('Agendamento realizado com sucesso!');
             $('#toast').toast('show');
+            
+            TASKS[data.id] = data;
+            
+            fill_task_list();
+            update_view();
+
         },
         error: function (data) {
             alert('Houve um erro no agendamento, tente novamente!');
@@ -34,7 +40,6 @@ services.get_tasks_in_interval = function (start_date, end_date) {
         async: false,
         success: function (data) {
             tasks_by_date = data;
-            
         },
         error: function (data) {
             console.error(data.responseText);
@@ -72,12 +77,31 @@ services.update_tasks = function (tarks_ids) {
 }
 
 services.delete_task = function(task_id) {
+    excluded_tasks.push(task_id);
+
+    // Remove task from view
+    $(`#more-showing-task-${task_id}`).remove();
+
     $.ajax({
         url: `${server_address}/api/task/${task_id}`,
         type: 'delete',
         async: false,
         success: function (data) {
-            calendar.daily.today();
+            update_view();
+        },
+        error: function (data) {
+            console.error(data.responseText);
+        }
+    });   
+}
+
+services.cancel_task = function(task_id) {
+    $.ajax({
+        url: `/api/scheduler/tasks/${task_id}/cancel`,
+        type: 'post',
+        async: false,
+        success: function (data) {
+            update_view();
         },
         error: function (data) {
             console.error(data.responseText);
@@ -91,7 +115,7 @@ services.save_updated_scheduling = function (task_being_edited) {
     let parsed_data = JSON.stringify(task_being_edited);
 
     $.ajax({
-        url: `${server_address}/api/task/${task_id}/`,
+        url: `${server_address}/api/task/${task_id}`,
         type: 'put',
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -100,7 +124,9 @@ services.save_updated_scheduling = function (task_being_edited) {
         success: function (data) {
             $('#toast-success-text').text('Agendamento alterado com sucesso!');
             $('#toast').toast('show');
-            // calendar.daily.today();
+
+            TASKS[task_id] = services.get_task(task_id);
+            update_view();
         },
         error: function (data) {
             console.error(data.responseText);
