@@ -2,28 +2,85 @@ from datetime import datetime
 from time import sleep
 import threading
 import ujson
-import schedule
+from schedule.schedule import Schedule
 import requests
-
+from requests.exceptions import ConnectionError
 from kafka import KafkaConsumer
 from coolname import generate_slug
-
+ 
 import settings
 
 SERVER_SESSION = requests.sessions.Session()
 
-def run_crawler(crawler_id, action):
-    SERVER_SESSION.get(settings.RUN_CRAWLER_URL + "/api/crawlers/{}/run?action={}".format(crawler_id, action))
-    print(f'[{datetime.now()}] [TC] Crawler {crawler_id} processed by schedule...')
+CANCEL_TASK = "cancel"
+UPDATE_TASK = "update"
+CREATE_TASK = "create"
 
-def run_crawler_once(crawler_id, action):
-    SERVER_SESSION.get(settings.RUN_CRAWLER_URL + "/api/crawlers/{}/run?action={}".format(crawler_id, action))
-    print(f'[{datetime.now()}] [TC] Crawler {crawler_id} processed by schedule...')
-    return schedule.CancelJob
+MAX_ATTEMPTS = 3
+SLEEP_TIME = 5
+
+def run_crawler(crawler_id, action, next_run):
+    attempt = 0
+    sleep_time = SLEEP_TIME
+
+    url = settings.RUN_CRAWLER_URL + "/api/crawler/{}/run?action={}".format(crawler_id, action)
+    if next_run:
+        url += "&next_run={}".format(next_run)
+    
+    while attempt < MAX_ATTEMPTS:
+        try:
+            resp = SERVER_SESSION.get(url)
+            
+            if resp.status_code != 200:
+                raise ConnectionError(f'[{datetime.now()}] [TC] Error running crawler {crawler_id}. \n\tServer response: {resp.text}')
+
+            print(f'[{datetime.now()}] [TC] Crawler {crawler_id} processed by schedule. \n\tAction: {action} \n\tNext run: {next_run}\n\t Server response: {resp}')
+            break
+
+        except Exception as e:
+            attempt += 1
+            sleep_time *= attempt
+
+            print(f'[{datetime.now()}] [TC] Error running crawler {crawler_id}.\n\tAttempt: {attempt}\n\tSleep time: {sleep_time}\n\tReason: {e}')
+            sleep(sleep_time)
+
+            continue
+    
+    if attempt == MAX_ATTEMPTS:
+        print(f'[{datetime.now()}] [TC] Error running crawler {crawler_id}. \n\tMax attempts reached.')
 
 class Scheduler:
-    def __init__(self, jobs):
-        self.jobs = jobs
+    def __init__(self):
+        self.jobs = dict()
+        self._lock_until_server_up()
+        self.scheduler = Schedule(connect_db=True, 
+                                db_host=settings.DB_HOST, 
+                                db_port=settings.DB_PORT, 
+                                db_user=settings.DB_USER, 
+                                db_pass=settings.DB_PASS, 
+                                db_db=settings.DB_DB)
+
+    def _lock_until_server_up(self):
+        '''
+        Lock the scheduler until the server is up.
+        '''
+        print(f'[{datetime.now()}] [TC] Waiting for server to be up...')
+
+        time_waited = 0
+        while time_waited < settings.MAX_WAIT_TIME:
+            try:
+                SERVER_SESSION.get(settings.RUN_CRAWLER_URL)
+                break
+
+            except:
+                time_waited += settings.WAIT_TIME
+                sleep(settings.WAIT_TIME)
+                continue
+        
+        if time_waited == settings.MAX_WAIT_TIME:
+            raise ConnectionError(f'[{datetime.now()}] [TC] Server is down. \n\tMax wait time reached.')
+        
+        print(f'[{datetime.now()}] [TC] Server is up.')
 
     def __run_task_consumer(self):
         # Generates a random name for the consumer
@@ -45,65 +102,54 @@ class Scheduler:
                             max_partition_fetch_bytes=settings.KAFKA_CONSUMER_FETCH_MESSAGE_MAX_BYTES)
 
         for message in consumer:
-            # try:
-                task_data = ujson.loads(message.value.decode('utf-8'))
+            try:
+                data = ujson.loads(message.value.decode('utf-8'))
 
-                print(f'[{datetime.now()}] [TC] {worker_name} Worker: Processing task data')
+                print(f'[{datetime.now()}] [TC] {worker_name} Worker: Processing task data: {data}')
 
-                self.__process_task_data(task_data)
+                self.__process_task_data(data)
 
-            # except Exception as e:
-            #     print(f'[{datetime.now()}] [TC] {worker_name} Worker: Error processing task data: "{e}"')
+            except Exception as e:
+                print(f'[{datetime.now()}] [TC] {worker_name} Worker: Error processing task data: "{e}"')
 
-    def _set_schedule_call_for_task(self, task_data):
-        # converte ação em sintaxe schedule
-        # executa metodo run_crawler
-        # incluir personalizado
-        # começar a partir da data
-        runtime = task_data["data"]["runtime"][-9:-1]
+    def _set_schedule_call_for_task(self, config_dict, task_id, crawler_id, behavior):
+        job = self.scheduler.schedule_job(config_dict, run_crawler, crawler_id=crawler_id, action=behavior)
+        self.jobs[task_id] = job
 
-        if task_data["data"]["repeat_mode"] == "no_repeat":
-            params = [run_crawler_once, task_data["data"]["crawl_request"], task_data["data"]["crawler_queue_behavior"]]
-            schedule.every().day.at(runtime).do(*params)
-            return 
-
-        params = [run_crawler, task_data["data"]["crawl_request"], task_data["data"]["crawler_queue_behavior"]]
-
-        if task_data["data"]["repeat_mode"] == "daily":
-            job = schedule.every().day.at(runtime).do(*params)
+    def _remove_task(self, task_id: int, reason: str = None, remove_from_db: bool = True):
+        if task_id not in self.jobs:
+            return
         
-        if task_data["data"]["repeat_mode"] == "weekly":
-            # Checks if it is possible to put the collection to run today (if the time it should run has passed), if not, it runs next week
-            now = datetime.now()
+        self.scheduler.cancel_job(self.jobs[task_id], reason=reason, remove_from_db=remove_from_db)
+        del self.jobs[task_id]
 
-            str_runtime = task_data["data"]["runtime"]
-            runtime_datetime = datetime.fromisoformat(str_runtime.replace('Z', ''))
+    def __process_task_data(self, data):
+        action = data['action']
 
-            # runs once to include today's day
-            if now <= runtime_datetime:
-                params = [run_crawler_once, task_data["data"]["crawl_request"], task_data["data"]["crawler_queue_behavior"]]
-                schedule.every().day.at(runtime).do(*params)
-                
-            # Weekly repetition (which does not consider the current day)
-            job = schedule.every(7).days.at(runtime).do(*params)
-            
+        if action == CANCEL_TASK:
+            task_id = int(data['id'])
+            remove_from_db = data['remove_from_db']
+            self._remove_task(task_id, reason='Task canceled by user', 
+                              remove_from_db=remove_from_db)
+            return
+        
+        config_dict = data['schedule_config']
+        task_id = int(data['task_data']['id'])
+        crawler_id = data['task_data']['crawl_request']
+        behavior = data['task_data']['crawler_queue_behavior']
+        
+        if action == UPDATE_TASK:
+            self._remove_task(task_id)
+            self._set_schedule_call_for_task(config_dict, task_id, crawler_id, behavior)
+
+        elif action == CREATE_TASK:
+            self._set_schedule_call_for_task(config_dict, task_id, crawler_id, behavior)
+
         else:
-            job = None
+            print(f'[{datetime.now()}] [TC] Unknown action: {action}')
+
+        print(f'\t[{datetime.now()}] [TC] Jobs at end: {self.jobs}')
         
-        self.jobs[task_data["data"]["id"]] = job
-
-    def __process_task_data(self, task_data):
-
-        if task_data["action"] == "cancel":
-            schedule.cancel_job(self.jobs[task_data["data"]["id"]])
-        
-        if task_data["action"] == "update":
-            schedule.cancel_job(self.jobs[task_data["data"]["id"]])
-            self._set_schedule_call_for_task(task_data)
-
-        if task_data["action"] == "create":
-            self._set_schedule_call_for_task(task_data)
-
     def __create_task_consumer(self):
         self.thread = threading.Thread(target=self.__run_task_consumer, daemon=True)
         self.thread.start()
@@ -111,14 +157,9 @@ class Scheduler:
     def run(self):
         self.__create_task_consumer()
         while True:
+            self.scheduler.run_pending()
             sleep(1)
-            schedule.run_pending()
 
-
-if __name__ == '__main__':
-    jobs = {}
-
-    # get initial jobs
-
-    scheduler = Scheduler(jobs)
+if __name__ == "__main__":
+    scheduler = Scheduler()
     scheduler.run()

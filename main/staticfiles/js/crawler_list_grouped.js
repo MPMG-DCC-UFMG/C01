@@ -16,10 +16,13 @@ $(function(){
         let $group_content = $($(e.target).find(".group-content"));
         let $loading = $($(e.target).find(".loading"));
         let $content_template = $($("#group-content-template").html());
+        
+        let url = `${window.location.origin}/api/crawler/${crawler_id}/group`;
+        console.log('>>', url);
 
-        let ajax_request = $.ajax("get_crawlers_from_same_group/"+crawler_id);
-        ajax_request.done(function(response){
-            let json_response = $.parseJSON(response);
+        let ajax_request = $.ajax(url);
+
+        ajax_request.done(function (json_response){
             let table = $content_template.clone();
             $group_content.html(table);
             for (let i = 0; i < json_response.length; i++) {

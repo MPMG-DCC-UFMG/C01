@@ -482,9 +482,6 @@ class DistributedScheduler(object):
                     domain not in self.black_domains)) and \
                     (req_dict['meta']['expires'] == 0 or
                     curr_time < req_dict['meta']['expires']):
-
-                print(
-                    f'Dupefilter {request.url} @ seen? {request_seen}')
                 if not request_seen:
                     notify_new_page_found(req_dict['meta']['attrs']['instance_id'])
 

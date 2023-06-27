@@ -121,6 +121,7 @@ Crawler "{{ crawler.source_name }}"
                                 <i class="fa fa-info-circle" aria-hidden="true"></i>
                             </button>
                         </th>
+                        <th scope="col">Video</th>
                         {% endif %}
                     </tr>
                 </thead>
@@ -133,10 +134,11 @@ Crawler "{{ crawler.source_name }}"
                         <td>{{instance.duration_readable}}</td>
                         <td>{{instance.num_data_files}} arquivos</td>
                         <td>{{instance.data_size_readable}}</td>
-                        <td><a class="btn btn-primary" href="{% url 'export_config' instance.instance_id%}">Baixar</a></td>
+                        <td><button class="btn btn-primary" onclick="downloadConfig({{ instance.instance_id }})">Baixar</button></td>
                         {% if crawler.dynamic_processing %}
                         <td><button type="button" class="btn btn-primary" onclick="displayScreenshotModal({{instance.instance_id}})">Visualizar</button></td>
-                        <td><a class="btn btn-primary" href="{% url 'export_trace' instance.instance_id%}">Baixar</a></td>
+                        <td><button class="btn btn-primary" onclick="downloadInstanceTrace({{instance.instance_id}})">Baixar</button></td>
+                        <td><button class="btn btn-primary" onclick="displayVideoPlayerModal({{instance.instance_id}})">Visualizar</button></td>
                         {% endif %}
                     </tr>
                     
@@ -279,7 +281,7 @@ Crawler "{{ crawler.source_name }}"
             <div class="row mb-3">
                 <div class="col pr-0 d-flex align-items-center justify-content-between">
                     <h5>Últimas linhas do stdout</h5>
-                    <a class="btn btn-primary" target="_blank"  href="{% url 'raw_log_out' last_instance.instance_id %}">Abrir Log Bruto</a>
+                    <a class="btn btn-primary" target="_blank"  href="{% url 'api:instance-log-raw-out' last_instance.instance_id %}">Abrir Log Bruto</a>
                 </div>
             </div>
             <div class="row">
@@ -303,7 +305,7 @@ Crawler "{{ crawler.source_name }}"
             <div class="row mb-3">
                 <div class="col pr-0 d-flex align-items-center justify-content-between">
                     <h5>Últimas linhas do stderr</h5>
-                    <a class="btn btn-primary" target="_blank" href="{% url 'raw_log_err' last_instance.instance_id %}">Abrir Log Bruto</a>
+                    <a class="btn btn-primary" target="_blank" href="{% url 'api:instance-log-raw-error' last_instance.instance_id %}">Abrir Log Bruto</a>
                 </div>
             </div>
             <div class="row">
@@ -354,6 +356,25 @@ Crawler "{{ crawler.source_name }}"
         </div>
     </div>
 </div>
+
+
+<div class="modal" id="video_player_modal" tabindex="-1" role="dialog" >
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Video Player</h5>
+            </div>
+            <div class="modal-body px-3">
+            </div>
+            <div class="modal-footer">
+                <div class="pagination mr-auto"></div>
+                <button type="button" class="btn btn-secondary" onclick="closeVideoPlayerModal()">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endif %}
 
 {% endblock %}
@@ -373,7 +394,7 @@ Crawler "{{ crawler.source_name }}"
     var CRAWLER_QUEUE_API_ADDRESS = SERVER_ADDRESS + '/api/crawler_queue/1/';
 
     var RUNNING_TEST_MODE = {% if running_test_mode %} true {% else %} false {% endif %};
-    var TEST_STARTED_AT = {{ test_started_at }};
+    var TEST_STARTED_AT = {% if test_started_at %} {{ test_started_at }} {% else %} null {% endif %};
     var TEST_RUNTIME = {{ test_runtime }}; 
         
 </script>
@@ -381,5 +402,6 @@ Crawler "{{ crawler.source_name }}"
 
 <script src="{% static 'js/jquery.paging.min.js' %}"></script>
 <script src="{% static 'js/screenshot_viewer.js' %}"></script>
+<script src="{% static 'js/video_viewer.js' %}"></script>
 <script src="{% static 'js/details.js' %}"></script>
 {% endblock %}

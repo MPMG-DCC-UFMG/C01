@@ -1,4 +1,6 @@
 statusInterval = null //global var to control call interval
+server_address = window.location.origin;
+
 document.addEventListener('DOMContentLoaded',
     function () {
         var instance_id = document.getElementById("last_instance_id").innerText.trim();
@@ -35,9 +37,8 @@ function tail_logs(instance_id){
     let progress_page_failure = $('#progress-page-failure');
     let progress_page_duplicated = $('#progress-page-duplicated');
     let progress_page_previously_crawled = $('#progress-page-previously-crawled');
-
     // calls tail log view and set logs
-    $.ajax("/tail_log_file/" + instance_id).done(function(data) {
+    $.ajax(`${server_address}/api/instance/${instance_id}/log/tail`).done(function(data) {
             var response = data;
             
             if (response["files_found"] != 0) {
@@ -166,7 +167,7 @@ function status_instance(instance_id){
         }
     };
 
-    xhr.open("GET", "/api/instances/"+instance_id, true);
+    xhr.open("GET", "/api/instance/"+instance_id, true);
     xhr.send();
 }
 
@@ -192,6 +193,44 @@ function exit_crawler_queue(queue_item_id) {
         },
         error: function (data) {
             alert('Houve um erro ao remover o item da fila!');
+        }
+    });
+}
+
+function downloadInstanceTrace(instance_id) {
+    let server_address = window.location.origin;
+    let url = `${server_address}/api/instance/${instance_id}/debug/trace`;
+
+    // sends a head request to check if the file exists
+    $.ajax({
+        url: url,
+        type: 'head',
+        dataType: 'json',
+        async: false,
+        success: function (data) {            
+            window.open(url, '_blank');
+        },
+        error: function (data) {
+            alert('O arquivo de trace não existe!');
+        }
+    });
+}
+
+function downloadConfig(instance_id) {
+    let server_address = window.location.origin;
+    let url = `${server_address}/api/instance/${instance_id}/config`;
+
+    // sends a head request to check if the file exists
+    $.ajax({
+        url: url,
+        type: 'head',
+        dataType: 'json',
+        async: false,
+        success: function (data) {
+            window.open(url, '_blank');
+        },
+        error: function (data) {
+            alert('O arquivo de configuração não existe!');
         }
     });
 }
@@ -238,6 +277,7 @@ function update_test_runtime_label() {
 $(document).ready(function () {
     update_test_runtime_label();
 });
+
 // Initiates all popovers on the page
 $(function () {
     $('[data-toggle="popover"]').popover()

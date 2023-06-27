@@ -15,3 +15,12 @@ KAFKA_SESSION_TIMEOUT_MS = 2 * 60 * 1000
 TASK_TOPIC = os.getenv('TASK_TOPIC', KAFKA_TOPIC_PREFIX + 'task_topic')
 TASK_DATA_CONSUMER_GROUP = os.getenv('TASK_DATA_CONSUMER_DATA', KAFKA_TOPIC_PREFIX + '.task_data_group')
 RUN_CRAWLER_URL = "http://web:8000"
+
+WAIT_TIME = 1
+MAX_WAIT_TIME = 60
+
+DB_HOST = os.getenv('DB_HOST', 'db')
+DB_PORT = os.getenv('DB_PORT', '5432')
+DB_USER = os.getenv('POSTGRES_USER', 'django')
+DB_PASS = os.getenv('POSTGRES_PASSWORD', 'c01_password')
+DB_DB = os.getenv('POSTGRES_DB', 'c01_prod')

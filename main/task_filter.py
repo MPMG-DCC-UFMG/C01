@@ -5,8 +5,6 @@ from typing import Dict, List, Union
 
 from typing_extensions import Literal
 
-from .models import TaskType
-
 # adapta a saída dos dias da semana da biblioteca para que os dias da semana comecem
 # domingo (dia 0)
 WEEKDAY = {
@@ -128,7 +126,7 @@ def process_weekly_repeat_mode(filtered_tasks_ids: Dict[str, int],
                             max_occurrences: int = math.inf,
                             max_date: datetime = MAX_DATE,
                             interval: int = 1) -> Dict[str, int]:
-
+    
     delta_weeks = timedelta(weeks=interval)
     num_occorrences = 0
 
@@ -267,11 +265,14 @@ def process_yearly_repeat_mode(filtered_tasks_ids: Dict[str, int],
         num_occorrences += 1
 
 
-def task_filter_by_date_interval(tasks: List[TaskType], start_date: datetime, end_date: datetime) -> Dict[str, int]:
+def task_filter_by_date_interval(tasks: List[dict], start_date: datetime, end_date: datetime) -> Dict[str, int]:
     filtered_tasks_ids: Dict[str, int] = dict()
 
-    for task in tasks:
-        runtime = task['runtime']
+    for raw_task in tasks:
+        task = raw_task['scheduler_config']
+        task['id'] = raw_task['id']
+
+        runtime = task['start_date']
         # runtime is like: 2022-08-06T23:29:00Z
         year, month, day = runtime.split('T')[0].split('-')
         base_date = get_date(day, month, year)
@@ -296,16 +297,16 @@ def task_filter_by_date_interval(tasks: List[TaskType], start_date: datetime, en
         max_date = MAX_DATE
 
         if repeat_mode == PERSONALIZED_REPEAT_MODE:
-            personalized_task = task['personalized_repetition_mode']
+            personalized_task = task['personalized_repeat']
             interval = personalized_task['interval']
 
-            finish_type = personalized_task['finish']['type']
+            finish_type = personalized_task['finish']['mode']
             if finish_type == REPEAT_FINISH_BY_OCCURRENCES:
-                max_occurrences = personalized_task['finish']['additional_data']
+                max_occurrences = personalized_task['finish']['value']
                 max_date = MAX_DATE
 
             elif finish_type == REPEAT_FINISH_BY_DATE:
-                str_date = personalized_task['finish']['additional_data']
+                str_date = personalized_task['finish']['value']
 
                 year, month, day = str_date.split('-')
 
@@ -315,13 +316,13 @@ def task_filter_by_date_interval(tasks: List[TaskType], start_date: datetime, en
             else:
                 pass
 
-            repeat_mode = personalized_task['type']
+            repeat_mode = personalized_task['mode']
             if repeat_mode == WEEKLY_REPEAT_MODE:
-                weekdays_to_run = personalized_task['additional_data']
+                weekdays_to_run = personalized_task['data']
 
             elif repeat_mode == MONTHLY_REPEAT_MODE:
-                monthly_occurrence_type = personalized_task['additional_data']['type']
-                monthly_occurrence_val = personalized_task['additional_data']['value']
+                monthly_occurrence_type = personalized_task['data']['mode']
+                monthly_occurrence_val = personalized_task['data']['value']
 
             else:
                 pass
