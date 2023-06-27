@@ -8,6 +8,7 @@ from crawling_utils.constants import (AUTO_ENCODE_DETECTION,
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 from django.db.models.base import ModelBase
+from django.conf import settings
 from django.utils import timezone
 from typing_extensions import Literal, TypedDict
 
@@ -369,10 +370,10 @@ class CrawlRequest(TimeStamped):
             return None
 
     def __check_if_crawler_worked(self, instance_id) -> bool:
-        files_path = f'/data/{self.data_path}/{instance_id}/data/'
-        
-        raw_pages_crawled = os.listdir(files_path + 'raw_pages/')
-        files_crawled = os.listdir(files_path + 'files/')
+        files_path = os.path.join(settings.OUTPUT_FOLDER, self.data_path, str(instance_id), 'data')
+
+        raw_pages_crawled = os.listdir(files_path + '/raw_pages/')
+        files_crawled = os.listdir(files_path + '/files/')
 
         for ignore_file in ('file_description.jsonl', 'temp', 'browser_downloads'):
             if ignore_file in raw_pages_crawled:

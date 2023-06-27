@@ -394,7 +394,7 @@ Crawler "{{ crawler.source_name }}"
     var CRAWLER_QUEUE_API_ADDRESS = SERVER_ADDRESS + '/api/crawler_queue/1/';
 
     var RUNNING_TEST_MODE = {% if running_test_mode %} true {% else %} false {% endif %};
-    var TEST_STARTED_AT = {{ test_started_at }};
+    var TEST_STARTED_AT = {% if test_started_at %} {{ test_started_at }} {% else %} null {% endif %};
     var TEST_RUNTIME = {{ test_runtime }}; 
         
 </script>

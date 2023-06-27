@@ -13,11 +13,11 @@ import settings
 SERVER_SESSION = requests.sessions.Session()
 
 def run_crawler(crawler_id, action):
-    SERVER_SESSION.get(settings.RUN_CRAWLER_URL + "/api/crawlers/{}/run?action={}".format(crawler_id, action))
+    SERVER_SESSION.get(settings.RUN_CRAWLER_URL + "/api/crawler/{}/run?action={}".format(crawler_id, action))
     print(f'[{datetime.now()}] [TC] Crawler {crawler_id} processed by schedule...')
 
 def run_crawler_once(crawler_id, action):
-    SERVER_SESSION.get(settings.RUN_CRAWLER_URL + "/api/crawlers/{}/run?action={}".format(crawler_id, action))
+    SERVER_SESSION.get(settings.RUN_CRAWLER_URL + "/api/crawler/{}/run?action={}".format(crawler_id, action))
     print(f'[{datetime.now()}] [TC] Crawler {crawler_id} processed by schedule...')
     return schedule.CancelJob
 

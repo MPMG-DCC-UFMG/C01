@@ -3,12 +3,13 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from django.db import transaction
+from django.conf import settings
 
 from main.models import CrawlRequest, ParameterHandler, ResponseHandler
 from main.serializers import CrawlRequestSerializer
 
 from main.utils import (add_crawl_request, unqueue_crawl_requests, 
-                        process_run_crawl, process_stop_crawl)
+                        process_run_crawl, process_stop_crawl, process_start_test_crawler)
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -375,3 +376,54 @@ class CrawlerViewSet(viewsets.ModelViewSet):
             })
         
         return Response(json_data, status=status.HTTP_200_OK)
+    @swagger_auto_schema(
+        operation_summary='Testa o coletor.',
+        operation_description='Ao chamar por esse endpoint, o coletor começará o seu processo de teste.',
+        manual_parameters=[
+            openapi.Parameter(
+                'id',
+                openapi.IN_PATH,
+                description='ID único do crawler.',
+                type=openapi.TYPE_INTEGER
+            ),
+            openapi.Parameter(
+                'runtime',
+                openapi.IN_QUERY,
+                description='Tempo de execução do teste em segundos.',
+                default=settings.RUNTIME_OF_CRAWLER_TEST,
+                type=openapi.TYPE_INTEGER
+            ),
+        ],
+        responses={
+            200: openapi.Response(
+                description='O processo de teste do coletor foi iniciado.'
+            ),
+            400: openapi.Response(
+                description='Coletor não encontrado.',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Mensagem de erro.'
+                        )
+                    }
+                )
+            )
+        }
+    )
+    def test(self, request, pk): 
+        try:
+            CrawlRequest.objects.get(pk=pk)
+        
+        except CrawlRequest.DoesNotExist:
+            return Response({'error': 'Coletor não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+        runtime = int(request.query_params.get('runtime', settings.RUNTIME_OF_CRAWLER_TEST))
+
+        code, msg = process_start_test_crawler(pk, runtime)
+
+        if code == settings.API_ERROR:
+            return Response({'error': msg}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response({'message': msg}, status=status.HTTP_200_OK)

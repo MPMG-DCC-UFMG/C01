@@ -1,16 +1,24 @@
 import os
 import subprocess
 
-from typing_extensions import Literal
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
+from django.conf import settings
+
+from typing_extensions import Literal
 
 import crawler_manager.crawler_manager as crawler_manager
-from crawler_manager.settings import OUTPUT_FOLDER
 
-from main.models import CrawlRequest, CrawlerInstance, CrawlerQueue, CrawlerQueueItem
+from crawler_manager.crawler_manager import LOG_WRITER
+from crawler_manager.settings import OUTPUT_FOLDER, WRITER_TOPIC
+
 from main.forms import ParameterHandlerFormSet, ResponseHandlerFormSet
-
+from main.models import (CrawlerInstance, CrawlerQueue, CrawlerQueueItem,
+                         CrawlRequest, Log)
+from main.crawling_timer import CrawlingTimer
+from main.serializers import CrawlerInstanceSerializer, CrawlRequestSerializer
+                          
 CRAWLER_QUEUE = None
 
 try:
@@ -22,14 +30,24 @@ try:
 except:
     pass
 
+class NoInstanceRunningException(Exception):
+    pass
+
 def update_queue_instance():
     global CRAWLER_QUEUE
     CRAWLER_QUEUE = CrawlerQueue.object()
 
-def create_instance(crawler_id, instance_id):
+def create_instance(crawler_id, instance_id, test_mode):
     mother = CrawlRequest.objects.filter(id=crawler_id)
+    if test_mode:
+        mother[0].ignore_data_crawled_in_previous_instances = False
+
     obj = CrawlerInstance.objects.create(
-        crawler=mother[0], instance_id=instance_id, running=True)
+        crawler=mother[0], 
+        instance_id=instance_id, 
+        execution_context = 'testing' if test_mode else 'crawling',
+        running=True)
+    
     return obj
 
 def add_crawl_request(crawler_id, wait_on: Literal['last_position', 'first_position', 'no_wait'] = 'last_position'):
@@ -73,6 +91,28 @@ def add_crawl_request(crawler_id, wait_on: Literal['last_position', 'first_posit
                                     queue_type=cr_expec_runtime_cat)
         queue_item.save()
 
+def delete_instance_and_logs(instance_id: int):
+    # Ignore logs associated with the instance being deleted
+    LOG_WRITER.add_instance_to_ignore(instance_id)
+
+    # Remove the logs and the test instance
+    logs = Log.objects.filter(instance_id=instance_id)
+    logs.delete()
+    CrawlerInstance.objects.get(instance_id=instance_id).delete()
+
+    # Free memory         
+    LOG_WRITER.remove_instance_to_ignore(instance_id)
+
+def delete_instance_crawled_folder(data_path: str, instance_id: int):
+    message = {
+        'delete_folder': {
+            'data_path': data_path,
+            'instance_id': str(instance_id)
+        }
+    }
+
+    crawler_manager.MESSAGE_SENDER.send(WRITER_TOPIC, message)
+
 def unqueue_crawl_requests(queue_type: str, update_queue: bool = False):
     if update_queue:
         update_queue_instance()
@@ -107,7 +147,7 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
 
     # No instance running
     if instance is None:
-        raise ValueError("No instance running")
+        raise NoInstanceRunningException("No instance running")
 
     if from_sm_listener and not instance.download_files_finished():
         instance.page_crawling_finished = True
@@ -116,13 +156,18 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
         return
 
     instance_id = instance.instance_id
-    config = CrawlRequest.objects.filter(id=int(crawler_id)).values()[0]
+    running_crawler_test = instance.execution_context == 'testing'
 
-    # FIXME: Colocar esse trecho de código no módulo writer
-    # computa o tamanho em kbytes do diretório "data"
-    instance_path = os.path.join(OUTPUT_FOLDER, config['data_path'], str(instance_id), 'data')
+    crawler = CrawlRequest.objects.get(id=int(crawler_id))
+    crawler.update_functional_status_after_run(instance_id)
+
+    if running_crawler_test:
+        delete_instance_and_logs(instance_id)
+        delete_instance_crawled_folder(crawler.data_path, instance_id)
     
-    command_output = subprocess.run(["du " + instance_path + " -d 0"], shell=True, stdout=subprocess.PIPE)
+    instance_path = os.path.join(OUTPUT_FOLDER, crawler.data_path, str(instance_id), 'data')
+    
+    command_output = subprocess.run(['du ' + instance_path + ' -d 0'], shell=True, stdout=subprocess.PIPE)
     output_line = command_output.stdout.decode('utf-8').strip('\n')
     parts = output_line.split('\t')
     data_size_kbytes = int(parts[0])
@@ -131,7 +176,6 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
     num_data_files = instance.number_files_success_download
     
     instance = None
-    instance_info = {}
     queue_type = None
 
     with transaction.atomic():
@@ -147,15 +191,6 @@ def process_stop_crawl(crawler_id, from_sm_listener: bool = False):
         queue_type = queue_item.queue_type
         queue_item.delete()
 
-    # As soon as the instance is created, it starts to collect and is only modified when it stops,
-    # we use these fields to define when a collection started and ended
-    instance_info["started_at"] = str(instance.creation_date)
-    instance_info["finished_at"] = str(instance.last_modified)
-    instance_info["data_size_kbytes"] = data_size_kbytes
-    instance_info["num_data_files"] = num_data_files
-
-    crawler_manager.update_instances_info(
-        config["data_path"], str(instance_id), instance_info)
 
     crawler_manager.stop_crawler(crawler_id)
 
@@ -168,30 +203,36 @@ def remove_crawl_request(crawler_id):
         queue_item = CrawlerQueueItem.objects.get(crawl_request_id=crawler_id)
         queue_item.delete()
 
-def process_run_crawl(crawler_id):
+def process_run_crawl(crawler_id, test_mode = False):
     instance = None
-    instance_info = dict()
 
-    crawler_entry = CrawlRequest.objects.filter(id=crawler_id)
-    data = crawler_entry.values()[0]
+    crawler = CrawlRequest.objects.get(pk=crawler_id)
+    data = CrawlRequestSerializer(crawler).data
+
+    # delete unnecessary data
+    if 'instances' in data:
+        del data['instances']
 
     # Instance already running
-    if crawler_entry.get().running:
-        instance_id = crawler_entry.get().running_instance.instance_id
+    if crawler.running:
+        instance_id = crawler.running_instance.instance_id
         raise ValueError("An instance is already running for this crawler "
                          f"({instance_id})")
 
-    data = CrawlRequest.process_config_data(crawler_entry.get(), data)
 
-    data["instance_id"] = crawler_manager.gen_key()
-    instance = create_instance(data['id'], data["instance_id"])
-    crawler_manager.start_crawler(data.copy())
+    data = CrawlRequest.process_config_data(crawler, data)
 
-    instance_info["started_at"] = str(instance.creation_date)
-    instance_info["finished_at"] = None
+    instance_id = crawler_manager.gen_key()
+    instance = create_instance(crawler_id, instance_id, test_mode)
 
-    crawler_manager.update_instances_info(
-        data["data_path"], str(data["instance_id"]), instance_info)
+    data['instance_id'] = instance_id
+    data['execution_context'] = instance.execution_context
+    data['running_in_test_mode'] = test_mode
+
+    crawler.functional_status = 'testing' if test_mode else 'testing_by_crawling'
+    crawler.save()
+
+    crawler_manager.start_crawler(data)
 
     return instance
 
@@ -260,8 +301,8 @@ def generate_injector_forms(*args, filter_queryset=False, **kwargs):
         crawler = kwargs.get('instance')
 
         if crawler is None:
-            raise ValueError("If the filter_queryset option is True, the " +
-                "instance property must be set.")
+            raise ValueError('If the filter_queryset option is True, the ' +
+                'instance property must be set.')
 
         queryset = crawler.parameter_handlers
 
@@ -275,3 +316,28 @@ def generate_injector_forms(*args, filter_queryset=False, **kwargs):
         prefix='templated_url-responses', queryset=queryset, **kwargs)
 
     return parameter_formset, response_formset
+
+def process_start_test_crawler(crawler_id: int, runtime: float) -> dict:
+    instance = None
+    try:
+        instance = process_run_crawl(crawler_id, True)
+
+    except Exception as e:
+        return settings.API_ERROR, str(e)
+
+    try:
+
+        test_instance_id = CrawlerInstanceSerializer(instance).data['instance_id']
+        
+        crawler = CrawlRequest.objects.get(pk=crawler_id)
+        data_path = crawler.data_path
+
+        server_address = 'http://localhost:8000'
+
+        crawling_timer = CrawlingTimer(crawler_id, test_instance_id, data_path, runtime, server_address)
+        crawling_timer.start()
+
+        return settings.API_SUCCESS, f'Testing {crawler_id} for {runtime}s'
+    
+    except Exception as e:
+        return settings.API_ERROR, str(e)

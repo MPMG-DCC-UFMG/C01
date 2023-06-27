@@ -35,6 +35,8 @@ urlpatterns = [
     path('crawler/<int:pk>/run', views.CrawlerViewSet.as_view({'get': 'run'}), name='crawler-run'),
     path('crawler/<int:pk>/stop', views.CrawlerViewSet.as_view({'get': 'stop'}), name='crawler-run'),
     path('crawler/<int:pk>/group', views.CrawlerViewSet.as_view({'get': 'group'}), name='crawler-group'),
+    path('crawler/<int:pk>/test/start', views.CrawlerViewSet.as_view({'get': 'test'}), name='crawler-test-start'),
+    path('crawler/<int:pk>/test/stop', views.CrawlerViewSet.as_view({'get': 'stop'}), name='crawler-test-stop'),
 
     # instance 
     path('instance/', views.CrawlerInstanceViewSet.as_view(only_list_action), name='instance'),

@@ -184,7 +184,7 @@ class TaskViewSet(viewsets.ModelViewSet):
                 'action': 'create',
                 'data': response.data
             }
-            crawler_manager.message_sender.send(TASK_TOPIC, message)
+            crawler_manager.MESSAGE_SENDER.send(TASK_TOPIC, message)
         return response
 
     @swagger_auto_schema(
@@ -213,7 +213,7 @@ class TaskViewSet(viewsets.ModelViewSet):
                 'action': 'update',
                 'data': response.data
             }
-            crawler_manager.message_sender.send(TASK_TOPIC, message)
+            crawler_manager.MESSAGE_SENDER.send(TASK_TOPIC, message)
         return response
 
     @swagger_auto_schema(
@@ -246,7 +246,7 @@ class TaskViewSet(viewsets.ModelViewSet):
                     'id': pk
                 }
             }
-        crawler_manager.message_sender.send(TASK_TOPIC, message)
+        crawler_manager.MESSAGE_SENDER.send(TASK_TOPIC, message)
         return response
     
     def __str2date(self, s: str) -> datetime:

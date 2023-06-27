@@ -12,7 +12,7 @@ class CrawlingTimer:
                     data_path: str, 
                     runtime: float = 300,
                     server_address: str = 'http://web:8000', 
-                    stop_crawler_endpoint: str = '/api/crawlers/{crawler_id}/stop_test') -> None:
+                    stop_crawler_endpoint: str = '/api/crawler/{crawler_id}/test/stop') -> None:
         
         self.crawler_id = crawler_id
         self.test_instance_id = test_instance_id
