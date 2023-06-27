@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -5,7 +7,7 @@ from rest_framework.response import Response
 from django.db import transaction
 from django.conf import settings
 
-from main.models import CrawlRequest, ParameterHandler, ResponseHandler
+from main.models import CrawlRequest, ParameterHandler, ResponseHandler, Task
 from main.serializers import CrawlRequestSerializer
 
 from main.utils import (add_crawl_request, unqueue_crawl_requests, 
@@ -217,6 +219,13 @@ class CrawlerViewSet(viewsets.ModelViewSet):
                 default='wait_on_last_queue_position',
                 enum=['run_immediately', 'wait_on_first_queue_position', 'wait_on_last_queue_position'],
                 required=False
+            ),
+            openapi.Parameter(
+                'next_run',
+                openapi.IN_QUERY,
+                description='Esse parâmetro permite definir a próxima data de execução do coletor. Deve ser informado no formato `YYYY-MM-DD HH:MM:SS`.',
+                type=openapi.TYPE_STRING,
+                required=False
             )
         ],
     )
@@ -224,6 +233,15 @@ class CrawlerViewSet(viewsets.ModelViewSet):
     def run(self, request, pk):
         query_params = self.request.query_params.dict()
         action = query_params.get('action', 'wait_on_last_queue_position')
+
+        # check if there is a task for this crawler
+        task = Task.objects.filter(crawl_request__pk=pk).first()
+
+        if task:
+            next_run = query_params.get('next_run')
+            task.next_run = datetime.strptime(next_run, '%Y-%m-%d %H:%M:%S') if next_run else None       
+            task.last_run = datetime.now()
+            task.save()
 
         if action == 'run_immediately':
             wait_on = 'no_wait'
