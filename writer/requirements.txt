@@ -7,5 +7,5 @@ kafka-python==2.0.2
 lxml==4.6.3
 requests==2.25.1
 ujson==4.0.2
-urllib3==1.26.5
+urllib3==1.26.17
 coolname==1.1.0
