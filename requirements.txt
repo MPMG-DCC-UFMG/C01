@@ -1,7 +1,7 @@
 Automat==20.2.0
 Deprecated==1.2.13
 Django==3.2.12
-Pillow==9.0.1
+Pillow==10.0.1
 Protego==0.2.1
 PyDispatcher==2.0.5
 PySocks==1.7.1
